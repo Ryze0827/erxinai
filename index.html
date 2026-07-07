@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ErxinAI 是一个 AI 网站首页门户模板，用于展示智能体、知识库、模型接入和自动化工作流。"
+    />
+    <title>ErxinAI - AI 工作流首页门户</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header" data-scrolled="false">
+        <div class="nav">
+          <div class="nav-glass"></div>
+          <a class="nav-brand" href="#" aria-label="ErxinAI 首页" data-i18n-aria-label="brand.homeLabel">
+            <span class="brand-mark" aria-hidden="true">E</span>
+            <span>ErxinAI</span>
+          </a>
+          <nav class="nav-links" aria-label="主导航" data-i18n-aria-label="nav.primaryLabel">
+            <a href="#features" data-i18n="nav.features">能力</a>
+            <a href="#workflow" data-i18n="nav.workflow">工作流</a>
+            <a href="#resources" data-i18n="nav.resources">资源</a>
+            <a href="#faq">FAQ</a>
+          </nav>
+          <div class="nav-actions">
+            <a class="btn btn-dark btn-sm" href="#contact" data-i18n="cta.start">开始体验</a>
+            <div class="language-picker" data-language-picker>
+              <button class="language-button" type="button" data-language-button aria-haspopup="listbox" aria-expanded="false">
+                <span class="language-current" data-language-current>中文</span>
+                <span class="language-chev" aria-hidden="true"></span>
+              </button>
+              <div class="language-menu" data-language-menu role="listbox"></div>
+            </div>
+            <button
+              class="nav-toggle"
+              type="button"
+              aria-label="展开导航"
+              data-i18n-aria-label="nav.toggleLabel"
+              aria-expanded="false"
+              aria-controls="nav-drawer"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+        </div>
+        <div class="nav-drawer" id="nav-drawer" data-open="false">
+          <a href="#features" data-i18n="nav.features">能力</a>
+          <a href="#workflow" data-i18n="nav.workflow">工作流</a>
+          <a href="#resources" data-i18n="nav.resources">资源</a>
+          <a href="#faq">FAQ</a>
+          <a class="btn btn-dark" href="#contact" data-i18n="cta.start">开始体验</a>
+          <div class="language-picker drawer-lang" data-language-picker>
+            <button class="language-button" type="button" data-language-button aria-haspopup="listbox" aria-expanded="false">
+              <span class="language-current" data-language-current>中文</span>
+              <span class="language-chev" aria-hidden="true"></span>
+            </button>
+            <div class="language-menu" data-language-menu role="listbox"></div>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <button class="feature-pill" type="button">
+            <span data-i18n="hero.pill">预留最新动态入口</span>
+            <span aria-hidden="true">→</span>
+          </button>
+          <h1 class="hero-title" aria-label="一个 AI 入口，连接你的所有工作流" data-i18n-aria-label="hero.title">
+            <span data-i18n="hero.titlePrefix">一个 </span><span class="title-shine" data-i18n="hero.titleAccent">AI 入口</span
+            ><span data-i18n="hero.titleSuffix">，连接你的所有工作流</span>
+          </h1>
+          <p class="hero-lead" data-i18n="hero.lead">为智能体、知识库、模型能力和自动化任务预留统一的首页门户。</p>
+          <div class="hero-cta">
+            <a class="btn btn-glass" href="#contact" data-i18n="cta.build">开始搭建门户</a>
+            <span data-i18n="hero.meta">可替换品牌、产品图、价格与行动按钮</span>
+          </div>
+          <div class="hero-stack" aria-label="预留能力标签" data-i18n-aria-label="hero.stackLabel">
+            <span data-i18n="hero.modules">预留模块</span>
+            <ul>
+              <li><span class="mini-mark mark-orange"></span><span data-i18n="modules.agents">智能体</span></li>
+              <li><span class="mini-mark mark-blue"></span><span data-i18n="modules.knowledge">知识库</span></li>
+              <li><span class="mini-mark mark-black"></span><span data-i18n="modules.models">模型接入</span></li>
+              <li><span class="mini-mark mark-green"></span><span data-i18n="modules.automation">自动化</span></li>
+              <li><span class="mini-mark mark-silver"></span><span data-i18n="modules.workspace">工作台</span></li>
+            </ul>
+          </div>
+          <div class="hero-stage" aria-label="产品演示预留位" data-i18n-aria-label="hero.demoLabel">
+            <div class="device-frame">
+              <div class="demo-screen">
+                <div class="demo-sidebar">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <div class="demo-panel">
+                  <div class="demo-toolbar">
+                    <strong>AI Portal</strong>
+                    <span data-i18n="demo.status">运行中</span>
+                  </div>
+                  <div class="demo-request">
+                    <span class="check"></span>
+                    <div>
+                      <strong data-i18n="demo.title">预留产品演示画面</strong>
+                      <p data-i18n="demo.body">这里可以替换成真实截图、视频或交互预览。</p>
+                    </div>
+                  </div>
+                  <div class="demo-grid">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section feature-section" id="features">
+          <div class="section-head center">
+            <span class="eyebrow">Observe</span>
+            <h2 data-i18n="features.title">让关键 AI 能力在首页就被看见。</h2>
+            <p data-i18n="features.body">首屏之后保持克制的信息密度，用清晰段落承接产品能力、使用场景和转化入口。</p>
+          </div>
+          <div class="feature-rows">
+            <article class="feature-row">
+              <div class="feature-text">
+                <span data-i18n="features.entryLabel">统一入口</span>
+                <h3 data-i18n="features.entryTitle">把分散的 AI 能力收束到一个门户。</h3>
+                <p data-i18n="features.entryBody">预留智能体、知识库、模型、插件和自动化任务的位置，让用户不用先理解复杂系统。</p>
+              </div>
+              <div class="media-card">
+                <div class="mock-window">
+                  <div class="mock-line wide"></div>
+                  <div class="mock-line"></div>
+                  <div class="mock-list">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </article>
+            <article class="feature-row">
+              <div class="feature-text">
+                <span data-i18n="features.statusLabel">状态感知</span>
+                <h3 data-i18n="features.statusTitle">重要任务、使用量和提示集中呈现。</h3>
+                <p data-i18n="features.statusBody">为运行中任务、待处理提示、数据连接和容量状态预留清晰的视觉层级。</p>
+              </div>
+              <div class="media-card">
+                <div class="mock-window mock-dashboard">
+                  <div class="metric-row">
+                    <strong>72%</strong>
+                    <span></span>
+                  </div>
+                  <div class="metric-row">
+                    <strong>18</strong>
+                    <span></span>
+                  </div>
+                  <div class="metric-row">
+                    <strong>4</strong>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section workflow-section" id="workflow">
+          <div class="section-head center">
+            <span class="eyebrow">Act</span>
+            <h2 data-i18n="workflow.title">让用户在门户里完成第一步动作。</h2>
+            <p data-i18n="workflow.body">按钮、标签和信息面板都有真实交互，方便后续接入产品路由或业务后台。</p>
+          </div>
+          <div class="workflow-block">
+            <div class="media-card media-large">
+              <div class="mock-window mock-flow">
+                <div class="flow-card active" data-i18n="workflow.flowConfirm">任务确认</div>
+                <div class="flow-card" data-i18n="workflow.flowSearch">知识检索</div>
+                <div class="flow-card" data-i18n="workflow.flowModel">模型调用</div>
+              </div>
+            </div>
+            <div class="tabs">
+              <div class="tab-list" role="tablist" aria-label="门户动作" data-i18n-aria-label="workflow.tabsLabel">
+                <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="0">
+                  <span class="tab-dot"></span><span class="tab-label" data-i18n="tabs.task">任务</span>
+                </button>
+                <button class="tab" type="button" role="tab" aria-selected="false" data-tab="1">
+                  <span class="tab-dot"></span><span class="tab-label" data-i18n="tabs.data">数据</span>
+                </button>
+                <button class="tab" type="button" role="tab" aria-selected="false" data-tab="2">
+                  <span class="tab-dot"></span><span class="tab-label" data-i18n="tabs.team">团队</span>
+                </button>
+              </div>
+              <div class="tab-panels">
+                <article class="tab-panel active">
+                  <h3 data-i18n="tabs.taskTitle">预留任务入口</h3>
+                  <p data-i18n="tabs.taskBody">放置创建任务、查看运行状态、处理确认请求等核心动作。</p>
+                </article>
+                <article class="tab-panel">
+                  <h3 data-i18n="tabs.dataTitle">预留数据入口</h3>
+                  <p data-i18n="tabs.dataBody">放置知识库、文件、数据连接和检索结果的入口。</p>
+                </article>
+                <article class="tab-panel">
+                  <h3 data-i18n="tabs.teamTitle">预留团队入口</h3>
+                  <p data-i18n="tabs.teamBody">放置成员、权限、协作空间和审计记录等团队能力。</p>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section resources-section" id="resources">
+          <div class="section-head center">
+            <span class="eyebrow">More</span>
+            <h2 data-i18n="resources.title">后续扩展模块，保持同一套视觉语言。</h2>
+            <p data-i18n="resources.body">下面的卡片用于承接资源、文档、案例和集成能力。</p>
+          </div>
+          <ul class="gallery-grid">
+            <li class="gallery-card">
+              <div class="gallery-visual visual-a"></div>
+              <h3 data-i18n="resources.centerTitle">资源中心</h3>
+              <p data-i18n="resources.centerBody">预留模板、提示词、文件和教程入口。</p>
+            </li>
+            <li class="gallery-card">
+              <div class="gallery-visual visual-b"></div>
+              <h3 data-i18n="resources.integrationsTitle">集成广场</h3>
+              <p data-i18n="resources.integrationsBody">预留模型、插件、API 和第三方工具入口。</p>
+            </li>
+            <li class="gallery-card">
+              <div class="gallery-visual visual-c"></div>
+              <h3 data-i18n="resources.historyTitle">使用记录</h3>
+              <p data-i18n="resources.historyBody">预留调用历史、任务日志和团队审计入口。</p>
+            </li>
+          </ul>
+        </section>
+
+        <section class="section faq-section" id="faq">
+          <div class="section-head center">
+            <span class="eyebrow">FAQ</span>
+            <h2 data-i18n="faq.title">常见问题预留区。</h2>
+          </div>
+          <div class="faq">
+            <article class="faq-item" data-open="false">
+              <button type="button" class="faq-q" aria-expanded="false">
+                <span data-i18n="faq.brandQ">这个门户可以替换成我的真实品牌吗？</span>
+                <span class="plus" aria-hidden="true"></span>
+              </button>
+              <div class="faq-a" data-i18n="faq.brandA">可以。当前所有品牌、文案和演示画面都是占位内容，后续可以替换为你的产品信息。</div>
+            </article>
+            <article class="faq-item" data-open="false">
+              <button type="button" class="faq-q" aria-expanded="false">
+                <span data-i18n="faq.demoQ">首屏演示位应该放什么？</span>
+                <span class="plus" aria-hidden="true"></span>
+              </button>
+              <div class="faq-a" data-i18n="faq.demoA">建议放真实产品截图、短视频或关键交互录屏，这个区域已经按宽屏演示比例预留。</div>
+            </article>
+            <article class="faq-item" data-open="false">
+              <button type="button" class="faq-q" aria-expanded="false">
+                <span data-i18n="faq.mobileQ">移动端是否可用？</span>
+                <span class="plus" aria-hidden="true"></span>
+              </button>
+              <div class="faq-a" data-i18n="faq.mobileA">可用。导航会切换为抽屉，标题、按钮、标签和演示区域会按手机宽度重新排布。</div>
+            </article>
+            <article class="faq-item" data-open="false">
+              <button type="button" class="faq-q" aria-expanded="false">
+                <span data-i18n="faq.routeQ">后续能接入实际业务页面吗？</span>
+                <span class="plus" aria-hidden="true"></span>
+              </button>
+              <div class="faq-a" data-i18n="faq.routeA">可以。现在是静态首页，按钮和导航 href 都预留了接入产品路由的位置。</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="cta-band" id="contact">
+          <div class="cta-card">
+            <h2 data-i18n="finalCta.title">把这里替换成你的主转化口号。</h2>
+            <p data-i18n="finalCta.body">预留价格、试用、预约演示或联系销售的行动入口。</p>
+            <a class="btn btn-glass" href="#" data-i18n="finalCta.button">预留 CTA</a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-card">
+          <div class="footer-top">
+            <aside>
+              <p data-i18n="footer.note">这里预留创始人说明、产品愿景或品牌介绍。文字建议保持短、真诚、克制。</p>
+              <span>ErxinAI · AI Portal</span>
+            </aside>
+            <div class="footer-grid">
+              <div>
+                <h4 data-i18n="footer.product">产品</h4>
+                <a href="#features" data-i18n="nav.features">能力</a>
+                <a href="#workflow" data-i18n="nav.workflow">工作流</a>
+                <a href="#contact" data-i18n="footer.experience">体验</a>
+              </div>
+              <div>
+                <h4 data-i18n="nav.resources">资源</h4>
+                <a href="#resources" data-i18n="resources.centerTitle">资源中心</a>
+                <a href="#faq">FAQ</a>
+                <a href="#" data-i18n="footer.docs">文档预留</a>
+              </div>
+              <div>
+                <h4 data-i18n="footer.support">支持</h4>
+                <a href="#" data-i18n="footer.contact">联系预留</a>
+                <a href="#" data-i18n="footer.status">状态预留</a>
+              </div>
+            </div>
+          </div>
+          <strong class="footer-wordmark" aria-hidden="true">ErxinAI</strong>
+          <div class="footer-base">
+            <span>© ErxinAI</span>
+            <span data-i18n="footer.template">AI website portal template</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>
