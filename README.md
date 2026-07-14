@@ -1,123 +1,125 @@
-# Erxin AI 中转服务首页
+# Erxin AI Relay Service Portal
 
-Erxin AI 的官方网站首页与用户服务门户，用于展示 AI 中转服务、承接用户注册与套餐购买，并为用户提供充值、订单和 API 接入管理能力。
+[简体中文](./README.zh-CN.md)
 
-本仓库是面向用户的 Web 前端。模型请求转发、渠道调度、额度扣减、密钥校验和计费等中转核心能力由后端服务提供，不包含在本工程中。
+Erxin AI's official website and customer portal. It introduces the AI relay service, guides users through registration and plan purchases, and provides recharge, order, and API access management.
 
-## 项目定位
+This repository contains the customer-facing web frontend. Core relay capabilities such as model request forwarding, provider routing, quota deduction, credential validation, and billing are implemented by backend services and are not included here.
 
-站点以 AI 中转服务为核心，主要承担以下职责：
+## Project Purpose
 
-- 作为 Erxin AI 的网站首页，展示服务能力、套餐、公告和使用入口
-- 引导用户注册、登录、购买或充值 AI 中转服务
-- 提供商品套餐、订单、支付和自动交付流程
-- 提供钱包余额、充值记录和礼品卡管理
-- 提供用户 API 凭证申请、生成、启停和重新生成能力
-- 提供 CDK 充值、卡密查询等配套工具
-- 提供博客、公告、服务条款和隐私政策页面
-- 支持简体中文、繁体中文和英文界面
+The site is centered on the Erxin AI relay service and provides the following capabilities:
 
-## 主要页面
+- An official homepage for presenting service capabilities, plans, announcements, and access points
+- User registration, sign-in, purchase, and recharge flows for the AI relay service
+- Service plan browsing, orders, payments, and automated fulfillment
+- Wallet balance, recharge history, and gift card management
+- API credential application, generation, enablement, disabling, and regeneration
+- CDK redemption and card lookup tools
+- Blog posts, announcements, terms of service, and privacy policy pages
+- Simplified Chinese, Traditional Chinese, and English interfaces
 
-- 首页：展示 AI 中转服务、推荐套餐和最新公告
-- 套餐页面：浏览中转服务套餐并完成购买
-- 用户中心：管理资料、安全设置、订单、钱包和 API 凭证
-- 支付页面：处理订单支付、钱包组合支付和支付结果确认
-- CDK 工具：完成卡密充值和批量查询
-- 内容页面：展示公告、博客、关于我们和法律条款
+## Main Pages
 
-## 技术栈
+- Homepage: presents the AI relay service, recommended plans, and recent announcements
+- Plans: lets users browse and purchase relay service plans
+- Account center: manages profiles, security, orders, wallets, and API credentials
+- Payment: handles order payments, wallet combination payments, and payment confirmation
+- CDK tools: supports card redemption and batch card lookup
+- Content: displays announcements, blog posts, company information, and legal documents
 
-- Vue 3、TypeScript、Vue Router
-- Vite、Tailwind CSS
-- Pinia、Vue I18n、Unhead
-- DOMPurify、QRCode
+## Technology Stack
 
-## 本地开发
+- Vue 3, TypeScript, and Vue Router
+- Vite and Tailwind CSS
+- Pinia, Vue I18n, and Unhead
+- DOMPurify and QRCode
 
-建议使用 Node.js 20 或更高版本。
+## Local Development
+
+Node.js 20 or later is recommended.
 
 ```bash
 npm install
 npm run dev
 ```
 
-开发服务器默认监听 `0.0.0.0:5173`，并将以下路径代理到本机 `8080` 端口的后端服务：
+The development server listens on `0.0.0.0:5173` by default and proxies the following paths to the backend service on local port `8080`:
 
 - `/api`
 - `/uploads`
 - `/sitemap.xml`
 - `/robots.txt`
 
-## 环境变量
+## Environment Variables
 
-生产环境通过 `VITE_API_BASE_URL` 指定业务后端：
+Set `VITE_API_BASE_URL` to the business backend URL in production:
 
 ```dotenv
 VITE_API_BASE_URL=https://api.example.com
 ```
 
-配置要求：
+Requirements:
 
-- 不要在地址末尾添加 `/`
-- 不要添加 `/api/v1`，请求客户端会自动拼接接口前缀
-- 后端需要允许站点域名进行跨域访问
-- 留空时使用当前站点的同源接口
+- Do not append a trailing `/`
+- Do not append `/api/v1`; the request client adds the API prefix automatically
+- The backend must allow cross-origin requests from the website domain
+- Leave it empty when the API is served from the same origin
 
-CDK 相关页面使用同源 `/cdk-api` 路径。生产部署时需要通过反向代理或 Cloudflare Worker 将该路径转发到对应后端。
+CDK pages use the same-origin `/cdk-api` path. In production, route this path to the corresponding backend through a reverse proxy or Cloudflare Worker.
 
-## 可用命令
+## Available Commands
 
 ```bash
-npm run dev      # 启动开发服务器
-npm run build    # 类型检查并生成生产文件
-npm run preview  # 预览生产构建
+npm run dev      # Start the development server
+npm run build    # Type-check and generate the production build
+npm run preview  # Preview the production build
 ```
 
-## 目录结构
+## Project Structure
 
 ```text
 src/
-├── api/          # 业务后端请求与数据类型
-├── components/   # 通用组件和业务组件
-├── composables/  # 首页、商品和页面复用逻辑
-├── router/       # 站内页面路由
-├── stores/       # 用户、购物车和全局状态
-├── utils/        # 导航、内容、金额等工具
-└── views/        # 首页与业务页面
+├── api/          # Backend requests and data types
+├── components/   # Shared and business components
+├── composables/  # Reusable homepage, product, and page logic
+├── router/       # Internal page routes
+├── stores/       # User, cart, and global state
+├── utils/        # Navigation, content, currency, and other utilities
+└── views/        # Homepage and business pages
 ```
 
-## Cloudflare Pages 部署
+## Cloudflare Pages Deployment
 
-连接 Git 仓库后使用以下构建配置：
+Use the following build settings after connecting the Git repository:
 
 ```text
-生产分支：main
-框架预设：Vue
-构建命令：npm run build
-构建输出目录：dist
-根目录：留空
+Production branch: main
+Framework preset: Vue
+Build command: npm run build
+Build output directory: dist
+Root directory: leave empty
 ```
 
-建议配置以下构建环境变量：
+Recommended build environment variables:
 
 ```text
 NODE_VERSION=22.16.0
 VITE_API_BASE_URL=https://api.example.com
 ```
 
-Cloudflare Pages 只负责托管本工程生成的静态前端文件。部署前还需要确认：
+Cloudflare Pages only hosts the static frontend generated by this project. Before deployment, verify that:
 
-- AI 中转后端已经部署并可以通过公网访问
-- 后端跨域配置已包含 Pages 域名和正式自定义域名
-- `/cdk-api` 已配置反向代理
-- `/sitemap.xml` 和 `/robots.txt` 已提供静态文件或代理规则
-- Turnstile 等第三方服务已添加正式站点域名
+- The AI relay backend is deployed and publicly accessible
+- Backend CORS settings include the Pages domain and the production custom domain
+- `/cdk-api` has a reverse proxy route
+- `/sitemap.xml` and `/robots.txt` are provided as static files or through proxy rules
+- Production domains are registered with Turnstile and other third-party services
 
-## Docker 部署
+## Docker Deployment
 
-仓库提供多阶段构建的 `Dockerfile` 和适配 Vue Router history 模式的 `nginx.conf`。容器运行后由 Nginx 提供静态文件，并暴露 `/health` 健康检查端点。
+The repository includes a multi-stage `Dockerfile` and an `nginx.conf` configured for Vue Router history mode. Nginx serves the static files and exposes a `/health` endpoint when the container is running.
 
-## 导航约束
+## Navigation Policy
 
-普通站点导航只接受以 `/` 开头的站内路径。后台配置的外部导航、页脚链接和横幅链接不会生成可跳转入口；富文本中的外部超链接也不会保持可点击状态。支付网关和第三方登录属于独立业务流程，不作为站点导航使用。
+Standard site navigation only accepts internal paths beginning with `/`. External navigation items, footer links, and banner links returned by backend configuration are not rendered as navigable entries. External links in rich text are also made non-clickable. Payment providers and third-party authentication remain separate business flows and are not treated as site navigation.
