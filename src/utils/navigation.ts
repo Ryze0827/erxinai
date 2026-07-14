@@ -1,4 +1,4 @@
-export const isInternalRoute = (value: unknown): value is string => {
+export const isInternalRoute = (value: unknown): boolean => {
   const path = typeof value === 'string' ? value.trim() : ''
   return path.startsWith('/') && !path.startsWith('//')
 }

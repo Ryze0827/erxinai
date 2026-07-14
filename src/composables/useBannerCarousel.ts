@@ -105,7 +105,8 @@ export function useBannerCarousel() {
   const heroLink = computed(() => {
     const banner = heroBanner.value
     if (!banner || banner.link_type === 'none' || banner.link_type === 'external') return ''
-    return isInternalRoute(banner.link_value) ? banner.link_value.trim() : ''
+    const link = typeof banner.link_value === 'string' ? banner.link_value.trim() : ''
+    return isInternalRoute(link) ? link : ''
   })
 
   const hasHeroLink = computed(() => heroLink.value.trim().length > 0)

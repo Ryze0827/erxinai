@@ -380,7 +380,10 @@ const handleCaptchaConfigStale = async () => {
 }
 
 const redirectAfterLogin = () => {
-  const redirect = isInternalRoute(route.query.redirect) ? route.query.redirect : '/me/orders'
+  const routeRedirect = route.query.redirect
+  const redirect = typeof routeRedirect === 'string' && isInternalRoute(routeRedirect)
+    ? routeRedirect
+    : '/me/orders'
   return router.push(redirect)
 }
 
