@@ -449,6 +449,7 @@ import { copyText } from '../utils/clipboard'
 import { amountToCents, centsToAmount } from '../utils/money'
 import { buildSkuDisplayTextFromSnapshot } from '../utils/sku'
 import { getImageUrl } from '../utils/image'
+import { removeExternalLinksFromHtml } from '../utils/navigation'
 
 const route = useRoute()
 const router = useRouter()
@@ -591,13 +592,13 @@ const getLocalizedText = (jsonData: any) => {
   return jsonData[locale] || jsonData['zh-CN'] || jsonData['en-US'] || ''
 }
 
-const sanitizeInstructionsHtml = (raw: string) => DOMPurify.sanitize(raw, {
+const sanitizeInstructionsHtml = (raw: string) => removeExternalLinksFromHtml(DOMPurify.sanitize(raw, {
   ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'code', 'pre', 'blockquote', 'ul', 'ol', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div', 'img', 'hr'],
   ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title'],
   FORBID_ATTR: ['style', 'class', 'id'],
   ALLOW_DATA_ATTR: false,
   ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|tel:|#|\/(?!\/))/i,
-})
+}))
 
 const instructionBlocks = (items: any): Array<{ title: string; html: string }> => {
   if (!Array.isArray(items)) return []

@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { bannerAPI } from '../api'
 import { getImageUrl } from '../utils/image'
+import { isInternalRoute } from '../utils/navigation'
 import { useLocalized } from './useProduct'
 
 export function useBannerCarousel() {
@@ -103,31 +104,20 @@ export function useBannerCarousel() {
 
   const heroLink = computed(() => {
     const banner = heroBanner.value
-    if (!banner || banner.link_type === 'none') return ''
-    return banner.link_value || ''
+    if (!banner || banner.link_type === 'none' || banner.link_type === 'external') return ''
+    return isInternalRoute(banner.link_value) ? banner.link_value.trim() : ''
   })
 
   const hasHeroLink = computed(() => heroLink.value.trim().length > 0)
 
   const heroPrimaryButtonText = computed(() => {
     if (!hasHeroLink.value) return t('home.hero.cta')
-    const linkType = String(heroBanner.value?.link_type || '').toLowerCase()
-    if (linkType === 'external') {
-      return t('common.learnMore')
-    }
     return t('common.viewDetails')
   })
-
-  const heroOpenInNewTab = computed(() => Boolean(heroBanner.value?.open_in_new_tab))
 
   const goToHeroLink = () => {
     if (!heroLink.value) {
       router.push('/products')
-      return
-    }
-    const isExternal = /^https?:\/\//i.test(heroLink.value)
-    if (isExternal || heroOpenInNewTab.value) {
-      window.open(heroLink.value, heroOpenInNewTab.value ? '_blank' : '_self')
       return
     }
     router.push(heroLink.value)
@@ -164,7 +154,6 @@ export function useBannerCarousel() {
     heroLink,
     hasHeroLink,
     heroPrimaryButtonText,
-    heroOpenInNewTab,
     loadBanners,
     handleNextHeroBanner,
     handlePrevHeroBanner,

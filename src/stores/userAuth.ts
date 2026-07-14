@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { userAuthAPI } from '../api'
+import { isInternalRoute } from '../utils/navigation'
 
 export const useUserAuthStore = defineStore('user-auth', () => {
     const router = useRouter()
@@ -164,7 +165,7 @@ export const useUserAuthStore = defineStore('user-auth', () => {
 
     const logout = (redirect = '/auth/login') => {
         clearAuth()
-        router.push(redirect)
+        router.push(isInternalRoute(redirect) ? redirect : '/auth/login')
     }
 
     return {

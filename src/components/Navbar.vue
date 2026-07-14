@@ -12,7 +12,7 @@
       <!-- Desktop Menu -->
       <div v-if="menuItems.length" class="hidden lg:flex items-center space-x-1 min-w-0 overflow-x-auto scrollbar-hide">
         <template v-for="item in menuItems" :key="item.key">
-          <router-link v-if="item.type === 'route'" :to="item.path"
+          <router-link :to="item.path"
             class="theme-nav-link text-sm relative group overflow-hidden flex items-center gap-1.5 whitespace-nowrap shrink-0"
             active-class="theme-nav-link-active">
             <svg class="w-4 h-4 shrink-0 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,13 +20,6 @@
             </svg>
             <span class="relative z-10">{{ item.label.startsWith('nav.') ? t(item.label) : item.label }}</span>
           </router-link>
-          <a v-else :href="item.path" :target="item.target" rel="noopener noreferrer"
-            class="theme-nav-link text-sm relative group overflow-hidden flex items-center gap-1.5 whitespace-nowrap shrink-0">
-            <svg class="w-4 h-4 shrink-0 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" :d="item.icon" />
-            </svg>
-            <span class="relative z-10">{{ item.label }}</span>
-          </a>
         </template>
       </div>
 
@@ -177,7 +170,7 @@
 
           <!-- Navigation items not in bottom nav -->
           <template v-for="item in mobileDrawerItems" :key="item.key">
-            <router-link v-if="item.type === 'route'" :to="item.path" @click="showMobileMenu = false"
+            <router-link :to="item.path" @click="showMobileMenu = false"
               class="block w-full text-left px-4 py-3 rounded-xl theme-nav-link text-sm min-h-[44px] flex items-center gap-3"
               active-class="theme-nav-link-active">
               <svg class="w-5 h-5 shrink-0 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,13 +178,6 @@
               </svg>
               {{ item.label.startsWith('nav.') ? t(item.label) : item.label }}
             </router-link>
-            <a v-else :href="item.path" :target="item.target" rel="noopener noreferrer" @click="showMobileMenu = false"
-              class="block w-full text-left px-4 py-3 rounded-xl theme-nav-link text-sm min-h-[44px] flex items-center gap-3">
-              <svg class="w-5 h-5 shrink-0 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" :d="item.icon" />
-              </svg>
-              {{ item.label }}
-            </a>
           </template>
 
           <!-- Guest orders (not in bottom nav) -->
@@ -274,6 +260,7 @@ import { useAppStore } from '../stores/app'
 import { useCartStore } from '../stores/cart'
 import { useUserAuthStore } from '../stores/userAuth'
 import { useTheme } from '../utils/theme'
+import { isInternalRoute } from '../utils/navigation'
 
 const { t, locale } = useI18n()
 const appStore = useAppStore()
@@ -304,8 +291,6 @@ interface NavItem {
   path: string
   label: string
   icon: string
-  type: 'route' | 'link'
-  target: string
 }
 
 const navConfig = computed(() => appStore.config?.nav_config as {
@@ -344,7 +329,7 @@ const buildCustomNavItems = (): NavItem[] => {
   const items = navConfig.value?.custom_items
   if (!Array.isArray(items)) return []
   return items
-    .filter((item) => item.enabled)
+    .filter((item) => item.enabled && item.link_type !== 'external' && isInternalRoute(item.url))
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
     .map((item) => {
       const icon = (presetIcons[item.icon as string] || defaultIcon) as string
@@ -353,8 +338,6 @@ const buildCustomNavItems = (): NavItem[] => {
         path: item.url || '',
         label: getCustomItemTitle(item),
         icon,
-        type: item.link_type === 'external' ? 'link' as const : 'route' as const,
-        target: item.target || '_self',
       }
     })
     .filter((item) => item.label && item.path)
@@ -366,7 +349,7 @@ const buildBuiltinNavItemsByKeys = (keys: string[]): NavItem[] => {
     .filter((key) => !builtin || builtin[key] !== false)
     .map((key) => {
       const def = builtinNavDefs[key]!
-      return { key, path: def.path, label: def.label, icon: def.icon, type: 'route' as const, target: '_self' }
+      return { key, path: def.path, label: def.label, icon: def.icon }
     })
     .filter((item) => item.path)
 }
@@ -399,7 +382,7 @@ const cartCount = computed(() => cartStore.totalItems)
 
 const brandSiteName = computed(() => {
   const text = String(appStore.config?.brand?.site_name || '').trim()
-  return text !== '' ? text : 'Dujiao-Next'
+  return text !== '' ? text : 'Erxin AI'
 })
 
 const toggleMobileMenu = () => {

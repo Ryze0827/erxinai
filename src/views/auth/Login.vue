@@ -293,6 +293,7 @@ import { debounceAsync } from '../../utils/debounce'
 import { useAppStore } from '../../stores/app'
 import { useTelegramMiniAppStore } from '../../stores/telegramMiniApp'
 import { buildTelegramMiniAppEntryLink, isTelegramUrlEnvironment, openTelegramCompatibleLink } from '../../utils/telegramMiniApp'
+import { isInternalRoute } from '../../utils/navigation'
 import type { CaptchaPayload, TelegramAuthPayload } from '../../api'
 import ImageCaptcha from '../../components/captcha/ImageCaptcha.vue'
 import TurnstileCaptcha from '../../components/captcha/TurnstileCaptcha.vue'
@@ -308,7 +309,7 @@ const { t } = useI18n()
 
 const brandSiteName = computed(() => {
   const siteName = String(appStore.config?.brand?.site_name || '').trim()
-  return siteName !== '' ? siteName : 'Dujiao-Next'
+  return siteName !== '' ? siteName : 'Erxin AI'
 })
 
 const email = ref('')
@@ -379,7 +380,7 @@ const handleCaptchaConfigStale = async () => {
 }
 
 const redirectAfterLogin = () => {
-  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/me/orders'
+  const redirect = isInternalRoute(route.query.redirect) ? route.query.redirect : '/me/orders'
   return router.push(redirect)
 }
 

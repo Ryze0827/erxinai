@@ -89,7 +89,7 @@ const appStore = useAppStore()
 
 const brandSiteName = computed(() => {
   const siteName = String(appStore.config?.brand?.site_name || '').trim()
-  return siteName !== '' ? siteName : 'Dujiao-Next'
+  return siteName !== '' ? siteName : 'Erxin AI'
 })
 
 const goBack = () => {
