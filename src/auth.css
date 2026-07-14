@@ -669,8 +669,14 @@
 
 .auth-turnstile {
   display: grid;
+  width: 100%;
   min-height: 65px;
   place-items: center;
+}
+
+.auth-turnstile > div,
+.auth-turnstile iframe {
+  width: 100% !important;
 }
 
 .auth-divider {

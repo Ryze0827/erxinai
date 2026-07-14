@@ -10,3 +10,5 @@ When implementing from a selected generated mock, treat that image as the source
 
 - Authentication success returns to the homepage instead of a standalone success screen.
 - The authenticated homepage navigation shows the user's initial and a Dashboard entry; regular users go to `/dashboard`, while administrators go to `/admin/dashboard`.
+- Turnstile verification fills the available authentication form width and remains responsive on narrow screens.
+- The homepage `Start building` action uses the same Dashboard destination when the user is authenticated and otherwise opens registration.

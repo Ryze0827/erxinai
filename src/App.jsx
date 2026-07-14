@@ -105,6 +105,9 @@ function syncLandingAuth(root) {
     if (label) label.textContent = authenticated ? "Dashboard" : "Log in";
     if (initial) initial.textContent = getUserInitial(user);
   });
+  root.querySelectorAll("[data-auth-dashboard]").forEach((link) => {
+    link.href = authenticated ? getDashboardPath(user) : "/register";
+  });
   root.querySelectorAll("[data-auth-register]").forEach((link) => {
     link.hidden = authenticated;
   });
