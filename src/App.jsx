@@ -1,6 +1,14 @@
 import { useEffect } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 import landingPageMarkup from "./landing-page.html?raw";
-import { AuthPage } from "./AuthPage";
+import { AUTH_SESSION_EVENT, getAccessToken, getStoredUser } from "./api/session";
+import { EmailVerifyPage } from "./auth/EmailVerifyPage";
+import { ForgotPasswordPage, ResetPasswordPage } from "./auth/PasswordPages";
+import { LoginPage } from "./auth/LoginPage";
+import { OAuthCallbackPage } from "./auth/OAuthCallbackPage";
+import { RegisterPage } from "./auth/RegisterPage";
+import { SuccessPage } from "./auth/SuccessPage";
+import { SessionManager } from "./auth/SessionManager";
 import { mountGatewayDemos } from "./gatewayDemos";
 
 function setNavigationState({ header, drawer, toggle }, open) {
@@ -76,17 +84,41 @@ function observeGatewayDemos(root) {
   return observer;
 }
 
-function getAuthMode() {
-  if (window.location.pathname === "/login") return "login";
-  if (window.location.pathname === "/register") return "register";
-  return "";
+function getDashboardPath(user) {
+  if (import.meta.env.VITE_DASHBOARD_URL) return import.meta.env.VITE_DASHBOARD_URL;
+  return user?.role === "admin" ? "/admin/dashboard" : "/dashboard";
 }
 
-export function App() {
-  const authMode = getAuthMode();
+function getUserInitial(user) {
+  const source = user?.username || user?.email || "U";
+  return source.trim().charAt(0).toUpperCase() || "U";
+}
 
+function syncLandingAuth(root) {
+  const user = getStoredUser();
+  const authenticated = Boolean(getAccessToken() && user);
+  root.querySelectorAll("[data-auth-link]").forEach((link) => {
+    link.href = authenticated ? getDashboardPath(user) : "/login";
+    link.dataset.authenticated = String(authenticated);
+    const label = link.querySelector("[data-auth-label]");
+    const initial = link.querySelector("[data-auth-initial]");
+    if (label) label.textContent = authenticated ? "Dashboard" : "Log in";
+    if (initial) initial.textContent = getUserInitial(user);
+  });
+  root.querySelectorAll("[data-auth-register]").forEach((link) => {
+    link.hidden = authenticated;
+  });
+}
+
+function mountLandingAuth(root, signal) {
+  const sync = () => syncLandingAuth(root);
+  sync();
+  window.addEventListener(AUTH_SESSION_EVENT, sync, { signal });
+  window.addEventListener("storage", sync, { signal });
+}
+
+function LandingPage() {
   useEffect(() => {
-    if (authMode) return undefined;
     const root = document.querySelector(".app-shell");
     if (!root) return undefined;
     const controller = new AbortController();
@@ -96,6 +128,7 @@ export function App() {
     const closeNavigation = mountNavigation(root, signal);
     mountPricing(root, signal);
     mountFaq(root, signal);
+    mountLandingAuth(root, signal);
     const observer = observeGatewayDemos(root);
     document.documentElement.classList.add("reveal-on");
 
@@ -105,8 +138,32 @@ export function App() {
       closeNavigation();
       document.documentElement.classList.remove("reveal-on");
     };
-  }, [authMode]);
+  }, []);
 
-  if (authMode) return <AuthPage initialMode={authMode} />;
   return <div dangerouslySetInnerHTML={{ __html: landingPageMarkup }} />;
+}
+
+export function App() {
+  return (
+    <>
+      <SessionManager />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/email-verify" element={<EmailVerifyPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/auth/success" element={<SuccessPage />} />
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
+        <Route path="/auth/oauth/callback" element={<OAuthCallbackPage />} />
+        <Route path="/auth/linuxdo/callback" element={<OAuthCallbackPage provider="linuxdo" />} />
+        <Route path="/auth/wechat/callback" element={<OAuthCallbackPage provider="wechat" />} />
+        <Route path="/auth/dingtalk/callback" element={<OAuthCallbackPage provider="dingtalk" />} />
+        <Route path="/auth/dingtalk/email-completion" element={<OAuthCallbackPage provider="dingtalk" initialPhase="create" />} />
+        <Route path="/auth/oidc/callback" element={<OAuthCallbackPage provider="oidc" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  );
 }

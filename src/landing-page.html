@@ -21,7 +21,7 @@
         <a href="#faq">FAQ</a>
       </nav>
       <div class="nav-right">
-        <a class="btn btn-account btn-sm" href="/login"><span class="btn-content">Log in</span></a>
+        <a class="btn btn-account btn-sm" data-auth-link data-authenticated="false" href="/login"><span class="btn-content"><span class="nav-account-avatar" data-auth-initial aria-hidden="true">U</span><span data-auth-label>Log in</span></span></a>
         <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-drawer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="4" y1="7" x2="20" y2="7"></line>
@@ -35,8 +35,8 @@
       <a href="#features">Features</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
-      <a class="btn btn-account" href="/login"><span class="btn-content">Log in</span></a>
-      <a class="btn btn-primary" href="/register">Create account</a>
+      <a class="btn btn-account" data-auth-link data-authenticated="false" href="/login"><span class="btn-content"><span class="nav-account-avatar" data-auth-initial aria-hidden="true">U</span><span data-auth-label>Log in</span></span></a>
+      <a class="btn btn-primary" data-auth-register href="/register">Create account</a>
     </div>
   </header>
 

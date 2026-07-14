@@ -4,7 +4,7 @@
 
 Sentence AI is a responsive website prototype for an AI gateway service. It presents a unified, OpenAI-compatible entry point for multiple model providers, together with request tracing, usage and cost visibility, provider health, and failover concepts.
 
-This repository currently contains the public website and interactive front-end demonstrations only. It does not yet proxy real AI requests or provide a production authentication system.
+This repository contains the public website, interactive gateway demonstrations, and a production-oriented authentication client compatible with the `sub2api` backend. Gateway demonstrations remain front-end-only.
 
 ## Features
 
@@ -14,22 +14,24 @@ This repository currently contains the public website and interactive front-end 
 - Request tracing and latency visualization
 - Token usage and cost monitoring concepts
 - Provider health and automatic failover concepts
-- Login and registration page prototypes
+- Password, email verification, 2FA, password recovery, and OAuth authentication flows
 - Interactive pricing, FAQ, and navigation interfaces
 - Locally bundled fonts and images
 
 ## Current Scope
 
-The project is a static front-end prototype:
+The project combines a static gateway prototype with a real authentication client:
 
-- Login and registration submissions are simulated in the browser.
+- Authentication uses the backend at `/api/v1`, including session refresh and OAuth pending-session cookies.
 - Gateway dashboards display demonstration data and do not call a backend API.
-- No API keys, environment variables, database, or server runtime are required.
+- A compatible backend and its database/provider configuration are required for live authentication.
 
 ## Technology
 
 - React 19
 - Vite 6
+- React Router
+- React Markdown
 - JavaScript and CSS
 
 ## Local Development
@@ -41,7 +43,15 @@ npm install
 npm run dev
 ```
 
-The development server listens on all local interfaces by default. Use the address printed by Vite after startup.
+The development server listens on all local interfaces and proxies `/api` to `http://127.0.0.1:8080` by default.
+
+Optional environment variables:
+
+```bash
+VITE_API_BASE_URL=/api/v1
+VITE_DEV_API_PROXY_TARGET=http://127.0.0.1:8080
+VITE_DASHBOARD_URL=/dashboard
+```
 
 ## Available Scripts
 
@@ -57,8 +67,9 @@ npm run preview  # Preview the production build locally
 .
 ├── index.html                       # Vite HTML entry and page metadata
 ├── src/
-│   ├── App.jsx                      # Main page behavior and route selection
-│   ├── AuthPage.jsx                 # Login and registration prototypes
+│   ├── App.jsx                      # Landing page behavior and application routes
+│   ├── api/                         # API client, authentication endpoints, and token storage
+│   ├── auth/                        # Authentication pages, controls, and OAuth state machine
 │   ├── gatewayDemos.js              # Interactive AI gateway demonstrations
 │   ├── landing-page.html            # Main landing-page markup
 │   └── *.css                        # Page and component styles
@@ -71,8 +82,10 @@ npm run preview  # Preview the production build locally
 | Route | Purpose |
 | --- | --- |
 | `/` | Main Sentence AI gateway landing page |
-| `/login` | Simulated login page |
-| `/register` | Simulated registration page |
+| `/login`, `/register`, `/email-verify` | Password registration and sign-in flows |
+| `/forgot-password`, `/reset-password` | Password recovery |
+| `/auth/success` | Unified authentication result page |
+| `/auth/*/callback` | OAuth callbacks and account-completion flows |
 
 Client-side route selection is handled by the React application. Cloudflare Pages can serve these routes through its default single-page application fallback because the build does not include a top-level `404.html` file.
 
@@ -88,11 +101,10 @@ Use the following build settings:
 | Build output directory | `dist` |
 | Root directory | Leave empty |
 
-No environment variables are required for the current prototype.
+Production should keep `/api/v1` on the same origin. Configure the backend `server.frontend_url`, every enabled OAuth callback/frontend redirect, and SPA fallback for all authentication routes.
 
 ## Before Production
 
-- Connect login and registration to real backend services.
 - Connect the gateway views to production request, usage, billing, and provider-health data.
 - Confirm final pricing and FAQ content, then add Sentence AI legal and contact pages when available.
 - Add social preview metadata and verify the production domain.
