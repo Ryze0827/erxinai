@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { groupsApi, keysApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
+import { GroupBadge } from "../GroupBadge";
+import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 import { Button, ConfirmDialog, CopyButton, DataTable, EmptyState, ErrorState, Field, IconButton, LineChart, Modal, Page, Pagination, Panel, ProgressBar, SelectInput, Spinner, StatusBadge, TextArea, TextInput, Toggle } from "../UI";
 import { maskKey, statusLabel } from "../utils";
@@ -50,6 +52,28 @@ function QuotaCell({ row, formatCurrency, t }) {
   return <div className="console-table-progress"><span>{formatCurrency(row.quota_used)} / {formatCurrency(row.quota)}</span><ProgressBar value={percent} tone={percent >= 90 ? "danger" : "primary"} /></div>;
 }
 
+function endpointItems(settings, defaultLabel) {
+  const primary = String(settings?.api_base_url || window.location.origin).replace(/\/+$/, "");
+  const custom = (settings?.custom_endpoints || []).filter((item) => item.endpoint).map((item, index) => ({
+    name: item.name || `Endpoint ${index + 2}`,
+    endpoint: String(item.endpoint).replace(/\/+$/, ""),
+    description: item.description || "",
+  }));
+  const unique = new Map([[primary, { name: defaultLabel, endpoint: primary, description: "", primary: true }]]);
+  custom.forEach((item) => { if (!unique.has(item.endpoint)) unique.set(item.endpoint, item); });
+  return [...unique.values()];
+}
+
+function modelsUrl(endpoint) {
+  return /\/v1$/i.test(endpoint) ? `${endpoint}/models` : `${endpoint}/v1/models`;
+}
+
+function EndpointList({ settings }) {
+  const { t } = useLocale();
+  const items = endpointItems(settings, t("keys.endpoints"));
+  return <div className="console-endpoints"><div className="console-endpoints-intro"><span><Icon name="link" size={18} /></span><div><strong>{t("keys.endpoints")}</strong><small>{t("keys.endpointHint")}</small></div></div><div className="console-endpoint-list">{items.map((item) => <div className="console-endpoint" key={item.endpoint} title={item.description || item.endpoint}><div><strong>{item.name}</strong>{item.primary && <span>{t("keys.endpointDefault")}</span>}</div><code>{item.endpoint}</code><CopyButton value={item.endpoint} /><a href={`https://www.tcptest.cn/http/${encodeURIComponent(item.endpoint)}`} target="_blank" rel="noreferrer" title={t("keys.endpointSpeed")} aria-label={t("keys.endpointSpeed")}><Icon name="pulse" size={15} /></a></div>)}</div></div>;
+}
+
 function KeyForm({ form, setForm, groups, editing }) {
   const { t, locale } = useLocale();
   const set = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
@@ -81,7 +105,7 @@ function UsageDetail({ apiKey }) {
 
 export function KeysPage() {
   const { t, locale, formatCurrency, formatDate } = useLocale();
-  const { notify } = useConsole();
+  const { notify, settings } = useConsole();
   const [query, setQuery] = useState({ search: "", status: "", group_id: "" });
   const [paging, setPaging] = useState({ page: 1, pageSize: 20 });
   const [result, setResult] = useState({ items: [], total: 0, pages: 1 });
@@ -142,16 +166,20 @@ export function KeysPage() {
   const columns = [
     { key: "name", label: t("common.name"), render: (row) => <div className="console-key-name"><strong>{row.name}</strong><small>{row.group?.platform || "—"}</small></div> },
     { key: "key", label: t("keys.key"), render: (row) => <span className="console-code"><span>{maskKey(row.key)}</span><CopyButton value={row.key} /></span> },
-    { key: "group", label: t("keys.group"), render: (row) => <span className="console-chip">{row.group?.name || "—"}</span> },
+    { key: "group", label: t("keys.group"), render: (row) => <GroupBadge name={row.group?.name} platform={row.group?.platform} /> },
     { key: "quota", label: t("keys.quota"), render: (row) => <QuotaCell row={row} formatCurrency={formatCurrency} t={t} /> },
     { key: "expires_at", label: t("keys.expires"), render: (row) => row.expires_at ? formatDate(row.expires_at) : t("common.never") },
     { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={row.status} label={statusLabel(row.status, locale)} /> },
     { key: "actions", label: t("common.actions"), align: "right", render: (row) => <div className="console-inline-actions"><IconButton icon="eye" label={t("keys.usage")} onClick={() => setModal({ type: "usage", item: row })} /><IconButton icon={row.status === "active" ? "play" : "refresh"} label={t("keys.toggle")} onClick={() => toggle(row)} /><IconButton icon="edit" label={t("common.edit")} onClick={() => openEdit(row)} /><IconButton icon="trash" label={t("common.delete")} onClick={() => setModal({ type: "delete", item: row })} /></div> },
   ];
+  const gatewayEndpoint = endpointItems(settings, t("keys.endpoints"))[0].endpoint;
+  const exampleUrl = modelsUrl(gatewayEndpoint);
+  const exampleCommand = `curl ${exampleUrl} -H "Authorization: Bearer sk-…"`;
 
   return <Page title={t("keys.title")} subtitle={t("keys.subtitle")} actions={<Button variant="primary" icon="plus" onClick={openCreate}>{t("keys.new")}</Button>}>
+    <EndpointList settings={settings} />
     <Panel><div className="console-toolbar"><Field label={t("common.search")} className="is-wide"><TextInput value={query.search} onChange={(event) => { setQuery((current) => ({ ...current, search: event.target.value })); setPaging((current) => ({ ...current, page: 1 })); }} placeholder={locale === "zh" ? "名称或密钥" : "Name or key"} /></Field><Field label={t("common.status")}><SelectInput value={query.status} onChange={(event) => { setQuery((current) => ({ ...current, status: event.target.value })); setPaging((current) => ({ ...current, page: 1 })); }}><option value="">{t("common.all")}</option><option value="active">{t("common.active")}</option><option value="inactive">{t("common.inactive")}</option><option value="quota_exhausted">{locale === "zh" ? "额度已用尽" : "Quota exhausted"}</option><option value="expired">{locale === "zh" ? "已过期" : "Expired"}</option></SelectInput></Field><Field label={t("keys.group")}><SelectInput value={query.group_id} onChange={(event) => { setQuery((current) => ({ ...current, group_id: event.target.value })); setPaging((current) => ({ ...current, page: 1 })); }}><option value="">{t("common.all")}</option>{groups.map((group) => <option value={group.id} key={group.id}>{group.name}</option>)}</SelectInput></Field><Button icon="refresh" onClick={load}>{t("common.refresh")}</Button></div>{state.loading ? <Spinner /> : state.error ? <ErrorState message={state.error} onRetry={load} /> : <><DataTable columns={columns} rows={result.items} empty={<EmptyState icon="key" title={locale === "zh" ? "还没有 API 密钥" : "No API keys yet"} action={<Button variant="primary" icon="plus" onClick={openCreate}>{t("keys.new")}</Button>} />} /><Pagination page={paging.page} pageSize={paging.pageSize} total={result.total} pages={result.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>}</Panel>
-    <Panel title={locale === "zh" ? "快速接入" : "Quick start"}><div className="console-panel-body console-guide"><div><span>1</span><p>{locale === "zh" ? "创建并复制一个 API 密钥。" : "Create and securely copy an API key."}</p></div><div><span>2</span><p>{locale === "zh" ? "将网关地址配置到兼容 OpenAI 的客户端。" : "Point your OpenAI-compatible client at this gateway."}</p></div><pre><code>{`curl ${window.location.origin}/v1/models \\\n  -H "Authorization: Bearer sk-…"`}</code><CopyButton value={`curl ${window.location.origin}/v1/models -H "Authorization: Bearer sk-…"`} /></pre></div></Panel>
+    <Panel title={locale === "zh" ? "快速接入" : "Quick start"}><div className="console-panel-body console-guide"><div><span>1</span><p>{locale === "zh" ? "创建并复制一个 API 密钥。" : "Create and securely copy an API key."}</p></div><div><span>2</span><p>{locale === "zh" ? "将网关地址配置到兼容 OpenAI 的客户端。" : "Point your OpenAI-compatible client at this gateway."}</p></div><pre><code>{`curl ${exampleUrl} \\\n  -H "Authorization: Bearer sk-…"`}</code><CopyButton value={exampleCommand} /></pre></div></Panel>
     <Modal open={modal?.type === "form"} title={modal?.item ? t("common.edit") : t("keys.new")} description={t("keys.subtitle")} onClose={() => setModal(null)} size="large" footer={<><Button onClick={() => setModal(null)} disabled={busy}>{t("common.cancel")}</Button><Button variant="primary" onClick={submit} disabled={busy}>{busy ? t("common.loading") : t("common.save")}</Button></>}><KeyForm form={form} setForm={setForm} groups={groups} editing={Boolean(modal?.item)} /></Modal>
     <Modal open={modal?.type === "usage"} title={`${modal?.item?.name || ""} · ${t("keys.usage")}`} onClose={() => setModal(null)} size="large">{modal?.item && <UsageDetail apiKey={modal.item} />}</Modal>
     <ConfirmDialog open={modal?.type === "delete"} title={t("keys.deleteTitle")} description={t("keys.deleteBody")} busy={busy} onClose={() => setModal(null)} onConfirm={remove} />

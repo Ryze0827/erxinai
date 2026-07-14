@@ -10,9 +10,23 @@ import { safeExternalUrl, safeImageUrl, statusLabel } from "../utils";
 
 const WECHAT_PENDING_KEY = "payment.wechat.pending";
 
-function paymentLabel(type) {
-  const labels = { alipay: "Alipay", wxpay: "WeChat Pay", stripe: "Stripe", easypay: "EasyPay", airwallex: "Airwallex" };
-  return labels[type] || type;
+function paymentLabel(type, locale = "en") {
+  const normalized = type === "alipay_direct" ? "alipay" : type === "wxpay_direct" ? "wxpay" : type;
+  const labels = locale === "zh"
+    ? { alipay: "支付宝", wxpay: "微信支付", stripe: "Stripe", easypay: "易支付", airwallex: "Airwallex" }
+    : { alipay: "Alipay", wxpay: "WeChat Pay", stripe: "Stripe", easypay: "EasyPay", airwallex: "Airwallex" };
+  return labels[normalized] || type;
+}
+
+function PaymentMark({ type, method }) {
+  const normalized = type === "alipay_direct" ? "alipay" : type === "wxpay_direct" ? "wxpay" : type;
+  const customIcon = safeImageUrl(method?.icon_url || method?.icon);
+  if (customIcon) return <span className="console-payment-mark"><img src={customIcon} alt="" /></span>;
+  if (normalized === "alipay") return <span className="console-payment-mark"><svg viewBox="0 0 1024 1024" aria-hidden="true"><path fill="#02A9F1" d="M902 653 651 568s19-29 40-85c20-57 24-88 24-88l-163-1v-56l197-1v-39H552v-89h-96v89H272v39l184-1v59H308v31h303s-3 25-14 57c-12 31-24 59-24 59s-142-50-217-50-166 30-175 118c-9 87 42 134 114 152 73 17 139 0 197-29 58-28 115-93 115-93l293 142c-12 69-72 120-142 120H266c-80 0-144-65-144-144V266c0-80 64-144 144-144h492c80 0 144 64 144 144v387ZM536 604s-91 115-199 115c-107 0-130-55-130-94 0-40 22-82 114-88 91-6 215 67 215 67Z" /></svg></span>;
+  if (normalized === "wxpay") return <span className="console-payment-mark"><svg viewBox="0 0 1024 1024" aria-hidden="true"><path fill="#09BB07" d="M396 604c-4 2-8 3-13 3-11 0-20-6-25-15l-2-4-78-168c-1-2-1-4-1-6 0-8 6-13 14-13 3 0 6 1 9 3l92 64c7 4 15 7 24 7 5 0 10-1 15-3l431-190c-77-90-205-148-349-148-236 0-428 157-428 351 0 106 58 202 148 266 7 5 12 14 12 22 0 3-1 6-2 9l-19 71c-1 3-2 7-2 11 0 8 6 14 14 14 3 0 6-1 8-3l93-54c7-4 15-7 23-7 4 0 9 1 13 2 43 13 91 20 139 20 236 0 427-158 427-352 0-58-18-114-48-163L399 602l-3 2Z" /></svg></span>;
+  if (normalized === "stripe") return <span className="console-payment-mark"><svg viewBox="0 0 1024 1024" aria-hidden="true"><circle cx="512" cy="512" r="448" fill="#676BE5" /><path fill="#fff" d="M472 417c0-21 17-29 45-29 44 0 89 13 133 35V297c-42-17-87-25-133-25-109 0-181 57-181 152 0 148 204 124 204 188 0 25-22 33-52 33-49 0-98-14-146-43v121c47 20 96 30 146 30 112 0 188-48 188-144 0-160-204-132-204-192Z" /></svg></span>;
+  if (normalized === "airwallex") return <span className="console-payment-mark"><svg viewBox="0 0 48 33" aria-hidden="true"><defs><linearGradient id="console-airwallex" x1="0" y1="2" x2="48" y2="30"><stop stopColor="#FF4F42" /><stop offset="1" stopColor="#FF8E3C" /></linearGradient></defs><path fill="url(#console-airwallex)" d="M46.6 12.7a6 6 0 0 1 1.4 6.4l-3.2 8.6a6.9 6.9 0 0 1-5 4.5 6.6 6.6 0 0 1-6.4-2.3L14.4 7.2a.4.4 0 0 0-.7.1L7.5 24a.4.4 0 0 0 .6.5l7.5-3.1a3.3 3.3 0 0 1 4.5 2.1 3.5 3.5 0 0 1-2 4.2l-9.9 4A5.9 5.9 0 0 1 .3 24.2L7.6 4.5A6.8 6.8 0 0 1 19.3 2.4l10.9 13 10-4.1a5.8 5.8 0 0 1 6.4 1.4Zm-5.8 6.5a.4.4 0 0 0-.5-.5l-5.6 2.2 3.4 4a.4.4 0 0 0 .7-.1Z" /></svg></span>;
+  return <span className="console-payment-mark console-payment-mark--generic"><Icon name="card" size={22} /></span>;
 }
 
 function currency(value, code, locale) {
@@ -27,7 +41,7 @@ function methodFits(method, amount) {
 }
 
 function PaymentMethods({ methods, selected, setSelected, amount, amountForMethod, locale }) {
-  return <div className="console-payment-methods">{Object.entries(methods).map(([type, method]) => <button type="button" key={type} className={selected === type ? "is-selected" : ""} disabled={!methodFits(method, amountForMethod ? amountForMethod(method) : amount)} onClick={() => setSelected(type)}><span>{paymentLabel(type).slice(0, 1)}</span><div><strong>{method.display_name || paymentLabel(type)}</strong><small>{Number(method.fee_rate || 0) > 0 ? `${method.fee_rate}% ${locale === "zh" ? "手续费" : "fee"}` : (locale === "zh" ? "无额外手续费" : "No extra fee")}</small></div>{selected === type && <Icon name="check" size={17} />}</button>)}</div>;
+  return <div className="console-payment-methods">{Object.entries(methods).map(([type, method]) => <button type="button" key={type} className={selected === type ? "is-selected" : ""} disabled={!methodFits(method, amountForMethod ? amountForMethod(method) : amount)} onClick={() => setSelected(type)}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{Number(method.fee_rate || 0) > 0 ? `${method.fee_rate}% ${locale === "zh" ? "手续费" : "fee"}` : (locale === "zh" ? "无额外手续费" : "No extra fee")}</small></div>{selected === type && <Icon name="check" size={17} />}</button>)}</div>;
 }
 
 function makeOrderBody({ amount, paymentType, orderType, planId, resumeToken, openid, forceQr }) {
@@ -252,7 +266,7 @@ export function OrdersPage() {
     { key: "out_trade_no", label: t("orders.number"), render: (row) => <span className="console-mono">{row.out_trade_no}</span> },
     { key: "order_type", label: t("orders.type"), render: (row) => <span className="console-chip">{row.order_type}</span> },
     { key: "amount", label: t("orders.amount"), render: (row) => currency(row.pay_amount || row.amount, row.currency, locale), align: "right" },
-    { key: "payment_type", label: t("orders.method"), render: (row) => paymentLabel(row.payment_type) },
+    { key: "payment_type", label: t("orders.method"), render: (row) => paymentLabel(row.payment_type, locale) },
     { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={String(row.status).toLowerCase()} label={statusLabel(String(row.status).toLowerCase(), locale)} /> },
     { key: "created_at", label: t("common.date"), render: (row) => formatDate(row.created_at) },
     { key: "actions", label: t("common.actions"), align: "right", render: (row) => <div className="console-inline-actions">{String(row.status).toUpperCase() === "PENDING" && <Button variant="danger" onClick={() => setDialog({ type: "cancel", item: row })}>{t("orders.cancel")}</Button>}{String(row.status).toUpperCase() === "COMPLETED" && row.provider_instance_id && state.eligible.has(row.provider_instance_id) && <Button onClick={() => setDialog({ type: "refund", item: row })}>{t("orders.refund")}</Button>}</div> },

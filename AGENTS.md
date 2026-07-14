@@ -18,3 +18,9 @@ When implementing from a selected generated mock, treat that image as the source
 - The user console covers the complete non-admin `sub2api` feature set while keeping Sentence AI's light fluted-glass visual language; no administrator APIs or administrator navigation are included.
 - New console, payment helper, and public key-usage surfaces are bilingual, default to English, persist the selected language, and send it through `Accept-Language`.
 - `/admin/dashboard` remains a compatibility alias for the user dashboard; it does not expose administrator functionality.
+- Console pages use the available desktop workspace more fully instead of centering content in a narrow admin column.
+- The desktop console sidebar can collapse to an icon rail, persists the user's choice, and remains a drawer on mobile.
+- Payment selectors retain recognizable provider branding and the backend-provided payment method display name.
+- The API Keys page shows the configured default and custom API endpoints with copy actions and uses the default endpoint in quick-start examples.
+- Group badges retain the group name while using platform-specific colors and recognizable platform marks, following `sub2api` semantics.
+- Administrator contact details are not persistent in the sidebar; they appear in the top-right user dropdown, following `sub2api` interaction hierarchy.

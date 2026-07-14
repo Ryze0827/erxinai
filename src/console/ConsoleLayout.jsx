@@ -8,6 +8,8 @@ import { Button, EmptyState, IconButton, Spinner, ToastViewport } from "./UI";
 import { safeExternalUrl, safeImageUrl } from "./utils";
 import "./console.css";
 
+const SIDEBAR_STORAGE_KEY = "sentence_console_sidebar_collapsed";
+
 const coreNav = [
   { path: "/dashboard", key: "nav.dashboard", icon: "dashboard" },
   { path: "/keys", key: "nav.keys", icon: "key" },
@@ -64,9 +66,9 @@ function useBatchNavigationAccess(authenticated) {
   return enabled;
 }
 
-function SidebarSection({ title, items, onNavigate }) {
+function SidebarSection({ title, items, onNavigate, collapsed }) {
   const { t } = useLocale();
-  return <div className="console-nav-section"><span className="console-nav-label">{title}</span>{items.map((item) => <NavLink key={item.path} to={item.path} className={({ isActive }) => `console-nav-link ${isActive ? "is-active" : ""}`} onClick={onNavigate}><Icon name={item.icon} size={19} /><span>{item.label || t(item.key)}</span><Icon name="chevronRight" size={14} /></NavLink>)}</div>;
+  return <div className="console-nav-section"><span className="console-nav-label">{title}</span>{items.map((item) => { const label = item.label || t(item.key); return <NavLink key={item.path} to={item.path} title={collapsed ? label : undefined} aria-label={collapsed ? label : undefined} className={({ isActive }) => `console-nav-link ${isActive ? "is-active" : ""}`} onClick={onNavigate}><Icon name={item.icon} size={19} /><span>{label}</span><Icon name="chevronRight" size={14} /></NavLink>; })}</div>;
 }
 
 function AnnouncementMenu() {
@@ -106,7 +108,7 @@ function AnnouncementMenu() {
 
 function UserMenu({ onNavigate }) {
   const { t } = useLocale();
-  const { user, logout } = useConsole();
+  const { user, logout, settings } = useConsole();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
@@ -125,7 +127,7 @@ function UserMenu({ onNavigate }) {
     navigate("/login", { replace: true });
   };
 
-  return <div className="console-user-menu" ref={wrapperRef}><button className="console-user-trigger" onClick={() => setOpen((value) => !value)}>{avatar ? <img src={avatar} alt="" /> : <span>{initial}</span>}<div><strong>{displayName}</strong><small>{user?.role}</small></div><Icon name="chevronDown" size={14} /></button>{open && <div className="console-popover console-user-popover"><div><strong>{displayName}</strong><small>{user?.email}</small></div><Link to="/profile" onClick={() => { setOpen(false); onNavigate(); }}><Icon name="user" size={17} />{t("nav.profile")}</Link><Link to="/keys" onClick={() => { setOpen(false); onNavigate(); }}><Icon name="key" size={17} />{t("nav.keys")}</Link><button onClick={handleLogout}><Icon name="logout" size={17} />{t("nav.logout")}</button></div>}</div>;
+  return <div className="console-user-menu" ref={wrapperRef}><button className="console-user-trigger" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-haspopup="menu">{avatar ? <img src={avatar} alt="" /> : <span>{initial}</span>}<div><strong>{displayName}</strong><small>{user?.role}</small></div><Icon name="chevronDown" size={14} /></button>{open && <div className="console-popover console-user-popover" role="menu"><div className="console-user-summary"><strong>{displayName}</strong><small>{user?.email}</small></div><Link to="/profile" onClick={() => { setOpen(false); onNavigate(); }} role="menuitem"><Icon name="user" size={17} />{t("nav.profile")}</Link><Link to="/keys" onClick={() => { setOpen(false); onNavigate(); }} role="menuitem"><Icon name="key" size={17} />{t("nav.keys")}</Link>{settings?.contact_info && <div className="console-user-contact"><Icon name="chat" size={17} /><div><span>{t("common.contactSupport")}</span><p>{settings.contact_info}</p></div></div>}<button className="console-user-logout" onClick={handleLogout} role="menuitem"><Icon name="logout" size={17} />{t("nav.logout")}</button></div>}</div>;
 }
 
 function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
@@ -153,6 +155,7 @@ export function ConsoleLayout({ children }) {
   const { user, authenticated, settings } = useConsole();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1");
   const batchEnabled = useBatchNavigationAccess(authenticated);
   const simpleMode = user?.run_mode === "simple";
   const customItems = (settings?.custom_menu_items || []).filter((item) => item.visibility === "user").sort((a, b) => a.sort_order - b.sort_order).map((item) => ({ path: `/custom/${item.id}`, label: item.label, icon: "link" }));
@@ -168,6 +171,9 @@ export function ConsoleLayout({ children }) {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [location.pathname, settings?.site_name, title]);
   useEffect(() => {
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarCollapsed ? "1" : "0");
+  }, [sidebarCollapsed]);
+  useEffect(() => {
     if (!mobileOpen) return undefined;
     const close = (event) => event.key === "Escape" && setMobileOpen(false);
     document.body.style.overflow = "hidden";
@@ -178,7 +184,8 @@ export function ConsoleLayout({ children }) {
     };
   }, [mobileOpen]);
 
-  return <div className="console-shell"><div className="console-scene" /><aside className={`console-sidebar ${mobileOpen ? "is-open" : ""}`}><Link className="console-brand" to="/"><img src={logo} alt="" /><div><strong>{settings?.site_name || "Sentence AI"}</strong><span>AI gateway</span></div></Link><nav><SidebarSection title={t("nav.overview")} items={workspaceItems} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.account")} items={personalItems} onNavigate={() => setMobileOpen(false)} /></nav><div className="console-sidebar-foot"><Link to="/"><Icon name="home" size={18} />{t("nav.home")}</Link>{settings?.contact_info && <span>{settings.contact_info}</span>}</div></aside>{mobileOpen && <button className="console-sidebar-overlay" aria-label="Close menu" onClick={() => setMobileOpen(false)} />}<div className="console-workspace"><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></div>;
+  const collapseLabel = sidebarCollapsed ? t("nav.expand") : t("nav.collapse");
+  return <div className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><div className="console-scene" /><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`}><Link className="console-brand" to="/" title={sidebarCollapsed ? settings?.site_name || "Sentence AI" : undefined}><img src={logo} alt="" /><div><strong>{settings?.site_name || "Sentence AI"}</strong><span>AI gateway</span></div></Link><nav><SidebarSection title={t("nav.overview")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.account")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><div className="console-sidebar-foot"><Link to="/" title={sidebarCollapsed ? t("nav.home") : undefined}><Icon name="home" size={18} /><span>{t("nav.home")}</span></Link><button type="button" className="console-sidebar-toggle" onClick={() => setSidebarCollapsed((value) => !value)} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /><span>{t("nav.collapse")}</span></button></div></aside>{mobileOpen && <button className="console-sidebar-overlay" aria-label="Close menu" onClick={() => setMobileOpen(false)} />}<div className="console-workspace"><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></div>;
 }
 
 export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false }) {
