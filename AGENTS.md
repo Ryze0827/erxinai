@@ -13,3 +13,5 @@ When implementing from a selected generated mock, treat that image as the source
 - Turnstile verification fills the available authentication form width and remains responsive on narrow screens.
 - The homepage `Start building` action uses the same Dashboard destination when the user is authenticated and otherwise opens registration.
 - The Hero keeps the `Text / Code / Image / Reasoning` capability pills above the original overlapping AI tool icon strip.
+- OAuth provider buttons follow the `sub2api` interaction: a single provider fills the row with a 48px branded button and `Sign in with …` label.
+- Password visibility uses the `sub2api` eye/eye-off icon button instead of `Show/Hide` text.
