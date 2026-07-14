@@ -1,0 +1,2569 @@
+{
+  "body": {
+    "cls": "",
+    "id": "",
+    "rect": {
+      "h": 5043.125,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "style": {
+      "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+      "border": "0px none rgb(26, 25, 22)",
+      "borderRadius": "0px",
+      "boxShadow": "none",
+      "color": "rgb(26, 25, 22)",
+      "display": "block",
+      "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "gap": "normal",
+      "letterSpacing": "normal",
+      "lineHeight": "24px",
+      "margin": "0px",
+      "padding": "0px",
+      "position": "static"
+    },
+    "tag": "body",
+    "text": "AgentPeekFeaturesPricingDocsLogFAQDownloadFeaturesPricingDocsLogFAQDownloadRequest a featureYour coding agents,in the Mac notchA macOS app that keeps AI agent e"
+  },
+  "controls": [
+    {
+      "cls": "nav-brand",
+      "id": "",
+      "rect": {
+        "h": 28,
+        "w": 116.96875,
+        "x": 356,
+        "y": 4073
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "600",
+        "gap": "8px",
+        "letterSpacing": "-0.16px",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "relative"
+      },
+      "tag": "a",
+      "text": "AgentPeek"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 37,
+        "w": 81.7109375,
+        "x": 557.55078125,
+        "y": 4068.5
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "8px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Features"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 37,
+        "w": 69.9375,
+        "x": 643.26171875,
+        "y": 4068.5
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "8px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Pricing"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 37,
+        "w": 57.5703125,
+        "x": 717.19921875,
+        "y": 4068.5
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "8px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Docs"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 37,
+        "w": 48.390625,
+        "x": 778.76953125,
+        "y": 4068.5
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "8px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Log"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 37,
+        "w": 51.2890625,
+        "x": 831.16015625,
+        "y": 4068.5
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "8px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "FAQ"
+    },
+    {
+      "cls": "btn btn-download btn-sm",
+      "id": "",
+      "rect": {
+        "h": 36,
+        "w": 110.640625,
+        "x": 973.359375,
+        "y": 4069
+      },
+      "style": {
+        "background": "rgb(0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "1px solid rgba(0, 0, 0, 0)",
+        "borderRadius": "9999px",
+        "boxShadow": "rgba(0, 0, 0, 0.16) 0px 1px 2px 0px",
+        "color": "rgb(255, 255, 255)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "13px",
+        "fontWeight": "500",
+        "gap": "8px",
+        "letterSpacing": "normal",
+        "lineHeight": "13px",
+        "margin": "0px",
+        "padding": "0px 14px",
+        "position": "relative"
+      },
+      "tag": "a",
+      "text": "Download"
+    },
+    {
+      "cls": "nav-toggle",
+      "id": "",
+      "rect": {
+        "h": 0,
+        "w": 0,
+        "x": 0,
+        "y": 4043
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "none",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": ""
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 0,
+        "w": 0,
+        "x": 0,
+        "y": 4043
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "14px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Features"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 0,
+        "w": 0,
+        "x": 0,
+        "y": 4043
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "14px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Pricing"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 0,
+        "w": 0,
+        "x": 0,
+        "y": 4043
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "14px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Docs"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 0,
+        "w": 0,
+        "x": 0,
+        "y": 4043
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "14px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Log"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 0,
+        "w": 0,
+        "x": 0,
+        "y": 4043
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "8px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "14px 12px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "FAQ"
+    },
+    {
+      "cls": "btn btn-download",
+      "id": "",
+      "rect": {
+        "h": 0,
+        "w": 0,
+        "x": 0,
+        "y": 4043
+      },
+      "style": {
+        "background": "rgb(0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "1px solid rgba(0, 0, 0, 0)",
+        "borderRadius": "8px",
+        "boxShadow": "rgba(0, 0, 0, 0.16) 0px 1px 2px 0px",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline-flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "500",
+        "gap": "8px",
+        "letterSpacing": "normal",
+        "lineHeight": "16px",
+        "margin": "0px",
+        "padding": "14px 12px",
+        "position": "relative"
+      },
+      "tag": "a",
+      "text": "Download"
+    },
+    {
+      "cls": "feature-pill",
+      "id": "",
+      "rect": {
+        "h": 23.5,
+        "w": 131.90625,
+        "x": 654.046875,
+        "y": 172
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "13px",
+        "fontWeight": "600",
+        "gap": "4px",
+        "letterSpacing": "0.13px",
+        "lineHeight": "19.5px",
+        "margin": "0px",
+        "padding": "2px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "Request a feature"
+    },
+    {
+      "cls": "btn btn-glass",
+      "id": "",
+      "rect": {
+        "h": 56,
+        "w": 212.0234375,
+        "x": 613.984375,
+        "y": 462.5
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) linear-gradient(-75deg, rgba(230, 245, 255, 0.1), rgba(240, 250, 255, 0.3), rgba(230, 245, 255, 0.1)) repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(50, 50, 50)",
+        "borderRadius": "9999px",
+        "boxShadow": "rgba(0, 0, 0, 0.05) 0px 2px 2px 0px inset, rgba(255, 255, 255, 0.6) 0px -2px 2px 0px inset, rgba(210, 235, 255, 0.35) 0px 0px 1.6px 3px inset, rgba(0, 0, 0, 0.06) 0px 1px 1px 0px, rgba(60, 100, 160, 0.3) 0px 12px 26px -8px, rgba(0, 0, 0, 0.1) 0px 4px 10px -4px",
+        "color": "rgb(50, 50, 50)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "500",
+        "gap": "8px",
+        "letterSpacing": "-0.16px",
+        "lineHeight": "16px",
+        "margin": "0px",
+        "padding": "0px 30px",
+        "position": "relative"
+      },
+      "tag": "a",
+      "text": "Download for Free"
+    },
+    {
+      "cls": "home-price-tier selected",
+      "id": "",
+      "rect": {
+        "h": 34,
+        "w": 168.6640625,
+        "x": 464,
+        "y": 2525.421875
+      },
+      "style": {
+        "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "1px solid rgba(26, 25, 22, 0.1)",
+        "borderRadius": "9px",
+        "boxShadow": "rgba(26, 25, 22, 0.12) 0px 1px 3px 0px",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "13px",
+        "fontWeight": "600",
+        "gap": "5px",
+        "letterSpacing": "normal",
+        "lineHeight": "19.5px",
+        "margin": "0px",
+        "padding": "0px 8px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "1 machine"
+    },
+    {
+      "cls": "home-price-tier",
+      "id": "",
+      "rect": {
+        "h": 34,
+        "w": 168.6640625,
+        "x": 635.6640625,
+        "y": 2525.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "1px solid rgba(0, 0, 0, 0)",
+        "borderRadius": "9px",
+        "boxShadow": "none",
+        "color": "rgb(143, 137, 126)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "13px",
+        "fontWeight": "500",
+        "gap": "5px",
+        "letterSpacing": "normal",
+        "lineHeight": "19.5px",
+        "margin": "0px",
+        "padding": "0px 8px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "2 machines"
+    },
+    {
+      "cls": "home-price-tier",
+      "id": "",
+      "rect": {
+        "h": 34,
+        "w": 168.671875,
+        "x": 807.328125,
+        "y": 2525.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "1px solid rgba(0, 0, 0, 0)",
+        "borderRadius": "9px",
+        "boxShadow": "none",
+        "color": "rgb(143, 137, 126)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "13px",
+        "fontWeight": "500",
+        "gap": "5px",
+        "letterSpacing": "normal",
+        "lineHeight": "19.5px",
+        "margin": "0px",
+        "padding": "0px 8px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "3 machines"
+    },
+    {
+      "cls": "btn btn-glass",
+      "id": "",
+      "rect": {
+        "h": 56,
+        "w": 520,
+        "x": 460,
+        "y": 2583.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) linear-gradient(-75deg, rgba(230, 245, 255, 0.1), rgba(240, 250, 255, 0.3), rgba(230, 245, 255, 0.1)) repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(50, 50, 50)",
+        "borderRadius": "9999px",
+        "boxShadow": "rgba(0, 0, 0, 0.05) 0px 2px 2px 0px inset, rgba(255, 255, 255, 0.6) 0px -2px 2px 0px inset, rgba(210, 235, 255, 0.35) 0px 0px 1.6px 3px inset, rgba(0, 0, 0, 0.06) 0px 1px 1px 0px, rgba(60, 100, 160, 0.3) 0px 12px 26px -8px, rgba(0, 0, 0, 0.1) 0px 4px 10px -4px",
+        "color": "rgb(50, 50, 50)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "500",
+        "gap": "8px",
+        "letterSpacing": "-0.16px",
+        "lineHeight": "16px",
+        "margin": "0px",
+        "padding": "0px 30px",
+        "position": "relative"
+      },
+      "tag": "a",
+      "text": "Buy a license"
+    },
+    {
+      "cls": "price-download",
+      "id": "",
+      "rect": {
+        "h": 21,
+        "w": 520,
+        "x": 460,
+        "y": 2881.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "gap": "8px",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "12px 0px 0px",
+        "padding": "0px",
+        "position": "relative"
+      },
+      "tag": "a",
+      "text": "or download for free"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3240.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "What is AgentPeek?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3303.6953125
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "How does AgentPeek monitor my agents?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3366.96875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "Which agents does AgentPeek support?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3430.2421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "How many agent sessions can AgentPeek watch at once?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3493.515625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "How much does AgentPeek cost?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3556.7890625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "Is AgentPeek safe? Does it send my code or prompts anywhere?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3620.0625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "What token usage and limits does AgentPeek track?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3683.3359375
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "How does AgentPeek alert me when an agent needs permission?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3746.609375
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "What else lives in the notch?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3809.8828125
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "Do I need to change how I run my agents?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3873.15625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "What if my Mac doesn't have a notch?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3936.4296875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "What Macs does AgentPeek run on?"
+    },
+    {
+      "cls": "faq-q",
+      "id": "",
+      "rect": {
+        "h": 62.2734375,
+        "w": 1264,
+        "x": 88,
+        "y": 3999.703125
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16.5px",
+        "fontWeight": "550",
+        "gap": "16px",
+        "letterSpacing": "-0.165px",
+        "lineHeight": "22.275px",
+        "margin": "0px",
+        "padding": "20px 0px",
+        "position": "static"
+      },
+      "tag": "button",
+      "text": "What does a license include?"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 19.5,
+        "w": 81,
+        "x": 151,
+        "y": 4343.9765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "inline",
+        "fontFamily": "\"Geist Mono\", ui-monospace, SFMono-Regular, \"SF Mono\", Menlo, monospace",
+        "fontSize": "15px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "@brenhubr"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 56.2421875,
+        "x": 838.4453125,
+        "y": 4268.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Features"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 44.625,
+        "x": 838.4453125,
+        "y": 4301.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Pricing"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 64.1171875,
+        "x": 838.4453125,
+        "y": 4334.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Download"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 67.1171875,
+        "x": 945.7578125,
+        "y": 4268.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Notch app"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 89.1171875,
+        "x": 945.7578125,
+        "y": 4301.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Menu bar app"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 81.2421875,
+        "x": 945.7578125,
+        "y": 4334.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Token usage"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 77.890625,
+        "x": 945.7578125,
+        "y": 4367.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Permissions"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 76.46875,
+        "x": 945.7578125,
+        "y": 4400.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Dev servers"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 79.046875,
+        "x": 945.7578125,
+        "y": 4433.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Fast Actions"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 85.6953125,
+        "x": 945.7578125,
+        "y": 4466.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Quick Routes"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 38.109375,
+        "x": 945.7578125,
+        "y": 4499.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Views"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 33.0078125,
+        "x": 1078.0703125,
+        "y": 4268.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Docs"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 23.9609375,
+        "x": 1078.0703125,
+        "y": 4301.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Log"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 26.84375,
+        "x": 1078.0703125,
+        "y": 4334.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "FAQ"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 34.8671875,
+        "x": 1078.0703125,
+        "y": 4367.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "LLMs"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 47.109375,
+        "x": 1198.5390625,
+        "y": 4268.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Privacy"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 49.6875,
+        "x": 1198.5390625,
+        "y": 4301.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "License"
+    },
+    {
+      "cls": "footer-x",
+      "id": "",
+      "rect": {
+        "h": 16,
+        "w": 16,
+        "x": 1291.421875,
+        "y": 4266.4765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "inline-flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": ""
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 15,
+        "w": 68.8125,
+        "x": 197.625,
+        "y": 4929.625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(140, 140, 136)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(140, 140, 136)",
+        "display": "inline",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "19.5px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "a",
+      "text": "Bren Huber"
+    }
+  ],
+  "headings": [
+    {
+      "cls": "hero-headline",
+      "id": "",
+      "rect": {
+        "h": 163,
+        "w": 658.0859375,
+        "x": 390.953125,
+        "y": 231.5
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(255, 255, 255)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(255, 255, 255)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "80px",
+        "fontWeight": "700",
+        "gap": "normal",
+        "letterSpacing": "-3.6px",
+        "lineHeight": "80px",
+        "margin": "16px 350.953px 0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h1",
+      "text": "Your coding agents,in the Mac notch"
+    },
+    {
+      "cls": "bento-title",
+      "id": "",
+      "rect": {
+        "h": 35.8359375,
+        "w": 604,
+        "x": 72,
+        "y": 914
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "32px",
+        "fontWeight": "650",
+        "gap": "normal",
+        "letterSpacing": "-0.8px",
+        "lineHeight": "35.84px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h2",
+      "text": "See everything your agents do"
+    },
+    {
+      "cls": "bento-title",
+      "id": "",
+      "rect": {
+        "h": 35.8359375,
+        "w": 604,
+        "x": 764,
+        "y": 914
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "32px",
+        "fontWeight": "650",
+        "gap": "normal",
+        "letterSpacing": "-0.8px",
+        "lineHeight": "35.84px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h2",
+      "text": "Answer without breaking flow"
+    },
+    {
+      "cls": "bento-title",
+      "id": "",
+      "rect": {
+        "h": 35.8359375,
+        "w": 604,
+        "x": 72,
+        "y": 1436.7109375
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "32px",
+        "fontWeight": "650",
+        "gap": "normal",
+        "letterSpacing": "-0.8px",
+        "lineHeight": "35.84px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h2",
+      "text": "See limits before they land"
+    },
+    {
+      "cls": "bento-title",
+      "id": "",
+      "rect": {
+        "h": 35.8359375,
+        "w": 604,
+        "x": 764,
+        "y": 1436.7109375
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "\"Schibsted Grotesk\", -apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "32px",
+        "fontWeight": "650",
+        "gap": "normal",
+        "letterSpacing": "-0.8px",
+        "lineHeight": "35.84px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h2",
+      "text": "Everyday tools, one click away"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 66,
+        "w": 283.8125,
+        "x": 578.09375,
+        "y": 2127.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "44px",
+        "fontWeight": "600",
+        "gap": "normal",
+        "letterSpacing": "-1.408px",
+        "lineHeight": "66px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h2",
+      "text": "Lifetime Pricing"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 66,
+        "w": 604.6875,
+        "x": 417.65625,
+        "y": 3114.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "44px",
+        "fontWeight": "600",
+        "gap": "normal",
+        "letterSpacing": "-1.408px",
+        "lineHeight": "66px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h2",
+      "text": "Questions, answered."
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 64.1171875,
+        "x": 838.4453125,
+        "y": 4233.9765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(154, 154, 150)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(154, 154, 150)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "11px",
+        "fontWeight": "600",
+        "gap": "normal",
+        "letterSpacing": "0.968px",
+        "lineHeight": "16.5px",
+        "margin": "0px 0px 16px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h4",
+      "text": "Product"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 89.1171875,
+        "x": 945.7578125,
+        "y": 4233.9765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(154, 154, 150)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(154, 154, 150)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "11px",
+        "fontWeight": "600",
+        "gap": "normal",
+        "letterSpacing": "0.968px",
+        "lineHeight": "16.5px",
+        "margin": "0px 0px 16px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h4",
+      "text": "Explore"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 77.2734375,
+        "x": 1078.0703125,
+        "y": 4233.9765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(154, 154, 150)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(154, 154, 150)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "11px",
+        "fontWeight": "600",
+        "gap": "normal",
+        "letterSpacing": "0.968px",
+        "lineHeight": "16.5px",
+        "margin": "0px 0px 16px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h4",
+      "text": "Resources"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 49.6875,
+        "x": 1198.5390625,
+        "y": 4233.9765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(154, 154, 150)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(154, 154, 150)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "11px",
+        "fontWeight": "600",
+        "gap": "normal",
+        "letterSpacing": "0.968px",
+        "lineHeight": "16.5px",
+        "margin": "0px 0px 16px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h4",
+      "text": "Legal"
+    },
+    {
+      "cls": "",
+      "id": "",
+      "rect": {
+        "h": 16.5,
+        "w": 60.578125,
+        "x": 1291.421875,
+        "y": 4233.9765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(154, 154, 150)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(154, 154, 150)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "11px",
+        "fontWeight": "600",
+        "gap": "normal",
+        "letterSpacing": "0.968px",
+        "lineHeight": "16.5px",
+        "margin": "0px 0px 16px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "h4",
+      "text": "Support"
+    }
+  ],
+  "links": [
+    {
+      "as": "font",
+      "href": "https://agentpeek.app/assets/fonts/SchibstedGrotesk-Variable.woff2",
+      "rel": "preload"
+    },
+    {
+      "as": "",
+      "href": "https://agentpeek.app/assets/app-DWa1kOOb.css",
+      "rel": "stylesheet"
+    },
+    {
+      "as": "image",
+      "href": "https://agentpeek.app/assets/img/ap_icon-20260711.png",
+      "rel": "preload"
+    },
+    {
+      "as": "image",
+      "href": "https://agentpeek.app/assets/img/hero-claude-53b6104287.webp",
+      "rel": "preload"
+    },
+    {
+      "as": "image",
+      "href": "https://agentpeek.app/assets/img/hero-codex-52fd8a0726.webp",
+      "rel": "preload"
+    },
+    {
+      "as": "image",
+      "href": "https://agentpeek.app/assets/img/hero-cursor-b63f652982.webp",
+      "rel": "preload"
+    },
+    {
+      "as": "image",
+      "href": "https://agentpeek.app/assets/img/hero-grok-8f7563399d.webp",
+      "rel": "preload"
+    },
+    {
+      "as": "image",
+      "href": "https://agentpeek.app/assets/img/hero-hermes-36f1b32d9d.webp",
+      "rel": "preload"
+    },
+    {
+      "as": "image",
+      "href": "https://agentpeek.app/assets/img/hero-opencode-0a4e72d2ce.webp",
+      "rel": "preload"
+    },
+    {
+      "as": "image",
+      "href": "https://agentpeek.app/assets/img/hero-antigravity-c8c6175360.webp",
+      "rel": "preload"
+    }
+  ],
+  "mainChildren": [
+    {
+      "cls": "hero-wrap",
+      "id": "",
+      "rect": {
+        "h": 830,
+        "w": 1440,
+        "x": 0,
+        "y": -12
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) linear-gradient(rgb(37, 50, 178), rgb(36, 84, 210) 14%, rgb(60, 130, 242) 30%, rgb(83, 157, 246), rgb(112, 183, 249), rgb(161, 215, 249) 72%, rgb(205, 233, 251)) repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "-88px 0px 0px",
+        "padding": "0px",
+        "position": "relative"
+      },
+      "tag": "div",
+      "text": "Request a featureYour coding agents,in the Mac notchA macOS app that keeps AI agent essentials visible while you work.Download for FreeFree 3-day trial · Apple "
+    },
+    {
+      "cls": "section bento-section",
+      "id": "features",
+      "rect": {
+        "h": 1213.421875,
+        "w": 1440,
+        "x": 0,
+        "y": 818
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "96px 40px",
+        "position": "static"
+      },
+      "tag": "section",
+      "text": "See everything your agents doLive sessions from Claude Code, Codex, Cursor, Grok, Hermes, OpenCode, and Antigravity in one place, sorted by project.Answer witho"
+    },
+    {
+      "cls": "section home-price-section",
+      "id": "pricing",
+      "rect": {
+        "h": 987,
+        "w": 1440,
+        "x": 0,
+        "y": 2031.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "96px 40px",
+        "position": "static"
+      },
+      "tag": "section",
+      "text": "Lifetime PricingOne-time purchase$19/onceStart with 3 days free1 machine2 machines3 machinesBuy a licenseClaude Code, Codex, Cursor, Grok, Hermes, OpenCode, and"
+    },
+    {
+      "cls": "faq-section section",
+      "id": "faq",
+      "rect": {
+        "h": 1151.5546875,
+        "w": 1440,
+        "x": 0,
+        "y": 3018.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "96px 40px",
+        "position": "static"
+      },
+      "tag": "section",
+      "text": "Questions, answered.What is AgentPeek?AgentPeek is a macOS app that keeps Claude Code, Codex, Cursor, Grok, Hermes, OpenCode, and Antigravity in view from your "
+    }
+  ],
+  "media": [
+    {
+      "alt": "",
+      "cls": "",
+      "poster": "",
+      "rect": {
+        "h": 28,
+        "w": 28,
+        "x": 356,
+        "y": 4073
+      },
+      "src": "https://agentpeek.app/assets/img/ap_icon-20260711.png",
+      "tag": "img"
+    },
+    {
+      "alt": "Claude",
+      "cls": "hero-mark hero-mark-claude",
+      "poster": "",
+      "rect": {
+        "h": 72,
+        "w": 72,
+        "x": 534,
+        "y": 574
+      },
+      "src": "https://agentpeek.app/assets/img/hero-claude-53b6104287.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "Codex",
+      "cls": "hero-mark hero-mark-codex",
+      "poster": "",
+      "rect": {
+        "h": 72,
+        "w": 72,
+        "x": 584,
+        "y": 574
+      },
+      "src": "https://agentpeek.app/assets/img/hero-codex-52fd8a0726.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "Cursor",
+      "cls": "hero-mark hero-mark-cursor",
+      "poster": "",
+      "rect": {
+        "h": 72,
+        "w": 72,
+        "x": 634,
+        "y": 574
+      },
+      "src": "https://agentpeek.app/assets/img/hero-cursor-b63f652982.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "Grok",
+      "cls": "hero-mark hero-mark-grok",
+      "poster": "",
+      "rect": {
+        "h": 72,
+        "w": 72,
+        "x": 684,
+        "y": 574
+      },
+      "src": "https://agentpeek.app/assets/img/hero-grok-8f7563399d.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "Hermes",
+      "cls": "hero-mark hero-mark-hermes",
+      "poster": "",
+      "rect": {
+        "h": 72,
+        "w": 72,
+        "x": 734,
+        "y": 574
+      },
+      "src": "https://agentpeek.app/assets/img/hero-hermes-36f1b32d9d.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "OpenCode",
+      "cls": "hero-mark hero-mark-opencode",
+      "poster": "",
+      "rect": {
+        "h": 72,
+        "w": 72,
+        "x": 784,
+        "y": 574
+      },
+      "src": "https://agentpeek.app/assets/img/hero-opencode-0a4e72d2ce.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "Antigravity",
+      "cls": "hero-mark hero-mark-antigravity",
+      "poster": "",
+      "rect": {
+        "h": 72,
+        "w": 72,
+        "x": 834,
+        "y": 574
+      },
+      "src": "https://agentpeek.app/assets/img/hero-antigravity-c8c6175360.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "cls": "bento-video",
+      "poster": "",
+      "rect": {
+        "h": 367.875,
+        "w": 654,
+        "x": 47,
+        "y": 1037.8359375
+      },
+      "src": "https://agentpeek.app/assets/video/see-everything.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": "",
+      "cls": "bento-video",
+      "poster": "",
+      "rect": {
+        "h": 367.875,
+        "w": 654,
+        "x": 739,
+        "y": 1037.8359375
+      },
+      "src": "https://agentpeek.app/assets/video/answer-flow.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": "",
+      "cls": "bento-video",
+      "poster": "",
+      "rect": {
+        "h": 367.875,
+        "w": 654,
+        "x": 47,
+        "y": 1560.546875
+      },
+      "src": "https://agentpeek.app/assets/video/usage-limits.mp4",
+      "tag": "video"
+    },
+    {
+      "alt": "",
+      "cls": "bento-video",
+      "poster": "",
+      "rect": {
+        "h": 367.875,
+        "w": 654,
+        "x": 739,
+        "y": 1560.546875
+      },
+      "src": "https://agentpeek.app/assets/video/everyday-tools.mp4",
+      "tag": "video"
+    }
+  ],
+  "sections": [
+    {
+      "cls": "site-header",
+      "id": "",
+      "rect": {
+        "h": 64,
+        "w": 1440,
+        "x": 0,
+        "y": 4055
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "12px 0px 0px",
+        "padding": "0px 20px",
+        "position": "sticky"
+      },
+      "tag": "header",
+      "text": "AgentPeekFeaturesPricingDocsLogFAQDownloadFeaturesPricingDocsLogFAQDownload"
+    },
+    {
+      "cls": "hero",
+      "id": "",
+      "rect": {
+        "h": 830,
+        "w": 1440,
+        "x": 0,
+        "y": -12
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "108px 40px 96px",
+        "position": "relative"
+      },
+      "tag": "section",
+      "text": "Request a featureYour coding agents,in the Mac notchA macOS app that keeps AI agent essentials visible while you work.Download for FreeFree 3-day trial · Apple "
+    },
+    {
+      "cls": "section bento-section",
+      "id": "features",
+      "rect": {
+        "h": 1213.421875,
+        "w": 1440,
+        "x": 0,
+        "y": 818
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "96px 40px",
+        "position": "static"
+      },
+      "tag": "section",
+      "text": "See everything your agents doLive sessions from Claude Code, Codex, Cursor, Grok, Hermes, OpenCode, and Antigravity in one place, sorted by project.Answer witho"
+    },
+    {
+      "cls": "bento-cell",
+      "id": "",
+      "rect": {
+        "h": 498.7109375,
+        "w": 668,
+        "x": 40,
+        "y": 914
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "article",
+      "text": "See everything your agents doLive sessions from Claude Code, Codex, Cursor, Grok, Hermes, OpenCode, and Antigravity in one place, sorted by project."
+    },
+    {
+      "cls": "bento-cell",
+      "id": "",
+      "rect": {
+        "h": 498.7109375,
+        "w": 668,
+        "x": 732,
+        "y": 914
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "article",
+      "text": "Answer without breaking flowPlans, permissions, and questions surface in the notch, ready for a keystroke, never a window switch."
+    },
+    {
+      "cls": "bento-cell",
+      "id": "",
+      "rect": {
+        "h": 498.7109375,
+        "w": 668,
+        "x": 40,
+        "y": 1436.7109375
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "article",
+      "text": "See limits before they landToken usage, rate limit windows, weekly limits, monthly spend, and API cost, whatever each agent tracks, live."
+    },
+    {
+      "cls": "bento-cell",
+      "id": "",
+      "rect": {
+        "h": 498.7109375,
+        "w": 668,
+        "x": 732,
+        "y": 1436.7109375
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "0px",
+        "position": "static"
+      },
+      "tag": "article",
+      "text": "Everyday tools, one click awayLocal servers, quick routes, views, and fast actions in the notch, without ever leaving your editor."
+    },
+    {
+      "cls": "section home-price-section",
+      "id": "pricing",
+      "rect": {
+        "h": 987,
+        "w": 1440,
+        "x": 0,
+        "y": 2031.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "flex",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "96px 40px",
+        "position": "static"
+      },
+      "tag": "section",
+      "text": "Lifetime PricingOne-time purchase$19/onceStart with 3 days free1 machine2 machines3 machinesBuy a licenseClaude Code, Codex, Cursor, Grok, Hermes, OpenCode, and"
+    },
+    {
+      "cls": "faq-section section",
+      "id": "faq",
+      "rect": {
+        "h": 1151.5546875,
+        "w": 1440,
+        "x": 0,
+        "y": 3018.421875
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(26, 25, 22)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(26, 25, 22)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "margin": "0px",
+        "padding": "96px 40px",
+        "position": "static"
+      },
+      "tag": "section",
+      "text": "Questions, answered.What is AgentPeek?AgentPeek is a macOS app that keeps Claude Code, Codex, Cursor, Grok, Hermes, OpenCode, and Antigravity in view from your "
+    },
+    {
+      "cls": "site-footer",
+      "id": "",
+      "rect": {
+        "h": 873.1484375,
+        "w": 1440,
+        "x": 0,
+        "y": 4169.9765625
+      },
+      "style": {
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "border": "0px none rgb(92, 87, 79)",
+        "borderRadius": "0px",
+        "boxShadow": "none",
+        "color": "rgb(92, 87, 79)",
+        "display": "block",
+        "fontFamily": "-apple-system, \"system-ui\", \"SF Pro Display\", \"SF Pro Text\", \"SF Pro\", system-ui, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "gap": "normal",
+        "letterSpacing": "normal",
+        "lineHeight": "21px",
+        "margin": "0px",
+        "padding": "0px 40px 32px",
+        "position": "static"
+      },
+      "tag": "footer",
+      "text": "Hey, I'm Bren. I build AgentPeek on my own, in the open, shipping updates almost every day. There's no team behind it and no investors to answer to, just me and"
+    }
+  ]
+}

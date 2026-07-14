@@ -1,0 +1,102 @@
+- complementary:
+  - link "Logo":
+    - /url: /admin/dashboard
+    - img "Logo"
+  - link "WayXStoreAI":
+    - /url: /admin/dashboard
+  - button "v0.1.151":
+    - generic: v0.1.151
+  - navigation:
+    - link "仪表盘":
+      - /url: /admin/dashboard
+      - generic: 仪表盘
+    - link "运维监控":
+      - /url: /admin/ops
+      - generic: 运维监控
+    - link "用户管理":
+      - /url: /admin/users
+      - generic: 用户管理
+    - link "分组管理":
+      - /url: /admin/groups
+      - generic: 分组管理
+    - button "渠道管理":
+      - generic: 渠道管理
+    - link "订阅管理":
+      - /url: /admin/subscriptions
+      - generic: 订阅管理
+    - link "账号管理":
+      - /url: /admin/accounts
+      - generic: 账号管理
+    - link "公告":
+      - /url: /admin/announcements
+      - generic: 公告
+    - link "IP管理":
+      - /url: /admin/proxies
+      - generic: IP管理
+    - link "兑换码":
+      - /url: /admin/redeem
+      - generic: 兑换码
+    - link "优惠码":
+      - /url: /admin/promo-codes
+      - generic: 优惠码
+    - button "订单管理":
+      - generic: 订单管理
+    - link "使用记录":
+      - /url: /admin/usage
+      - generic: 使用记录
+    - link "系统设置":
+      - /url: /admin/settings
+      - generic: 系统设置
+    - generic: 我的账户
+    - link "API 密钥":
+      - /url: /keys
+      - generic: API 密钥
+    - link "使用记录":
+      - /url: /usage
+      - generic: 使用记录
+    - link "渠道状态":
+      - /url: /monitor
+      - generic: 渠道状态
+    - link "我的订阅":
+      - /url: /subscriptions
+      - generic: 我的订阅
+    - link "充值/订阅":
+      - /url: /purchase
+      - generic: 充值/订阅
+    - link "我的订单":
+      - /url: /orders
+      - generic: 我的订单
+    - link "兑换":
+      - /url: /redeem
+      - generic: 兑换
+    - link "个人资料":
+      - /url: /profile
+      - generic: 个人资料
+    - link "GPT 生图工具":
+      - /url: /custom/ccd8e5fbc90ab894
+      - generic: GPT 生图工具
+    - link "生图 API 接入文档":
+      - /url: /custom/f7455f702b5ce61a
+      - generic: 生图 API 接入文档
+  - button "深色模式":
+    - generic: 深色模式
+  - button "收起":
+    - generic: 收起
+- banner:
+  - heading "我的订阅" [level=1]
+  - paragraph: 查看您的订阅计划和用量
+  - button "公告":
+  - link "文档":
+    - /url: https://www.yuque.com/liwei-4xhqj/bgg7dk/zgrz10ggsw1lhd13
+    - generic: 文档
+  - button "🇨🇳 ZH":
+    - generic: 🇨🇳
+    - generic: ZH
+  - generic: $857.46
+  - button "User Menu":
+    - generic: 二二
+    - generic: 二二
+    - generic: admin
+- main:
+  - heading "暂无有效订阅" [level=3]
+  - paragraph: 您没有任何有效订阅。请联系管理员获取订阅。
