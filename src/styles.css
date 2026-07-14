@@ -33,6 +33,36 @@
   text-transform: uppercase;
 }
 
+.hero-supports {
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero-agents-strip,
+.gateway-provider-list {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-works .hero-mark {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.hero-works .hero-mark + .hero-mark {
+  margin-left: -22px;
+}
+
+.hero-works .hero-mark:hover {
+  z-index: 1;
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 35%));
+  transform: translateY(-6px) scale(1.1);
+}
+
 .gateway-provider-list {
   gap: 10px;
 }
@@ -46,6 +76,17 @@
   font-size: 12px;
   font-weight: 600;
   backdrop-filter: blur(8px);
+}
+
+@media (max-width: 479px) {
+  .hero-works .hero-mark {
+    width: 56px;
+    height: 56px;
+  }
+
+  .hero-works .hero-mark + .hero-mark {
+    margin-left: -18px;
+  }
 }
 
 .gateway-demo {
