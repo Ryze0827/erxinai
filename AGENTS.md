@@ -24,3 +24,4 @@ When implementing from a selected generated mock, treat that image as the source
 - The API Keys page shows the configured default and custom API endpoints with copy actions and uses the default endpoint in quick-start examples.
 - Group badges retain the group name while using platform-specific colors and recognizable platform marks, following `sub2api` semantics.
 - Administrator contact details are not persistent in the sidebar; they appear in the top-right user dropdown, following `sub2api` interaction hierarchy.
+- API Keys and Usage preserve the complete `sub2api` user-facing component hierarchy, dense table layout, column controls, filters, charts, dialogs, platform configuration, and mobile card behavior while using Sentence AI styling.

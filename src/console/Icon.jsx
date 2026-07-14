@@ -44,6 +44,13 @@ const paths = {
   filter: "M4 5h16l-6 7v5l-4 2v-7L4 5Z",
   dollar: "M12 2v20m5-16H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H7",
   clock: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Zm0-15v5l3 2",
+  terminal: "M5 7l4 5-4 5m6 0h8",
+  grid: "M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z",
+  arrowUp: "m7 11 5-5 5 5m-5-5v12",
+  arrowDown: "m7 13 5 5 5-5m-5 5V6",
+  upload: "M12 21V9m-5 5 5-5 5 5M5 3h14",
+  reset: "M4 4v6h6M5.5 15a7 7 0 1 0 .6-7.4L4 10",
+  calendar: "M5 4h14v16H5V4Zm3-2v4m8-4v4M5 9h14",
 };
 
 export function Icon({ name, size = 20, className = "" }) {

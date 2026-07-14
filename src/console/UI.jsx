@@ -120,11 +120,19 @@ export function Pagination({ page = 1, pageSize = 20, total = 0, pages, onPageCh
   return <div className="console-pagination"><span>{t("common.page", { page, pages: totalPages })}</span><div>{onPageSizeChange && <SelectInput value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))}><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></SelectInput>}<Button onClick={() => onPageChange(page - 1)} disabled={page <= 1}>{t("common.previous")}</Button><Button onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}>{t("common.next")}</Button></div></div>;
 }
 
-export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick }) {
+export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "" }) {
   if (!rows?.length) return empty || <EmptyState />;
+  const openRow = (event, row) => {
+    if (event.target.closest("button, a, input, select, textarea, [role='button']")) return;
+    onRowClick?.(row);
+  };
+  const sort = (column) => {
+    if (!column.sortable || !onSort) return;
+    onSort(column.key, sortKey === column.key && sortOrder === "asc" ? "desc" : "asc");
+  };
   return (
-    <div className="console-table-wrap">
-      <table className="console-table"><thead><tr>{columns.map((column) => <th key={column.key} className={column.align ? `is-${column.align}` : ""}>{column.label}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={row[rowKey] ?? index} onClick={onRowClick ? () => onRowClick(row) : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <td key={column.key} data-label={column.label} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : row[column.key] ?? "—"}</td>)}</tr>)}</tbody></table>
+    <div className={`console-table-wrap ${className}`}>
+      <table className="console-table"><thead><tr>{columns.map((column) => <th key={column.key} className={column.align ? `is-${column.align}` : ""}>{column.sortable && onSort ? <button type="button" className={sortKey === column.key ? "is-sorted" : ""} onClick={() => sort(column)}><span>{column.label}</span><Icon name={sortKey === column.key && sortOrder === "asc" ? "arrowUp" : "arrowDown"} size={13} /></button> : column.label}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={row[rowKey] ?? index} onClick={onRowClick ? (event) => openRow(event, row) : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <td key={column.key} data-label={column.label} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : row[column.key] ?? "—"}</td>)}</tr>)}</tbody></table>
     </div>
   );
 }
