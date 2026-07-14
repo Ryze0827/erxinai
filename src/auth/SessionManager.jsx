@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { refreshAuthSession } from "../api/client";
 import { authApi } from "../api/auth";
-import { getAccessToken, getTokenExpiresAt, setStoredUser } from "../api/session";
+import { AUTH_SESSION_EVENT, getAccessToken, getTokenExpiresAt, setStoredUser } from "../api/session";
 
 const REFRESH_EARLY_MS = 60_000;
 const MAX_TIMER_MS = 2_147_000_000;
@@ -13,6 +13,18 @@ function getRefreshDelay() {
 }
 
 export function SessionManager() {
+  const [sessionToken, setSessionToken] = useState(() => getAccessToken());
+
+  useEffect(() => {
+    const sync = () => setSessionToken(getAccessToken());
+    window.addEventListener(AUTH_SESSION_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
   useEffect(() => {
     if (!getAccessToken()) return undefined;
     let cancelled = false;
@@ -33,7 +45,9 @@ export function SessionManager() {
 
     const restoreSession = async () => {
       try {
-        setStoredUser(await authApi.getCurrentUser());
+        const user = await authApi.getCurrentUser();
+        if (cancelled) return;
+        setStoredUser(user);
         scheduleRefresh();
       } catch {
         // A failed restore is handled by the API refresh path.
@@ -45,7 +59,7 @@ export function SessionManager() {
       cancelled = true;
       window.clearTimeout(refreshTimer);
     };
-  }, []);
+  }, [sessionToken]);
 
   return null;
 }

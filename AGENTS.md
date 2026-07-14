@@ -15,3 +15,6 @@ When implementing from a selected generated mock, treat that image as the source
 - The Hero keeps the `Text / Code / Image / Reasoning` capability pills above the original overlapping AI tool icon strip.
 - OAuth provider buttons follow the `sub2api` interaction: a single provider fills the row with a 48px branded button and `Sign in with …` label.
 - Password visibility uses the `sub2api` eye/eye-off icon button instead of `Show/Hide` text.
+- The user console covers the complete non-admin `sub2api` feature set while keeping Sentence AI's light fluted-glass visual language; no administrator APIs or administrator navigation are included.
+- New console, payment helper, and public key-usage surfaces are bilingual, default to English, persist the selected language, and send it through `Accept-Language`.
+- `/admin/dashboard` remains a compatibility alias for the user dashboard; it does not expose administrator functionality.

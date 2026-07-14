@@ -89,6 +89,18 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
     navigate("/", { replace: true });
   };
 
+  const finishBinding = async (response = {}) => {
+    try {
+      setStoredUser(await authApi.getCurrentUser());
+    } catch {
+      // The binding is already complete even if refreshing the profile fails.
+    }
+    clearPendingAuthSession();
+    sessionStorage.removeItem("oauth_bind_intent");
+    const redirect = String(response.redirect || "/profile");
+    navigate(redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/profile", { replace: true });
+  };
+
   const applyCompletion = async (nextValue) => {
     const next = normalizeCompletion(nextValue);
     if (next.provider) {
@@ -101,6 +113,9 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
       });
     }
     if (next.access_token) return finish(next);
+    const bindingIntent = sessionStorage.getItem("oauth_bind_intent");
+    const pendingBindingStep = next.error || next.step || next.intent || next.pending_auth_token || next.pending_oauth_token;
+    if (bindingIntent && !pendingBindingStep) return finishBinding(next);
     setCompletion(next);
     setForm((current) => ({ ...current, email: getCompletionEmail(next) || current.email }));
     const activeProvider = String(next.provider || provider).toLowerCase();

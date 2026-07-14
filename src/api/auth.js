@@ -3,6 +3,12 @@ import { apiRequest, buildApiUrl } from "./client";
 export const authApi = {
   getPublicSettings: () => apiRequest("/settings/public", { skipAuth: true }),
   getCurrentUser: () => apiRequest("/auth/me"),
+  prepareOAuthBind: () => apiRequest("/auth/oauth/bind-token", { method: "POST" }),
+  logout: (refreshToken) => apiRequest("/auth/logout", {
+    method: "POST",
+    body: { refresh_token: refreshToken },
+    skipRefresh: true,
+  }),
   login: (body) => apiRequest("/auth/login", { method: "POST", body, skipRefresh: true }),
   login2FA: (body) => apiRequest("/auth/login/2fa", { method: "POST", body, skipRefresh: true }),
   register: (body) => apiRequest("/auth/register", { method: "POST", body, skipRefresh: true }),
@@ -28,4 +34,10 @@ export function getOAuthStartUrl(provider, params = {}) {
 
 export function getOAuthCallbackUrl(provider, search) {
   return `${buildApiUrl(`/auth/oauth/${provider}/callback`)}${search}`;
+}
+
+export function getOAuthBindingUrl(provider, { redirect = "/profile", mode } = {}) {
+  const query = new URLSearchParams({ redirect, intent: "bind_current_user" });
+  if (mode) query.set("mode", mode);
+  return `${buildApiUrl(`/auth/oauth/${provider}/bind/start`)}?${query.toString()}`;
 }
