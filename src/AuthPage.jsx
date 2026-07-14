@@ -95,7 +95,7 @@ export function AuthPage({ initialMode = "login" }) {
       <div className="auth-scene" aria-hidden="true" />
       <header className="auth-topbar">
         <a className="auth-brand" href="/" aria-label="Sentence AI home">
-          <img src="/assets/img/ap_icon-20260711.png" alt="" width="32" height="32" />
+          <img src="/assets/img/sentence-ai-icon.png" alt="" width="32" height="32" />
           <span>Sentence AI</span>
         </a>
         <a className="auth-home-link" href="/">Back to home</a>

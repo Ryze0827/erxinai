@@ -1,165 +1,103 @@
 import { useEffect } from "react";
-import pageMarkup from "./agentpeek-fragment.html?raw";
+import landingPageMarkup from "./landing-page.html?raw";
 import { AuthPage } from "./AuthPage";
 import { mountGatewayDemos } from "./gatewayDemos";
 
-const renderedPageMarkup = pageMarkup
-  .replace("Download for Free", "Get Started")
-  .replace(
-    /<a class="btn btn-download btn-sm" href="[^"]+" data-dl="1"><span class="btn-content"><svg class="apple-logo"[\s\S]*?<\/svg>Download<\/span><\/a>/,
-    '<a class="btn btn-download btn-sm" href="/login"><span class="btn-content">Log in</span></a>',
-  );
+function setNavigationState({ header, drawer, toggle }, open) {
+  header?.setAttribute("data-open", String(open));
+  drawer?.setAttribute("data-open", String(open));
+  toggle?.setAttribute("aria-expanded", String(open));
+  document.body.style.overflow = open ? "hidden" : "";
+}
 
-const featureComposerMarkup = `
-  <form class="feature-composer">
-    <label class="feature-composer-label" for="feature-request-input">What should Sentence AI do next?</label>
-    <textarea id="feature-request-input" class="feature-composer-input" placeholder="Describe the feature you'd love to see…" maxlength="1000" rows="3"></textarea>
-    <input class="feature-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" type="text" name="botcheck">
-    <div class="feature-composer-row">
-      <span class="feature-composer-status feature-composer-status--idle" role="status" aria-live="polite"></span>
-      <div class="feature-composer-actions">
-        <button type="button" class="feature-composer-cancel">Close</button>
-        <button type="submit" class="feature-composer-send">Send request</button>
-      </div>
-    </div>
-  </form>
-`;
+function mountNavigation(root, signal) {
+  const header = root.querySelector(".site-header");
+  const drawer = root.querySelector(".nav-drawer");
+  const toggle = root.querySelector(".nav-toggle");
+  const elements = { header, drawer, toggle };
+  const close = () => setNavigationState(elements, false);
+  const updateHeader = () => header?.setAttribute("data-scrolled", String(window.scrollY > 8));
+  const handleToggle = () => setNavigationState(elements, header?.getAttribute("data-open") !== "true");
+  const handleLink = (event) => {
+    const href = event.target.closest("a")?.getAttribute("href");
+    if (href === "/") {
+      event.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    if (href) close();
+  };
+
+  updateHeader();
+  window.addEventListener("scroll", updateHeader, { passive: true, signal });
+  toggle?.addEventListener("click", handleToggle, { signal });
+  drawer?.addEventListener("click", handleLink, { signal });
+  root.querySelector(".nav-brand")?.addEventListener("click", handleLink, { signal });
+  return close;
+}
+
+function mountPricing(root, signal) {
+  const tiers = [...root.querySelectorAll(".home-price-tier")];
+  const amount = root.querySelector(".home-price-amount");
+  const action = root.querySelector(".home-price-action");
+  const handlePricing = (event) => {
+    const selectedTier = event.target.closest(".home-price-tier");
+    if (!selectedTier) return;
+    tiers.forEach((tier) => {
+      const selected = tier === selectedTier;
+      tier.classList.toggle("selected", selected);
+      tier.setAttribute("aria-checked", String(selected));
+    });
+    if (amount) amount.innerHTML = `${selectedTier.dataset.price}<span class="home-price-per">${selectedTier.dataset.period}</span>`;
+    action?.setAttribute("href", `/register?plan=${selectedTier.dataset.plan}`);
+  };
+
+  root.querySelector(".home-price-tiers")?.addEventListener("click", handlePricing, { signal });
+}
+
+function mountFaq(root, signal) {
+  const handleFaq = (event) => {
+    const button = event.target.closest(".faq-q");
+    if (!button) return;
+    const item = button.closest(".faq-item");
+    const open = item?.getAttribute("data-open") !== "true";
+    item?.setAttribute("data-open", String(open));
+    button.setAttribute("aria-expanded", String(open));
+  };
+
+  root.querySelector(".faq")?.addEventListener("click", handleFaq, { signal });
+}
+
+function observeGatewayDemos(root) {
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach(({ isIntersecting, target }) => target.setAttribute("data-active", String(isIntersecting))),
+    { rootMargin: "180px 0px", threshold: 0.05 },
+  );
+  root.querySelectorAll(".gateway-demo").forEach((demo) => observer.observe(demo));
+  return observer;
+}
+
+function getAuthMode() {
+  if (window.location.pathname === "/login") return "login";
+  if (window.location.pathname === "/register") return "register";
+  return "";
+}
 
 export function App() {
-  const authMode = window.location.pathname === "/login" ? "login" : window.location.pathname === "/register" ? "register" : "";
+  const authMode = getAuthMode();
 
   useEffect(() => {
     if (authMode) return undefined;
+    const root = document.querySelector(".app-shell");
+    if (!root) return undefined;
     const controller = new AbortController();
     const { signal } = controller;
-    const root = document.querySelector(".app-shell");
+
     mountGatewayDemos(root);
-    const header = root?.querySelector(".site-header");
-    const drawer = root?.querySelector(".nav-drawer");
-    const navToggle = root?.querySelector(".nav-toggle");
-    const featureWrap = root?.querySelector(".feature-pill-wrap");
-    const featureButton = root?.querySelector(".feature-pill");
-    const videos = [...(root?.querySelectorAll("video") ?? [])];
-    const demos = [...(root?.querySelectorAll(".gateway-demo") ?? [])];
-
+    const closeNavigation = mountNavigation(root, signal);
+    mountPricing(root, signal);
+    mountFaq(root, signal);
+    const observer = observeGatewayDemos(root);
     document.documentElement.classList.add("reveal-on");
-
-    const updateHeader = () => {
-      header?.setAttribute("data-scrolled", String(window.scrollY > 8));
-    };
-
-    const closeNavigation = () => {
-      header?.setAttribute("data-open", "false");
-      drawer?.setAttribute("data-open", "false");
-      navToggle?.setAttribute("aria-expanded", "false");
-      document.body.style.overflow = "";
-    };
-
-    const toggleNavigation = () => {
-      const willOpen = header?.getAttribute("data-open") !== "true";
-      header?.setAttribute("data-open", String(willOpen));
-      drawer?.setAttribute("data-open", String(willOpen));
-      navToggle?.setAttribute("aria-expanded", String(willOpen));
-      document.body.style.overflow = willOpen ? "hidden" : "";
-    };
-
-    const closeComposer = () => {
-      featureWrap?.removeAttribute("data-open");
-      featureButton?.setAttribute("aria-expanded", "false");
-      featureWrap?.querySelector(".feature-composer")?.remove();
-    };
-
-    const openComposer = () => {
-      if (!featureWrap || !featureButton) return;
-      if (featureWrap.hasAttribute("data-open")) {
-        closeComposer();
-        return;
-      }
-      featureWrap.setAttribute("data-open", "true");
-      featureButton.setAttribute("aria-expanded", "true");
-      featureWrap.insertAdjacentHTML("beforeend", featureComposerMarkup);
-      featureWrap.querySelector(".feature-composer-input")?.focus();
-    };
-
-    const handleComposerClick = (event) => {
-      if (event.target.closest(".feature-composer-cancel")) closeComposer();
-    };
-
-    const handleComposerSubmit = (event) => {
-      event.preventDefault();
-    };
-
-    const handlePricing = (event) => {
-      const tier = event.target.closest(".home-price-tier");
-      if (!tier) return;
-      const tiers = [...root.querySelectorAll(".home-price-tier")];
-      const selectedIndex = tiers.indexOf(tier);
-      if (selectedIndex < 0) return;
-      const prices = [19, 35, 49];
-      tiers.forEach((item, index) => {
-        const selected = index === selectedIndex;
-        item.classList.toggle("selected", selected);
-        item.setAttribute("aria-checked", String(selected));
-      });
-      const amount = root.querySelector(".home-price-amount");
-      const checkout = root.querySelector('.home-price-card a[href*="checkout"]');
-      if (amount) amount.innerHTML = `$${prices[selectedIndex]}<span class="home-price-per">/once</span>`;
-      if (checkout) checkout.href = `https://agentpeek.app/checkout?machines=${selectedIndex + 1}`;
-    };
-
-    const handleFaq = (event) => {
-      const button = event.target.closest(".faq-q");
-      if (!button) return;
-      const item = button.closest(".faq-item");
-      const willOpen = item?.getAttribute("data-open") !== "true";
-      item?.setAttribute("data-open", String(willOpen));
-      button.setAttribute("aria-expanded", String(willOpen));
-    };
-
-    const handleLocalLink = (event) => {
-      const link = event.target.closest("a");
-      if (!link) return;
-      const href = link.getAttribute("href");
-      if (href === "/") {
-        event.preventDefault();
-        closeNavigation();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else if (href?.startsWith("#")) {
-        closeNavigation();
-      }
-    };
-
-    root?.querySelectorAll('a[href^="/"]:not([href="/"])').forEach((link) => {
-      link.href = `https://agentpeek.app${link.getAttribute("href")}`;
-    });
-
-    updateHeader();
-    window.addEventListener("scroll", updateHeader, { passive: true, signal });
-    navToggle?.addEventListener("click", toggleNavigation, { signal });
-    drawer?.addEventListener("click", handleLocalLink, { signal });
-    root?.querySelector(".nav-brand")?.addEventListener("click", handleLocalLink, { signal });
-    featureButton?.addEventListener("click", openComposer, { signal });
-    featureWrap?.addEventListener("click", handleComposerClick, { signal });
-    featureWrap?.addEventListener("submit", handleComposerSubmit, { signal });
-    root?.querySelector(".home-price-tiers")?.addEventListener("click", handlePricing, { signal });
-    root?.querySelector(".faq")?.addEventListener("click", handleFaq, { signal });
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(({ isIntersecting, target }) => {
-          if (target.matches(".gateway-demo")) {
-            target.setAttribute("data-active", String(isIntersecting));
-          } else if (isIntersecting) {
-            target.play().catch(() => {});
-          } else {
-            target.pause();
-          }
-        });
-      },
-      { rootMargin: "180px 0px", threshold: 0.05 },
-    );
-    videos.forEach((video) => observer.observe(video));
-    demos.forEach((demo) => observer.observe(demo));
 
     return () => {
       controller.abort();
@@ -167,8 +105,8 @@ export function App() {
       closeNavigation();
       document.documentElement.classList.remove("reveal-on");
     };
-  }, []);
+  }, [authMode]);
 
   if (authMode) return <AuthPage initialMode={authMode} />;
-  return <div dangerouslySetInnerHTML={{ __html: renderedPageMarkup }} />;
+  return <div dangerouslySetInnerHTML={{ __html: landingPageMarkup }} />;
 }

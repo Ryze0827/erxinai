@@ -1,0 +1,186 @@
+<div class="app-shell">
+  <header class="site-header" data-scrolled="false" data-hero="true" data-open="false">
+    <svg class="nav-glass-defs" aria-hidden="true">
+      <filter id="sentence-nav-glass-dist" x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse" color-interpolation-filters="linearRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.008" numOctaves="2" seed="92" stitchTiles="stitch" result="noise"></feTurbulence>
+        <feGaussianBlur in="noise" stdDeviation="2" result="blurred"></feGaussianBlur>
+        <feDisplacementMap in="SourceGraphic" in2="blurred" scale="20" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+      </filter>
+    </svg>
+    <div class="nav">
+      <div class="nav-glass-filter" aria-hidden="true"></div>
+      <div class="nav-glass-overlay" aria-hidden="true"></div>
+      <div class="nav-glass-specular" aria-hidden="true"></div>
+      <a class="nav-brand" href="/" aria-label="Sentence AI home">
+        <img src="/assets/img/sentence-ai-icon.png" alt="" width="28" height="28">
+        <span>Sentence AI</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-right">
+        <a class="btn btn-account btn-sm" href="/login"><span class="btn-content">Log in</span></a>
+        <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-drawer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="4" y1="7" x2="20" y2="7"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="17" x2="20" y2="17"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="nav-drawer" id="nav-drawer" data-open="false">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn btn-account" href="/login"><span class="btn-content">Log in</span></a>
+      <a class="btn btn-primary" href="/register">Create account</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero-wrap">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <section class="hero">
+        <span class="gateway-eyebrow">OpenAI-compatible AI gateway</span>
+        <h1 class="hero-headline" aria-label="Your AI gateway, built for every model">
+          <span aria-hidden="true">
+            <span class="hero-word hero-char" style="animation-delay: 560ms">Your</span>
+            <span class="hero-word hero-char" style="animation-delay: 650ms">AI</span>
+            <span class="hero-word hero-char" style="animation-delay: 740ms">gateway,</span>
+          </span>
+          <br>
+          <span class="hero-headline-serif" aria-hidden="true">
+            <span class="hero-word hero-char" style="animation-delay: 860ms">built</span>
+            <span class="hero-word hero-char" style="animation-delay: 950ms">for</span>
+            <span class="hero-word hero-char" style="animation-delay: 1040ms">every</span>
+            <span class="hero-word hero-char" style="animation-delay: 1130ms">model</span>
+          </span>
+        </h1>
+        <p class="lead">Connect to leading text, code, and image models through one stable API. Trace requests, control spend, and route around provider failures.</p>
+        <div class="hero-cta">
+          <a class="btn btn-glass" href="/register"><span class="btn-content">Start building</span></a>
+          <span class="hero-meta">One account · One endpoint · Multiple providers</span>
+        </div>
+        <div class="hero-works gateway-provider-list" aria-label="Supported model families">
+          <span>Text</span>
+          <span>Code</span>
+          <span>Image</span>
+          <span>Reasoning</span>
+        </div>
+      </section>
+    </div>
+
+    <section class="section bento-section" id="features">
+      <div class="bento-grid">
+        <article class="bento-cell">
+          <div class="bento-card-head">
+            <h2 class="bento-title">One endpoint. Every model.</h2>
+            <p class="bento-sub">Use one OpenAI-compatible API to reach leading text, code, and image models.</p>
+          </div>
+          <div class="bento-card"><div class="gateway-demo gateway-demo--endpoint" data-gateway-demo="endpoint" aria-hidden="true"></div></div>
+        </article>
+        <article class="bento-cell">
+          <div class="bento-card-head">
+            <h2 class="bento-title">Trace every request.</h2>
+            <p class="bento-sub">Inspect status, latency, tokens, cost, retries, and the exact route behind every call.</p>
+          </div>
+          <div class="bento-card"><div class="gateway-demo gateway-demo--trace" data-gateway-demo="trace" aria-hidden="true"></div></div>
+        </article>
+        <article class="bento-cell">
+          <div class="bento-card-head">
+            <h2 class="bento-title">Know every token and dollar.</h2>
+            <p class="bento-sub">Track usage and spend by key, model, project, and time range.</p>
+          </div>
+          <div class="bento-card"><div class="gateway-demo gateway-demo--usage" data-gateway-demo="usage" aria-hidden="true"></div></div>
+        </article>
+        <article class="bento-cell">
+          <div class="bento-card-head">
+            <h2 class="bento-title">Stay online when providers do not.</h2>
+            <p class="bento-sub">Monitor provider health and use routing policies to keep production traffic moving.</p>
+          </div>
+          <div class="bento-card"><div class="gateway-demo gateway-demo--health" data-gateway-demo="health" aria-hidden="true"></div></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section home-price-section" id="pricing">
+      <div class="section-head center"><h2>Pricing that grows with your traffic.</h2></div>
+      <div class="home-price-card">
+        <div class="home-price-panel">
+          <span class="home-price-kicker">Choose how you start</span>
+          <div class="home-price-amount">$0<span class="home-price-per">/start</span></div>
+          <p class="home-price-note">Create an account before adding usage credit</p>
+        </div>
+        <div class="home-price-tiers" role="radiogroup" aria-label="Gateway plan">
+          <button type="button" role="radio" aria-checked="true" class="home-price-tier selected" data-plan="starter" data-price="$0" data-period="/start">Starter</button>
+          <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="usage" data-price="Usage" data-period="/based">Usage based</button>
+          <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="scale" data-price="Custom" data-period="/plan">Scale</button>
+        </div>
+        <a class="btn btn-glass home-price-action" href="/register?plan=starter"><span class="btn-content">Create an account</span></a>
+        <ul class="home-price-list">
+          <li>One OpenAI-compatible endpoint for supported model providers</li>
+          <li>Project keys with request-level usage and cost visibility</li>
+          <li>Provider health, routing policies, retries, and fallback controls</li>
+          <li>Text, code, image, and reasoning workloads in one account</li>
+          <li>No separate client integration for every upstream provider</li>
+        </ul>
+        <a class="price-download" href="/login"><span class="btn-content">Already have an account? Log in</span></a>
+      </div>
+    </section>
+
+    <section class="faq-section section" id="faq">
+      <div class="section-head center"><h2>Questions, answered.</h2></div>
+      <div class="faq">
+        <div class="faq-item" data-open="false">
+          <button class="faq-q" type="button" aria-expanded="false"><span>What is Sentence AI?</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Sentence AI is an AI gateway that gives applications one API for multiple model providers. It centralizes access keys, request routing, usage records, and provider health in one place.</div></div></div>
+        </div>
+        <div class="faq-item" data-open="false">
+          <button class="faq-q" type="button" aria-expanded="false"><span>Can I use an OpenAI client library?</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Yes. Point a compatible client at the Sentence AI base URL, provide your Sentence AI key, and select a supported model. Most integrations only need those configuration changes.</div></div></div>
+        </div>
+        <div class="faq-item" data-open="false">
+          <button class="faq-q" type="button" aria-expanded="false"><span>How are requests monitored?</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Request records can include status, route, latency, token usage, estimated cost, retries, and errors so teams can diagnose behavior without building a separate observability layer.</div></div></div>
+        </div>
+        <div class="faq-item" data-open="false">
+          <button class="faq-q" type="button" aria-expanded="false"><span>What happens when a provider is unavailable?</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Provider health and routing policies help you identify degraded upstreams. Where a compatible backup is configured, requests can be retried or routed through another available channel.</div></div></div>
+        </div>
+        <div class="faq-item" data-open="false">
+          <button class="faq-q" type="button" aria-expanded="false"><span>How do I control access and spend?</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Use separate keys for projects or environments, then review request and token usage by key, model, and time range. Keep production keys on your server and rotate them when needed.</div></div></div>
+        </div>
+        <div class="faq-item" data-open="false">
+          <button class="faq-q" type="button" aria-expanded="false"><span>How do I get started?</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Create a Sentence AI account, generate a project key, update your client base URL, and send your first request using a supported model identifier.</div></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-card">
+      <div class="footer-top">
+        <aside class="footer-note">
+          <p>Build against one stable AI interface while Sentence AI keeps provider access, routing, and usage visible.</p>
+        </aside>
+        <div class="footer-grid">
+          <div class="footer-col">
+            <h4>Product</h4>
+            <ul><li><a href="#features">Features</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#faq">FAQ</a></li></ul>
+          </div>
+          <div class="footer-col">
+            <h4>Account</h4>
+            <ul><li><a href="/login">Log in</a></li><li><a href="/register">Create account</a></li></ul>
+          </div>
+        </div>
+      </div>
+      <span class="footer-wordmark" aria-hidden="true">Sentence AI</span>
+      <div class="footer-base"><span>© 2026 Sentence AI</span><span>AI gateway for developers</span></div>
+    </div>
+  </footer>
+</div>
