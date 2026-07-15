@@ -25,3 +25,5 @@ When implementing from a selected generated mock, treat that image as the source
 - Group badges retain the group name while using platform-specific colors and recognizable platform marks, following `sub2api` semantics.
 - Administrator contact details are not persistent in the sidebar; they appear in the top-right user dropdown, following `sub2api` interaction hierarchy.
 - API Keys and Usage preserve the complete `sub2api` user-facing component hierarchy, dense table layout, column controls, filters, charts, dialogs, platform configuration, and mobile card behavior while using Sentence AI styling.
+- User-console visuals are original to Sentence AI: calm solid-color surfaces, restrained gradients, clear component borders, compact corner radii, and strong contrast for icons, figures, units, and typography.
+- Every user-console surface supports persisted light, dark, and system themes; custom embedded pages receive the resolved theme.

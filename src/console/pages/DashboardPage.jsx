@@ -21,6 +21,24 @@ function ModelDistribution({ models, formatNumber }) {
   })}</div>;
 }
 
+function TokenBreakdown({ stats, formatNumber, locale }) {
+  const items = [
+    [locale === "zh" ? "输入 Token" : "Input tokens", stats.total_input_tokens],
+    [locale === "zh" ? "输出 Token" : "Output tokens", stats.total_output_tokens],
+    [locale === "zh" ? "缓存创建" : "Cache creation", stats.total_cache_creation_tokens],
+    [locale === "zh" ? "缓存读取" : "Cache read", stats.total_cache_read_tokens],
+  ];
+  return <div className="console-public-metrics">{items.map(([label, value]) => <div key={label}><span>{label}</span><strong>{formatNumber(value)}</strong></div>)}</div>;
+}
+
+function PlatformDistribution({ items, formatCurrency, formatNumber, locale }) {
+  if (!items.length) return <EmptyState />;
+  return <div className="console-distribution">{items.map((item, index) => {
+    const label = item.platform || (locale === "zh" ? "其他" : "Other");
+    return <div key={`${label}-${index}`}><div><strong>{label}</strong><span>{formatNumber(item.total_requests)} · {formatCurrency(item.total_actual_cost)}</span></div><small>{locale === "zh" ? "今日" : "Today"}: {formatNumber(item.today_requests)} · {formatCurrency(item.today_actual_cost)}</small></div>;
+  })}</div>;
+}
+
 function PlatformQuotas({ items, formatCurrency, locale, t }) {
   if (!items.length) return <EmptyState />;
   const labels = locale === "zh" ? { daily: "每日", weekly: "每周", monthly: "每月" } : { daily: "Daily", weekly: "Weekly", monthly: "Monthly" };
@@ -89,16 +107,19 @@ export function DashboardPage() {
       <StatCard label={t("dashboard.keys")} value={`${formatNumber(stats.active_api_keys)} / ${formatNumber(stats.total_api_keys)}`} meta={t("keys.title")} icon="key" tone="green" />
       <StatCard label={t("dashboard.requests")} value={formatCompact(stats.total_requests, locale)} meta={`${t("dashboard.today")}: ${formatNumber(stats.today_requests)}`} icon="pulse" tone="amber" />
       <StatCard label={t("dashboard.tokens")} value={formatCompact(stats.total_tokens, locale)} meta={`${t("dashboard.today")}: ${formatCompact(stats.today_tokens, locale)}`} icon="chart" />
-      <StatCard label={t("dashboard.cost")} value={formatCurrency(stats.total_actual_cost)} meta={`${t("dashboard.latency")}: ${formatDuration(stats.average_duration_ms)}`} icon="dollar" tone="rose" />
+      <StatCard label={t("dashboard.cost")} value={formatCurrency(stats.total_actual_cost)} meta={`${locale === "zh" ? "标准费用" : "Standard"}: ${formatCurrency(stats.total_cost)}`} icon="dollar" tone="rose" />
+      <StatCard label="RPM / TPM" value={`${formatNumber(stats.rpm)} / ${formatCompact(stats.tpm, locale)}`} meta={`${t("dashboard.latency")}: ${formatDuration(stats.average_duration_ms)}`} icon="pulse" tone="green" />
     </div>
     <div className="console-grid console-grid--sidebar">
       <Panel title={t("dashboard.trend")}><LineChart data={data.trend} valueKey="total_tokens" /></Panel>
-      <Panel title={t("dashboard.quick")}><div className="console-quick-actions"><Link to="/keys"><Icon name="key" size={19} /><span><strong>{t("dashboard.createKey")}</strong><small>{t("keys.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>{!simpleMode && <Link to="/usage"><Icon name="chart" size={19} /><span><strong>{t("dashboard.inspectUsage")}</strong><small>{t("usage.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && settings?.payment_enabled !== false && <Link to="/purchase"><Icon name="cart" size={19} /><span><strong>{t("dashboard.addCredit")}</strong><small>{t("purchase.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}</div></Panel>
+      <Panel title={t("dashboard.quick")}><div className="console-quick-actions"><Link to="/keys"><Icon name="key" size={19} /><span><strong>{t("dashboard.createKey")}</strong><small>{t("keys.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>{!simpleMode && <Link to="/usage"><Icon name="chart" size={19} /><span><strong>{t("dashboard.inspectUsage")}</strong><small>{t("usage.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to="/batch-image"><Icon name="image" size={19} /><span><strong>{t("batch.title")}</strong><small>{t("batch.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to="/redeem"><Icon name="gift" size={19} /><span><strong>{t("redeem.title")}</strong><small>{t("redeem.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && settings?.payment_enabled !== false && <Link to="/purchase"><Icon name="cart" size={19} /><span><strong>{t("dashboard.addCredit")}</strong><small>{t("purchase.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}</div></Panel>
     </div>
+    <Panel title={locale === "zh" ? "Token 构成" : "Token breakdown"}><div className="console-panel-body"><TokenBreakdown stats={stats} formatNumber={formatNumber} locale={locale} /></div></Panel>
     <div className="console-grid console-grid--2">
       <Panel title={t("dashboard.models")}><div className="console-panel-body"><ModelDistribution models={data.models} formatNumber={formatNumber} /></div></Panel>
-      {!simpleMode && <Panel title={t("dashboard.platforms")}><div className="console-panel-body"><PlatformQuotas items={data.quotas} formatCurrency={formatCurrency} locale={locale} t={t} /></div></Panel>}
+      {!simpleMode && <Panel title={t("dashboard.platforms")}><div className="console-panel-body"><PlatformDistribution items={stats.by_platform || []} formatCurrency={formatCurrency} formatNumber={formatNumber} locale={locale} /></div></Panel>}
     </div>
-    <Panel title={t("dashboard.recent")} actions={<Link className="console-text-link" to="/usage">{t("usage.records")}<Icon name="chevronRight" size={14} /></Link>}><DataTable columns={columns} rows={data.recent} /></Panel>
+    {!simpleMode && <Panel title={locale === "zh" ? "平台配额" : "Platform quotas"}><div className="console-panel-body"><PlatformQuotas items={data.quotas} formatCurrency={formatCurrency} locale={locale} t={t} /></div></Panel>}
+    <Panel title={t("dashboard.recent")} actions={!simpleMode && <Link className="console-text-link" to="/usage">{t("usage.records")}<Icon name="chevronRight" size={14} /></Link>}><DataTable columns={columns} rows={data.recent} /></Panel>
   </Page>;
 }

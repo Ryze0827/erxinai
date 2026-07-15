@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button, TextInput } from "../UI";
 import { useLocale } from "../i18n";
 
@@ -26,6 +26,7 @@ export function ColumnPicker({ columns, hidden, onToggle, alwaysVisible = [] }) 
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
+  const menuId = `console-column-menu-${useId()}`;
   useEffect(() => {
     if (!open) return undefined;
     const close = (event) => !rootRef.current?.contains(event.target) && setOpen(false);
@@ -34,8 +35,8 @@ export function ColumnPicker({ columns, hidden, onToggle, alwaysVisible = [] }) 
   }, [open]);
   const choices = columns.filter((column) => !alwaysVisible.includes(column.key));
   return <div className="console-column-picker" ref={rootRef}>
-    <Button icon="grid" onClick={() => setOpen((value) => !value)}>{locale === "zh" ? "列设置" : "Columns"}</Button>
-    {open && <div className="console-column-menu">{choices.map((column) => <button type="button" key={column.key} onClick={() => onToggle(column.key)}><span>{column.label}</span>{!hidden.has(column.key) && <i className="is-checked">✓</i>}</button>)}</div>}
+    <Button icon="grid" aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined} onClick={() => setOpen((value) => !value)}>{locale === "zh" ? "列设置" : "Columns"}</Button>
+    {open && <div id={menuId} className="console-column-menu" role="menu">{choices.map((column) => <button type="button" role="menuitemcheckbox" aria-checked={!hidden.has(column.key)} key={column.key} onClick={() => onToggle(column.key)}><span>{column.label}</span>{!hidden.has(column.key) && <i className="is-checked">✓</i>}</button>)}</div>}
   </div>;
 }
 
@@ -64,6 +65,7 @@ export function DateRangePicker({ startDate, endDate, onChange }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState({ start_date: startDate, end_date: endDate });
   const rootRef = useRef(null);
+  const menuId = `console-date-menu-${useId()}`;
   useEffect(() => setDraft({ start_date: startDate, end_date: endDate }), [startDate, endDate]);
   useEffect(() => {
     if (!open) return undefined;
@@ -78,8 +80,8 @@ export function DateRangePicker({ startDate, endDate, onChange }) {
   ];
   const apply = (range = draft) => { onChange(range); setOpen(false); };
   return <div className="console-date-picker" ref={rootRef}>
-    <Button icon="calendar" onClick={() => setOpen((value) => !value)}><span>{startDate}</span><span className="console-muted">→</span><span>{endDate}</span></Button>
-    {open && <div className="console-date-menu"><div className="console-date-presets">{presets.map(([value, en, zh]) => <button type="button" key={value} onClick={() => apply(rangeFor(value))}>{locale === "zh" ? zh : en}</button>)}</div><div className="console-date-custom"><label><span>{locale === "zh" ? "开始" : "Start"}</span><TextInput type="date" value={draft.start_date} onChange={(event) => setDraft((current) => ({ ...current, start_date: event.target.value }))} /></label><label><span>{locale === "zh" ? "结束" : "End"}</span><TextInput type="date" value={draft.end_date} onChange={(event) => setDraft((current) => ({ ...current, end_date: event.target.value }))} /></label><Button variant="primary" onClick={() => apply()}>{locale === "zh" ? "应用" : "Apply"}</Button></div></div>}
+    <Button icon="calendar" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? menuId : undefined} onClick={() => setOpen((value) => !value)}><span>{startDate}</span><span className="console-muted">→</span><span>{endDate}</span></Button>
+    {open && <div id={menuId} className="console-date-menu" role="dialog" aria-label={locale === "zh" ? "选择日期范围" : "Choose date range"}><div className="console-date-presets">{presets.map(([value, en, zh]) => <button type="button" key={value} onClick={() => apply(rangeFor(value))}>{locale === "zh" ? zh : en}</button>)}</div><div className="console-date-custom"><label><span>{locale === "zh" ? "开始" : "Start"}</span><TextInput type="date" value={draft.start_date} onChange={(event) => setDraft((current) => ({ ...current, start_date: event.target.value }))} /></label><label><span>{locale === "zh" ? "结束" : "End"}</span><TextInput type="date" value={draft.end_date} onChange={(event) => setDraft((current) => ({ ...current, end_date: event.target.value }))} /></label><Button variant="primary" onClick={() => apply()}>{locale === "zh" ? "应用" : "Apply"}</Button></div></div>}
   </div>;
 }
 
@@ -89,5 +91,5 @@ export function SearchSelect({ value, onChange, options, placeholder, id }) {
 }
 
 export function CompactTabs({ items, value, onChange, label }) {
-  return <div className="console-compact-tabs" aria-label={label}>{items.map((item) => <button type="button" className={value === item.value ? "is-active" : ""} onClick={() => onChange(item.value)} key={item.value}>{item.label}</button>)}</div>;
+  return <div className="console-compact-tabs" role="tablist" aria-label={label}>{items.map((item) => <button type="button" role="tab" aria-selected={value === item.value} className={value === item.value ? "is-active" : ""} onClick={() => onChange(item.value)} key={item.value}>{item.label}</button>)}</div>;
 }

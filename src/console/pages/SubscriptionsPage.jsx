@@ -39,7 +39,10 @@ export function SubscriptionsPage() {
       if (subscriptions.status === "rejected") throw subscriptions.reason;
       const items = Array.isArray(subscriptions.value) ? subscriptions.value : subscriptions.value?.items || [];
       const progressItems = Array.isArray(progress.value) ? progress.value : progress.value?.items || progress.value?.progress || [];
-      const progressMap = Object.fromEntries(progressItems.map((item) => [item.subscription_id, item]));
+      const progressMap = Object.fromEntries(progressItems.map((item) => [
+        item.subscription_id ?? item.subscription?.id,
+        item.progress ?? item,
+      ]).filter(([subscriptionId]) => subscriptionId != null));
       if (mountedRef.current) setState({ loading: false, error: "", items, progress: progressMap });
     } catch (error) { if (mountedRef.current) setState({ loading: false, error: error.message, items: [], progress: {} }); }
   }, []);

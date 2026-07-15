@@ -8,6 +8,7 @@ import {
 
 const API_BASE_URL = normalizeBaseURL(import.meta.env.VITE_API_BASE_URL || "/api/v1");
 const DEFAULT_LOCALE = "en";
+const DEFAULT_TIMEOUT_MS = 60_000;
 let refreshPromise = null;
 
 export class ApiError extends Error {
@@ -109,19 +110,39 @@ function isRefreshableRequest(path, options) {
   return !["/auth/login", "/auth/register", "/auth/refresh"].some((endpoint) => path.includes(endpoint));
 }
 
+async function fetchWithTimeout(url, init, sourceSignal, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const controller = new AbortController();
+  let timedOut = false;
+  const abort = () => controller.abort();
+  if (sourceSignal?.aborted) abort();
+  else sourceSignal?.addEventListener("abort", abort, { once: true });
+  const timer = window.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (timedOut) throw new ApiError("Request timed out. Please try again.", { status: 0, reason: "TIMEOUT", cause: error });
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+    sourceSignal?.removeEventListener("abort", abort);
+  }
+}
+
 async function fetchJSON(path, options) {
   const method = options.method || "GET";
   const url = appendQuery(buildApiUrl(path), options.query, method);
   const body = options.body === undefined || options.rawBody || options.body instanceof FormData
     ? options.body
     : JSON.stringify(options.body);
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     method,
     credentials: "include",
     headers: buildHeaders(options),
     body,
-    signal: options.signal,
-  });
+  }, options.signal, options.timeoutMs);
   return { response, payload: await readResponse(response, options.responseType) };
 }
 
@@ -183,12 +204,11 @@ export async function gatewayRequest(path, options = {}) {
     headers.set("Content-Type", "application/json");
   }
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method,
       headers,
       body: options.body === undefined || options.body instanceof FormData ? options.body : JSON.stringify(options.body),
-      signal: options.signal,
-    });
+    }, options.signal, options.timeoutMs);
     const payload = await readResponse(response, options.responseType);
     return unwrapResponse(response, payload);
   } catch (error) {

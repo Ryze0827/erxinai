@@ -41,7 +41,7 @@ function methodFits(method, amount) {
 }
 
 function PaymentMethods({ methods, selected, setSelected, amount, amountForMethod, locale }) {
-  return <div className="console-payment-methods">{Object.entries(methods).map(([type, method]) => <button type="button" key={type} className={selected === type ? "is-selected" : ""} disabled={!methodFits(method, amountForMethod ? amountForMethod(method) : amount)} onClick={() => setSelected(type)}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{Number(method.fee_rate || 0) > 0 ? `${method.fee_rate}% ${locale === "zh" ? "手续费" : "fee"}` : (locale === "zh" ? "无额外手续费" : "No extra fee")}</small></div>{selected === type && <Icon name="check" size={17} />}</button>)}</div>;
+  return <div className="console-payment-methods" role="radiogroup" aria-label={locale === "zh" ? "支付方式" : "Payment method"}>{Object.entries(methods).map(([type, method]) => <button type="button" role="radio" aria-checked={selected === type} key={type} className={selected === type ? "is-selected" : ""} disabled={!methodFits(method, amountForMethod ? amountForMethod(method) : amount)} onClick={() => setSelected(type)}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{Number(method.fee_rate || 0) > 0 ? `${method.fee_rate}% ${locale === "zh" ? "手续费" : "fee"}` : (locale === "zh" ? "无额外手续费" : "No extra fee")}</small></div>{selected === type && <Icon name="check" size={17} />}</button>)}</div>;
 }
 
 function makeOrderBody({ amount, paymentType, orderType, planId, resumeToken, openid, forceQr }) {
@@ -115,27 +115,90 @@ function paymentTotal(amount, rate, currencyCode) {
   return roundPaymentAmount(Number(amount || 0) + paymentFee(amount, rate, currencyCode), currencyCode);
 }
 
+function stripeMethod(paymentType) {
+  if (paymentType === "stripe") return "";
+  return paymentType === "wxpay" ? "wechat_pay" : "alipay";
+}
+
+function stripeTarget(snapshot, context, common) {
+  const method = stripeMethod(context.paymentType);
+  const suffix = method ? `&method=${method}` : "";
+  return `/payment/stripe?${common}&client_secret=${encodeURIComponent(snapshot.clientSecret)}${suffix}`;
+}
+
+function shouldRedirectHosted(hostedUrl, forceQr) {
+  return Boolean(hostedUrl && /Mobi|Android|iPhone/i.test(navigator.userAgent) && !forceQr);
+}
+
+function openHostedTarget(hostedUrl, common, navigate) {
+  const popup = window.open(hostedUrl, "paymentPopup", "popup=yes,width=520,height=720,resizable=yes,scrollbars=yes");
+  if (!popup || popup.closed) window.location.assign(hostedUrl);
+  else navigate(`/payment/qrcode?${common}`);
+}
+
+function routePaymentTarget(snapshot, context, common, hostedUrl, navigate) {
+  if (context.paymentType === "airwallex" && snapshot.clientSecret && snapshot.intentId) { navigate(`/payment/airwallex?${common}`); return; }
+  if (snapshot.clientSecret) { navigate(stripeTarget(snapshot, context, common)); return; }
+  if (shouldRedirectHosted(hostedUrl, context.forceQr)) { window.location.assign(hostedUrl); return; }
+  if (snapshot.qrCode) { navigate(`/payment/qrcode?${common}`); return; }
+  if (hostedUrl) { openHostedTarget(hostedUrl, common, navigate); return; }
+  throw new Error("The payment provider did not return a payment target.");
+}
+
 function launchPayment(result, context, navigate) {
   const snapshot = createRecovery(result, context);
   saveRecovery(snapshot);
   const common = paymentQuery(snapshot);
+  const hostedUrl = safeExternalUrl(snapshot.payUrl);
   if (result.result_type === "oauth_required" && result.oauth?.authorize_url) {
     sessionStorage.setItem(WECHAT_PENDING_KEY, JSON.stringify({ amount: context.amount, paymentType: context.paymentType, orderType: context.orderType, planId: context.planId || 0 }));
     window.location.assign(withWechatResumeContext(result.oauth.authorize_url, context));
     return snapshot;
   }
   if (result.result_type === "jsapi_ready" && (result.jsapi || result.jsapi_payload)) return { ...snapshot, jsapi: result.jsapi || result.jsapi_payload };
-  if (context.paymentType === "airwallex" && snapshot.clientSecret && snapshot.intentId) navigate(`/payment/airwallex?${common}`);
-  else if (snapshot.clientSecret) {
-    const method = context.paymentType === "stripe" ? "" : context.paymentType === "wxpay" ? "wechat_pay" : "alipay";
-    navigate(`/payment/stripe?${common}&client_secret=${encodeURIComponent(snapshot.clientSecret)}${method ? `&method=${method}` : ""}`);
-  } else if (snapshot.qrCode || snapshot.payUrl) navigate(`/payment/qrcode?${common}`);
-  else throw new Error("The payment provider did not return a payment target.");
+  routePaymentTarget(snapshot, context, common, hostedUrl, navigate);
   return snapshot;
 }
 
 function PlanCard({ plan, selected, onSelect, locale }) {
-  return <button className={`console-plan-card ${selected ? "is-selected" : ""}`} onClick={() => onSelect(plan)}><div><span>{plan.group_platform || "AI"}</span>{selected && <Icon name="check" size={17} />}</div><h3>{plan.name}</h3><p>{plan.description}</p><strong>{currency(plan.price, "USD", locale)}</strong><small>/ {plan.validity_days} {locale === "zh" ? "天" : "days"}</small><div className="console-chip-list">{plan.daily_limit_usd != null && <span className="console-chip">${plan.daily_limit_usd}/day</span>}{plan.weekly_limit_usd != null && <span className="console-chip">${plan.weekly_limit_usd}/week</span>}{plan.monthly_limit_usd != null && <span className="console-chip">${plan.monthly_limit_usd}/month</span>}{(plan.features || []).slice(0, 3).map((feature) => <span className="console-chip" key={feature}>{feature}</span>)}</div></button>;
+  return <button type="button" role="radio" aria-checked={selected} className={`console-plan-card ${selected ? "is-selected" : ""}`} onClick={() => onSelect(plan)}><div><span>{plan.group_platform || "AI"}</span>{selected && <Icon name="check" size={17} />}</div><h3>{plan.name}</h3><p>{plan.description}</p><strong>{currency(plan.price, "USD", locale)}</strong><small>/ {plan.validity_days} {locale === "zh" ? "天" : "days"}</small><div className="console-chip-list">{plan.daily_limit_usd != null && <span className="console-chip">${plan.daily_limit_usd}/day</span>}{plan.weekly_limit_usd != null && <span className="console-chip">${plan.weekly_limit_usd}/week</span>}{plan.monthly_limit_usd != null && <span className="console-chip">${plan.monthly_limit_usd}/month</span>}{(plan.features || []).slice(0, 3).map((feature) => <span className="console-chip" key={feature}>{feature}</span>)}</div></button>;
+}
+
+function PurchaseTabs({ hidden, tab, setTab, setPlan, locale, t }) {
+  if (hidden) return null;
+  return <div className="console-tabs" role="tablist" aria-label={locale === "zh" ? "购买类型" : "Purchase type"}><button type="button" role="tab" aria-selected={tab === "balance"} className={tab === "balance" ? "is-active" : ""} onClick={() => { setTab("balance"); setPlan(null); }}>{t("purchase.balance")}</button><button type="button" role="tab" aria-selected={tab === "subscription"} className={tab === "subscription" ? "is-active" : ""} onClick={() => setTab("subscription")}>{t("purchase.plan")}</button></div>;
+}
+
+function AmountPresets({ amount, setAmount }) {
+  return <div className="console-amounts">{[10, 20, 50, 100, 200, 500, 1000].map((value) => <button type="button" aria-pressed={Number(amount) === value} className={Number(amount) === value ? "is-selected" : ""} key={value} onClick={() => setAmount(value)}>{value}</button>)}</div>;
+}
+
+function BalanceForm({ checkout, user, locale, t, formatCurrency, amount, setAmount, methods, method, setMethod, orderAmount }) {
+  return <Panel title={t("purchase.balance")}><div className="console-panel-body console-payment-form"><div className="console-payment-account"><span>{locale === "zh" ? "充值账户" : "Recharge account"}</span><strong>{user?.username || user?.email}</strong><small>{t("common.balance")}: {formatCurrency(user?.balance)}</small></div><Field label={t("purchase.amount")}><TextInput type="number" min={checkout.global_min || 0} max={checkout.global_max || undefined} value={amount} onChange={(event) => setAmount(event.target.value)} /></Field><AmountPresets amount={amount} setAmount={setAmount} /><PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={orderAmount} locale={locale} /></div></Panel>;
+}
+
+function BalanceOrderSummary({ checkout, locale, t, formatCurrency, chargeAmount, selectedLimit, feeRate, fee, payable, orderAmount, state, methodAvailable, onPay }) {
+  const multiplier = Number(checkout.balance_recharge_multiplier || 1);
+  return <Panel title={locale === "zh" ? "订单摘要" : "Order summary"}><div className="console-panel-body console-order-summary"><div><span>{t("purchase.amount")}</span><strong>{currency(chargeAmount, selectedLimit?.currency, locale)}</strong></div>{feeRate > 0 && <div><span>{t("purchase.fee")} ({feeRate}%)</span><strong>{currency(fee, selectedLimit?.currency, locale)}</strong></div>}<div className="is-total"><span>{t("purchase.total")}</span><strong>{currency(payable, selectedLimit?.currency, locale)}</strong></div>{multiplier !== 1 && <p>{locale === "zh" ? `到账余额：${formatCurrency(orderAmount * multiplier)}` : `Balance credited: ${formatCurrency(orderAmount * multiplier)}`}</p>}<Button variant="primary" icon="card" onClick={onPay} disabled={state.busy || !methodAvailable || orderAmount <= 0}>{state.busy ? t("common.loading") : t("purchase.pay")}</Button></div></Panel>;
+}
+
+function BalancePurchase(props) {
+  return <div className="console-grid console-grid--sidebar"><BalanceForm {...props} /><BalanceOrderSummary {...props} /></div>;
+}
+
+function SubscriptionCheckout({ plan, locale, chargeAmount, selectedLimit, methods, method, setMethod, payable, subscriptionTotalForMethod, state, methodAvailable, onPay, t }) {
+  return <Panel title={locale === "zh" ? "确认套餐" : "Confirm your plan"}><div className="console-panel-body console-subscribe-checkout"><div><strong>{plan.name}</strong><span>{currency(chargeAmount, selectedLimit?.currency, locale)}</span></div><PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={payable} amountForMethod={subscriptionTotalForMethod} locale={locale} /><Button variant="primary" onClick={onPay} disabled={state.busy || !methodAvailable}>{state.busy ? t("common.loading") : `${t("purchase.pay")} · ${currency(payable, selectedLimit?.currency, locale)}`}</Button></div></Panel>;
+}
+
+function SubscriptionPurchase(props) {
+  const { checkout, plan, setPlan, locale } = props;
+  return <><div className="console-plan-grid" role="radiogroup" aria-label={locale === "zh" ? "订阅套餐" : "Subscription plan"}>{checkout.plans.map((item) => <PlanCard key={item.id} plan={item} selected={plan?.id === item.id} onSelect={setPlan} locale={locale} />)}</div>{!checkout.plans.length && <Panel><EmptyState icon="gift" /></Panel>}{plan && <SubscriptionCheckout {...props} />}</>;
+}
+
+function PurchaseHelp({ checkout }) {
+  if (!checkout.help_text && !checkout.help_image_url) return null;
+  const image = safeExternalUrl(checkout.help_image_url);
+  return <Panel><div className="console-panel-body console-payment-help">{image && <img src={image} alt="" />}<p>{checkout.help_text}</p></div></Panel>;
 }
 
 export function PurchasePage() {
@@ -196,11 +259,12 @@ export function PurchasePage() {
     try {
       const body = makeOrderBody({ amount: activeAmount, paymentType: activeMethod, orderType: activeType, planId: activePlanId, resumeToken: options.resumeToken, openid: options.openid, forceQr: checkout?.alipay_force_qrcode });
       const result = await paymentApi.createOrder(body);
-      const launched = launchPayment(result, { amount: activeAmount, paymentType: activeMethod, orderType: activeType, planId: activePlanId, currency: methods[activeMethod]?.currency, stripePublishableKey: checkout?.stripe_publishable_key }, navigate);
+      const launched = launchPayment(result, { amount: activeAmount, paymentType: activeMethod, orderType: activeType, planId: activePlanId, currency: methods[activeMethod]?.currency, stripePublishableKey: checkout?.stripe_publishable_key, forceQr: checkout?.alipay_force_qrcode && activeMethod === "alipay" }, navigate);
       if (launched.jsapi) {
         const response = await invokeWechat(launched.jsapi);
         const message = String(response?.err_msg || "").toLowerCase();
         if (message.includes("cancel")) throw new Error(locale === "zh" ? "支付已取消。" : "Payment was cancelled.");
+        if (message && !message.includes("ok")) throw new Error(locale === "zh" ? `微信支付失败：${message}` : `WeChat Pay failed: ${message}`);
         navigate(`/payment/result?${paymentQuery(launched)}`);
       }
     } catch (error) { notify("error", error.message); } finally { if (mountedRef.current) setState((current) => ({ ...current, busy: false })); }
@@ -231,10 +295,11 @@ export function PurchasePage() {
   if (state.loading) return <Page title={t("purchase.title")}><Panel><Spinner /></Panel></Page>;
   if (state.error || !checkout) return <Page title={t("purchase.title")}><Panel><ErrorState message={state.error} onRetry={load} /></Panel></Page>;
   const methodAvailable = methodFits(selectedLimit, tab === "subscription" ? payable : orderAmount);
+  const purchaseProps = { checkout, user, locale, t, formatCurrency, amount, setAmount, methods, method, setMethod, orderAmount, chargeAmount, selectedLimit, feeRate, fee, payable, state, methodAvailable, plan, setPlan, subscriptionTotalForMethod, onPay: () => create() };
   return <Page title={t("purchase.title")} subtitle={t("purchase.subtitle")}>
-    {!checkout.balance_disabled && <div className="console-tabs"><button className={tab === "balance" ? "is-active" : ""} onClick={() => { setTab("balance"); setPlan(null); }}>{t("purchase.balance")}</button><button className={tab === "subscription" ? "is-active" : ""} onClick={() => setTab("subscription")}>{t("purchase.plan")}</button></div>}
-    {tab === "balance" ? <div className="console-grid console-grid--sidebar"><Panel title={t("purchase.balance")}><div className="console-panel-body console-payment-form"><div className="console-payment-account"><span>{locale === "zh" ? "充值账户" : "Recharge account"}</span><strong>{user?.username || user?.email}</strong><small>{t("common.balance")}: {formatCurrency(user?.balance)}</small></div><Field label={t("purchase.amount")}><TextInput type="number" min={checkout.global_min || 0} max={checkout.global_max || undefined} value={amount} onChange={(event) => setAmount(event.target.value)} /></Field><div className="console-amounts">{[10, 20, 50, 100, 200, 500, 1000].map((value) => <button type="button" className={Number(amount) === value ? "is-selected" : ""} key={value} onClick={() => setAmount(value)}>{value}</button>)}</div><PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={orderAmount} locale={locale} /></div></Panel><Panel title={locale === "zh" ? "订单摘要" : "Order summary"}><div className="console-panel-body console-order-summary"><div><span>{t("purchase.amount")}</span><strong>{currency(chargeAmount, selectedLimit?.currency, locale)}</strong></div>{feeRate > 0 && <div><span>{t("purchase.fee")} ({feeRate}%)</span><strong>{currency(fee, selectedLimit?.currency, locale)}</strong></div>}<div className="is-total"><span>{t("purchase.total")}</span><strong>{currency(payable, selectedLimit?.currency, locale)}</strong></div>{Number(checkout.balance_recharge_multiplier || 1) !== 1 && <p>{locale === "zh" ? `到账余额：${formatCurrency(orderAmount * Number(checkout.balance_recharge_multiplier || 1))}` : `Balance credited: ${formatCurrency(orderAmount * Number(checkout.balance_recharge_multiplier || 1))}`}</p>}<Button variant="primary" icon="card" onClick={() => create()} disabled={state.busy || !methodAvailable || orderAmount <= 0}>{state.busy ? t("common.loading") : t("purchase.pay")}</Button></div></Panel></div> : <><div className="console-plan-grid">{checkout.plans.map((item) => <PlanCard key={item.id} plan={item} selected={plan?.id === item.id} onSelect={setPlan} locale={locale} />)}</div>{!checkout.plans.length && <Panel><EmptyState icon="gift" /></Panel>}{plan && <Panel title={locale === "zh" ? "确认套餐" : "Confirm your plan"}><div className="console-panel-body console-subscribe-checkout"><div><strong>{plan.name}</strong><span>{currency(chargeAmount, selectedLimit?.currency, locale)}</span></div><PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={payable} amountForMethod={subscriptionTotalForMethod} locale={locale} /><Button variant="primary" onClick={() => create()} disabled={state.busy || !methodAvailable}>{state.busy ? t("common.loading") : `${t("purchase.pay")} · ${currency(payable, selectedLimit?.currency, locale)}`}</Button></div></Panel>}</>}
-    {(checkout.help_text || checkout.help_image_url) && <Panel><div className="console-panel-body console-payment-help">{safeExternalUrl(checkout.help_image_url) && <img src={safeExternalUrl(checkout.help_image_url)} alt="" />}<p>{checkout.help_text}</p></div></Panel>}
+    <PurchaseTabs hidden={checkout.balance_disabled} tab={tab} setTab={setTab} setPlan={setPlan} locale={locale} t={t} />
+    {tab === "balance" ? <BalancePurchase {...purchaseProps} /> : <SubscriptionPurchase {...purchaseProps} />}
+    <PurchaseHelp checkout={checkout} />
   </Page>;
 }
 
@@ -351,6 +416,43 @@ export function PaymentResultPage() {
   return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className={`console-payment-state-icon ${success ? "is-success" : state.error ? "is-error" : ""}`}><Icon name={success ? "check" : state.error ? "warning" : "clock"} size={30} /></span>{state.loading ? <Spinner label={t("payment.processing")} /> : <><h1>{success ? t("payment.success") : pendingStatus(state.order?.status) ? t("payment.processing") : t("payment.failed")}</h1><p>{state.error || (success ? (locale === "zh" ? "余额或订阅权益将在片刻内更新。" : "Your balance or subscription will update shortly.") : state.order?.status)}</p>{state.order && <div className="console-result-order"><span>{t("orders.number")}</span><strong className="console-mono">{state.order.out_trade_no}</strong><span>{t("common.status")}</span><StatusBadge status={String(state.order.status).toLowerCase()} label={statusLabel(String(state.order.status).toLowerCase(), locale)} /></div>}<div className="console-payment-state-actions"><Link className="console-button console-button--primary" to="/orders">{t("payment.viewOrders")}</Link><Link className="console-button console-button--secondary" to="/purchase">{t("payment.back")}</Link></div></>}</div></Panel></PaymentShell>;
 }
 
+async function loadStripePaymentClient(snapshot, clientSecretParam, locale) {
+  const clientSecret = clientSecretParam || snapshot?.clientSecret;
+  if (!snapshot?.orderId || !clientSecret) throw new Error(locale === "zh" ? "支付参数不完整。" : "Payment parameters are incomplete.");
+  const checkout = await paymentApi.checkout().catch(() => ({}));
+  const publishableKey = snapshot.stripePublishableKey || checkout.stripe_publishable_key;
+  if (!publishableKey) throw new Error(locale === "zh" ? "Stripe 尚未配置。" : "Stripe is not configured.");
+  const { loadStripe } = await import("@stripe/stripe-js");
+  return { clientSecret, stripe: await loadStripe(publishableKey) };
+}
+
+async function confirmStripeMethod({ stripe, method, clientSecret, snapshot, finish, setState }) {
+  if (method === "alipay") {
+    setState((current) => ({ ...current, loading: false }));
+    const result = await stripe.confirmAlipayPayment(clientSecret, { return_url: `${window.location.origin}/payment/result?${paymentQuery(snapshot)}` });
+    if (result.error) throw new Error(result.error.message);
+    return true;
+  }
+  if (method !== "wechat_pay") return false;
+  const client = /Mobi/i.test(navigator.userAgent) ? "mobile_web" : "web";
+  const result = await stripe.confirmWechatPayPayment(clientSecret, { payment_method_options: { wechat_pay: { client } } });
+  if (result.error) throw new Error(result.error.message);
+  const qr = result.paymentIntent?.next_action?.wechat_pay_display_qr_code?.image_data_url || "";
+  if (result.paymentIntent?.status === "succeeded") finish();
+  else setState((current) => ({ ...current, loading: false, qr }));
+  return true;
+}
+
+function mountStripeElement(stripe, clientSecret, onReady) {
+  const darkTheme = document.documentElement.dataset.consoleTheme === "dark";
+  const accent = getComputedStyle(document.documentElement).getPropertyValue("--console-accent").trim() || "#0e7d73";
+  const elements = stripe.elements({ clientSecret, appearance: { theme: darkTheme ? "night" : "stripe", variables: { borderRadius: "12px", colorPrimary: accent } } });
+  const element = elements.create("payment", { layout: "tabs" });
+  element.mount("#stripe-payment-element");
+  element.on("ready", onReady);
+  return { element, elements };
+}
+
 export function StripePaymentPage({ popup = false }) {
   const { t, locale } = useLocale();
   const navigate = useNavigate();
@@ -362,7 +464,13 @@ export function StripePaymentPage({ popup = false }) {
   const resumeToken = params.get("resume_token") || "";
   const clientSecretParam = params.get("client_secret") || "";
   const methodParam = params.get("method") || "";
-  const snapshot = useMemo(() => readRecovery(resumeToken), [resumeToken]);
+  const routeOrderId = Number(params.get("order_id") || 0);
+  const snapshot = useMemo(() => {
+    const restored = readRecovery(resumeToken);
+    if (restored && (!routeOrderId || restored.orderId === routeOrderId)) return { ...restored, clientSecret: clientSecretParam || restored.clientSecret };
+    if (!routeOrderId) return null;
+    return createRecovery({ order_id: routeOrderId, client_secret: clientSecretParam, out_trade_no: params.get("out_trade_no") || "", resume_token: resumeToken });
+  }, [clientSecretParam, params, resumeToken, routeOrderId]);
   const finish = useCallback(() => {
     setState((current) => ({ ...current, success: true, qr: "" }));
     window.clearInterval(intervalRef.current);
@@ -373,33 +481,12 @@ export function StripePaymentPage({ popup = false }) {
     let active = true;
     let element = null;
     const initialize = async () => {
-      const clientSecret = clientSecretParam || snapshot?.clientSecret;
-      if (!snapshot?.orderId || !clientSecret) throw new Error(locale === "zh" ? "支付参数不完整。" : "Payment parameters are incomplete.");
-      const checkout = await paymentApi.checkout().catch(() => ({}));
-      const publishableKey = snapshot.stripePublishableKey || checkout.stripe_publishable_key;
-      if (!publishableKey) throw new Error(locale === "zh" ? "Stripe 尚未配置。" : "Stripe is not configured.");
-      const { loadStripe } = await import("@stripe/stripe-js");
-      const stripe = await loadStripe(publishableKey);
+      const { clientSecret, stripe } = await loadStripePaymentClient(snapshot, clientSecretParam, locale);
       if (!active || !stripe) return;
-      const method = methodParam;
-      if (method === "alipay") {
-        setState((current) => ({ ...current, loading: false }));
-        const result = await stripe.confirmAlipayPayment(clientSecret, { return_url: `${window.location.origin}/payment/result?${paymentQuery(snapshot)}` });
-        if (result.error) throw new Error(result.error.message);
-        return;
-      }
-      if (method === "wechat_pay") {
-        const result = await stripe.confirmWechatPayPayment(clientSecret, { payment_method_options: { wechat_pay: { client: /Mobi/i.test(navigator.userAgent) ? "mobile_web" : "web" } } });
-        if (result.error) throw new Error(result.error.message);
-        const qr = result.paymentIntent?.next_action?.wechat_pay_display_qr_code?.image_data_url || "";
-        if (result.paymentIntent?.status === "succeeded") finish(); else setState((current) => ({ ...current, loading: false, qr }));
-        return;
-      }
-      const elements = stripe.elements({ clientSecret, appearance: { theme: "stripe", variables: { borderRadius: "12px", colorPrimary: "#397eab" } } });
-      element = elements.create("payment", { layout: "tabs" });
-      element.mount("#stripe-payment-element");
-      element.on("ready", () => active && setState((current) => ({ ...current, loading: false, ready: true })));
-      paymentElementRef.current = { stripe, elements };
+      if (await confirmStripeMethod({ stripe, method: methodParam, clientSecret, snapshot, finish, setState })) return;
+      const mounted = mountStripeElement(stripe, clientSecret, () => active && setState((current) => ({ ...current, loading: false, ready: true })));
+      element = mounted.element;
+      paymentElementRef.current = { stripe, elements: mounted.elements };
     };
     initialize().catch((error) => active && setState({ loading: false, error: error.message, ready: false, busy: false, success: false, qr: "" }));
     if (snapshot?.orderId) intervalRef.current = window.setInterval(async () => { try { const order = await paymentApi.order(snapshot.orderId); if (active && successfulOrder(order.status)) finish(); } catch { /* transient poll error */ } }, 3000);

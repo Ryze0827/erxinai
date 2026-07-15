@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { announcementsApi, keysApi, subscriptionsApi } from "../api";
+import { getAccessToken } from "../api/session";
 import { useConsole, resolveFeature } from "./ConsoleContext";
 import { Icon } from "./Icon";
 import { useLocale } from "./i18n";
-import { Button, EmptyState, IconButton, Spinner, ToastViewport } from "./UI";
+import { Button, EmptyState, IconButton, Modal, Spinner, ThemeToggle, ToastViewport } from "./UI";
 import { safeExternalUrl, safeImageUrl } from "./utils";
 import "./console.css";
 
@@ -77,6 +78,9 @@ function AnnouncementMenu() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
+  const [popup, setPopup] = useState(null);
+  const [popupQueue, setPopupQueue] = useState([]);
+  const shownPopupIds = useRef(new Set());
   const mountedRef = useRef(true);
 
   const load = async () => {
@@ -85,12 +89,20 @@ function AnnouncementMenu() {
       if (!mountedRef.current) return;
       setItems(nextItems);
       setLoaded(true);
+      const pending = nextItems.filter((item) => item.notify_mode === "popup" && !item.is_read && !item.read_at && !shownPopupIds.current.has(item.id));
+      pending.forEach((item) => shownPopupIds.current.add(item.id));
+      if (pending.length) setPopupQueue((current) => [...current, ...pending]);
     } catch (error) {
       if (mountedRef.current) notify("error", error.message);
     }
   };
 
   useEffect(() => { mountedRef.current = true; load(); return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => {
+    if (popup || !popupQueue.length) return;
+    setPopup(popupQueue[0]);
+    setPopupQueue((current) => current.slice(1));
+  }, [popup, popupQueue]);
   const unread = items.filter((item) => !item.is_read && !item.read_at).length;
   const markRead = async (item) => {
     if (item.is_read || item.read_at) return;
@@ -103,7 +115,13 @@ function AnnouncementMenu() {
     }
   };
 
-  return <div className="console-popover-wrap"><IconButton icon="bell" label={t("announcement.title")} onClick={() => setOpen((value) => !value)} />{unread > 0 && <b className="console-notification-dot">{unread > 9 ? "9+" : unread}</b>}{open && <div className="console-popover console-announcements"><div className="console-popover-head"><strong>{t("announcement.title")}</strong><IconButton icon="refresh" label={t("common.refresh")} onClick={load} /></div>{!loaded ? <Spinner /> : !items.length ? <EmptyState title={t("announcement.empty")} /> : <div className="console-announcement-list">{items.map((item) => <button key={item.id} className={item.is_read || item.read_at ? "is-read" : ""} onClick={() => markRead(item)}><strong>{item.title}</strong><p>{item.content || item.message}</p><small>{formatDate(item.created_at)}</small></button>)}</div>}</div>}</div>;
+  const closePopup = async () => {
+    const current = popup;
+    setPopup(null);
+    if (current) await markRead(current);
+  };
+
+  return <div className="console-popover-wrap"><IconButton icon="bell" label={t("announcement.title")} onClick={() => setOpen((value) => !value)} />{unread > 0 && <b className="console-notification-dot">{unread > 9 ? "9+" : unread}</b>}{open && <div className="console-popover console-announcements"><div className="console-popover-head"><strong>{t("announcement.title")}</strong><IconButton icon="refresh" label={t("common.refresh")} onClick={load} /></div>{!loaded ? <Spinner /> : !items.length ? <EmptyState title={t("announcement.empty")} /> : <div className="console-announcement-list">{items.map((item) => <button key={item.id} className={item.is_read || item.read_at ? "is-read" : ""} onClick={() => { shownPopupIds.current.add(item.id); setPopup(item); setOpen(false); }}><strong>{item.title}</strong><p>{item.content || item.message}</p><small>{formatDate(item.created_at)}</small></button>)}</div>}</div>}<Modal open={Boolean(popup)} title={popup?.title || t("announcement.title")} description={popup?.created_at ? formatDate(popup.created_at) : ""} onClose={closePopup} footer={<Button variant="primary" icon="check" onClick={closePopup}>{t("common.confirm")}</Button>}><div className="console-markdown">{popup?.content || popup?.message}</div></Modal></div>;
 }
 
 function UserMenu({ onNavigate }) {
@@ -141,11 +159,12 @@ function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
     return () => { active = false; };
   }, []);
 
-  return <header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label="Menu" onClick={() => setMobileOpen((value) => !value)} /><div><span>{t("app.name")}</span><strong>{title}</strong></div></div><div className="console-header-actions">{summary?.active_count > 0 && <Link className="console-subscription-pill" to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}{safeExternalUrl(settings?.doc_url) && <a className="console-header-link" href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<button className="console-language" onClick={() => setLocale(locale === "en" ? "zh" : "en")}><Icon name="globe" size={17} />{t("nav.language")}</button><AnnouncementMenu /><div className="console-balance"><span>{t("common.balance")}</span><strong>{formatCurrency(user?.balance || 0)}</strong></div><UserMenu onNavigate={() => setMobileOpen(false)} /></div></header>;
+  return <header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label="Menu" onClick={() => setMobileOpen((value) => !value)} /><div><span>{t("app.name")}</span><strong>{title}</strong></div></div><div className="console-header-actions">{summary?.active_count > 0 && <Link className="console-subscription-pill" to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}{safeExternalUrl(settings?.doc_url) && <a className="console-header-link" href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<button className="console-language" onClick={() => setLocale(locale === "en" ? "zh" : "en")}><Icon name="globe" size={17} />{t("nav.language")}</button><ThemeToggle /><AnnouncementMenu /><div className="console-balance"><span>{t("common.balance")}</span><strong>{formatCurrency(user?.balance || 0)}</strong></div><UserMenu onNavigate={() => setMobileOpen(false)} /></div></header>;
 }
 
 function pageTitle(pathname, items, t) {
-  const exact = items.find((item) => item.path === pathname || pathname.startsWith(`${item.path}/`));
+  const currentPath = pathname === "/docs/batch-image" ? "/batch-image" : pathname;
+  const exact = items.find((item) => item.path === currentPath || currentPath.startsWith(`${item.path}/`));
   if (exact) return exact.label || t(exact.key);
   return t("nav.dashboard");
 }
@@ -191,6 +210,7 @@ export function ConsoleLayout({ children }) {
 export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false }) {
   const location = useLocation();
   const { authenticated, user, settings, settingsLoading, settingsError } = useConsole();
+  if (getAccessToken() && !user) return <div className="console-standalone"><Spinner /></div>;
   if (!authenticated) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   if (settings?.backend_mode_enabled && user?.role !== "admin") return <Navigate to="/login" replace />;
   if (standardOnly && user?.run_mode === "simple") return <Navigate to="/dashboard" replace />;

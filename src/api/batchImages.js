@@ -1,5 +1,7 @@
 import { gatewayRequest } from "./client";
 
+const LARGE_TRANSFER_TIMEOUT_MS = 10 * 60 * 1000;
+
 export const batchImagesApi = {
   submit: (apiKey, body, idempotencyKey) => gatewayRequest("/v1/images/batches", {
     method: "POST",
@@ -18,8 +20,13 @@ export const batchImagesApi = {
     apiKey,
     query: { image_index: imageIndex },
     responseType: "blob",
+    timeoutMs: LARGE_TRANSFER_TIMEOUT_MS,
   }),
   cancel: (apiKey, id) => gatewayRequest(`/v1/images/batches/${encodeURIComponent(id)}/cancel`, { method: "POST", apiKey }),
-  download: (apiKey, id) => gatewayRequest(`/v1/images/batches/${encodeURIComponent(id)}/download`, { apiKey, responseType: "blob" }),
+  download: (apiKey, id) => gatewayRequest(`/v1/images/batches/${encodeURIComponent(id)}/download`, {
+    apiKey,
+    responseType: "blob",
+    timeoutMs: LARGE_TRANSFER_TIMEOUT_MS,
+  }),
   remove: (apiKey, id) => gatewayRequest(`/v1/images/batches/${encodeURIComponent(id)}`, { method: "DELETE", apiKey }),
 };

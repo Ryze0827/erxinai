@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { refreshAuthSession } from "../api/client";
+import { clearExpiredSession, refreshAuthSession } from "../api/client";
 import { authApi } from "../api/auth";
-import { AUTH_SESSION_EVENT, getAccessToken, getTokenExpiresAt, setStoredUser } from "../api/session";
+import { AUTH_SESSION_EVENT, getAccessToken, getStoredUser, getTokenExpiresAt, setStoredUser } from "../api/session";
 
 const REFRESH_EARLY_MS = 60_000;
 const MAX_TIMER_MS = 2_147_000_000;
@@ -49,8 +49,8 @@ export function SessionManager() {
         if (cancelled) return;
         setStoredUser(user);
         scheduleRefresh();
-      } catch {
-        // A failed restore is handled by the API refresh path.
+      } catch (error) {
+        if (!cancelled && (error?.status === 401 || !getStoredUser())) clearExpiredSession();
       }
     };
 
