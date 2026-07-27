@@ -5,6 +5,7 @@ import { App } from "./App.jsx";
 import "./cascade.css";
 import "./landing.css";
 import "./styles.css";
+import "./theme.css";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
