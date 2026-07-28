@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { paymentApi } from "../../api";
+import { paymentApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, ConfirmDialog, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatusBadge, TextArea, TextInput } from "../UI";
+import { Button, ConfirmDialog, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatusBadge, TextArea } from "../UI";
 import { clearRecovery, createRecovery, paymentQuery, readRecovery, saveRecovery, successfulOrder, terminalOrder, visibleMethods } from "../paymentFlow";
 import { safeExternalUrl, safeImageUrl, statusLabel } from "../utils";
 
@@ -16,6 +16,26 @@ function paymentLabel(type, locale = "en") {
     ? { alipay: "支付宝", wxpay: "微信支付", stripe: "Stripe", easypay: "易支付", airwallex: "Airwallex" }
     : { alipay: "Alipay", wxpay: "WeChat Pay", stripe: "Stripe", easypay: "EasyPay", airwallex: "Airwallex" };
   return labels[normalized] || type;
+}
+
+function paymentDescription(type, locale = "en") {
+  const normalized = type === "alipay_direct" ? "alipay" : type === "wxpay_direct" ? "wxpay" : type;
+  const descriptions = locale === "zh"
+    ? {
+      alipay: "安全快捷，推荐使用支付宝支付",
+      wxpay: "即时支付，微信扫码完成付款",
+      stripe: "使用银行卡安全完成在线支付",
+      easypay: "通过聚合支付通道完成付款",
+      airwallex: "使用银行卡或本地方式完成付款",
+    }
+    : {
+      alipay: "Fast and secure payment with Alipay",
+      wxpay: "Scan with WeChat to pay instantly",
+      stripe: "Secure online card payment",
+      easypay: "Pay through the available payment gateway",
+      airwallex: "Pay by card or a supported local method",
+    };
+  return descriptions[normalized] || (locale === "zh" ? "安全加密支付" : "Secure encrypted payment");
 }
 
 function PaymentMark({ type, method }) {
@@ -30,7 +50,7 @@ function PaymentMark({ type, method }) {
 }
 
 function currency(value, code, locale) {
-  try { return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", { style: "currency", currency: code || "CNY", maximumFractionDigits: 2 }).format(Number(value) || 0); }
+  try { return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", { style: "currency", currency: code || "CNY", currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 }).format(Number(value) || 0); }
   catch { return `${code || ""} ${(Number(value) || 0).toFixed(2)}`; }
 }
 
@@ -41,7 +61,7 @@ function methodFits(method, amount) {
 }
 
 function PaymentMethods({ methods, selected, setSelected, amount, amountForMethod, locale }) {
-  return <div className="console-payment-methods" role="radiogroup" aria-label={locale === "zh" ? "支付方式" : "Payment method"}>{Object.entries(methods).map(([type, method]) => <button type="button" role="radio" aria-checked={selected === type} key={type} className={selected === type ? "is-selected" : ""} disabled={!methodFits(method, amountForMethod ? amountForMethod(method) : amount)} onClick={() => setSelected(type)}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{Number(method.fee_rate || 0) > 0 ? `${method.fee_rate}% ${locale === "zh" ? "手续费" : "fee"}` : (locale === "zh" ? "无额外手续费" : "No extra fee")}</small></div>{selected === type && <Icon name="check" size={17} />}</button>)}</div>;
+  return <div className="console-payment-methods" role="radiogroup" aria-label={locale === "zh" ? "支付方式" : "Payment method"}>{Object.entries(methods).map(([type, method]) => <button type="button" role="radio" aria-checked={selected === type} key={type} className={selected === type ? "is-selected" : ""} disabled={!methodFits(method, amountForMethod ? amountForMethod(method) : amount)} onClick={() => setSelected(type)}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{paymentDescription(type, locale)}</small></div><span className="console-payment-method-selected">{selected === type && <Icon name="check" size={15} />}</span><Icon name="chevronDown" size={15} /></button>)}</div>;
 }
 
 function makeOrderBody({ amount, paymentType, orderType, planId, resumeToken, openid, forceQr }) {
@@ -79,6 +99,20 @@ function subscriptionCharge(price, checkout, method) {
   const rate = Number(checkout?.subscription_usd_to_cny_rate || 0);
   const currencyCode = String(method?.currency || "CNY").toUpperCase();
   return roundPaymentAmount(rate > 0 && currencyCode === "CNY" ? Number(price || 0) * rate : Number(price || 0), currencyCode);
+}
+
+function balanceCharge(credit, checkout, method) {
+  const currencyCode = String(method?.currency || "CNY").toUpperCase();
+  const multiplier = Number(checkout?.balance_recharge_multiplier || 1);
+  const amount = Number(credit || 0);
+  const converted = currencyCode === "CNY" && multiplier > 0 ? amount / multiplier : amount;
+  return roundPaymentAmount(converted, currencyCode);
+}
+
+function balanceCreditLimit(charge, checkout, method) {
+  const currencyCode = String(method?.currency || "CNY").toUpperCase();
+  const multiplier = Number(checkout?.balance_recharge_multiplier || 1);
+  return roundPaymentAmount(currencyCode === "CNY" ? Number(charge || 0) * multiplier : Number(charge || 0), "USD");
 }
 
 function withWechatResumeContext(authorizeUrl, context) {
@@ -166,24 +200,84 @@ function PlanCard({ plan, selected, onSelect, locale }) {
 
 function PurchaseTabs({ hidden, tab, setTab, setPlan, locale, t }) {
   if (hidden) return null;
-  return <div className="console-tabs" role="tablist" aria-label={locale === "zh" ? "购买类型" : "Purchase type"}><button type="button" role="tab" aria-selected={tab === "balance"} className={tab === "balance" ? "is-active" : ""} onClick={() => { setTab("balance"); setPlan(null); }}>{t("purchase.balance")}</button><button type="button" role="tab" aria-selected={tab === "subscription"} className={tab === "subscription" ? "is-active" : ""} onClick={() => setTab("subscription")}>{t("purchase.plan")}</button></div>;
+  return <div className="console-tabs console-purchase-tabs" role="tablist" aria-label={locale === "zh" ? "购买类型" : "Purchase type"}><button type="button" role="tab" aria-selected={tab === "balance"} className={tab === "balance" ? "is-active" : ""} onClick={() => { setTab("balance"); setPlan(null); }}><Icon name="card" size={16} />{locale === "zh" ? "充值" : t("purchase.balance")}</button><button type="button" role="tab" aria-selected={tab === "subscription"} className={tab === "subscription" ? "is-active" : ""} onClick={() => setTab("subscription")}><Icon name="gift" size={16} />{locale === "zh" ? "订阅" : t("purchase.plan")}</button></div>;
 }
 
 function AmountPresets({ amount, setAmount }) {
-  return <div className="console-amounts">{[10, 20, 50, 100, 200, 500, 1000].map((value) => <button type="button" aria-pressed={Number(amount) === value} className={Number(amount) === value ? "is-selected" : ""} key={value} onClick={() => setAmount(value)}>{value}</button>)}</div>;
+  return <div className="console-amounts console-purchase-amounts">{[10, 20, 50, 100, 200, 500, 1000, 2000].map((value) => <button type="button" aria-pressed={Number(amount) === value} className={Number(amount) === value ? "is-selected" : ""} key={value} onClick={() => setAmount(value)}><strong>${value}</strong><span className="console-purchase-amount-check"><Icon name="check" size={13} /></span></button>)}</div>;
 }
 
-function BalanceForm({ checkout, user, locale, t, formatCurrency, amount, setAmount, methods, method, setMethod, orderAmount }) {
-  return <Panel title={t("purchase.balance")}><div className="console-panel-body console-payment-form"><div className="console-payment-account"><span>{locale === "zh" ? "充值账户" : "Recharge account"}</span><strong>{user?.username || user?.email}</strong><small>{t("common.balance")}: {formatCurrency(user?.balance)}</small></div><Field label={t("purchase.amount")}><TextInput type="number" min={checkout.global_min || 0} max={checkout.global_max || undefined} value={amount} onChange={(event) => setAmount(event.target.value)} /></Field><AmountPresets amount={amount} setAmount={setAmount} /><PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={orderAmount} locale={locale} /></div></Panel>;
+function PurchaseSectionTitle({ title, description }) {
+  return <div className="console-purchase-section-title"><strong>{title}</strong>{description && <small>{description}</small>}</div>;
 }
 
-function BalanceOrderSummary({ checkout, locale, t, formatCurrency, chargeAmount, selectedLimit, feeRate, fee, payable, orderAmount, state, methodAvailable, onPay }) {
-  const multiplier = Number(checkout.balance_recharge_multiplier || 1);
-  return <Panel title={locale === "zh" ? "订单摘要" : "Order summary"}><div className="console-panel-body console-order-summary"><div><span>{t("purchase.amount")}</span><strong>{currency(chargeAmount, selectedLimit?.currency, locale)}</strong></div>{feeRate > 0 && <div><span>{t("purchase.fee")} ({feeRate}%)</span><strong>{currency(fee, selectedLimit?.currency, locale)}</strong></div>}<div className="is-total"><span>{t("purchase.total")}</span><strong>{currency(payable, selectedLimit?.currency, locale)}</strong></div>{multiplier !== 1 && <p>{locale === "zh" ? `到账余额：${formatCurrency(orderAmount * multiplier)}` : `Balance credited: ${formatCurrency(orderAmount * multiplier)}`}</p>}<Button variant="primary" icon="card" onClick={onPay} disabled={state.busy || !methodAvailable || orderAmount <= 0}>{state.busy ? t("common.loading") : t("purchase.pay")}</Button></div></Panel>;
+function successfulBalanceOrders(items = []) {
+  return items.filter((item) => item.order_type === "balance" && successfulOrder(item.status));
 }
 
-function BalancePurchase(props) {
-  return <div className="console-grid console-grid--sidebar"><BalanceForm {...props} /><BalanceOrderSummary {...props} /></div>;
+async function purchaseOrders() {
+  const first = await paymentApi.orders({ page: 1, page_size: 100, order_type: "balance" });
+  const pages = Number(first.pages || 1);
+  if (pages <= 1) return first.items || [];
+  const remaining = await Promise.all(Array.from({ length: pages - 1 }, (_, index) => paymentApi.orders({ page: index + 2, page_size: 100, order_type: "balance" })));
+  return [first, ...remaining].flatMap((page) => page.items || []);
+}
+
+function purchaseOverview(ordersResult, usageResult) {
+  const orders = ordersResult.status === "fulfilled" ? successfulBalanceOrders(ordersResult.value) : [];
+  const latest = orders.reduce((current, item) => {
+    const itemDate = item.completed_at || item.paid_at || item.created_at;
+    const currentDate = current?.completed_at || current?.paid_at || current?.created_at;
+    return !current || Date.parse(itemDate) > Date.parse(currentDate) ? item : current;
+  }, null);
+  return {
+    loading: false,
+    totalRecharge: ordersResult.status === "fulfilled" ? orders.reduce((sum, item) => sum + Number(item.amount || 0), 0) : null,
+    totalSpend: usageResult.status === "fulfilled" ? Number(usageResult.value?.total_actual_cost ?? 0) : null,
+    lastRecharge: latest?.completed_at || latest?.paid_at || latest?.created_at || null,
+  };
+}
+
+async function loadPurchaseOverview() {
+  const [orders, usage] = await Promise.allSettled([purchaseOrders(), usageApi.dashboardStats()]);
+  return purchaseOverview(orders, usage);
+}
+
+function OverviewMetric({ label, value, loading }) {
+  return <div className="console-purchase-overview-metric"><small>{label}</small>{loading ? <i aria-hidden="true" /> : <strong>{value}</strong>}</div>;
+}
+
+function overviewDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  const pad = (part) => String(part).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function BalanceOverview({ user, overview, formatUsd, locale }) {
+  const account = user?.username || user?.email;
+  const recharge = overview.totalRecharge == null ? "—" : formatUsd(overview.totalRecharge);
+  const spend = overview.totalSpend == null ? "—" : formatUsd(overview.totalSpend);
+  const latest = overview.lastRecharge ? overviewDate(overview.lastRecharge) : "—";
+  return <section className="console-purchase-overview">
+    <div className="console-purchase-overview-balance">
+      <span className="console-purchase-overview-icon"><Icon name="wallet" size={30} /></span>
+      <div className="console-purchase-overview-copy"><small>{locale === "zh" ? "当前余额 (USD)" : "Current balance (USD)"}</small><strong>{formatUsd(user?.balance)}</strong><span>{locale === "zh" ? "账户" : "Account"} · {account || "—"}</span></div>
+    </div>
+    <div className="console-purchase-overview-stats">
+      <OverviewMetric label={locale === "zh" ? "累计充值" : "Total recharged"} value={recharge} loading={overview.loading} />
+      <OverviewMetric label={locale === "zh" ? "累计消费" : "Total spent"} value={spend} loading={overview.loading} />
+      <OverviewMetric label={locale === "zh" ? "最近充值" : "Latest recharge"} value={latest} loading={overview.loading} />
+    </div>
+    <img className="console-purchase-overview-art" src="/assets/img/purchase-wallet-stack.png" alt="" aria-hidden="true" />
+  </section>;
+}
+
+function BalancePurchase({ user, overview, locale, t, formatUsd, amount, setAmount, methods, method, setMethod, orderAmount, selectedLimit, payable, state, methodAvailable, minimumCredit, maximumCredit, onPay }) {
+  const methodCount = Object.keys(methods).length;
+  const buttonAmount = currency(payable, selectedLimit?.currency || "CNY", "zh");
+  const minimumLabel = minimumCredit > 0 ? `$${minimumCredit}` : "$10";
+  return <div className="console-purchase-balance"><BalanceOverview user={user} overview={overview} formatUsd={formatUsd} locale={locale} /><section><PurchaseSectionTitle title={locale === "zh" ? "快捷充值" : "Quick top-up"} description={locale === "zh" ? "选择以下金额快速充值，到账即时生效" : "Choose an amount to add credit instantly"} /><AmountPresets amount={amount} setAmount={setAmount} /></section><section><PurchaseSectionTitle title={locale === "zh" ? "自定义金额" : "Custom amount"} /><label className="console-purchase-custom-input"><span>$</span><input type="number" min={minimumCredit || undefined} max={maximumCredit || undefined} value={amount} placeholder={locale === "zh" ? `输入充值金额，最低 ${minimumLabel}` : `Enter an amount, minimum ${minimumLabel}`} onChange={(event) => setAmount(event.target.value)} /></label></section><section><PurchaseSectionTitle title={t("purchase.method")} />{methodCount ? <PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={orderAmount} locale={locale} /> : <div className="console-payment-empty">{locale === "zh" ? "暂未配置可用支付方式" : "No payment methods are available"}</div>}</section><div className="console-purchase-security"><Icon name="shield" size={15} />{locale === "zh" ? "您的支付信息将通过加密通道传输，我们不会存储您的支付凭证。" : "Your payment information is encrypted in transit and payment credentials are never stored."}</div><Button variant="primary" className="console-purchase-submit" icon="shield" onClick={onPay} disabled={state.busy || !methodAvailable || orderAmount <= 0}>{state.busy ? t("common.loading") : `${locale === "zh" ? "确认支付" : "Confirm payment"} ${buttonAmount}`}</Button></div>;
 }
 
 function SubscriptionCheckout({ plan, locale, chargeAmount, selectedLimit, methods, method, setMethod, payable, subscriptionTotalForMethod, state, methodAvailable, onPay, t }) {
@@ -202,14 +296,15 @@ function PurchaseHelp({ checkout }) {
 }
 
 export function PurchasePage() {
-  const { t, locale, formatCurrency } = useLocale();
+  const { t, locale, formatCurrency, formatUsd } = useLocale();
   const { user, notify } = useConsole();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [checkout, setCheckout] = useState(null);
+  const [overview, setOverview] = useState({ loading: true, totalRecharge: null, totalSpend: null, lastRecharge: null });
   const [state, setState] = useState({ loading: true, error: "", busy: false });
   const [tab, setTab] = useState("balance");
-  const [amount, setAmount] = useState(50);
+  const [amount, setAmount] = useState(10);
   const [method, setMethod] = useState("");
   const [plan, setPlan] = useState(null);
   const resumeHandled = useRef(false);
@@ -217,16 +312,21 @@ export function PurchasePage() {
   const initialQueryRef = useRef({ tab: params.get("tab") || "", group: params.get("group") || "" });
   const methods = useMemo(() => visibleMethods(checkout?.methods), [checkout]);
   const selectedLimit = methods[method];
-  const orderAmount = tab === "subscription" ? Number(plan?.price || 0) : Number(amount || 0);
+  const creditAmount = Number(amount || 0);
+  const orderAmount = tab === "subscription" ? Number(plan?.price || 0) : balanceCharge(creditAmount, checkout, selectedLimit);
   const chargeAmount = tab === "subscription" ? subscriptionCharge(orderAmount, checkout, selectedLimit) : orderAmount;
   const feeRate = Number(checkout?.recharge_fee_rate || 0);
   const selectedCurrency = selectedLimit?.currency || "CNY";
   const fee = paymentFee(chargeAmount, feeRate, selectedCurrency);
   const payable = paymentTotal(chargeAmount, feeRate, selectedCurrency);
+  const minimumCredit = Math.max(10, balanceCreditLimit(checkout?.global_min, checkout, selectedLimit));
+  const maximumCredit = Number(checkout?.global_max) > 0 ? balanceCreditLimit(checkout.global_max, checkout, selectedLimit) : 0;
   const subscriptionTotalForMethod = (candidate) => paymentTotal(subscriptionCharge(orderAmount, checkout, candidate), feeRate, candidate?.currency || "CNY");
 
   const load = useCallback(async () => {
     setState({ loading: true, error: "", busy: false });
+    setOverview({ loading: true, totalRecharge: null, totalSpend: null, lastRecharge: null });
+    const overviewRequest = loadPurchaseOverview();
     try {
       const data = await paymentApi.checkout();
       if (!mountedRef.current) return;
@@ -240,6 +340,8 @@ export function PurchasePage() {
         if (matchingPlan) setPlan(matchingPlan);
       }
       setState({ loading: false, error: "", busy: false });
+      const nextOverview = await overviewRequest;
+      if (mountedRef.current) setOverview(nextOverview);
     } catch (error) { if (mountedRef.current) setState({ loading: false, error: error.message, busy: false }); }
   }, []);
   useEffect(() => {
@@ -277,7 +379,7 @@ export function PurchasePage() {
       const stored = JSON.parse(sessionStorage.getItem(WECHAT_PENDING_KEY)) || {};
       const planId = Number(stored.planId || params.get("plan_id")) || 0;
       const orderType = stored.orderType || params.get("order_type") || (planId ? "subscription" : "balance");
-      const fallbackAmount = orderType === "subscription" ? Number((checkout.plans || []).find((item) => item.id === planId)?.price || 0) : Number(amount || 0);
+      const fallbackAmount = orderType === "subscription" ? Number((checkout.plans || []).find((item) => item.id === planId)?.price || 0) : Number(orderAmount || 0);
       const pending = {
         amount: params.get("wechat_resume_token") ? 0 : Number(stored.amount ?? params.get("amount") ?? fallbackAmount),
         paymentType: stored.paymentType || params.get("payment_type") || "wxpay",
@@ -290,13 +392,13 @@ export function PurchasePage() {
     const nextParams = new URLSearchParams(params);
     ["wechat_resume", "wechat_resume_token", "openid", "state", "scope", "payment_type", "amount", "order_type", "plan_id"].forEach((key) => nextParams.delete(key));
     setParams(nextParams, { replace: true });
-  }, [amount, checkout, create, locale, notify, params, setParams]);
+  }, [checkout, create, locale, notify, orderAmount, params, setParams]);
 
   if (state.loading) return <Page title={t("purchase.title")}><Panel><Spinner /></Panel></Page>;
   if (state.error || !checkout) return <Page title={t("purchase.title")}><Panel><ErrorState message={state.error} onRetry={load} /></Panel></Page>;
   const methodAvailable = methodFits(selectedLimit, tab === "subscription" ? payable : orderAmount);
-  const purchaseProps = { checkout, user, locale, t, formatCurrency, amount, setAmount, methods, method, setMethod, orderAmount, chargeAmount, selectedLimit, feeRate, fee, payable, state, methodAvailable, plan, setPlan, subscriptionTotalForMethod, onPay: () => create() };
-  return <Page title={t("purchase.title")} subtitle={t("purchase.subtitle")}>
+  const purchaseProps = { checkout, user, overview, locale, t, formatCurrency, formatUsd, amount, setAmount, methods, method, setMethod, orderAmount, chargeAmount, selectedLimit, feeRate, fee, payable, state, methodAvailable, minimumCredit, maximumCredit, plan, setPlan, subscriptionTotalForMethod, onPay: () => create() };
+  return <Page title={t("purchase.title")} className="console-purchase-page">
     <PurchaseTabs hidden={checkout.balance_disabled} tab={tab} setTab={setTab} setPlan={setPlan} locale={locale} t={t} />
     {tab === "balance" ? <BalancePurchase {...purchaseProps} /> : <SubscriptionPurchase {...purchaseProps} />}
     <PurchaseHelp checkout={checkout} />
@@ -336,13 +438,13 @@ export function OrdersPage() {
     { key: "created_at", label: t("common.date"), render: (row) => formatDate(row.created_at) },
     { key: "actions", label: t("common.actions"), align: "right", render: (row) => <div className="console-inline-actions">{String(row.status).toUpperCase() === "PENDING" && <Button variant="danger" onClick={() => setDialog({ type: "cancel", item: row })}>{t("orders.cancel")}</Button>}{String(row.status).toUpperCase() === "COMPLETED" && row.provider_instance_id && state.eligible.has(row.provider_instance_id) && <Button onClick={() => setDialog({ type: "refund", item: row })}>{t("orders.refund")}</Button>}</div> },
   ];
-  return <Page title={t("orders.title")} subtitle={t("orders.subtitle")} actions={<Button variant="primary" icon="cart" onClick={() => navigate("/purchase")}>{t("purchase.title")}</Button>}><Panel><div className="console-toolbar"><Field label={t("common.status")}><SelectInput value={filter} onChange={(event) => { setFilter(event.target.value); setPaging((current) => ({ ...current, page: 1 })); }}><option value="">{t("common.all")}</option>{["PENDING", "PAID", "RECHARGING", "COMPLETED", "EXPIRED", "FAILED", "CANCELLED", "REFUND_REQUESTED", "REFUNDING", "REFUND_PENDING", "PARTIALLY_REFUNDED", "REFUNDED", "REFUND_FAILED"].map((status) => <option key={status}>{status}</option>)}</SelectInput></Field><Button icon="refresh" onClick={load}>{t("common.refresh")}</Button></div>{state.loading ? <Spinner /> : state.error ? <ErrorState message={state.error} onRetry={load} /> : <><DataTable columns={columns} rows={state.items} empty={<EmptyState icon="order" />} /><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>}</Panel><ConfirmDialog open={dialog?.type === "cancel"} title={t("orders.cancel")} description={locale === "zh" ? "确定取消这个待支付订单吗？" : "Cancel this pending order?"} busy={state.busy} onClose={() => setDialog(null)} onConfirm={submitAction} /><Modal open={dialog?.type === "refund"} title={t("orders.refund")} onClose={() => setDialog(null)} size="small" footer={<><Button onClick={() => setDialog(null)}>{t("common.cancel")}</Button><Button variant="primary" onClick={submitAction} disabled={!reason.trim() || state.busy}>{t("common.confirm")}</Button></>}><Field label={t("orders.reason")}><TextArea rows="4" value={reason} onChange={(event) => setReason(event.target.value)} /></Field></Modal></Page>;
+  const filterOptions = ["PENDING", "COMPLETED", "FAILED", "REFUNDED"];
+  return <Page title={t("orders.title")} subtitle={t("orders.subtitle")} actions={<Button variant="primary" icon="cart" onClick={() => navigate("/purchase")}>{t("purchase.title")}</Button>}><Panel><div className="console-toolbar console-orders-toolbar"><Field label={t("common.status")}><SelectInput value={filter} onChange={(event) => { setFilter(event.target.value); setPaging((current) => ({ ...current, page: 1 })); }}><option value="">{t("common.all")}</option>{filterOptions.map((status) => <option key={status} value={status}>{statusLabel(status.toLowerCase(), locale)}</option>)}</SelectInput></Field><Button icon="refresh" onClick={load}>{t("common.refresh")}</Button></div>{state.loading ? <Spinner /> : state.error ? <ErrorState message={state.error} onRetry={load} /> : <><DataTable columns={columns} rows={state.items} empty={<EmptyState icon="order" />} /><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>}</Panel><ConfirmDialog open={dialog?.type === "cancel"} title={t("orders.cancel")} description={locale === "zh" ? "确定取消这个待支付订单吗？" : "Cancel this pending order?"} busy={state.busy} onClose={() => setDialog(null)} onConfirm={submitAction} /><Modal open={dialog?.type === "refund"} title={t("orders.refund")} onClose={() => setDialog(null)} size="small" footer={<><Button onClick={() => setDialog(null)}>{t("common.cancel")}</Button><Button variant="primary" onClick={submitAction} disabled={!reason.trim() || state.busy}>{t("common.confirm")}</Button></>}><Field label={t("orders.reason")}><TextArea rows="4" value={reason} onChange={(event) => setReason(event.target.value)} /></Field></Modal></Page>;
 }
 
 function PaymentShell({ children }) {
-  const { settings } = useConsole();
-  const logo = safeImageUrl(settings?.site_logo) || "/assets/img/sentence-ai-icon.png";
-  return <div className="console-public-shell"><div className="console-scene" /><Link className="console-public-brand" to="/"><img src={logo} alt="" /><strong>{settings?.site_name || "Sentence AI"}</strong></Link><main>{children}</main></div>;
+  const { branding, brandingReady } = useConsole();
+  return <div className="console-public-shell"><div className="console-scene" /><Link className={`console-public-brand ${brandingReady ? "" : "is-pending"}`} to="/">{brandingReady && <img key={branding.siteLogo} src={branding.siteLogo} alt="" />}{brandingReady && <strong>{branding.siteName}</strong>}</Link><main>{children}</main></div>;
 }
 
 function countdownText(seconds) {

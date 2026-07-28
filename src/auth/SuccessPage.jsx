@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
 
 export function SuccessPage() {
-  return <Navigate to="/" replace />;
+  return <Navigate to="/keys" replace />;
 }

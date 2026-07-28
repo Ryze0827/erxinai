@@ -123,14 +123,14 @@
         <div class="home-price-panel">
           <span class="home-price-kicker">Choose how you start</span>
           <div class="home-price-amount">$0<span class="home-price-per">/start</span></div>
-          <p class="home-price-note">Create an account before adding usage credit</p>
+          <p class="home-price-note" data-auth-pricing-note>Create an account before adding usage credit</p>
         </div>
         <div class="home-price-tiers" role="radiogroup" aria-label="Gateway plan">
           <button type="button" role="radio" aria-checked="true" class="home-price-tier selected" data-plan="starter" data-price="$0" data-period="/start">Starter</button>
           <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="usage" data-price="Usage" data-period="/based">Usage based</button>
           <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="scale" data-price="Custom" data-period="/plan">Scale</button>
         </div>
-        <a class="btn btn-glass home-price-action" href="/register?plan=starter"><span class="btn-content">Create an account</span></a>
+        <a class="btn btn-glass home-price-action" data-auth-pricing-action data-plan="starter" href="/register?plan=starter"><span class="btn-content" data-auth-pricing-label>Create an account</span></a>
         <ul class="home-price-list">
           <li>One OpenAI-compatible endpoint for supported model providers</li>
           <li>Project keys with request-level usage and cost visibility</li>
@@ -138,7 +138,7 @@
           <li>Text, code, image, and reasoning workloads in one account</li>
           <li>No separate client integration for every upstream provider</li>
         </ul>
-        <a class="price-download" href="/login"><span class="btn-content">Already have an account? Log in</span></a>
+        <a class="price-download" data-auth-login-prompt href="/login"><span class="btn-content">Already have an account? Log in</span></a>
       </div>
     </section>
 

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>渠道状态卡片细节对比</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { width: 2854px; margin: 0; padding: 12px; color: #eef3ef; background: #090c0a; font: 14px system-ui, sans-serif; }
+    section { display: grid; grid-template-columns: 1415px 1415px; margin-bottom: 24px; border: 1px solid #3c4740; }
+    figure { margin: 0; background: #0d100e; }
+    figcaption { height: 36px; padding: 9px 12px; border-bottom: 1px solid #3c4740; font-weight: 650; }
+    .crop { position: relative; width: 1415px; height: 420px; overflow: hidden; }
+    img { position: absolute; top: 0; left: 0; display: block; width: 1415px; height: 850px; object-fit: cover; object-position: top left; }
+    .reference img { transform: translateY(-326px); }
+    .implementation img { transform: translateY(-438px); }
+  </style>
+</head>
+<body>
+  <section>
+    <figure><figcaption>参考卡片</figcaption><div class="crop reference"><img src="./monitor-reference.png" alt="参考卡片" /></div></figure>
+    <figure><figcaption>深色毛玻璃卡片</figcaption><div class="crop implementation"><img src="./monitor-dark-final.png" alt="深色实现卡片" /></div></figure>
+  </section>
+  <section>
+    <figure><figcaption>参考卡片</figcaption><div class="crop reference"><img src="./monitor-reference.png" alt="参考卡片" /></div></figure>
+    <figure><figcaption>浅色毛玻璃卡片</figcaption><div class="crop implementation"><img src="./monitor-light-final.png" alt="浅色实现卡片" /></div></figure>
+  </section>
+</body>
+</html>

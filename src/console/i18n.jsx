@@ -66,7 +66,7 @@ const dictionaries = {
     "dashboard.keys": "Active keys",
     "dashboard.requests": "Total requests",
     "dashboard.tokens": "Total tokens",
-    "dashboard.cost": "Actual spend",
+    "dashboard.cost": "Today's spend",
     "dashboard.latency": "Average latency",
     "dashboard.today": "Today",
     "dashboard.trend": "Seven-day usage",
@@ -303,7 +303,7 @@ const dictionaries = {
     "dashboard.keys": "启用密钥",
     "dashboard.requests": "累计请求",
     "dashboard.tokens": "累计 Token",
-    "dashboard.cost": "实际消费",
+    "dashboard.cost": "今日消费",
     "dashboard.latency": "平均延迟",
     "dashboard.today": "今日",
     "dashboard.trend": "近七日用量",
@@ -502,7 +502,16 @@ export function LocaleProvider({ children }) {
     const formatCurrency = (number, currency = "USD") => new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
       style: "currency",
       currency,
-      maximumFractionDigits: currency === "USD" ? 4 : 2,
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(number) || 0);
+    const formatUsd = (number) => new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
+      style: "currency",
+      currency: "USD",
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(Number(number) || 0);
     const formatDate = (date, options = {}) => {
       if (!date) return "—";
@@ -513,7 +522,7 @@ export function LocaleProvider({ children }) {
         timeStyle: options.dateOnly ? undefined : "short",
       }).format(parsed);
     };
-    return { locale, setLocale, t, formatNumber, formatCurrency, formatDate };
+    return { locale, setLocale, t, formatNumber, formatCurrency, formatUsd, formatDate };
   }, [locale]);
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

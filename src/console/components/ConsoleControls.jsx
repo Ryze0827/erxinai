@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Button, TextInput } from "../UI";
+import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 
 function readHidden(storageKey, defaults) {
@@ -60,6 +61,13 @@ function rangeFor(preset) {
   return { start_date: localDate(start), end_date: localDate(end) };
 }
 
+function selectedPreset(startDate, endDate, presets) {
+  return presets.find(([value]) => {
+    const range = rangeFor(value);
+    return range.start_date === startDate && range.end_date === endDate;
+  });
+}
+
 export function DateRangePicker({ startDate, endDate, onChange }) {
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
@@ -78,10 +86,12 @@ export function DateRangePicker({ startDate, endDate, onChange }) {
     ["7d", "Last 7 days", "最近 7 天"], ["14d", "Last 14 days", "最近 14 天"], ["30d", "Last 30 days", "最近 30 天"],
     ["month", "This month", "本月"], ["lastMonth", "Last month", "上月"],
   ];
+  const selected = selectedPreset(startDate, endDate, presets);
+  const buttonLabel = selected ? (locale === "zh" ? selected[2] : selected[1]) : `${startDate} → ${endDate}`;
   const apply = (range = draft) => { onChange(range); setOpen(false); };
   return <div className="console-date-picker" ref={rootRef}>
-    <Button icon="calendar" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? menuId : undefined} onClick={() => setOpen((value) => !value)}><span>{startDate}</span><span className="console-muted">→</span><span>{endDate}</span></Button>
-    {open && <div id={menuId} className="console-date-menu" role="dialog" aria-label={locale === "zh" ? "选择日期范围" : "Choose date range"}><div className="console-date-presets">{presets.map(([value, en, zh]) => <button type="button" key={value} onClick={() => apply(rangeFor(value))}>{locale === "zh" ? zh : en}</button>)}</div><div className="console-date-custom"><label><span>{locale === "zh" ? "开始" : "Start"}</span><TextInput type="date" value={draft.start_date} onChange={(event) => setDraft((current) => ({ ...current, start_date: event.target.value }))} /></label><label><span>{locale === "zh" ? "结束" : "End"}</span><TextInput type="date" value={draft.end_date} onChange={(event) => setDraft((current) => ({ ...current, end_date: event.target.value }))} /></label><Button variant="primary" onClick={() => apply()}>{locale === "zh" ? "应用" : "Apply"}</Button></div></div>}
+    <Button icon="calendar" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? menuId : undefined} onClick={() => setOpen((value) => !value)}><span>{buttonLabel}</span><Icon className={`console-date-chevron ${open ? "is-open" : ""}`} name="chevronDown" size={14} /></Button>
+    {open && <div id={menuId} className="console-date-menu" role="dialog" aria-label={locale === "zh" ? "选择日期范围" : "Choose date range"}><div className="console-date-presets">{presets.map(([value, en, zh]) => <button className={selected?.[0] === value ? "is-active" : ""} type="button" key={value} onClick={() => apply(rangeFor(value))}>{locale === "zh" ? zh : en}</button>)}</div><div className="console-date-custom"><label><span>{locale === "zh" ? "开始日期" : "Start date"}</span><TextInput type="date" value={draft.start_date} onChange={(event) => setDraft((current) => ({ ...current, start_date: event.target.value }))} /></label><i>→</i><label><span>{locale === "zh" ? "结束日期" : "End date"}</span><TextInput type="date" value={draft.end_date} onChange={(event) => setDraft((current) => ({ ...current, end_date: event.target.value }))} /></label><Button variant="primary" onClick={() => apply()}>{locale === "zh" ? "应用" : "Apply"}</Button></div></div>}
   </div>;
 }
 

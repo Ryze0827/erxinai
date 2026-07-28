@@ -20,8 +20,14 @@ function PlatformMark({ platform }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 17.93A8.002 8.002 0 0 1 4.21 10.2L9 15v1c0 1.1.9 2 2 2v1.93Zm6.9-2.54A2 2 0 0 0 16 16h-1v-3a1 1 0 0 0-1-1H8v-2h2a1 1 0 0 0 1-1V7h2a2 2 0 0 0 2-2v-.41A8.002 8.002 0 0 1 17.9 17.39Z" /></svg>;
 }
 
-export function GroupBadge({ name, platform, detail }) {
+function BadgeDetail({ detail, originalDetail }) {
+  if (!detail) return null;
+  if (!originalDetail) return <small>{detail}</small>;
+  return <small className="is-discount"><del>{originalDetail}</del><strong>{detail}</strong></small>;
+}
+
+export function GroupBadge({ name, platform, detail, originalDetail }) {
   if (!name) return <span className="console-muted">—</span>;
   const tone = platformTone(platform);
-  return <span className={`console-group-badge console-group-badge--${tone}`} title={platform || name}><PlatformMark platform={tone} /><span>{name}</span>{detail && <small>{detail}</small>}</span>;
+  return <span className={`console-group-badge console-group-badge--${tone}`} title={platform || name}><PlatformMark platform={tone} /><span>{name}</span><BadgeDetail detail={detail} originalDetail={originalDetail} /></span>;
 }

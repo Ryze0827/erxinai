@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { authApi } from "../api/auth";
+import { persistBranding } from "../branding";
 
 let cachedSettings = null;
 let settingsPromise = null;
@@ -10,6 +11,7 @@ function fetchSettings(force) {
   settingsPromise = authApi.getPublicSettings()
     .then((settings) => {
       cachedSettings = settings;
+      persistBranding(settings);
       return settings;
     })
     .finally(() => {

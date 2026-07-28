@@ -27,6 +27,10 @@
   display: inline-flex;
 }
 
+.price-download[hidden] {
+  display: none;
+}
+
 .gateway-eyebrow {
   color: rgba(255, 255, 255, 0.78);
   font-size: 12px;
@@ -78,6 +82,18 @@
   font-size: 12px;
   font-weight: 600;
   backdrop-filter: blur(8px);
+}
+
+@media (min-width: 900px) {
+  .bento-cell {
+    display: grid;
+    grid-row: span 2;
+    grid-template-rows: subgrid;
+  }
+
+  .bento-card-head {
+    margin-bottom: 0;
+  }
 }
 
 @media (max-width: 479px) {

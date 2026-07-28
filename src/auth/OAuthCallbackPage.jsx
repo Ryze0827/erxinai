@@ -86,7 +86,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
     clearPendingAuthSession();
     clearAffiliateCode();
     sessionStorage.removeItem("email_oauth_pending_provider");
-    navigate("/", { replace: true });
+    navigate("/keys", { replace: true });
   };
 
   const finishBinding = async (response = {}) => {

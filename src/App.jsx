@@ -71,7 +71,11 @@ function mountPricing(root, signal) {
       tier.setAttribute("aria-checked", String(selected));
     });
     if (amount) amount.innerHTML = `${selectedTier.dataset.price}<span class="home-price-per">${selectedTier.dataset.period}</span>`;
-    action?.setAttribute("href", `/register?plan=${selectedTier.dataset.plan}`);
+    if (action) {
+      action.dataset.plan = selectedTier.dataset.plan;
+      const { authenticated } = getLandingAuthState();
+      setPricingActionHref(action, authenticated);
+    }
   };
 
   root.querySelector(".home-price-tiers")?.addEventListener("click", handlePricing, { signal });
@@ -110,9 +114,30 @@ function getUserInitial(user) {
   return source.trim().charAt(0).toUpperCase() || "U";
 }
 
-function syncLandingAuth(root) {
+function getLandingAuthState() {
   const user = getStoredUser();
-  const authenticated = Boolean(getAccessToken() && user);
+  return { user, authenticated: Boolean(getAccessToken() && user) };
+}
+
+function setPricingActionHref(action, authenticated) {
+  const plan = action.dataset.plan || "starter";
+  action.href = authenticated ? "/keys" : `/register?plan=${plan}`;
+}
+
+function syncPricingAuth(root, authenticated) {
+  const action = root.querySelector("[data-auth-pricing-action]");
+  const label = root.querySelector("[data-auth-pricing-label]");
+  const note = root.querySelector("[data-auth-pricing-note]");
+  const loginPrompt = root.querySelector("[data-auth-login-prompt]");
+
+  if (action) setPricingActionHref(action, authenticated);
+  if (label) label.textContent = authenticated ? "Start using" : "Create an account";
+  if (note) note.textContent = authenticated ? "Your account is ready. Go to API keys to get started." : "Create an account before adding usage credit";
+  if (loginPrompt) loginPrompt.hidden = authenticated;
+}
+
+function syncLandingAuth(root) {
+  const { user, authenticated } = getLandingAuthState();
   root.querySelectorAll("[data-auth-link]").forEach((link) => {
     link.href = authenticated ? getDashboardPath(user) : "/login";
     link.dataset.authenticated = String(authenticated);
@@ -122,11 +147,12 @@ function syncLandingAuth(root) {
     if (initial) initial.textContent = getUserInitial(user);
   });
   root.querySelectorAll("[data-auth-dashboard]").forEach((link) => {
-    link.href = authenticated ? getDashboardPath(user) : "/register";
+    link.href = authenticated ? "/keys" : "/register";
   });
   root.querySelectorAll("[data-auth-register]").forEach((link) => {
     link.hidden = authenticated;
   });
+  syncPricingAuth(root, authenticated);
 }
 
 function mountLandingAuth(root, signal) {
@@ -178,7 +204,7 @@ export function App() {
           <Route path="/email-verify" element={<EmailVerifyPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/auth/success" element={<Navigate to="/" replace />} />
+          <Route path="/auth/success" element={<Navigate to="/keys" replace />} />
           <Route path="/auth/callback" element={<OAuthCallbackPage />} />
           <Route path="/auth/oauth/callback" element={<OAuthCallbackPage />} />
           <Route path="/auth/linuxdo/callback" element={<OAuthCallbackPage provider="linuxdo" />} />

@@ -1,0 +1,233 @@
+{
+  "schema_version": "2.0",
+  "generated_at": "2026-07-16T12:27:24.365594+00:00",
+  "repo_root": "/Users/liwei/WebstormProjects/erxinai",
+  "wiki_dir": "/Users/liwei/WebstormProjects/erxinai/docs/agent-knowledge/wiki",
+  "relation_policy": {
+    "model_edge_min_confidence": 0.75,
+    "allowed_model_edge_types": [
+      "contradicts",
+      "depends-on",
+      "related-to",
+      "supports"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "node:docs-agent-knowledge-raws-index-md",
+      "label": "Raw Evidence Index",
+      "display_label": "Raw Evidence Index",
+      "type": "raw-index",
+      "node_kind": "document",
+      "path": "docs/agent-knowledge/raws/index.md",
+      "document_path": "docs/agent-knowledge/raws/index.md"
+    },
+    {
+      "id": "node:docs-agent-knowledge-engineering-constraints-md",
+      "label": "Engineering Constraints",
+      "display_label": "Engineering Constraints",
+      "type": "source-layer",
+      "node_kind": "document",
+      "path": "docs/agent-knowledge/engineering-constraints.md",
+      "document_path": "docs/agent-knowledge/engineering-constraints.md"
+    },
+    {
+      "id": "node:docs-agent-knowledge-error-patterns-md",
+      "label": "Error Patterns",
+      "display_label": "Error Patterns",
+      "type": "source-layer",
+      "node_kind": "document",
+      "path": "docs/agent-knowledge/error-patterns.md",
+      "document_path": "docs/agent-knowledge/error-patterns.md"
+    },
+    {
+      "id": "node:docs-agent-knowledge-learning-journal-md",
+      "label": "Learning Journal",
+      "display_label": "Learning Journal",
+      "type": "source-layer",
+      "node_kind": "document",
+      "path": "docs/agent-knowledge/learning-journal.md",
+      "document_path": "docs/agent-knowledge/learning-journal.md"
+    },
+    {
+      "id": "node:docs-agent-knowledge-project-profile-md",
+      "label": "Project Profile",
+      "display_label": "Project Profile",
+      "type": "source-layer",
+      "node_kind": "document",
+      "path": "docs/agent-knowledge/project-profile.md",
+      "document_path": "docs/agent-knowledge/project-profile.md"
+    },
+    {
+      "id": "node:docs-agent-knowledge-public-recall-candidates-md",
+      "label": "Public Recall Candidates",
+      "display_label": "Public Recall Candidates",
+      "type": "source-layer",
+      "node_kind": "document",
+      "path": "docs/agent-knowledge/public-recall-candidates.md",
+      "document_path": "docs/agent-knowledge/public-recall-candidates.md"
+    },
+    {
+      "id": "node:docs-agent-knowledge-wiki-knowledge-graph-md",
+      "label": "Knowledge Graph",
+      "display_label": "Knowledge Graph",
+      "type": "view",
+      "node_kind": "document",
+      "path": "docs/agent-knowledge/wiki/knowledge-graph.md",
+      "document_path": "docs/agent-knowledge/wiki/knowledge-graph.md"
+    },
+    {
+      "id": "wiki-index",
+      "label": "Wiki Index",
+      "display_label": "Wiki Index",
+      "type": "view",
+      "node_kind": "document",
+      "path": "docs/agent-knowledge/wiki/index.md",
+      "document_path": "docs/agent-knowledge/wiki/index.md"
+    },
+    {
+      "id": "entry:docs-agent-knowledge-engineering-constraints-md:1edad76abdf6",
+      "label": "Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.",
+      "display_label": "Flat console cards and panels use tiered surfaces...",
+      "type": "knowledge-entry",
+      "node_kind": "entry",
+      "entry_kind": "constraint",
+      "status": "stable",
+      "canonical_key": "flat-console-cards-and-panels-use-tiered-surfaces-plus-1px-borders-ambient-shadows-are-reserved-for-floating-surfaces",
+      "path": "docs/agent-knowledge/engineering-constraints.md#flat-console-cards-and-panels-use-tiered-surfaces-plus-1px-borders-ambient-shadows-are-reserved-for-floating-surfaces",
+      "document_path": "docs/agent-knowledge/engineering-constraints.md"
+    },
+    {
+      "id": "entry:docs-agent-knowledge-project-profile-md:4d444957dd1e",
+      "label": "The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.",
+      "display_label": "The application preserves three console theme...",
+      "type": "knowledge-entry",
+      "node_kind": "entry",
+      "entry_kind": "learned_fact",
+      "status": "stable",
+      "canonical_key": "the-application-preserves-three-console-theme-preferences-while-using-halo-as-the-exact-dark-palette-and-component-anatomy-baseline",
+      "path": "docs/agent-knowledge/project-profile.md#the-application-preserves-three-console-theme-preferences-while-using-halo-as-the-exact-dark-palette-and-component-anatomy-baseline",
+      "document_path": "docs/agent-knowledge/project-profile.md"
+    },
+    {
+      "id": "entry:docs-agent-knowledge-learning-journal-md:516e50b0bcf4",
+      "label": "The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.",
+      "display_label": "The landing stylesheet already declares `base` and...",
+      "type": "knowledge-entry",
+      "node_kind": "entry",
+      "entry_kind": "learned_fact",
+      "status": "staged",
+      "canonical_key": "the-landing-stylesheet-already-declares-base-and-components-cascade-layers-loading-halo-after-those-layers-without-predeclaring-order-would-give-halo-higher-layered-priority-and-leak-its-reset-into-the-landing-page",
+      "path": "docs/agent-knowledge/learning-journal.md#the-landing-stylesheet-already-declares-base-and-components-cascade-layers-loading-halo-after-those-layers-without-predeclaring-order-would-give-halo-higher-layered-priority-and-leak-its-reset-into-the-landing-page",
+      "document_path": "docs/agent-knowledge/learning-journal.md"
+    }
+  ],
+  "edges": [
+    {
+      "from": "node:docs-agent-knowledge-engineering-constraints-md",
+      "to": "entry:docs-agent-knowledge-engineering-constraints-md:1edad76abdf6",
+      "type": "contains",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    },
+    {
+      "from": "node:docs-agent-knowledge-learning-journal-md",
+      "to": "entry:docs-agent-knowledge-learning-journal-md:516e50b0bcf4",
+      "type": "contains",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    },
+    {
+      "from": "node:docs-agent-knowledge-project-profile-md",
+      "to": "entry:docs-agent-knowledge-project-profile-md:4d444957dd1e",
+      "type": "contains",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    },
+    {
+      "from": "wiki-index",
+      "to": "node:docs-agent-knowledge-engineering-constraints-md",
+      "type": "links-to",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    },
+    {
+      "from": "wiki-index",
+      "to": "node:docs-agent-knowledge-error-patterns-md",
+      "type": "links-to",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    },
+    {
+      "from": "wiki-index",
+      "to": "node:docs-agent-knowledge-learning-journal-md",
+      "type": "links-to",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    },
+    {
+      "from": "wiki-index",
+      "to": "node:docs-agent-knowledge-project-profile-md",
+      "type": "links-to",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    },
+    {
+      "from": "wiki-index",
+      "to": "node:docs-agent-knowledge-public-recall-candidates-md",
+      "type": "links-to",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    },
+    {
+      "from": "wiki-index",
+      "to": "node:docs-agent-knowledge-raws-index-md",
+      "type": "links-to",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    },
+    {
+      "from": "wiki-index",
+      "to": "node:docs-agent-knowledge-wiki-knowledge-graph-md",
+      "type": "links-to",
+      "relation_source": "deterministic",
+      "confidence": 1.0
+    }
+  ],
+  "workbench": {
+    "status_counts": {
+      "stable": 2,
+      "staged": 1
+    },
+    "saved_views": [
+      {
+        "id": "hard-constraints",
+        "label": "Hard Constraints",
+        "node_ids": [
+          "entry:docs-agent-knowledge-engineering-constraints-md:1edad76abdf6"
+        ]
+      },
+      {
+        "id": "promotion-candidates",
+        "label": "Promotion Candidates",
+        "node_ids": [
+          "entry:docs-agent-knowledge-learning-journal-md:516e50b0bcf4"
+        ]
+      },
+      {
+        "id": "evidence-gaps",
+        "label": "Evidence Gaps",
+        "node_ids": []
+      }
+    ],
+    "relation_policy": {
+      "model_edge_min_confidence": 0.75,
+      "allowed_model_edge_types": [
+        "contradicts",
+        "depends-on",
+        "related-to",
+        "supports"
+      ]
+    }
+  }
+}

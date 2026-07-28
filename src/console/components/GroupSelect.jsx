@@ -33,7 +33,7 @@ export function GroupOption({ group, selected, rates, onClick }) {
   const { locale } = useLocale();
   const rate = rateFor(group, rates);
   const original = Number(group.rate_multiplier || 1);
-  return <button type="button" role="option" aria-selected={selected} className={`console-group-option ${selected ? "is-selected" : ""}`} onClick={onClick}><div><GroupBadge name={group.name} platform={group.platform} /><p>{group.description || (locale === "zh" ? "用户 API 分组" : "User API group")}</p></div><div className="console-group-rates">{rate !== original && <del>{original}×</del>}<strong>{rate}×</strong>{group.peak_rate_multiplier && <small>{locale === "zh" ? "峰值" : "Peak"} {group.peak_rate_multiplier}×</small>}{group.subscription_type === "subscription" && <small>SUB</small>}</div>{selected && <Icon name="check" size={16} />}</button>;
+  return <button type="button" role="option" aria-selected={selected} className={`console-group-option ${selected ? "is-selected" : ""}`} onClick={onClick}><div><GroupBadge name={group.name} platform={group.platform} /><p>{group.description || (locale === "zh" ? "用户 API 分组" : "User API group")}</p></div><div className="console-group-rates">{selected && <Icon name="check" size={16} />}{rate !== original && <del>{original}×</del>}{group.subscription_type === "subscription" && <small>SUB</small>}<strong>{rate}×</strong></div></button>;
 }
 
 function EmptyGroupOption({ visible, selected, locale, onSelect }) {
@@ -52,7 +52,10 @@ function GroupMenu({ menuId, menuRef, position, listLabel, locale, search, setSe
 }
 
 function GroupTrigger({ triggerRef, open, menuId, selected, rates, locale, onClick, onKeyDown }) {
-  return <button ref={triggerRef} type="button" className="console-group-trigger" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? menuId : undefined} onClick={onClick} onKeyDown={onKeyDown}>{selected ? <GroupBadge name={selected.name} platform={selected.platform} detail={`${rateFor(selected, rates)}×`} /> : <span className="console-muted">{locale === "zh" ? "选择分组" : "Select group"}</span>}<Icon name="chevronDown" size={14} /></button>;
+  const rate = selected ? rateFor(selected, rates) : 1;
+  const original = Number(selected?.rate_multiplier || 1);
+  const originalDetail = Number(rate) < original ? `${original}×` : undefined;
+  return <button ref={triggerRef} type="button" className="console-group-trigger" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? menuId : undefined} onClick={onClick} onKeyDown={onKeyDown}>{selected ? <GroupBadge name={selected.name} platform={selected.platform} detail={`${rate}×`} originalDetail={originalDetail} /> : <span className="console-muted">{locale === "zh" ? "选择分组" : "Select group"}</span>}<Icon name="chevronDown" size={14} /></button>;
 }
 
 export function GroupSelect({ value, groups = [], rates = {}, onChange, allowEmpty = false, compact = false }) {

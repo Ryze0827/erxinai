@@ -41,7 +41,7 @@ export function LoginPage() {
   const completeLogin = (response) => {
     persistAuthResponse(response, form.remember);
     sessionStorage.removeItem("auth_expired");
-    navigate("/", { replace: true });
+    navigate("/keys", { replace: true });
   };
 
   const handleSubmit = async (event) => {

@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-16T12:27:24.365594+00:00",
+  "repo_root": "/Users/liwei/WebstormProjects/erxinai",
+  "wiki_dir": "/Users/liwei/WebstormProjects/erxinai/docs/agent-knowledge/wiki",
+  "relation_policy": {
+    "model_edge_min_confidence": 0.75,
+    "allowed_model_edge_types": [
+      "contradicts",
+      "depends-on",
+      "related-to",
+      "supports"
+    ]
+  },
+  "records": [
+    {
+      "id": "entry:docs-agent-knowledge-engineering-constraints-md:1edad76abdf6",
+      "record_type": "knowledge-entry",
+      "entry_kind": "constraint",
+      "status": "stable",
+      "canonical_key": "flat-console-cards-and-panels-use-tiered-surfaces-plus-1px-borders-ambient-shadows-are-reserved-for-floating-surfaces",
+      "canonical_text": "Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.",
+      "display_label": "Flat console cards and panels use tiered surfaces...",
+      "source_document_path": "docs/agent-knowledge/engineering-constraints.md",
+      "record_path": "docs/agent-knowledge/engineering-constraints.md#flat-console-cards-and-panels-use-tiered-surfaces-plus-1px-borders-ambient-shadows-are-reserved-for-floating-surfaces",
+      "evidence_refs": [
+        "`DESIGN.md`; `src/console/console.css`"
+      ],
+      "search_text": "Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.\ndocs/agent-knowledge/engineering-constraints.md\nconstraint\nconstraint: Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.\nevidence: Halo elevation rules and the implemented panel/popover/modal mapping.\nevidence_ref: `DESIGN.md`; `src/console/console.css`\nimpact: Avoid gradients and drop shadows on new flat console components.\nconfidence: High.\nsource_task: Halo console design-system integration (2026-07-16).\nfollow_up: Review new primitives against `html/preview.html`.\nFlat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.\ndocs/agent-knowledge/engineering-constraints.md\nconstraint\nconstraint: Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.\nevidence: Halo elevation rules and the implemented panel/popover/modal mapping.\nevidence_ref: `DESIGN.md`; `src/console/console.css`\nimpact: Avoid gradients and drop shadows on new flat console components.\nconfidence: High.\nsource_task: Halo console design-system integration (2026-07-16).\nfollow_up: Review new primitives against `html/preview.html`.",
+      "provenance": [
+        "docs/agent-knowledge/engineering-constraints.md"
+      ]
+    },
+    {
+      "id": "entry:docs-agent-knowledge-project-profile-md:4d444957dd1e",
+      "record_type": "knowledge-entry",
+      "entry_kind": "learned_fact",
+      "status": "stable",
+      "canonical_key": "the-application-preserves-three-console-theme-preferences-while-using-halo-as-the-exact-dark-palette-and-component-anatomy-baseline",
+      "canonical_text": "The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.",
+      "display_label": "The application preserves three console theme...",
+      "source_document_path": "docs/agent-knowledge/project-profile.md",
+      "record_path": "docs/agent-knowledge/project-profile.md#the-application-preserves-three-console-theme-preferences-while-using-halo-as-the-exact-dark-palette-and-component-anatomy-baseline",
+      "evidence_refs": [
+        "`DESIGN.md`; `src/console/console.css`"
+      ],
+      "search_text": "The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.\ndocs/agent-knowledge/project-profile.md\nlearned_fact\nlearned_fact: The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.\nevidence: `src/console/theme.js` and the Halo token bridge in `src/console/console.css`.\nevidence_ref: `DESIGN.md`; `src/console/console.css`\nimpact: New console components should consume the existing `--console-*` bridge instead of introducing independent colors or geometry.\nconfidence: High.\nsource_task: Halo console design-system integration (2026-07-16).\nfollow_up: Keep browser QA for light, dark, system, desktop, and mobile when console primitives change.\nThe application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.\ndocs/agent-knowledge/project-profile.md\nlearned_fact\nlearned_fact: The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.\nevidence: `src/console/theme.js` and the Halo token bridge in `src/console/console.css`.\nevidence_ref: `DESIGN.md`; `src/console/console.css`\nimpact: New console components should consume the existing `--console-*` bridge instead of introducing independent colors or geometry.\nconfidence: High.\nsource_task: Halo console design-system integration (2026-07-16).\nfollow_up: Keep browser QA for light, dark, system, desktop, and mobile when console primitives change.",
+      "provenance": [
+        "docs/agent-knowledge/project-profile.md"
+      ]
+    },
+    {
+      "id": "entry:docs-agent-knowledge-learning-journal-md:516e50b0bcf4",
+      "record_type": "knowledge-entry",
+      "entry_kind": "learned_fact",
+      "status": "staged",
+      "canonical_key": "the-landing-stylesheet-already-declares-base-and-components-cascade-layers-loading-halo-after-those-layers-without-predeclaring-order-would-give-halo-higher-layered-priority-and-leak-its-reset-into-the-landing-page",
+      "canonical_text": "The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.",
+      "display_label": "The landing stylesheet already declares `base` and...",
+      "source_document_path": "docs/agent-knowledge/learning-journal.md",
+      "record_path": "docs/agent-knowledge/learning-journal.md#the-landing-stylesheet-already-declares-base-and-components-cascade-layers-loading-halo-after-those-layers-without-predeclaring-order-would-give-halo-higher-layered-priority-and-leak-its-reset-into-the-landing-page",
+      "evidence_refs": [
+        "`src/cascade.css`; `src/styles.css`; `src/console/console.css`; `docs/superpowers/specs/2026-07-16-halo-console-design.md`"
+      ],
+      "search_text": "The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.\ndocs/agent-knowledge/learning-journal.md\nlearned_fact\ntask: Wire the supplied Halo design system into the Vite/React application and refactor console-owned UI without changing landing/authentication visuals.\nevidence: Static import scans, computed browser styles on `/`, `/login`, and `/key-usage`, plus desktop/mobile console layout checks.\nevidence_ref: `src/cascade.css`; `src/styles.css`; `src/console/console.css`; `docs/superpowers/specs/2026-07-16-halo-console-design.md`\nlearned_fact: The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.\nimpact: `src/cascade.css` must load before `landing.css`, predeclaring `halo` as the lowest layer, while `system.css` remains imported once from `src/styles.css`.\nconfidence: High.\npromotion_target: `engineering-constraints.md`\nfollow_up: Keep the layer-order regression check whenever global CSS entry files change.\nThe landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.\ndocs/agent-knowledge/learning-journal.md\nlearned_fact\ntask: Wire the supplied Halo design system into the Vite/React application and refactor console-owned UI without changing landing/authentication visuals.\nevidence: Static import scans, computed browser styles on `/`, `/login`, and `/key-usage`, plus desktop/mobile console layout checks.\nevidence_ref: `src/cascade.css`; `src/styles.css`; `src/console/console.css`; `docs/superpowers/specs/2026-07-16-halo-console-design.md`\nlearned_fact: The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.\nimpact: `src/cascade.css` must load before `landing.css`, predeclaring `halo` as the lowest layer, while `system.css` remains imported once from `src/styles.css`.\nconfidence: High.\npromotion_target: `engineering-constraints.md`\nfollow_up: Keep the layer-order regression check whenever global CSS entry files change.",
+      "heading": "2026-07-16 — Halo console integration",
+      "provenance": [
+        "docs/agent-knowledge/learning-journal.md"
+      ]
+    }
+  ],
+  "semantic_relations": []
+}

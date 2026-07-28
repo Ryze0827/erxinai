@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { authApi } from "../api/auth";
 import { clearAuthSession, AUTH_SESSION_EVENT, getAccessToken, getRefreshToken, getStoredUser, setStoredUser } from "../api/session";
 import { usePublicSettings } from "../auth/usePublicSettings";
+import { readCachedBranding, resolveBranding } from "../branding";
 
 const ConsoleContext = createContext(null);
 
@@ -13,6 +14,8 @@ export function resolveFeature(settings, key, mode = "opt-in") {
 
 export function ConsoleProvider({ children }) {
   const { settings, loading: settingsLoading, error: settingsError, retry: retrySettings } = usePublicSettings();
+  const cachedBranding = useMemo(() => readCachedBranding(), []);
+  const branding = useMemo(() => settings ? resolveBranding(settings) : cachedBranding || (settingsError ? resolveBranding() : null), [cachedBranding, settings, settingsError]);
   const [user, setUser] = useState(() => getStoredUser());
   const [toasts, setToasts] = useState([]);
   const nextToastId = useRef(0);
@@ -77,6 +80,8 @@ export function ConsoleProvider({ children }) {
     settings,
     settingsLoading,
     settingsError,
+    branding,
+    brandingReady: Boolean(branding),
     retrySettings,
     refreshUser,
     updateUser,
@@ -84,7 +89,7 @@ export function ConsoleProvider({ children }) {
     notify,
     toasts,
     dismissToast,
-  }), [user, settings, settingsLoading, settingsError, retrySettings, refreshUser, updateUser, logout, notify, toasts, dismissToast]);
+  }), [user, settings, settingsLoading, settingsError, branding, retrySettings, refreshUser, updateUser, logout, notify, toasts, dismissToast]);
 
   return <ConsoleContext.Provider value={value}>{children}</ConsoleContext.Provider>;
 }

@@ -4,14 +4,18 @@ import { Icon } from "./Icon";
 import { useConsole } from "./ConsoleContext";
 import { useLocale } from "./i18n";
 import { useTheme } from "./theme";
+import { formatTokenMillions } from "./utils";
 
 export function Page({ title, subtitle, actions, children, className = "" }) {
   return (
     <div className={`console-page ${className}`}>
-      <div className="console-page-head">
-        <div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div>
-        {actions && <div className="console-page-actions">{actions}</div>}
-      </div>
+      {title && <h1 className="console-page-title">{title}</h1>}
+      {(subtitle || actions) && (
+        <div className="console-page-head console-page-head--subtitle-only">
+          <div>{subtitle && <p>{subtitle}</p>}</div>
+          {actions && <div className="console-page-actions">{actions}</div>}
+        </div>
+      )}
       {children}
     </div>
   );
@@ -201,36 +205,87 @@ function TableHeader({ column, sortKey, sortOrder, onSort }) {
   const active = sortable && sortKey === column.key;
   const direction = active && sortOrder === "asc" ? "ascending" : active ? "descending" : "none";
   const icon = active && sortOrder === "asc" ? "arrowUp" : "arrowDown";
-  return <th className={column.align ? `is-${column.align}` : ""} aria-sort={sortable ? direction : undefined}>{sortable ? <button type="button" className={active ? "is-sorted" : ""} onClick={() => onSort(column.key, active && sortOrder === "asc" ? "desc" : "asc")}><span>{column.label}</span><Icon name={icon} size={13} /></button> : column.label}</th>;
+  return <th data-column={column.key} className={column.align ? `is-${column.align}` : ""} aria-sort={sortable ? direction : undefined}>{sortable ? <button type="button" className={active ? "is-sorted" : ""} onClick={() => onSort(column.key, active && sortOrder === "asc" ? "desc" : "asc")}><span>{column.label}</span><Icon name={icon} size={13} /></button> : <span className="console-table-header-content">{column.label}</span>}</th>;
 }
 
-function TableRow({ row, index, rowKey, columns, onRowClick }) {
+function TableRow({ row, index, rowKey, columns, onRowClick, onHover }) {
   const click = (event) => {
     if (!rowHasInteractiveTarget(event)) onRowClick?.(row);
   };
-  return <tr key={row[rowKey] ?? index} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <td key={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : row[column.key] ?? "—"}</td>)}</tr>;
+  return <tr key={row[rowKey] ?? index} onPointerEnter={(event) => onHover(event.currentTarget)} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <td key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : row[column.key] ?? "—"}</td>)}</tr>;
 }
 
 export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "" }) {
+  const wrapRef = useRef(null);
+  const tableRef = useRef(null);
+  const hoverRef = useRef(null);
   if (!rows?.length) return empty || <EmptyState />;
+  const clearHover = () => {
+    if (hoverRef.current) hoverRef.current.style.opacity = "0";
+  };
+  const hoverRow = (row) => {
+    const wrap = wrapRef.current;
+    const table = tableRef.current;
+    const hover = hoverRef.current;
+    if (!wrap || !table || !hover || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    hover.style.width = `${Math.max(table.scrollWidth, wrap.clientWidth)}px`;
+    hover.style.height = `${rowRect.height}px`;
+    hover.style.transform = `translate3d(0, ${rowRect.top - wrapRect.top + wrap.scrollTop}px, 0)`;
+    hover.style.opacity = "1";
+  };
   return (
-    <div className={`console-table-wrap ${className}`}>
-      <table className="console-table"><thead><tr>{columns.map((column) => <TableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</tr></thead><tbody>{rows.map((row, index) => <TableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} />)}</tbody></table>
+    <div className={`console-table-wrap ${className}`} ref={wrapRef} onPointerLeave={clearHover} onScroll={clearHover}>
+      <span className="console-table-hover" ref={hoverRef} aria-hidden="true" />
+      <table className="console-table" ref={tableRef}><thead><tr>{columns.map((column) => <TableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</tr></thead><tbody>{rows.map((row, index) => <TableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} onHover={hoverRow} />)}</tbody></table>
     </div>
   );
 }
 
-function chartPoints(data, valueKey, width, height) {
-  const values = data.map((item) => Number(item[valueKey]) || 0);
-  const maximum = Math.max(...values, 1);
-  const step = data.length > 1 ? width / (data.length - 1) : width;
-  return values.map((value, index) => `${index * step},${height - (value / maximum) * (height - 10) - 5}`).join(" ");
+const chartTop = 26;
+const chartBottom = 185;
+
+function chartMaximum(data, valueKey) {
+  const maximum = Math.max(...data.map((item) => Number(item[valueKey]) || 0), 1);
+  const magnitude = 10 ** Math.floor(Math.log10(maximum));
+  const normalized = maximum / magnitude;
+  const factor = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
+  return factor * magnitude;
 }
 
-export function LineChart({ data = [], valueKey = "total_tokens", labelKey = "date", height = 210 }) {
-  const points = useMemo(() => chartPoints(data, valueKey, 680, 180), [data, valueKey]);
+function chartPoints(data, valueKey, width, maximum) {
+  const step = data.length > 1 ? width / (data.length - 1) : width;
+  return data.map((item, index) => {
+    const value = Number(item[valueKey]) || 0;
+    return `${index * step},${chartBottom - value / maximum * (chartBottom - chartTop)}`;
+  }).join(" ");
+}
+
+function formatChartTick(value) {
+  return formatTokenMillions(value).slice(0, -1);
+}
+
+export function LineChart({ data = [], valueKey = "total_tokens", labelKey = "date", unit = "Token (M)" }) {
+  const maximum = useMemo(() => chartMaximum(data, valueKey), [data, valueKey]);
+  const points = useMemo(() => chartPoints(data, valueKey, 680, maximum), [data, valueKey, maximum]);
+  const ticks = useMemo(() => Array.from({ length: 5 }, (_, index) => maximum * (4 - index) / 4), [maximum]);
   if (!data.length) return <EmptyState />;
-  return <div className="console-line-chart"><svg viewBox="0 0 680 210" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="console-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity=".22" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></linearGradient></defs><line x1="0" y1="185" x2="680" y2="185" /><polygon points={`0,185 ${points} 680,185`} fill="url(#console-chart-fill)" /><polyline points={points} /></svg><div className="console-chart-labels">{data.map((item, index) => <span key={`${item[labelKey]}-${index}`}>{String(item[labelKey] || "").slice(5, 10)}</span>)}</div></div>;
+  return <div className="console-line-chart">
+    <div className="console-line-chart-plot">
+      <div className="console-line-chart-y-axis" aria-hidden="true">
+        <strong>{unit}</strong>
+        <div>{ticks.map((tick) => <span key={tick}>{formatChartTick(tick)}</span>)}</div>
+      </div>
+      <svg viewBox="0 0 680 210" preserveAspectRatio="none" aria-hidden="true">
+        <defs><linearGradient id="console-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity=".22" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></linearGradient></defs>
+        {ticks.map((tick, index) => <line key={tick} x1="0" y1={chartTop + index * (chartBottom - chartTop) / 4} x2="680" y2={chartTop + index * (chartBottom - chartTop) / 4} />)}
+        <polygon points={`0,${chartBottom} ${points} 680,${chartBottom}`} fill="url(#console-chart-fill)" />
+        <polyline points={points} />
+      </svg>
+    </div>
+    <div className="console-line-chart-x-axis"><i aria-hidden="true" /><div className="console-chart-labels">{data.map((item, index) => <span key={`${item[labelKey]}-${index}`}>{String(item[labelKey] || "").slice(5, 10)}</span>)}</div></div>
+  </div>;
 }
 
 const themeMeta = {
@@ -267,8 +322,12 @@ export function CopyButton({ value, label, copiedLabel, className = "" }) {
   return <button className={`console-copy ${className}`} type="button" onClick={copy}><Icon name={copied ? "check" : "copy"} size={15} />{label && <span>{copied ? copiedLabel || t("common.copied") : label}</span>}</button>;
 }
 
-export function StatCard({ label, value, meta, icon = "chart", tone = "blue" }) {
-  return <div className={`console-stat console-stat--${tone}`}><div><span>{label}</span><strong>{value}</strong>{meta && <small>{meta}</small>}</div><i><Icon name={icon} size={20} /></i></div>;
+export function StatCard({ label, value, meta, icon = "chart", tone = "blue", className = "" }) {
+  return <div className={`console-stat console-stat--${tone} ${className}`}><div><span>{label}</span><strong>{value}</strong>{meta && <small>{meta}</small>}</div><i><Icon name={icon} size={20} /></i></div>;
+}
+
+export function StatCardSkeleton({ tone = "blue" }) {
+  return <div className={`console-stat console-stat--${tone} console-skeleton console-stat-skeleton`} aria-hidden="true"><div><span /><strong /><small /></div><i /></div>;
 }
 
 export function ToastViewport() {

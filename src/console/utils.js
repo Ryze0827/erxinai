@@ -16,6 +16,22 @@ export function formatCompact(value, locale = "en") {
   }).format(Number(value) || 0);
 }
 
+export function formatTokenMillions(value) {
+  const millions = (Number(value) || 0) / 1_000_000;
+  if (!millions) return "0M";
+  const magnitude = Math.abs(millions);
+  const maximumFractionDigits = magnitude >= 100 ? 1 : magnitude >= 1 ? 2 : magnitude >= 0.01 ? 3 : magnitude >= 0.001 ? 4 : 6;
+  return `${millions.toLocaleString("en-US", { maximumFractionDigits, minimumFractionDigits: Math.min(1, maximumFractionDigits) })}M`;
+}
+
+export function formatTokenMillionsFixed(value, fractionDigits = 2) {
+  const millions = (Number(value) || 0) / 1_000_000;
+  return `${millions.toLocaleString("en-US", {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  })}M`;
+}
+
 export function formatDuration(value) {
   const milliseconds = Number(value) || 0;
   if (milliseconds < 1000) return `${Math.round(milliseconds)} ms`;

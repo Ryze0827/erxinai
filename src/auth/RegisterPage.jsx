@@ -102,7 +102,7 @@ export function RegisterPage() {
       } else {
         const response = await authApi.register({ ...buildPayload(), turnstile_token: settings.turnstile_enabled ? turnstileToken : undefined });
         persistAuthResponse(response, true);
-        navigate("/", { replace: true });
+        navigate("/keys", { replace: true });
       }
     } catch (requestError) {
       setError(getErrorMessage(requestError, "Registration failed."));

@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Knowledge Graph Workbench</title>
+  <script>
+    (() => {
+      const storageKey = "repo-memory-graph-theme";
+      const saved = localStorage.getItem(storageKey) || "auto";
+      const theme = saved === "auto"
+        ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+        : saved;
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-bottom: #0d1326;
+      --bg-accent-a: rgba(125, 211, 252, 0.12);
+      --bg-accent-b: rgba(139, 92, 246, 0.12);
+      --panel: #121933;
+      --panel-2: #182142;
+      --panel-border: rgba(154, 167, 209, 0.12);
+      --text: #e7ecff;
+      --muted: #9aa7d1;
+      --view: #8b5cf6;
+      --source: #22c55e;
+      --raw: #f59e0b;
+      --shared: #f472b6;
+      --linked: #94a3b8;
+      --entry: #38bdf8;
+      --stable: #22c55e;
+      --staged: #f59e0b;
+      --candidate: #f472b6;
+      --error: #ef4444;
+      --surface: rgba(11, 16, 32, 0.66);
+      --surface-strong: rgba(11, 16, 32, 0.92);
+      --chip-border: rgba(154, 167, 209, 0.12);
+      --graph-bg-a: rgba(11, 16, 32, 0.88);
+      --graph-bg-b: rgba(13, 19, 38, 0.98);
+      --graph-glow: rgba(125, 211, 252, 0.08);
+      --grid: rgba(154, 167, 209, 0.08);
+      --edge-active: rgba(125, 211, 252, 0.96);
+      --shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+      --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    html[data-theme="light"] {
+      --bg: #eef4ff;
+      --bg-bottom: #e6eefb;
+      --bg-accent-a: rgba(14, 165, 233, 0.12);
+      --bg-accent-b: rgba(99, 102, 241, 0.10);
+      --panel: #ffffff;
+      --panel-2: #f3f7ff;
+      --panel-border: rgba(59, 80, 145, 0.14);
+      --text: #13203b;
+      --muted: #607191;
+      --view: #7c3aed;
+      --source: #16a34a;
+      --raw: #d97706;
+      --shared: #db2777;
+      --linked: #64748b;
+      --entry: #0284c7;
+      --stable: #15803d;
+      --staged: #b45309;
+      --candidate: #be185d;
+      --error: #dc2626;
+      --surface: rgba(244, 247, 255, 0.94);
+      --surface-strong: rgba(255, 255, 255, 0.98);
+      --chip-border: rgba(96, 113, 145, 0.16);
+      --graph-bg-a: rgba(250, 252, 255, 0.98);
+      --graph-bg-b: rgba(238, 244, 255, 0.98);
+      --graph-glow: rgba(2, 132, 199, 0.08);
+      --grid: rgba(96, 113, 145, 0.08);
+      --edge-active: rgba(2, 132, 199, 0.9);
+      --shadow: 0 20px 45px rgba(52, 72, 119, 0.14);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, var(--bg-accent-a), transparent 30%),
+        radial-gradient(circle at top right, var(--bg-accent-b), transparent 28%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-bottom) 100%);
+      min-height: 100vh;
+      transition: background 180ms ease, color 180ms ease;
+    }
+    .app {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 18px;
+      padding: 18px;
+      min-height: 100vh;
+    }
+    .panel {
+      background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 96%, transparent), color-mix(in srgb, var(--panel) 98%, transparent));
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      min-height: 0;
+    }
+    .sidebar {
+      padding: 20px;
+      display: grid;
+      align-content: start;
+      gap: 20px;
+    }
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      letter-spacing: 0.01em;
+    }
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+    .section h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    .theme-select, .search, .group-select, .control-btn {
+      width: 100%;
+      border: 1px solid color-mix(in srgb, var(--muted) 28%, transparent);
+      background: var(--surface-strong);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 12px 14px;
+      outline: none;
+      font: inherit;
+      font-size: 14px;
+    }
+    .group-list {
+      display: grid;
+      gap: 8px;
+    }
+    .group-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      border: 1px solid color-mix(in srgb, var(--muted) 16%, transparent);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .group-item.active {
+      border-color: color-mix(in srgb, var(--entry) 50%, transparent);
+      background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
+    }
+    .group-meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .main {
+      display: grid;
+      grid-template-rows: 1fr;
+      min-height: 0;
+      position: relative;
+    }
+    .pill {
+      border: 1px solid color-mix(in srgb, var(--muted) 26%, transparent);
+      background: var(--surface);
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .control-btn {
+      width: auto;
+      cursor: pointer;
+      padding: 9px 12px;
+      font-size: 13px;
+    }
+    .control-btn.active {
+      border-color: color-mix(in srgb, var(--entry) 55%, transparent);
+      color: color-mix(in srgb, var(--entry) 88%, white);
+    }
+    .graph-wrap {
+      padding: 12px 16px 16px;
+      min-height: 0;
+    }
+    .graph-shell {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      min-height: 760px;
+      height: 100%;
+      border-radius: 16px;
+      border: 1px solid color-mix(in srgb, var(--muted) 18%, transparent);
+      background:
+        linear-gradient(180deg, var(--graph-bg-a), var(--graph-bg-b)),
+        radial-gradient(circle at top left, var(--graph-glow), transparent 24%);
+    }
+    .graph-shell.drawer-open {
+      grid-template-columns: minmax(0, 1fr) 388px;
+    }
+    .graph-shell .graph-note {
+      max-width: calc(100% - 48px);
+    }
+    .graph-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .graph-pane {
+      position: relative;
+      min-width: 0;
+      min-height: 760px;
+      overflow: hidden;
+    }
+    #cy {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+    .graph-note {
+      position: absolute;
+      left: 16px;
+      bottom: 14px;
+      z-index: 3;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface-strong) 90%, transparent);
+      border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .drawer {
+      position: relative;
+      width: 100%;
+      max-height: 100%;
+      overflow: auto;
+      background: color-mix(in srgb, var(--panel) 96%, transparent);
+      border-left: 1px solid var(--panel-border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+    .drawer.hidden {
+      display: none;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(18px);
+    }
+    .drawer-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .drawer-title {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+    .drawer h2 {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    .icon-btn {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 26px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+    }
+    .drawer-body {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .detail-block {
+      margin-bottom: 16px;
+    }
+    .detail-list {
+      display: grid;
+      gap: 10px;
+    }
+    .detail-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid color-mix(in srgb, var(--muted) 16%, transparent);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .detail-item button {
+      all: unset;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid color-mix(in srgb, var(--muted) 24%, transparent);
+      color: var(--muted);
+      background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+    }
+    .status-stable { color: var(--stable); border-color: color-mix(in srgb, var(--stable) 36%, transparent); }
+    .status-staged { color: var(--staged); border-color: color-mix(in srgb, var(--staged) 36%, transparent); }
+    .status-candidate { color: var(--candidate); border-color: color-mix(in srgb, var(--candidate) 36%, transparent); }
+    .status-error-pattern { color: var(--error); border-color: color-mix(in srgb, var(--error) 36%, transparent); }
+    @media (max-width: 1280px) {
+      .graph-shell.drawer-open {
+        grid-template-columns: minmax(0, 1fr) 340px;
+      }
+    }
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .graph-shell,
+      .graph-shell.drawer-open {
+        grid-template-columns: 1fr;
+      }
+      .drawer {
+        position: fixed;
+        left: 18px;
+        right: 18px;
+        width: auto;
+        top: auto;
+        bottom: 18px;
+        max-height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel sidebar">
+      <div>
+        <h1 class="title">Knowledge Graph Workbench</h1>
+        <p class="subtitle">Evidence-first browser for repository memory. Query the graph, inspect the trail, then decide what is stable enough to trust.</p>
+      </div>
+
+      <div class="section">
+        <h2>Search</h2>
+        <input id="search" class="search" type="search" placeholder="Search labels, paths, or node types">
+      </div>
+
+      <div class="section">
+        <h2>State Filters</h2>
+        <div id="stateFilters" class="group-list"></div>
+      </div>
+
+      <div class="section">
+        <h2>Saved Views</h2>
+        <div id="savedViews" class="group-list"></div>
+      </div>
+
+      <div class="section">
+        <h2>Mode</h2>
+        <div class="group-list">
+          <button id="explainModeBtn" class="group-item active" type="button">Explain</button>
+          <button id="pathModeBtn" class="group-item" type="button">Path Mode</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Theme</h2>
+        <select id="themeSelect" class="theme-select" aria-label="Theme">
+          <option value="auto">Auto</option>
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+    </aside>
+
+    <main class="panel main">
+      <div class="graph-wrap">
+        <div class="graph-shell">
+          <div class="graph-pane">
+            <div id="cy"></div>
+            <div class="graph-note">Use pan and zoom to inspect crowded regions. Click entities to open details.</div>
+          </div>
+
+          <aside id="detailsDrawer" class="drawer hidden" aria-hidden="true">
+            <div class="drawer-head">
+              <h2>Evidence Trail</h2>
+              <button id="closeDrawerBtn" class="icon-btn" type="button" aria-label="Close Evidence Trail">×</button>
+            </div>
+
+            <div id="drawerBody" class="drawer-body"></div>
+            <div id="drawerMeta"></div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+  <script>
+    const graphData = {"schema_version": "2.0", "generated_at": "2026-07-16T12:27:24.365594+00:00", "repo_root": "/Users/liwei/WebstormProjects/erxinai", "wiki_dir": "/Users/liwei/WebstormProjects/erxinai/docs/agent-knowledge/wiki", "relation_policy": {"model_edge_min_confidence": 0.75, "allowed_model_edge_types": ["contradicts", "depends-on", "related-to", "supports"]}, "nodes": [{"id": "node:docs-agent-knowledge-raws-index-md", "label": "Raw Evidence Index", "display_label": "Raw Evidence Index", "type": "raw-index", "node_kind": "document", "path": "docs/agent-knowledge/raws/index.md", "document_path": "docs/agent-knowledge/raws/index.md"}, {"id": "node:docs-agent-knowledge-engineering-constraints-md", "label": "Engineering Constraints", "display_label": "Engineering Constraints", "type": "source-layer", "node_kind": "document", "path": "docs/agent-knowledge/engineering-constraints.md", "document_path": "docs/agent-knowledge/engineering-constraints.md"}, {"id": "node:docs-agent-knowledge-error-patterns-md", "label": "Error Patterns", "display_label": "Error Patterns", "type": "source-layer", "node_kind": "document", "path": "docs/agent-knowledge/error-patterns.md", "document_path": "docs/agent-knowledge/error-patterns.md"}, {"id": "node:docs-agent-knowledge-learning-journal-md", "label": "Learning Journal", "display_label": "Learning Journal", "type": "source-layer", "node_kind": "document", "path": "docs/agent-knowledge/learning-journal.md", "document_path": "docs/agent-knowledge/learning-journal.md"}, {"id": "node:docs-agent-knowledge-project-profile-md", "label": "Project Profile", "display_label": "Project Profile", "type": "source-layer", "node_kind": "document", "path": "docs/agent-knowledge/project-profile.md", "document_path": "docs/agent-knowledge/project-profile.md"}, {"id": "node:docs-agent-knowledge-public-recall-candidates-md", "label": "Public Recall Candidates", "display_label": "Public Recall Candidates", "type": "source-layer", "node_kind": "document", "path": "docs/agent-knowledge/public-recall-candidates.md", "document_path": "docs/agent-knowledge/public-recall-candidates.md"}, {"id": "node:docs-agent-knowledge-wiki-knowledge-graph-md", "label": "Knowledge Graph", "display_label": "Knowledge Graph", "type": "view", "node_kind": "document", "path": "docs/agent-knowledge/wiki/knowledge-graph.md", "document_path": "docs/agent-knowledge/wiki/knowledge-graph.md"}, {"id": "wiki-index", "label": "Wiki Index", "display_label": "Wiki Index", "type": "view", "node_kind": "document", "path": "docs/agent-knowledge/wiki/index.md", "document_path": "docs/agent-knowledge/wiki/index.md"}, {"id": "entry:docs-agent-knowledge-engineering-constraints-md:1edad76abdf6", "label": "Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.", "display_label": "Flat console cards and panels use tiered surfaces...", "type": "knowledge-entry", "node_kind": "entry", "entry_kind": "constraint", "status": "stable", "canonical_key": "flat-console-cards-and-panels-use-tiered-surfaces-plus-1px-borders-ambient-shadows-are-reserved-for-floating-surfaces", "path": "docs/agent-knowledge/engineering-constraints.md#flat-console-cards-and-panels-use-tiered-surfaces-plus-1px-borders-ambient-shadows-are-reserved-for-floating-surfaces", "document_path": "docs/agent-knowledge/engineering-constraints.md"}, {"id": "entry:docs-agent-knowledge-project-profile-md:4d444957dd1e", "label": "The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.", "display_label": "The application preserves three console theme...", "type": "knowledge-entry", "node_kind": "entry", "entry_kind": "learned_fact", "status": "stable", "canonical_key": "the-application-preserves-three-console-theme-preferences-while-using-halo-as-the-exact-dark-palette-and-component-anatomy-baseline", "path": "docs/agent-knowledge/project-profile.md#the-application-preserves-three-console-theme-preferences-while-using-halo-as-the-exact-dark-palette-and-component-anatomy-baseline", "document_path": "docs/agent-knowledge/project-profile.md"}, {"id": "entry:docs-agent-knowledge-learning-journal-md:516e50b0bcf4", "label": "The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.", "display_label": "The landing stylesheet already declares `base` and...", "type": "knowledge-entry", "node_kind": "entry", "entry_kind": "learned_fact", "status": "staged", "canonical_key": "the-landing-stylesheet-already-declares-base-and-components-cascade-layers-loading-halo-after-those-layers-without-predeclaring-order-would-give-halo-higher-layered-priority-and-leak-its-reset-into-the-landing-page", "path": "docs/agent-knowledge/learning-journal.md#the-landing-stylesheet-already-declares-base-and-components-cascade-layers-loading-halo-after-those-layers-without-predeclaring-order-would-give-halo-higher-layered-priority-and-leak-its-reset-into-the-landing-page", "document_path": "docs/agent-knowledge/learning-journal.md"}], "edges": [{"from": "node:docs-agent-knowledge-engineering-constraints-md", "to": "entry:docs-agent-knowledge-engineering-constraints-md:1edad76abdf6", "type": "contains", "relation_source": "deterministic", "confidence": 1.0}, {"from": "node:docs-agent-knowledge-learning-journal-md", "to": "entry:docs-agent-knowledge-learning-journal-md:516e50b0bcf4", "type": "contains", "relation_source": "deterministic", "confidence": 1.0}, {"from": "node:docs-agent-knowledge-project-profile-md", "to": "entry:docs-agent-knowledge-project-profile-md:4d444957dd1e", "type": "contains", "relation_source": "deterministic", "confidence": 1.0}, {"from": "wiki-index", "to": "node:docs-agent-knowledge-engineering-constraints-md", "type": "links-to", "relation_source": "deterministic", "confidence": 1.0}, {"from": "wiki-index", "to": "node:docs-agent-knowledge-error-patterns-md", "type": "links-to", "relation_source": "deterministic", "confidence": 1.0}, {"from": "wiki-index", "to": "node:docs-agent-knowledge-learning-journal-md", "type": "links-to", "relation_source": "deterministic", "confidence": 1.0}, {"from": "wiki-index", "to": "node:docs-agent-knowledge-project-profile-md", "type": "links-to", "relation_source": "deterministic", "confidence": 1.0}, {"from": "wiki-index", "to": "node:docs-agent-knowledge-public-recall-candidates-md", "type": "links-to", "relation_source": "deterministic", "confidence": 1.0}, {"from": "wiki-index", "to": "node:docs-agent-knowledge-raws-index-md", "type": "links-to", "relation_source": "deterministic", "confidence": 1.0}, {"from": "wiki-index", "to": "node:docs-agent-knowledge-wiki-knowledge-graph-md", "type": "links-to", "relation_source": "deterministic", "confidence": 1.0}], "workbench": {"status_counts": {"stable": 2, "staged": 1}, "saved_views": [{"id": "hard-constraints", "label": "Hard Constraints", "node_ids": ["entry:docs-agent-knowledge-engineering-constraints-md:1edad76abdf6"]}, {"id": "promotion-candidates", "label": "Promotion Candidates", "node_ids": ["entry:docs-agent-knowledge-learning-journal-md:516e50b0bcf4"]}, {"id": "evidence-gaps", "label": "Evidence Gaps", "node_ids": []}], "relation_policy": {"model_edge_min_confidence": 0.75, "allowed_model_edge_types": ["contradicts", "depends-on", "related-to", "supports"]}}};
+    const indexData = {"schema_version": "1.0", "generated_at": "2026-07-16T12:27:24.365594+00:00", "repo_root": "/Users/liwei/WebstormProjects/erxinai", "wiki_dir": "/Users/liwei/WebstormProjects/erxinai/docs/agent-knowledge/wiki", "relation_policy": {"model_edge_min_confidence": 0.75, "allowed_model_edge_types": ["contradicts", "depends-on", "related-to", "supports"]}, "records": [{"id": "entry:docs-agent-knowledge-engineering-constraints-md:1edad76abdf6", "record_type": "knowledge-entry", "entry_kind": "constraint", "status": "stable", "canonical_key": "flat-console-cards-and-panels-use-tiered-surfaces-plus-1px-borders-ambient-shadows-are-reserved-for-floating-surfaces", "canonical_text": "Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.", "display_label": "Flat console cards and panels use tiered surfaces...", "source_document_path": "docs/agent-knowledge/engineering-constraints.md", "record_path": "docs/agent-knowledge/engineering-constraints.md#flat-console-cards-and-panels-use-tiered-surfaces-plus-1px-borders-ambient-shadows-are-reserved-for-floating-surfaces", "evidence_refs": ["`DESIGN.md`; `src/console/console.css`"], "search_text": "Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.\ndocs/agent-knowledge/engineering-constraints.md\nconstraint\nconstraint: Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.\nevidence: Halo elevation rules and the implemented panel/popover/modal mapping.\nevidence_ref: `DESIGN.md`; `src/console/console.css`\nimpact: Avoid gradients and drop shadows on new flat console components.\nconfidence: High.\nsource_task: Halo console design-system integration (2026-07-16).\nfollow_up: Review new primitives against `html/preview.html`.\nFlat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.\ndocs/agent-knowledge/engineering-constraints.md\nconstraint\nconstraint: Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.\nevidence: Halo elevation rules and the implemented panel/popover/modal mapping.\nevidence_ref: `DESIGN.md`; `src/console/console.css`\nimpact: Avoid gradients and drop shadows on new flat console components.\nconfidence: High.\nsource_task: Halo console design-system integration (2026-07-16).\nfollow_up: Review new primitives against `html/preview.html`.", "provenance": ["docs/agent-knowledge/engineering-constraints.md"]}, {"id": "entry:docs-agent-knowledge-project-profile-md:4d444957dd1e", "record_type": "knowledge-entry", "entry_kind": "learned_fact", "status": "stable", "canonical_key": "the-application-preserves-three-console-theme-preferences-while-using-halo-as-the-exact-dark-palette-and-component-anatomy-baseline", "canonical_text": "The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.", "display_label": "The application preserves three console theme...", "source_document_path": "docs/agent-knowledge/project-profile.md", "record_path": "docs/agent-knowledge/project-profile.md#the-application-preserves-three-console-theme-preferences-while-using-halo-as-the-exact-dark-palette-and-component-anatomy-baseline", "evidence_refs": ["`DESIGN.md`; `src/console/console.css`"], "search_text": "The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.\ndocs/agent-knowledge/project-profile.md\nlearned_fact\nlearned_fact: The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.\nevidence: `src/console/theme.js` and the Halo token bridge in `src/console/console.css`.\nevidence_ref: `DESIGN.md`; `src/console/console.css`\nimpact: New console components should consume the existing `--console-*` bridge instead of introducing independent colors or geometry.\nconfidence: High.\nsource_task: Halo console design-system integration (2026-07-16).\nfollow_up: Keep browser QA for light, dark, system, desktop, and mobile when console primitives change.\nThe application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.\ndocs/agent-knowledge/project-profile.md\nlearned_fact\nlearned_fact: The application preserves three console theme preferences while using Halo as the exact dark palette and component anatomy baseline.\nevidence: `src/console/theme.js` and the Halo token bridge in `src/console/console.css`.\nevidence_ref: `DESIGN.md`; `src/console/console.css`\nimpact: New console components should consume the existing `--console-*` bridge instead of introducing independent colors or geometry.\nconfidence: High.\nsource_task: Halo console design-system integration (2026-07-16).\nfollow_up: Keep browser QA for light, dark, system, desktop, and mobile when console primitives change.", "provenance": ["docs/agent-knowledge/project-profile.md"]}, {"id": "entry:docs-agent-knowledge-learning-journal-md:516e50b0bcf4", "record_type": "knowledge-entry", "entry_kind": "learned_fact", "status": "staged", "canonical_key": "the-landing-stylesheet-already-declares-base-and-components-cascade-layers-loading-halo-after-those-layers-without-predeclaring-order-would-give-halo-higher-layered-priority-and-leak-its-reset-into-the-landing-page", "canonical_text": "The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.", "display_label": "The landing stylesheet already declares `base` and...", "source_document_path": "docs/agent-knowledge/learning-journal.md", "record_path": "docs/agent-knowledge/learning-journal.md#the-landing-stylesheet-already-declares-base-and-components-cascade-layers-loading-halo-after-those-layers-without-predeclaring-order-would-give-halo-higher-layered-priority-and-leak-its-reset-into-the-landing-page", "evidence_refs": ["`src/cascade.css`; `src/styles.css`; `src/console/console.css`; `docs/superpowers/specs/2026-07-16-halo-console-design.md`"], "search_text": "The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.\ndocs/agent-knowledge/learning-journal.md\nlearned_fact\ntask: Wire the supplied Halo design system into the Vite/React application and refactor console-owned UI without changing landing/authentication visuals.\nevidence: Static import scans, computed browser styles on `/`, `/login`, and `/key-usage`, plus desktop/mobile console layout checks.\nevidence_ref: `src/cascade.css`; `src/styles.css`; `src/console/console.css`; `docs/superpowers/specs/2026-07-16-halo-console-design.md`\nlearned_fact: The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.\nimpact: `src/cascade.css` must load before `landing.css`, predeclaring `halo` as the lowest layer, while `system.css` remains imported once from `src/styles.css`.\nconfidence: High.\npromotion_target: `engineering-constraints.md`\nfollow_up: Keep the layer-order regression check whenever global CSS entry files change.\nThe landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.\ndocs/agent-knowledge/learning-journal.md\nlearned_fact\ntask: Wire the supplied Halo design system into the Vite/React application and refactor console-owned UI without changing landing/authentication visuals.\nevidence: Static import scans, computed browser styles on `/`, `/login`, and `/key-usage`, plus desktop/mobile console layout checks.\nevidence_ref: `src/cascade.css`; `src/styles.css`; `src/console/console.css`; `docs/superpowers/specs/2026-07-16-halo-console-design.md`\nlearned_fact: The landing stylesheet already declares `base` and `components` cascade layers. Loading Halo after those layers without predeclaring order would give Halo higher layered priority and leak its reset into the landing page.\nimpact: `src/cascade.css` must load before `landing.css`, predeclaring `halo` as the lowest layer, while `system.css` remains imported once from `src/styles.css`.\nconfidence: High.\npromotion_target: `engineering-constraints.md`\nfollow_up: Keep the layer-order regression check whenever global CSS entry files change.", "heading": "2026-07-16 — Halo console integration", "provenance": ["docs/agent-knowledge/learning-journal.md"]}], "semantic_relations": []};
+
+    const nodes = graphData.nodes;
+    const edges = graphData.edges;
+    const records = indexData.records || [];
+    const nodeMap = new Map(nodes.map(node => [node.id, node]));
+    const recordMap = new Map(records.map(record => [record.id, record]));
+    const documentLabels = new Map(
+      nodes
+        .filter(node => node.node_kind === "document")
+        .map(node => [node.document_path, node.label])
+    );
+
+    const workbench = graphData.workbench || { saved_views: [], status_counts: {} };
+    const savedViewsEl = document.getElementById("savedViews");
+    const stateFiltersEl = document.getElementById("stateFilters");
+    const explainModeBtn = document.getElementById("explainModeBtn");
+    const pathModeBtn = document.getElementById("pathModeBtn");
+    const searchInput = document.getElementById("search");
+    const themeSelect = document.getElementById("themeSelect");
+    const graphShell = document.querySelector(".graph-shell");
+    const detailsDrawer = document.getElementById("detailsDrawer");
+    const drawerBody = document.getElementById("drawerBody");
+    const drawerMeta = document.getElementById("drawerMeta");
+    const closeDrawerBtn = document.getElementById("closeDrawerBtn");
+    const storageKey = "repo-memory-graph-theme";
+    const cyContainer = document.getElementById("cy");
+
+    let cy = null;
+    let selectedStatuses = new Set();
+    let selectedSavedView = "__all__";
+    let selectedId = null;
+    let searchTerm = "";
+    let focusMode = "all";
+    let interactionMode = "Explain";
+    let pathStartId = null;
+    let pathTargetId = null;
+    let activePath = null;
+
+    function normalize(value) {
+      return (value || "").toLowerCase();
+    }
+
+    function applyTheme(theme) {
+      const root = document.documentElement;
+      if (theme === "auto") {
+        root.dataset.theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      } else {
+        root.dataset.theme = theme;
+      }
+    }
+
+    function loadThemePreference() {
+      const saved = localStorage.getItem(storageKey) || "auto";
+      themeSelect.value = saved;
+      applyTheme(saved);
+    }
+
+    function statusClass(status) {
+      return status ? `status-${status}` : "";
+    }
+
+    function buildStateFilters() {
+      stateFiltersEl.innerHTML = "";
+      for (const [status, count] of Object.entries(workbench.status_counts || {})) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `group-item ${selectedStatuses.has(status) ? "active" : ""}`.trim();
+        button.innerHTML = `<span>${status}</span><span class="group-meta">${count}</span>`;
+        button.addEventListener("click", () => {
+          if (selectedStatuses.has(status)) {
+            selectedStatuses.delete(status);
+          } else {
+            selectedStatuses.add(status);
+          }
+          selectedId = null;
+          resetPathState();
+          focusMode = "all";
+          render();
+        });
+        stateFiltersEl.append(button);
+      }
+    }
+
+    function buildSavedViews() {
+      savedViewsEl.innerHTML = "";
+      for (const view of workbench.saved_views || []) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `group-item ${selectedSavedView === view.id ? "active" : ""}`.trim();
+        button.innerHTML = `<span>${view.label}</span><span class="group-meta">${view.node_ids.length}</span>`;
+        button.addEventListener("click", () => {
+          selectedSavedView = selectedSavedView === view.id ? "__all__" : view.id;
+          selectedId = null;
+          resetPathState();
+          focusMode = "all";
+          render();
+        });
+        savedViewsEl.append(button);
+      }
+    }
+
+    function buildModeControls() {
+      explainModeBtn.classList.toggle("active", interactionMode === "Explain");
+      pathModeBtn.classList.toggle("active", interactionMode === "Path Mode");
+    }
+
+    function recordMatches(record) {
+      if (!searchTerm) return true;
+      const haystack = [
+        record.canonical_text,
+        record.display_label,
+        record.source_document_path,
+        record.entry_kind,
+        record.status,
+        record.search_text,
+      ].join("\n").toLowerCase();
+      return haystack.includes(searchTerm);
+    }
+
+    function baseEntryIds() {
+      let filtered = records.filter(record => recordMatches(record));
+      if (selectedStatuses.size) {
+        filtered = filtered.filter(record => selectedStatuses.has(record.status));
+      }
+      if (selectedSavedView !== "__all__") {
+        const selectedView = (workbench.saved_views || []).find(view => view.id === selectedSavedView);
+        const nodeIds = new Set(selectedView ? selectedView.node_ids : []);
+        filtered = filtered.filter(record => nodeIds.has(record.id));
+      }
+      return filtered.map(record => record.id);
+    }
+
+    function connectedIds(id) {
+      const ids = new Set([id]);
+      for (const edge of edges) {
+        if (edge.from === id) ids.add(edge.to);
+        if (edge.to === id) ids.add(edge.from);
+      }
+      return ids;
+    }
+
+    function resetPathState() {
+      pathStartId = null;
+      pathTargetId = null;
+      activePath = null;
+    }
+
+    function edgeId(edge) {
+      return `${edge.from}__${edge.to}__${edge.type}`;
+    }
+
+    function findPathBetween(sourceId, targetId, visibleIds) {
+      const queue = [sourceId];
+      const previous = new Map([[sourceId, null]]);
+      const allowed = visibleIds || new Set(nodes.map(node => node.id));
+
+      while (queue.length) {
+        const current = queue.shift();
+        if (current === targetId) break;
+        for (const edge of edges) {
+          if (!allowed.has(edge.from) || !allowed.has(edge.to)) continue;
+          let next = null;
+          if (edge.from === current) next = edge.to;
+          if (edge.to === current) next = edge.from;
+          if (!next || previous.has(next)) continue;
+          previous.set(next, { nodeId: current, edge });
+          queue.push(next);
+        }
+      }
+
+      if (!previous.has(targetId)) {
+        return { nodeIds: [sourceId, targetId], edgeIds: [], hops: [] };
+      }
+
+      const nodeIds = [targetId];
+      const edgeIds = [];
+      const hops = [];
+      let cursor = targetId;
+      while (cursor !== sourceId) {
+        const step = previous.get(cursor);
+        if (!step) break;
+        edgeIds.unshift(edgeId(step.edge));
+        hops.unshift(step.edge);
+        cursor = step.nodeId;
+        nodeIds.unshift(cursor);
+      }
+      return { nodeIds, edgeIds, hops };
+    }
+
+    function buildVisibleSet() {
+      const entryIds = new Set(baseEntryIds());
+      let visibleIds = new Set(entryIds);
+
+      for (const edge of edges) {
+        if (entryIds.has(edge.from) || entryIds.has(edge.to)) {
+          visibleIds.add(edge.from);
+          visibleIds.add(edge.to);
+        }
+      }
+
+      if (selectedId && !visibleIds.has(selectedId)) {
+        selectedId = null;
+        focusMode = "all";
+      }
+
+      if (selectedId && focusMode === "connected") {
+        const connected = connectedIds(selectedId);
+        visibleIds = new Set([...visibleIds].filter(id => connected.has(id)));
+      } else if (selectedId && focusMode === "isolate") {
+        visibleIds = new Set([selectedId]);
+      }
+
+      return visibleIds;
+    }
+
+    function edgeColor(type) {
+      const style = getComputedStyle(document.documentElement);
+      const map = {
+        "links-to": style.getPropertyValue("--edge-links").trim(),
+        "contains": style.getPropertyValue("--edge-contains").trim(),
+        "indexes-raw": style.getPropertyValue("--edge-indexes").trim(),
+        "evidence-ref": style.getPropertyValue("--edge-evidence").trim(),
+        "supports": style.getPropertyValue("--edge-semantic").trim(),
+        "contradicts": style.getPropertyValue("--edge-semantic").trim(),
+        "depends-on": style.getPropertyValue("--edge-semantic").trim(),
+        "related-to": style.getPropertyValue("--edge-semantic").trim(),
+      };
+      return map[type] || style.getPropertyValue("--linked").trim();
+    }
+
+    function nodeColor(type) {
+      const style = getComputedStyle(document.documentElement);
+      const map = {
+        "view": style.getPropertyValue("--view").trim(),
+        "source-layer": style.getPropertyValue("--source").trim(),
+        "knowledge-entry": style.getPropertyValue("--entry").trim(),
+        "raw-index": style.getPropertyValue("--raw").trim(),
+        "raw-evidence": style.getPropertyValue("--raw").trim(),
+        "shared-recall": style.getPropertyValue("--shared").trim(),
+        "linked-doc": style.getPropertyValue("--linked").trim(),
+      };
+      return map[type] || style.getPropertyValue("--linked").trim();
+    }
+
+    function buildElements() {
+      const visibleIds = buildVisibleSet();
+      const visibleNodes = nodes.filter(node => visibleIds.has(node.id));
+      const visibleEdges = edges.filter(edge => visibleIds.has(edge.from) && visibleIds.has(edge.to));
+      const positions = computePresetPositions(visibleNodes, visibleEdges);
+      const elements = [];
+      for (const node of visibleNodes) {
+        if (!visibleIds.has(node.id)) continue;
+        elements.push({
+          data: {
+            id: node.id,
+            label: node.display_label || node.label,
+            fullLabel: node.label,
+            path: node.path,
+            type: node.type,
+            status: node.status || "",
+            color: nodeColor(node.type),
+          },
+          position: positions.get(node.id),
+          classes: `${node.type} ${node.status ? `status-${node.status}` : ""}`.trim(),
+        });
+      }
+      for (const edge of visibleEdges) {
+        elements.push({
+          data: {
+            id: edgeId(edge),
+            source: edge.from,
+            target: edge.to,
+            type: edge.type,
+            confidence: edge.confidence || "",
+            color: edgeColor(edge.type),
+          },
+          classes: edge.type,
+        });
+      }
+      return { elements, visibleIds };
+    }
+
+    function computePresetPositions(visibleNodes, visibleEdges) {
+      const columns = {
+        view: 180,
+        "source-layer": 470,
+        "knowledge-entry": 820,
+        "raw-index": 1120,
+        "raw-evidence": 1410,
+        "shared-recall": 1230,
+        "linked-doc": 260,
+      };
+      const positions = new Map();
+      const grouped = new Map();
+      for (const node of visibleNodes) {
+        const bucket = grouped.get(node.type) || [];
+        bucket.push(node);
+        grouped.set(node.type, bucket);
+      }
+
+      for (const [type, bucket] of grouped.entries()) {
+        bucket.sort((a, b) => (a.display_label || a.label).localeCompare(b.display_label || b.label));
+        const x = columns[type] || 820;
+        const gap = 138;
+        const totalHeight = Math.max(0, (bucket.length - 1) * gap);
+        const startY = 460 - totalHeight / 2;
+        bucket.forEach((node, index) => {
+          positions.set(node.id, { x, y: startY + index * gap });
+        });
+      }
+
+      for (const edge of visibleEdges) {
+        const from = positions.get(edge.from);
+        const to = positions.get(edge.to);
+        if (!from || !to) continue;
+        if (Math.abs(from.x - to.x) < 80 && Math.abs(from.y - to.y) < 110) {
+          to.y += 72;
+        }
+      }
+
+      if (selectedId && positions.has(selectedId)) {
+        const selected = positions.get(selectedId);
+        selected.y = 460;
+      }
+
+      return positions;
+    }
+
+    function graphStyle() {
+      const style = getComputedStyle(document.documentElement);
+      return [
+        {
+          selector: "node",
+          style: {
+            "shape": "round-rectangle",
+            "background-color": "rgba(255,255,255,0.96)",
+            "border-color": "data(color)",
+            "border-width": 2,
+            "width": 198,
+            "height": 54,
+            "label": "data(label)",
+            "text-wrap": "wrap",
+            "text-max-width": 154,
+            "font-size": 13,
+            "font-weight": 600,
+            "color": style.getPropertyValue("--node-label").trim(),
+            "text-valign": "center",
+            "text-halign": "center",
+            "text-margin-y": 0,
+            "text-outline-color": "rgba(255,255,255,0.98)",
+            "text-outline-width": 1,
+            "overlay-opacity": 0,
+          },
+        },
+        {
+          selector: "node.knowledge-entry",
+          style: {
+            "width": 214,
+            "height": 64,
+            "font-size": 14,
+            "border-width": 3,
+            "background-color": "rgba(255,255,255,0.99)",
+          },
+        },
+        {
+          selector: "node.source-layer",
+          style: {
+            "width": 172,
+            "height": 48,
+            "font-size": 12,
+            "background-color": "rgba(241, 255, 247, 0.98)",
+          },
+        },
+        {
+          selector: "node.raw-evidence, node.raw-index",
+          style: {
+            "width": 164,
+            "height": 42,
+            "font-size": 10,
+            "text-max-width": 150,
+            "background-color": "rgba(255, 249, 235, 0.98)",
+          },
+        },
+        {
+          selector: "node.view",
+          style: {
+            "width": 150,
+            "height": 40,
+            "font-size": 11,
+            "background-color": "rgba(246, 240, 255, 0.98)",
+          },
+        },
+        {
+          selector: "node:selected",
+          style: {
+            "background-color": style.getPropertyValue("--node-fill-active").trim(),
+            "border-width": 3,
+            "shadow-blur": 18,
+            "shadow-color": style.getPropertyValue("--entry").trim(),
+            "shadow-opacity": 0.25,
+          },
+        },
+        {
+          selector: "edge",
+          style: {
+            "curve-style": "bezier",
+            "line-color": "data(color)",
+            "target-arrow-color": "data(color)",
+            "target-arrow-shape": "none",
+            "width": 2.8,
+            "opacity": 0.38,
+            "overlay-opacity": 0,
+          },
+        },
+        {
+          selector: "edge.supports, edge.contradicts, edge.depends-on, edge.related-to",
+          style: {
+            "line-style": "dashed",
+            "width": 3.2,
+          },
+        },
+        {
+          selector: ".faded",
+          style: {
+            "opacity": 0.12,
+          },
+        },
+        {
+          selector: ".edge-active",
+          style: {
+            "line-color": style.getPropertyValue("--edge-active").trim(),
+            "width": 4.4,
+            "opacity": 1,
+            "z-index": 999,
+          },
+        },
+        {
+          selector: ".node-active",
+          style: {
+            "border-width": 3,
+            "underlay-color": style.getPropertyValue("--edge-active").trim(),
+            "underlay-opacity": 0.18,
+            "underlay-padding": 8,
+          },
+        },
+        {
+          selector: ".path-source",
+          style: {
+            "underlay-color": style.getPropertyValue("--stable").trim(),
+            "underlay-opacity": 0.24,
+            "underlay-padding": 12,
+          },
+        },
+        {
+          selector: ".path-target",
+          style: {
+            "underlay-color": style.getPropertyValue("--candidate").trim(),
+            "underlay-opacity": 0.24,
+            "underlay-padding": 12,
+          },
+        },
+      ];
+    }
+
+    function renderGraph() {
+      const { elements, visibleIds } = buildElements();
+
+      if (cy) {
+        cy.destroy();
+      }
+
+      cy = cytoscape({
+        container: cyContainer,
+        elements,
+        style: graphStyle(),
+        wheelSensitivity: 0.16,
+        layout: {
+          name: "preset",
+          fit: true,
+          padding: 36,
+        },
+      });
+      window.__knowledgeCy = cy;
+
+      if (!selectedId) {
+        detailsDrawer.classList.add("hidden");
+        detailsDrawer.setAttribute("aria-hidden", "true");
+        graphShell.classList.remove("drawer-open");
+        cy.resize();
+      }
+
+      cy.on("tap", "node", event => {
+        const tappedId = event.target.id();
+        if (interactionMode === "Path Mode") {
+          handlePathModeTap(tappedId, visibleIds);
+          return;
+        }
+        resetPathState();
+        selectedId = tappedId;
+        focusMode = "all";
+        highlightSelection(selectedId);
+        openDrawer(selectedId, visibleIds);
+      });
+
+      cy.on("tap", event => {
+        if (event.target === cy) {
+          clearHighlights();
+        }
+      });
+
+      if (selectedId && visibleIds.has(selectedId)) {
+        if (interactionMode === "Path Mode" && pathStartId) {
+          if (activePath) {
+            highlightPathBetween(activePath);
+          } else {
+            highlightPathStart(pathStartId);
+          }
+          openPathDrawer(visibleIds, activePath);
+        } else {
+          highlightSelection(selectedId);
+          openDrawer(selectedId, visibleIds);
+        }
+      } else {
+        clearHighlights();
+      }
+    }
+
+    function clearHighlights() {
+      if (!cy) return;
+      cy.elements().removeClass("faded edge-active node-active path-source path-target");
+    }
+
+    function highlightSelection(id) {
+      if (!cy || !id) return;
+      clearHighlights();
+      const selected = cy.getElementById(id);
+      if (!selected || selected.empty()) return;
+      selected.addClass("node-active");
+      const connectedEdges = selected.connectedEdges();
+      const connectedNodes = connectedEdges.connectedNodes();
+      cy.elements().not(selected).not(connectedEdges).not(connectedNodes).addClass("faded");
+      connectedEdges.addClass("edge-active");
+    }
+
+    function highlightPathStart(id) {
+      if (!cy || !id) return;
+      clearHighlights();
+      const source = cy.getElementById(id);
+      if (!source || source.empty()) return;
+      cy.elements().not(source).addClass("faded");
+      source.removeClass("faded").addClass("node-active path-source");
+    }
+
+    function highlightPathBetween(pathResult) {
+      if (!cy || !pathResult) return;
+      clearHighlights();
+      cy.elements().addClass("faded");
+      for (const nodeId of pathResult.nodeIds) {
+        cy.getElementById(nodeId).removeClass("faded").addClass("node-active");
+      }
+      for (const edgeId of pathResult.edgeIds) {
+        cy.getElementById(edgeId).removeClass("faded").addClass("edge-active");
+      }
+      if (pathResult.nodeIds.length) {
+        cy.getElementById(pathResult.nodeIds[0]).addClass("path-source");
+        cy.getElementById(pathResult.nodeIds[pathResult.nodeIds.length - 1]).addClass("path-target");
+      }
+    }
+
+    function handlePathModeTap(id, visibleIds) {
+      if (!pathStartId || (pathStartId && pathTargetId)) {
+        pathStartId = id;
+        pathTargetId = null;
+        activePath = null;
+        selectedId = id;
+        highlightPathStart(id);
+        openPathDrawer(visibleIds, null);
+        return;
+      }
+
+      pathTargetId = id;
+      selectedId = id;
+      activePath = findPathBetween(pathStartId, pathTargetId, visibleIds);
+      highlightPathBetween(activePath);
+      openPathDrawer(visibleIds, activePath);
+    }
+
+    function centerOnNode(id) {
+      if (!cy || !id) return;
+      const selected = cy.getElementById(id);
+      if (!selected || selected.empty()) return;
+      const container = cy.container();
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const rendered = selected.renderedPosition();
+      const currentPan = cy.pan();
+      cy.animate({
+        pan: {
+          x: currentPan.x + (rect.width / 2 - rendered.x),
+          y: currentPan.y + (rect.height / 2 - rendered.y),
+        },
+        duration: 220,
+      });
+    }
+
+    function fitGraphToViewport() {
+      if (!cy) return;
+      cy.resize();
+      const focused = cy.elements().not(".faded");
+      const target = focused.length ? focused : cy.elements();
+      if (target.length) {
+        cy.fit(target, 96);
+        cy.center(target);
+      }
+    }
+
+    function scheduleFitGraphToViewport() {
+      requestAnimationFrame(() => {
+        fitGraphToViewport();
+      });
+      window.setTimeout(() => {
+        fitGraphToViewport();
+      }, 190);
+    }
+
+    function resizeGraphAfterDrawerLayout() {
+      requestAnimationFrame(() => {
+        if (cy) {
+          cy.resize();
+        }
+      });
+      window.setTimeout(() => {
+        if (cy) {
+          cy.resize();
+        }
+      }, 190);
+    }
+
+    function openDrawer(id, visibleIds) {
+      const node = nodeMap.get(id);
+      if (!node) return;
+      const record = recordMap.get(id);
+      const related = [];
+      for (const edge of edges) {
+        if (edge.from !== id && edge.to !== id) continue;
+        const otherId = edge.from === id ? edge.to : edge.from;
+        if (visibleIds && !visibleIds.has(otherId)) continue;
+        const other = nodeMap.get(otherId);
+        if (!other) continue;
+        related.push(`
+          <div class="detail-item">
+            <button type="button" data-related-node="${other.id}">
+              <strong>${other.display_label || other.label}</strong><br>
+              ${other.type} · ${edge.type}${edge.confidence ? ` · ${edge.confidence}` : ""}
+            </button>
+          </div>
+        `);
+      }
+
+      detailsDrawer.classList.remove("hidden");
+      detailsDrawer.setAttribute("aria-hidden", "false");
+      graphShell.classList.add("drawer-open");
+      scheduleFitGraphToViewport();
+      drawerBody.textContent = interactionMode === "Path Mode" ? "Path Mode" : "Explain";
+      const evidence = record && record.evidence_refs && record.evidence_refs.length
+        ? record.evidence_refs.map(ref => `<div class="detail-item">${ref}</div>`).join("")
+        : '<div class="detail-item">No captured evidence yet</div>';
+      const readiness = record && ["stable", "error-pattern"].includes(record.status)
+        ? "Safe to treat as a repository rule."
+        : "Do not treat this as a hard repository rule yet.";
+      drawerMeta.innerHTML = `
+        <div class="detail-block"><h2>Meaning</h2><div class="detail-list"><div class="detail-item">${record ? record.canonical_text : node.label}</div></div></div>
+        <div class="detail-block"><h2>Evidence Trail</h2><div class="detail-list">${evidence}</div></div>
+        <div class="detail-block"><h2>Status</h2><div class="detail-list"><div class="detail-item">${readiness}</div></div></div>
+        <div class="detail-block"><h2>Related Memory</h2><div class="detail-list">${related.length ? related.join("") : '<div class="detail-item">No visible related memory in the current graph.</div>'}</div></div>
+      `;
+      for (const button of drawerMeta.querySelectorAll("[data-related-node]")) {
+        button.addEventListener("click", () => {
+          selectedId = button.getAttribute("data-related-node");
+          render();
+        });
+      }
+    }
+
+    function openPathDrawer(visibleIds, pathResult) {
+      const source = pathStartId ? nodeMap.get(pathStartId) : null;
+      const target = pathTargetId ? nodeMap.get(pathTargetId) : null;
+      const pathEdges = pathResult ? pathResult.hops : [];
+      const hopItems = pathEdges.length
+        ? pathEdges.map(edge => {
+            const from = nodeMap.get(edge.from);
+            const to = nodeMap.get(edge.to);
+            return `<div class="detail-item">${from ? from.display_label || from.label : edge.from} <span class="pill">${edge.type}</span> ${to ? to.display_label || to.label : edge.to}</div>`;
+          }).join("")
+        : '<div class="detail-item">Select a second node to highlight the shortest visible path.</div>';
+
+      detailsDrawer.classList.remove("hidden");
+      detailsDrawer.setAttribute("aria-hidden", "false");
+      graphShell.classList.add("drawer-open");
+      drawerBody.textContent = "Path Mode";
+      drawerMeta.innerHTML = `
+        <div class="detail-block"><h2>Path Source</h2><div class="detail-list"><div class="detail-item">${source ? source.label : "Select a source node"}</div></div></div>
+        <div class="detail-block"><h2>Path Target</h2><div class="detail-list"><div class="detail-item">${target ? target.label : "Select a target node"}</div></div></div>
+        <div class="detail-block"><h2>Highlighted Path</h2><div class="detail-list">${hopItems}</div></div>
+      `;
+      resizeGraphAfterDrawerLayout();
+    }
+
+    function render() {
+      buildStateFilters();
+      buildSavedViews();
+      buildModeControls();
+      renderGraph();
+    }
+
+    searchInput.addEventListener("input", event => {
+      searchTerm = normalize(event.target.value);
+      selectedId = null;
+      resetPathState();
+      focusMode = "all";
+      render();
+    });
+
+    themeSelect.addEventListener("change", event => {
+      const nextTheme = event.target.value;
+      localStorage.setItem(storageKey, nextTheme);
+      applyTheme(nextTheme);
+      render();
+    });
+
+    explainModeBtn.addEventListener("click", () => {
+      interactionMode = "Explain";
+      resetPathState();
+      render();
+    });
+
+    pathModeBtn.addEventListener("click", () => {
+      interactionMode = "Path Mode";
+      selectedId = null;
+      resetPathState();
+      render();
+    });
+
+    closeDrawerBtn.addEventListener("click", () => {
+      detailsDrawer.classList.add("hidden");
+      detailsDrawer.setAttribute("aria-hidden", "true");
+      graphShell.classList.remove("drawer-open");
+      selectedId = null;
+      resetPathState();
+      focusMode = "all";
+      clearHighlights();
+      scheduleFitGraphToViewport();
+    });
+
+    loadThemePreference();
+    render();
+  </script>
+</body>
+</html>

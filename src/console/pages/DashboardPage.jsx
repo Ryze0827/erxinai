@@ -5,30 +5,31 @@ import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 import { DataTable, EmptyState, ErrorState, LineChart, Page, Panel, ProgressBar, Spinner, StatCard, StatusBadge } from "../UI";
-import { dateInput, formatCompact, formatDuration, statusLabel } from "../utils";
+import { DateRangePicker } from "../components/ConsoleControls";
+import { dateInput, formatCompact, formatDuration, formatTokenMillions, formatTokenMillionsFixed, statusLabel } from "../utils";
 
 function settledValue(result, fallback) {
   return result.status === "fulfilled" ? result.value : fallback;
 }
 
-function ModelDistribution({ models, formatNumber }) {
+function ModelDistribution({ models }) {
   const total = models.reduce((sum, item) => sum + Number(item.total_tokens || item.tokens || 0), 0) || 1;
   if (!models.length) return <EmptyState />;
   return <div className="console-distribution">{models.slice(0, 7).map((item, index) => {
     const value = Number(item.total_tokens || item.tokens || 0);
     const percent = value / total * 100;
-    return <div key={item.model || index}><div><strong>{item.model || "Unknown"}</strong><span>{formatNumber(value)} · {percent.toFixed(1)}%</span></div><ProgressBar value={percent} tone={index % 2 ? "green" : "primary"} /></div>;
+    return <div key={item.model || index}><div><strong>{item.model || "Unknown"}</strong><span>{formatTokenMillions(value)} · {percent.toFixed(1)}%</span></div><ProgressBar value={percent} tone={index % 2 ? "green" : "primary"} /></div>;
   })}</div>;
 }
 
-function TokenBreakdown({ stats, formatNumber, locale }) {
+function TokenBreakdown({ stats, locale }) {
   const items = [
     [locale === "zh" ? "输入 Token" : "Input tokens", stats.total_input_tokens],
     [locale === "zh" ? "输出 Token" : "Output tokens", stats.total_output_tokens],
     [locale === "zh" ? "缓存创建" : "Cache creation", stats.total_cache_creation_tokens],
     [locale === "zh" ? "缓存读取" : "Cache read", stats.total_cache_read_tokens],
   ];
-  return <div className="console-public-metrics">{items.map(([label, value]) => <div key={label}><span>{label}</span><strong>{formatNumber(value)}</strong></div>)}</div>;
+  return <div className="console-public-metrics">{items.map(([label, value]) => <div key={label}><span>{label}</span><strong>{formatTokenMillions(value)}</strong></div>)}</div>;
 }
 
 function PlatformDistribution({ items, formatCurrency, formatNumber, locale }) {
@@ -53,6 +54,7 @@ export function DashboardPage() {
   const { t, locale, formatNumber, formatCurrency, formatDate } = useLocale();
   const { user, refreshUser, settings } = useConsole();
   const simpleMode = user?.run_mode === "simple";
+  const [range, setRange] = useState({ start_date: dateInput(-6), end_date: dateInput() });
   const [data, setData] = useState({ stats: null, trend: [], models: [], recent: [], quotas: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -61,11 +63,11 @@ export function DashboardPage() {
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    const range = { start_date: dateInput(-6), end_date: dateInput(), granularity: "day" };
+    const query = { ...range, granularity: "day" };
     try {
       const results = await Promise.allSettled([
-        refreshUser(), usageApi.dashboardStats(), usageApi.dashboardTrend(range),
-        usageApi.dashboardModels(range), usageApi.list({ ...range, page: 1, page_size: 5, sort_by: "created_at", sort_order: "desc" }),
+        refreshUser(), usageApi.dashboardStats(), usageApi.dashboardTrend(query),
+        usageApi.dashboardModels(query), usageApi.list({ ...query, page: 1, page_size: 5, sort_by: "created_at", sort_order: "desc" }),
         userApi.getPlatformQuotas(),
       ]);
       const stats = settledValue(results[1], null);
@@ -81,7 +83,7 @@ export function DashboardPage() {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, [refreshUser, t]);
+  }, [range, refreshUser, t]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -94,29 +96,30 @@ export function DashboardPage() {
   const stats = data.stats || {};
   const columns = [
     { key: "model", label: t("usage.model"), render: (row) => <strong className="console-strong">{row.model || "—"}</strong> },
-    { key: "tokens", label: t("usage.tokens"), render: (row) => formatNumber(row.total_tokens), align: "right" },
+    { key: "tokens", label: t("usage.tokens"), render: (row) => formatTokenMillions(row.total_tokens), align: "right" },
     { key: "cost", label: t("usage.actualCost"), render: (row) => formatCurrency(row.actual_cost ?? row.cost), align: "right" },
     { key: "duration", label: t("usage.duration"), render: (row) => formatDuration(row.duration_ms), align: "right" },
     { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={row.status || "completed"} label={statusLabel(row.status || "completed", locale)} /> },
     { key: "created_at", label: t("common.date"), render: (row) => formatDate(row.created_at) },
   ];
 
-  return <Page title={t("dashboard.title")} subtitle={t("dashboard.subtitle")} actions={<button className="console-refresh-action" onClick={load}><Icon name="refresh" size={17} />{t("common.refresh")}</button>}>
+  const actions = <div className="console-dashboard-actions"><span>{locale === "zh" ? "时间范围：" : "Time range:"}</span><DateRangePicker startDate={range.start_date} endDate={range.end_date} onChange={setRange} /><button className="console-refresh-action" onClick={load}><Icon name="refresh" size={17} />{t("common.refresh")}</button></div>;
+  return <Page title={t("dashboard.title")} subtitle={t("dashboard.subtitle")} actions={actions}>
     <div className="console-stat-grid">
-      {!simpleMode && <StatCard label={t("dashboard.balance")} value={formatCurrency(user?.balance || 0)} meta={`${t("dashboard.today")}: ${formatCurrency(stats.today_actual_cost)}`} icon="dollar" />}
+      {!simpleMode && <StatCard className="console-stat--balance" label={t("dashboard.balance")} value={formatCurrency(user?.balance || 0)} meta={`${t("dashboard.today")}: ${formatCurrency(stats.today_actual_cost)}`} icon="dollar" />}
       <StatCard label={t("dashboard.keys")} value={`${formatNumber(stats.active_api_keys)} / ${formatNumber(stats.total_api_keys)}`} meta={t("keys.title")} icon="key" tone="green" />
       <StatCard label={t("dashboard.requests")} value={formatCompact(stats.total_requests, locale)} meta={`${t("dashboard.today")}: ${formatNumber(stats.today_requests)}`} icon="pulse" tone="amber" />
-      <StatCard label={t("dashboard.tokens")} value={formatCompact(stats.total_tokens, locale)} meta={`${t("dashboard.today")}: ${formatCompact(stats.today_tokens, locale)}`} icon="chart" />
-      <StatCard label={t("dashboard.cost")} value={formatCurrency(stats.total_actual_cost)} meta={`${locale === "zh" ? "标准费用" : "Standard"}: ${formatCurrency(stats.total_cost)}`} icon="dollar" tone="rose" />
-      <StatCard label="RPM / TPM" value={`${formatNumber(stats.rpm)} / ${formatCompact(stats.tpm, locale)}`} meta={`${t("dashboard.latency")}: ${formatDuration(stats.average_duration_ms)}`} icon="pulse" tone="green" />
+      <StatCard label={t("dashboard.tokens")} value={formatTokenMillions(stats.total_tokens)} meta={`${t("dashboard.today")}: ${formatTokenMillions(stats.today_tokens)}`} icon="chart" />
+      <StatCard label={t("dashboard.cost")} value={formatCurrency(stats.today_actual_cost)} meta={`${locale === "zh" ? "今日标准费用" : "Today standard"}: ${formatCurrency(stats.today_cost ?? stats.today_actual_cost)}`} icon="dollar" tone="rose" />
+      <StatCard label="RPM / TPM" value={`${formatNumber(stats.rpm, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${formatTokenMillionsFixed(stats.tpm)}`} meta={`${t("dashboard.latency")}: ${formatDuration(stats.average_duration_ms)}`} icon="pulse" tone="green" />
     </div>
     <div className="console-grid console-grid--sidebar">
       <Panel title={t("dashboard.trend")}><LineChart data={data.trend} valueKey="total_tokens" /></Panel>
       <Panel title={t("dashboard.quick")}><div className="console-quick-actions"><Link to="/keys"><Icon name="key" size={19} /><span><strong>{t("dashboard.createKey")}</strong><small>{t("keys.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>{!simpleMode && <Link to="/usage"><Icon name="chart" size={19} /><span><strong>{t("dashboard.inspectUsage")}</strong><small>{t("usage.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to="/batch-image"><Icon name="image" size={19} /><span><strong>{t("batch.title")}</strong><small>{t("batch.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to="/redeem"><Icon name="gift" size={19} /><span><strong>{t("redeem.title")}</strong><small>{t("redeem.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && settings?.payment_enabled !== false && <Link to="/purchase"><Icon name="cart" size={19} /><span><strong>{t("dashboard.addCredit")}</strong><small>{t("purchase.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}</div></Panel>
     </div>
-    <Panel title={locale === "zh" ? "Token 构成" : "Token breakdown"}><div className="console-panel-body"><TokenBreakdown stats={stats} formatNumber={formatNumber} locale={locale} /></div></Panel>
+    <Panel title={locale === "zh" ? "Token 构成" : "Token breakdown"}><div className="console-panel-body"><TokenBreakdown stats={stats} locale={locale} /></div></Panel>
     <div className="console-grid console-grid--2">
-      <Panel title={t("dashboard.models")}><div className="console-panel-body"><ModelDistribution models={data.models} formatNumber={formatNumber} /></div></Panel>
+      <Panel title={t("dashboard.models")}><div className="console-panel-body"><ModelDistribution models={data.models} /></div></Panel>
       {!simpleMode && <Panel title={t("dashboard.platforms")}><div className="console-panel-body"><PlatformDistribution items={stats.by_platform || []} formatCurrency={formatCurrency} formatNumber={formatNumber} locale={locale} /></div></Panel>}
     </div>
     {!simpleMode && <Panel title={locale === "zh" ? "平台配额" : "Platform quotas"}><div className="console-panel-body"><PlatformQuotas items={data.quotas} formatCurrency={formatCurrency} locale={locale} t={t} /></div></Panel>}

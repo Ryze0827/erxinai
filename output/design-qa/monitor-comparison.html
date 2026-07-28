@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>渠道状态视觉对比</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { width: 2854px; margin: 0; padding: 12px; color: #eef3ef; background: #090c0a; font: 14px system-ui, sans-serif; }
+    section { display: grid; grid-template-columns: 1415px 1415px; gap: 0; margin-bottom: 24px; border: 1px solid #3c4740; }
+    figure { margin: 0; background: #0d100e; }
+    figcaption { height: 36px; padding: 9px 12px; border-bottom: 1px solid #3c4740; font-weight: 650; }
+    img { display: block; width: 1415px; height: 850px; object-fit: cover; object-position: top left; }
+  </style>
+</head>
+<body>
+  <section>
+    <figure><figcaption>参考图</figcaption><img src="./monitor-reference.png" alt="参考图" /></figure>
+    <figure><figcaption>深色毛玻璃实现</figcaption><img src="./monitor-dark-final.png" alt="深色实现" /></figure>
+  </section>
+  <section>
+    <figure><figcaption>参考图</figcaption><img src="./monitor-reference.png" alt="参考图" /></figure>
+    <figure><figcaption>浅色毛玻璃实现</figcaption><img src="./monitor-light-final.png" alt="浅色实现" /></figure>
+  </section>
+</body>
+</html>

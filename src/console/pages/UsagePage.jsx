@@ -4,8 +4,8 @@ import { useConsole } from "../ConsoleContext";
 import { GroupBadge } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatusBadge } from "../UI";
-import { downloadBlob, formatCompact, formatDuration } from "../utils";
+import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatCardSkeleton, StatusBadge } from "../UI";
+import { downloadBlob, formatCompact, formatDuration, formatTokenMillions } from "../utils";
 import { ColumnPicker, DateRangePicker, SearchSelect, useHiddenColumns } from "../components/ConsoleControls";
 import { DistributionChart, UsageTrendChart } from "../components/UsageCharts";
 import { IpGeoBatchToolbar, IpGeoCell } from "../components/IpGeo";
@@ -63,11 +63,11 @@ function reasoningLabel(value) {
 
 function UsageStats({ stats, loading }) {
   const { t, locale, formatCurrency, formatNumber } = useLocale();
-  if (loading && !stats) return <div className="console-stat-grid console-stat-grid--4">{[0, 1, 2, 3].map((item) => <div className="console-stat console-skeleton" key={item} />)}</div>;
+  if (loading && !stats) return <div className="console-stat-grid console-stat-grid--4 console-usage-stats" role="status" aria-label={t("common.loading")}>{["blue", "green", "amber", "rose"].map((tone) => <StatCardSkeleton key={tone} tone={tone} />)}</div>;
   const value = stats || {};
   const cacheCreate = value.total_cache_creation_tokens || 0;
   const cacheRead = value.total_cache_read_tokens || value.total_cache_tokens || 0;
-  return <div className="console-stat-grid console-stat-grid--4 console-usage-stats"><div className="console-stat"><div><span>{t("usage.requests")}</span><strong>{formatCompact(value.total_requests, locale)}</strong><small>{locale === "zh" ? "所选时间范围" : "In selected range"}</small></div><i><Icon name="pulse" size={20} /></i></div><div className="console-stat console-stat--green"><div><span>{t("usage.tokens")}</span><strong>{formatCompact(value.total_tokens, locale)}</strong><small title={`${locale === "zh" ? "缓存创建" : "Cache creation"}: ${formatNumber(cacheCreate)} · ${locale === "zh" ? "缓存读取" : "Cache read"}: ${formatNumber(cacheRead)}`}>↓ {formatCompact(value.total_input_tokens, locale)} · ↑ {formatCompact(value.total_output_tokens, locale)} · C {formatCompact(cacheCreate + cacheRead, locale)}</small></div><i><Icon name="chart" size={20} /></i></div><div className="console-stat console-stat--amber"><div><span>{t("usage.actualCost")}</span><strong>{formatCurrency(value.total_actual_cost)}</strong><small><del>{formatCurrency(value.total_cost)}</del> {locale === "zh" ? "标准费用" : "standard"}</small></div><i><Icon name="dollar" size={20} /></i></div><div className="console-stat console-stat--rose"><div><span>{t("usage.avgLatency")}</span><strong>{formatDuration(value.average_duration_ms)}</strong><small>{locale === "zh" ? "平均请求耗时" : "Average request duration"}</small></div><i><Icon name="clock" size={20} /></i></div></div>;
+  return <div className="console-stat-grid console-stat-grid--4 console-usage-stats"><div className="console-stat"><div><span>{t("usage.requests")}</span><strong>{formatCompact(value.total_requests, locale)}</strong><small>{locale === "zh" ? "所选时间范围" : "In selected range"}</small></div><i><Icon name="pulse" size={20} /></i></div><div className="console-stat console-stat--green"><div><span>{t("usage.tokens")}</span><strong>{formatTokenMillions(value.total_tokens)}</strong><small title={`${locale === "zh" ? "缓存创建" : "Cache creation"}: ${formatTokenMillions(cacheCreate)} · ${locale === "zh" ? "缓存读取" : "Cache read"}: ${formatTokenMillions(cacheRead)}`}>↓ {formatTokenMillions(value.total_input_tokens)} · ↑ {formatTokenMillions(value.total_output_tokens)} · C {formatTokenMillions(cacheCreate + cacheRead)}</small></div><i><Icon name="chart" size={20} /></i></div><div className="console-stat console-stat--amber"><div><span>{t("usage.actualCost")}</span><strong>{formatCurrency(value.total_actual_cost)}</strong><small><del>{formatCurrency(value.total_cost)}</del> {locale === "zh" ? "标准费用" : "standard"}</small></div><i><Icon name="dollar" size={20} /></i></div><div className="console-stat console-stat--rose"><div><span>{t("usage.avgLatency")}</span><strong>{formatDuration(value.average_duration_ms)}</strong><small>{locale === "zh" ? "平均请求耗时" : "Average request duration"}</small></div><i><Icon name="clock" size={20} /></i></div></div>;
 }
 
 function FilterSelect({ label, value, onChange, children }) {
@@ -92,11 +92,11 @@ function ModelCell({ row }) {
   return <div className="console-key-name"><strong>{row.model || "—"}</strong>{row.upstream_model && row.upstream_model !== row.model && <small>↳ {row.upstream_model}</small>}</div>;
 }
 
-function TokenCell({ row, formatNumber, locale }) {
+function TokenCell({ row, locale }) {
   if (billingMode(row) === "image" || billingMode(row) === "per_request") return <div className="console-token-cell"><strong>{row.image_count || 1} {locale === "zh" ? "张" : "image(s)"}</strong><small>{row.image_output_size || row.image_size || row.image_input_size || "—"}</small></div>;
   const total = Number(row.input_tokens || 0) + Number(row.output_tokens || 0) + Number(row.cache_creation_tokens || 0) + Number(row.cache_read_tokens || 0);
-  const title = `${locale === "zh" ? "输入" : "Input"}: ${formatNumber(row.input_tokens)}\n${locale === "zh" ? "输出" : "Output"}: ${formatNumber(row.output_tokens)}\n${locale === "zh" ? "缓存创建" : "Cache creation"}: ${formatNumber(row.cache_creation_tokens)} (5m ${formatNumber(row.cache_creation_5m_tokens)}, 1h ${formatNumber(row.cache_creation_1h_tokens)})\n${locale === "zh" ? "缓存读取" : "Cache read"}: ${formatNumber(row.cache_read_tokens)}\nTotal: ${formatNumber(total)}`;
-  return <div className="console-token-cell" title={title}><span><b>↓</b>{formatNumber(row.input_tokens)} <b>↑</b>{formatNumber(row.output_tokens)}</span>{Number(row.cache_read_tokens) > 0 && <small className="is-cache">R {formatNumber(row.cache_read_tokens)}</small>}{Number(row.cache_creation_tokens) > 0 && <small className="is-create">C {formatNumber(row.cache_creation_tokens)}{Number(row.cache_creation_1h_tokens) > 0 && <i>1h</i>}{row.cache_ttl_overridden && <i>R</i>}</small>}</div>;
+  const title = `${locale === "zh" ? "输入" : "Input"}: ${formatTokenMillions(row.input_tokens)}\n${locale === "zh" ? "输出" : "Output"}: ${formatTokenMillions(row.output_tokens)}\n${locale === "zh" ? "缓存创建" : "Cache creation"}: ${formatTokenMillions(row.cache_creation_tokens)} (5m ${formatTokenMillions(row.cache_creation_5m_tokens)}, 1h ${formatTokenMillions(row.cache_creation_1h_tokens)})\n${locale === "zh" ? "缓存读取" : "Cache read"}: ${formatTokenMillions(row.cache_read_tokens)}\nTotal: ${formatTokenMillions(total)}`;
+  return <div className="console-token-cell" title={title}><span><b>↓</b>{formatTokenMillions(row.input_tokens)} <b>↑</b>{formatTokenMillions(row.output_tokens)}</span>{Number(row.cache_read_tokens) > 0 && <small className="is-cache">R {formatTokenMillions(row.cache_read_tokens)}</small>}{Number(row.cache_creation_tokens) > 0 && <small className="is-create">C {formatTokenMillions(row.cache_creation_tokens)}{Number(row.cache_creation_1h_tokens) > 0 && <i>1h</i>}{row.cache_ttl_overridden && <i>R</i>}</small>}</div>;
 }
 
 function CostCell({ row, formatCurrency, locale }) {
@@ -129,7 +129,7 @@ function csvRow(row) {
 }
 
 function TimeRangePanel({ filters, granularity, setGranularity, changeRange, locale }) {
-  return <Panel><div className="console-time-range"><div><span>{localized(locale, "时间范围", "Time range")}</span><DateRangePicker startDate={filters.start_date} endDate={filters.end_date} onChange={changeRange} /></div><div><span>{localized(locale, "粒度", "Granularity")}</span><SelectInput value={granularity} onChange={(event) => setGranularity(event.target.value)}><option value="day">{localized(locale, "天", "Day")}</option><option value="hour">{localized(locale, "小时", "Hour")}</option></SelectInput></div></div></Panel>;
+  return <Panel className="console-time-range-panel"><div className="console-time-range"><div><span>{localized(locale, "时间范围", "Time range")}</span><DateRangePicker startDate={filters.start_date} endDate={filters.end_date} onChange={changeRange} /></div><div><span>{localized(locale, "粒度", "Granularity")}</span><SelectInput value={granularity} onChange={(event) => setGranularity(event.target.value)}><option value="day">{localized(locale, "天", "Day")}</option><option value="hour">{localized(locale, "小时", "Hour")}</option></SelectInput></div></div></Panel>;
 }
 
 function UsageChartsPanel({ data, loading, locale }) {
@@ -155,13 +155,18 @@ function UsageTabs({ enabled, tab, setTab, locale, t }) {
   return <div className="console-tabs console-usage-tabs"><button className={tab === "usage" ? "is-active" : ""} onClick={() => setTab("usage")}>{localized(locale, "用量记录", "Usage")}</button><button className={tab === "errors" ? "is-active" : ""} onClick={() => setTab("errors")}>{t("usage.errors")}</button></div>;
 }
 
+function RecordsSkeleton({ columns, rowCount = 20 }) {
+  const { t } = useLocale();
+  return <><div className="console-table-wrap console-records-skeleton console-skeleton" role="status" aria-label={t("common.loading")}><table className="console-table" aria-hidden="true"><thead><tr>{columns.map((column) => <th key={column.key}><span className="console-table-header-content">{column.label}</span></th>)}</tr></thead><tbody>{Array.from({ length: rowCount }, (_, row) => <tr key={row}>{columns.map((column) => <td key={column.key} />)}</tr>)}</tbody></table></div><div className="console-pagination console-records-pagination-skeleton console-skeleton" aria-hidden="true"><span /><div><i /><i /><i /></div></div></>;
+}
+
 function ErrorRecords({ loading, columns, errors, sort, setSort, paging, setPaging, openError }) {
-  if (loading) return <Spinner />;
+  if (loading) return <RecordsSkeleton columns={columns} rowCount={paging.pageSize} />;
   return <><DataTable columns={columns} rows={errors.items} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} onRowClick={openError} /><Pagination page={paging.page} pageSize={paging.pageSize} total={errors.total} pages={errors.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 }
 
 function UsageRecords({ state, columns, data, sort, setSort, paging, setPaging, loadUsage }) {
-  if (state.loading) return <Spinner />;
+  if (state.loading) return <RecordsSkeleton columns={columns} rowCount={paging.pageSize} />;
   if (state.error) return <ErrorState message={state.error} onRetry={loadUsage} />;
   return <><DataTable columns={columns} rows={data.items} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} /><Pagination page={paging.page} pageSize={paging.pageSize} total={data.total} pages={data.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 }
@@ -274,7 +279,7 @@ export function UsagePage() {
     { key: "group", label: t("usage.group"), render: (row) => <GroupBadge name={row.group?.name} platform={row.group?.platform} /> },
     { key: "stream", label: t("usage.type"), render: (row) => <span className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row))}</span> },
     { key: "billing_mode", label: t("usage.billing"), render: (row) => <span className="console-billing-badge">{billingMode(row).replaceAll("_", " ")}</span> },
-    { key: "tokens", label: t("usage.tokens"), render: (row) => <TokenCell row={row} formatNumber={formatNumber} locale={locale} /> },
+    { key: "tokens", label: t("usage.tokens"), render: (row) => <TokenCell row={row} locale={locale} /> },
     { key: "cost", label: locale === "zh" ? "费用" : "Cost", render: (row) => <CostCell row={row} formatCurrency={formatCurrency} locale={locale} /> },
     { key: "latency", label: locale === "zh" ? "延迟" : "Latency", render: (row) => <LatencyCell row={row} locale={locale} /> },
     { key: "created_at", label: locale === "zh" ? "时间" : "Time", sortable: true, render: (row) => formatDate(row.created_at) },

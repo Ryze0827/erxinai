@@ -44,7 +44,7 @@ export function EmailVerifyPage() {
       const response = await authApi.register({ ...data, countdown_until: undefined, verify_code: code });
       persistAuthResponse(response, true);
       sessionStorage.removeItem("register_data");
-      navigate("/", { replace: true });
+      navigate("/keys", { replace: true });
     } catch (requestError) {
       setError(getErrorMessage(requestError, "Email verification failed."));
     } finally {

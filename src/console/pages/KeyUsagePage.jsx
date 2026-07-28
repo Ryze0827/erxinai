@@ -5,7 +5,7 @@ import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 import { Button, DataTable, EmptyState, ErrorState, Field, IconButton, LineChart, Panel, ProgressBar, Spinner, StatusBadge, TextInput, ThemeToggle } from "../UI";
-import { dateInput, formatDuration, safeExternalUrl, safeImageUrl, statusLabel } from "../utils";
+import { dateInput, formatDuration, formatTokenMillions, formatTokenMillionsFixed, safeExternalUrl, statusLabel } from "../utils";
 
 const rangeOptions = ["today", "7d", "30d", "custom"];
 const dailyOptions = [7, 30, 90];
@@ -69,25 +69,23 @@ function metricCells(data, locale, formatCurrency, formatNumber) {
   const totalPrefix = locale === "zh" ? "累计" : "Total";
   return [
     [locale === "zh" ? "今日请求" : "Today requests", n(today.requests)],
-    [`${todayPrefix} Input`, n(today.input_tokens)], [`${todayPrefix} Output`, n(today.output_tokens)],
-    [`${todayPrefix} Token`, n(today.total_tokens)], [`${todayPrefix} Cache create`, n(today.cache_creation_tokens)],
-    [`${todayPrefix} Cache read`, n(today.cache_read_tokens)], [locale === "zh" ? "今日费用" : "Today cost", formatCurrency(today.actual_cost)],
-    ["RPM / TPM", `${n(usage.rpm)} / ${n(usage.tpm)}`],
+    [`${todayPrefix} Input`, formatTokenMillions(today.input_tokens)], [`${todayPrefix} Output`, formatTokenMillions(today.output_tokens)],
+    [`${todayPrefix} Token`, formatTokenMillions(today.total_tokens)], [`${todayPrefix} Cache create`, formatTokenMillions(today.cache_creation_tokens)],
+    [`${todayPrefix} Cache read`, formatTokenMillions(today.cache_read_tokens)], [locale === "zh" ? "今日费用" : "Today cost", formatCurrency(today.actual_cost)],
+    ["RPM / TPM", `${formatNumber(usage.rpm, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${formatTokenMillionsFixed(usage.tpm)}`],
     [locale === "zh" ? "累计请求" : "Total requests", n(total.requests)],
-    [`${totalPrefix} Input`, n(total.input_tokens)], [`${totalPrefix} Output`, n(total.output_tokens)],
-    [`${totalPrefix} Token`, n(total.total_tokens)], [`${totalPrefix} Cache create`, n(total.cache_creation_tokens)],
-    [`${totalPrefix} Cache read`, n(total.cache_read_tokens)], [locale === "zh" ? "累计费用" : "Total cost", formatCurrency(total.actual_cost)],
+    [`${totalPrefix} Input`, formatTokenMillions(total.input_tokens)], [`${totalPrefix} Output`, formatTokenMillions(total.output_tokens)],
+    [`${totalPrefix} Token`, formatTokenMillions(total.total_tokens)], [`${totalPrefix} Cache create`, formatTokenMillions(total.cache_creation_tokens)],
+    [`${totalPrefix} Cache read`, formatTokenMillions(total.cache_read_tokens)], [locale === "zh" ? "累计费用" : "Total cost", formatCurrency(total.actual_cost)],
     [locale === "zh" ? "平均耗时" : "Average duration", formatDuration(usage.average_duration_ms)],
   ].map(([label, value]) => ({ label, value }));
 }
 
 function PublicShell({ children }) {
-  const { settings } = useConsole();
+  const { settings, branding, brandingReady } = useConsole();
   const { locale, setLocale, t } = useLocale();
-  const logo = safeImageUrl(settings?.site_logo) || "/assets/img/sentence-ai-icon.png";
   const docs = safeExternalUrl(settings?.doc_url);
-  const siteName = settings?.site_name || "Sentence AI";
-  return <div className="console-public-shell console-key-usage-shell"><div className="console-scene" /><header><Link to="/"><img src={logo} alt="" /><strong>{siteName}</strong></Link><nav>{docs && <a href={docs} target="_blank" rel="noreferrer"><Icon name="book" size={18} />{t("nav.docs")}</a>}<button onClick={() => setLocale(locale === "en" ? "zh" : "en")}><Icon name="globe" size={18} />{t("nav.language")}</button><ThemeToggle /></nav></header><main>{children}</main><footer>© {new Date().getFullYear()} {siteName}</footer></div>;
+  return <div className="console-public-shell console-key-usage-shell"><div className="console-scene" /><header><Link className={`console-key-usage-brand ${brandingReady ? "" : "is-pending"}`} to="/">{brandingReady && <img key={branding.siteLogo} src={branding.siteLogo} alt="" />}{brandingReady && <strong>{branding.siteName}</strong>}</Link><nav>{docs && <a href={docs} target="_blank" rel="noreferrer"><Icon name="book" size={18} />{t("nav.docs")}</a>}<button onClick={() => setLocale(locale === "en" ? "zh" : "en")}><Icon name="globe" size={18} />{t("nav.language")}</button><ThemeToggle /></nav></header><main>{children}</main><footer>© {new Date().getFullYear()} {brandingReady ? branding.siteName : ""}</footer></div>;
 }
 
 function RangePicker({ range, setRange, custom, setCustom, locale, onApply }) {
@@ -169,15 +167,15 @@ export function KeyUsagePage() {
 
   const dailyColumns = useMemo(() => [
     { key: "date", label: t("common.date") }, { key: "requests", label: t("usage.requests"), render: (row) => formatNumber(row.requests), align: "right" },
-    { key: "input_tokens", label: "Input", render: (row) => formatNumber(row.input_tokens), align: "right" }, { key: "output_tokens", label: "Output", render: (row) => formatNumber(row.output_tokens), align: "right" },
-    { key: "cache_read_tokens", label: "Cache read", render: (row) => formatNumber(row.cache_read_tokens), align: "right" }, { key: "cache_write_tokens", label: "Cache create", render: (row) => formatNumber(row.cache_write_tokens ?? row.cache_creation_tokens), align: "right" },
+    { key: "input_tokens", label: "Input (M)", render: (row) => formatTokenMillions(row.input_tokens), align: "right" }, { key: "output_tokens", label: "Output (M)", render: (row) => formatTokenMillions(row.output_tokens), align: "right" },
+    { key: "cache_read_tokens", label: "Cache read (M)", render: (row) => formatTokenMillions(row.cache_read_tokens), align: "right" }, { key: "cache_write_tokens", label: "Cache create (M)", render: (row) => formatTokenMillions(row.cache_write_tokens ?? row.cache_creation_tokens), align: "right" },
     { key: "actual_cost", label: t("usage.actualCost"), render: (row) => formatCurrency(row.actual_cost ?? row.cost), align: "right" },
   ], [formatCurrency, formatNumber, t]);
   const modelColumns = useMemo(() => [
     { key: "model", label: t("dashboard.models") }, { key: "requests", label: t("usage.requests"), render: (row) => formatNumber(row.requests), align: "right" },
-    { key: "input_tokens", label: "Input", render: (row) => formatNumber(row.input_tokens), align: "right" }, { key: "output_tokens", label: "Output", render: (row) => formatNumber(row.output_tokens), align: "right" },
-    { key: "cache_creation_tokens", label: "Cache create", render: (row) => formatNumber(row.cache_creation_tokens), align: "right" }, { key: "cache_read_tokens", label: "Cache read", render: (row) => formatNumber(row.cache_read_tokens), align: "right" },
-    { key: "total_tokens", label: t("usage.tokens"), render: (row) => formatNumber(row.total_tokens), align: "right" }, { key: "actual_cost", label: t("usage.actualCost"), render: (row) => formatCurrency(row.actual_cost ?? row.cost), align: "right" },
+    { key: "input_tokens", label: "Input (M)", render: (row) => formatTokenMillions(row.input_tokens), align: "right" }, { key: "output_tokens", label: "Output (M)", render: (row) => formatTokenMillions(row.output_tokens), align: "right" },
+    { key: "cache_creation_tokens", label: "Cache create (M)", render: (row) => formatTokenMillions(row.cache_creation_tokens), align: "right" }, { key: "cache_read_tokens", label: "Cache read (M)", render: (row) => formatTokenMillions(row.cache_read_tokens), align: "right" },
+    { key: "total_tokens", label: `${t("usage.tokens")} (M)`, render: (row) => formatTokenMillions(row.total_tokens), align: "right" }, { key: "actual_cost", label: t("usage.actualCost"), render: (row) => formatCurrency(row.actual_cost ?? row.cost), align: "right" },
   ], [formatCurrency, formatNumber, t]);
 
   const resultProps = { range, dailyDays, setDailyDays, dailyColumns, modelColumns, locale, formatCurrency, formatNumber, formatDate, query, t };

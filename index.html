@@ -7,8 +7,23 @@
       name="description"
       content="Sentence AI provides one OpenAI-compatible gateway for multiple AI models, with request tracing, usage visibility, and resilient routing."
     />
-    <link rel="icon" type="image/png" href="/assets/img/sentence-ai-icon.png" />
-    <title>Sentence AI — One Gateway for Every Model</title>
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" />
+    <title></title>
+    <script>
+      (() => {
+        try {
+          const branding = JSON.parse(localStorage.getItem("sentence_public_branding") || "null");
+          if (!branding) return;
+          window.__sentencePublicBranding = branding;
+          const logo = String(branding.site_logo || "");
+          const allowedLogo = /^data:image\/(?:png|jpe?g|gif|webp);base64,/i.test(logo) || /^https?:\/\//i.test(logo) || logo.startsWith("/");
+          if (allowedLogo) document.querySelector('link[rel~="icon"]')?.setAttribute("href", logo);
+          if (branding.site_name) document.title = String(branding.site_name);
+        } catch {
+          // Public settings will apply the final brand after the app starts.
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
