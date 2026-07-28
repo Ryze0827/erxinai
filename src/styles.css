@@ -27,6 +27,52 @@
   display: inline-flex;
 }
 
+.nav-language {
+  display: inline-flex;
+  height: 36px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid rgb(26 25 22 / 12%);
+  border-radius: 999px;
+  color: var(--ink);
+  background: rgb(255 255 255 / 42%);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+}
+
+.nav-language svg {
+  width: 15px;
+  height: 15px;
+}
+
+.nav-language:hover {
+  border-color: rgb(26 25 22 / 20%);
+  background: rgb(255 255 255 / 68%);
+}
+
+.site-header[data-hero="true"][data-scrolled="false"] .nav-language {
+  border-color: rgb(255 255 255 / 28%);
+  color: #fff;
+  background: rgb(255 255 255 / 10%);
+}
+
+.site-header[data-hero="true"][data-scrolled="false"] .nav-language:hover {
+  border-color: rgb(255 255 255 / 42%);
+  background: rgb(255 255 255 / 18%);
+}
+
+.site-header[data-hero="true"][data-scrolled="false"][data-open="true"] .nav-language {
+  border-color: rgb(26 25 22 / 12%);
+  color: var(--ink);
+  background: var(--surface-card);
+}
+
 .price-download[hidden] {
   display: none;
 }
@@ -97,6 +143,20 @@
 }
 
 @media (max-width: 479px) {
+  .nav-brand {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .nav-right > .btn-account {
+    display: none;
+  }
+
+  .nav-language {
+    height: 34px;
+    padding: 0 9px;
+  }
+
   .hero-works .hero-mark {
     width: 56px;
     height: 56px;

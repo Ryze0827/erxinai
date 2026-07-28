@@ -11,18 +11,25 @@
       <div class="nav-glass-filter" aria-hidden="true"></div>
       <div class="nav-glass-overlay" aria-hidden="true"></div>
       <div class="nav-glass-specular" aria-hidden="true"></div>
-      <a class="nav-brand" href="/" aria-label="Sentence AI home">
+      <a class="nav-brand" href="/" aria-label="Sentence AI 首页" data-i18n-aria="nav.home">
         <img src="/assets/img/sentence-ai-icon.png" alt="" width="28" height="28">
         <span>Sentence AI</span>
       </a>
-      <nav class="nav-links" aria-label="Primary">
-        <a href="#features">Features</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#faq">FAQ</a>
+      <nav class="nav-links" aria-label="主导航" data-i18n-aria="nav.primary">
+        <a href="#features" data-i18n="nav.features">功能</a>
+        <a href="#pricing" data-i18n="nav.pricing">价格</a>
+        <a href="#faq" data-i18n="nav.faq">常见问题</a>
       </nav>
       <div class="nav-right">
-        <a class="btn btn-account btn-sm" data-auth-link data-authenticated="false" href="/login"><span class="btn-content"><span class="nav-account-avatar" data-auth-initial aria-hidden="true">U</span><span data-auth-label>Log in</span></span></a>
-        <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-drawer">
+        <button class="nav-language" type="button" data-language-toggle data-language-target="en" aria-label="切换到英文" title="切换到英文">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M3 12h18M12 3c2.2 2.5 3.3 5.5 3.3 9S14.2 18.5 12 21c-2.2-2.5-3.3-5.5-3.3-9S9.8 5.5 12 3Z"></path>
+          </svg>
+          <span data-i18n="language.label">EN</span>
+        </button>
+        <a class="btn btn-account btn-sm" data-auth-link data-authenticated="false" href="/login"><span class="btn-content"><span class="nav-account-avatar" data-auth-initial aria-hidden="true">U</span><span data-auth-label>登录</span></span></a>
+        <button class="nav-toggle" type="button" aria-label="展开或收起导航" data-i18n-aria="nav.toggle" aria-expanded="false" aria-controls="nav-drawer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="4" y1="7" x2="20" y2="7"></line>
             <line x1="4" y1="12" x2="20" y2="12"></line>
@@ -32,11 +39,11 @@
       </div>
     </div>
     <div class="nav-drawer" id="nav-drawer" data-open="false">
-      <a href="#features">Features</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#faq">FAQ</a>
-      <a class="btn btn-account" data-auth-link data-authenticated="false" href="/login"><span class="btn-content"><span class="nav-account-avatar" data-auth-initial aria-hidden="true">U</span><span data-auth-label>Log in</span></span></a>
-      <a class="btn btn-primary" data-auth-register href="/register">Create account</a>
+      <a href="#features" data-i18n="nav.features">功能</a>
+      <a href="#pricing" data-i18n="nav.pricing">价格</a>
+      <a href="#faq" data-i18n="nav.faq">常见问题</a>
+      <a class="btn btn-account" data-auth-link data-authenticated="false" href="/login"><span class="btn-content"><span class="nav-account-avatar" data-auth-initial aria-hidden="true">U</span><span data-auth-label>登录</span></span></a>
+      <a class="btn btn-primary" data-auth-register data-i18n="auth.createAccount" href="/register">注册账号</a>
     </div>
   </header>
 
@@ -44,34 +51,33 @@
     <div class="hero-wrap">
       <div class="hero-bg" aria-hidden="true"></div>
       <section class="hero">
-        <span class="gateway-eyebrow">OpenAI-compatible AI gateway</span>
-        <h1 class="hero-headline" aria-label="Your AI gateway, built for every model">
+        <span class="gateway-eyebrow" data-i18n="hero.eyebrow">兼容 OpenAI 的 AI 网关</span>
+        <h1 class="hero-headline" aria-label="你的 AI 网关，连接每一种模型" data-i18n-aria="hero.titleLabel" data-i18n-html="hero.title">
           <span aria-hidden="true">
-            <span class="hero-word hero-char" style="animation-delay: 560ms">Your</span>
+            <span class="hero-word hero-char" style="animation-delay: 560ms">你的</span>
             <span class="hero-word hero-char" style="animation-delay: 650ms">AI</span>
-            <span class="hero-word hero-char" style="animation-delay: 740ms">gateway,</span>
+            <span class="hero-word hero-char" style="animation-delay: 740ms">网关，</span>
           </span>
           <br>
           <span class="hero-headline-serif" aria-hidden="true">
-            <span class="hero-word hero-char" style="animation-delay: 860ms">built</span>
-            <span class="hero-word hero-char" style="animation-delay: 950ms">for</span>
-            <span class="hero-word hero-char" style="animation-delay: 1040ms">every</span>
-            <span class="hero-word hero-char" style="animation-delay: 1130ms">model</span>
+            <span class="hero-word hero-char" style="animation-delay: 860ms">连接</span>
+            <span class="hero-word hero-char" style="animation-delay: 950ms">每一种</span>
+            <span class="hero-word hero-char" style="animation-delay: 1040ms">模型</span>
           </span>
         </h1>
-        <p class="lead">Connect to leading text, code, and image models through one stable API. Trace requests, control spend, and route around provider failures.</p>
+        <p class="lead" data-i18n="hero.lead">通过一个稳定的 API，连接领先的文本、代码和图像模型。追踪请求、控制成本，并在服务商故障时自动绕行。</p>
         <div class="hero-cta">
-          <a class="btn btn-glass" data-auth-dashboard href="/register"><span class="btn-content">Start building</span></a>
-          <span class="hero-meta">One account · One endpoint · Multiple providers</span>
+          <a class="btn btn-glass" data-auth-dashboard href="/register"><span class="btn-content" data-i18n="hero.cta">开始构建</span></a>
+          <span class="hero-meta" data-i18n="hero.meta">一个账号 · 一个端点 · 多家服务商</span>
         </div>
         <div class="hero-works hero-supports">
-          <div class="gateway-provider-list" aria-label="Supported model families">
-            <span>Text</span>
-            <span>Code</span>
-            <span>Image</span>
-            <span>Reasoning</span>
+          <div class="gateway-provider-list" aria-label="支持的模型类型" data-i18n-aria="hero.families">
+            <span data-i18n="hero.family.text">文本</span>
+            <span data-i18n="hero.family.code">代码</span>
+            <span data-i18n="hero.family.image">图像</span>
+            <span data-i18n="hero.family.reasoning">推理</span>
           </div>
-          <div class="hero-agents-strip" aria-label="Supported AI tools: Claude, Codex, Cursor, Grok, Hermes, OpenCode, and Antigravity">
+          <div class="hero-agents-strip" aria-label="支持的 AI 工具：Claude、Codex、Cursor、Grok、Hermes、OpenCode 和 Antigravity" data-i18n-aria="hero.tools">
             <img class="hero-mark" src="/assets/img/hero-claude-53b6104287.webp" alt="Claude" title="Claude" width="72" height="72" loading="eager" decoding="async">
             <img class="hero-mark" src="/assets/img/hero-codex-52fd8a0726.webp" alt="Codex" title="Codex" width="72" height="72" loading="eager" decoding="async">
             <img class="hero-mark" src="/assets/img/hero-cursor-b63f652982.webp" alt="Cursor" title="Cursor" width="72" height="72" loading="eager" decoding="async">
@@ -88,29 +94,29 @@
       <div class="bento-grid">
         <article class="bento-cell">
           <div class="bento-card-head">
-            <h2 class="bento-title">One endpoint. Every model.</h2>
-            <p class="bento-sub">Use one OpenAI-compatible API to reach leading text, code, and image models.</p>
+            <h2 class="bento-title" data-i18n="feature.endpoint.title">一个端点，连接所有模型。</h2>
+            <p class="bento-sub" data-i18n="feature.endpoint.body">通过一个兼容 OpenAI 的 API，接入领先的文本、代码和图像模型。</p>
           </div>
           <div class="bento-card"><div class="gateway-demo gateway-demo--endpoint" data-gateway-demo="endpoint" aria-hidden="true"></div></div>
         </article>
         <article class="bento-cell">
           <div class="bento-card-head">
-            <h2 class="bento-title">Trace every request.</h2>
-            <p class="bento-sub">Inspect status, latency, tokens, cost, retries, and the exact route behind every call.</p>
+            <h2 class="bento-title" data-i18n="feature.trace.title">追踪每一次请求。</h2>
+            <p class="bento-sub" data-i18n="feature.trace.body">查看状态、延迟、Token、费用、重试，以及每次调用背后的完整路由。</p>
           </div>
           <div class="bento-card"><div class="gateway-demo gateway-demo--trace" data-gateway-demo="trace" aria-hidden="true"></div></div>
         </article>
         <article class="bento-cell">
           <div class="bento-card-head">
-            <h2 class="bento-title">Know every token and dollar.</h2>
-            <p class="bento-sub">Track usage and spend by key, model, project, and time range.</p>
+            <h2 class="bento-title" data-i18n="feature.usage.title">掌握每个 Token 和每笔费用。</h2>
+            <p class="bento-sub" data-i18n="feature.usage.body">按密钥、模型、项目和时间范围追踪用量与支出。</p>
           </div>
           <div class="bento-card"><div class="gateway-demo gateway-demo--usage" data-gateway-demo="usage" aria-hidden="true"></div></div>
         </article>
         <article class="bento-cell">
           <div class="bento-card-head">
-            <h2 class="bento-title">Stay online when providers do not.</h2>
-            <p class="bento-sub">Monitor provider health and use routing policies to keep production traffic moving.</p>
+            <h2 class="bento-title" data-i18n="feature.health.title">服务商离线，业务依然在线。</h2>
+            <p class="bento-sub" data-i18n="feature.health.body">监控服务商健康状态，并通过路由策略保障生产流量持续运行。</p>
           </div>
           <div class="bento-card"><div class="gateway-demo gateway-demo--health" data-gateway-demo="health" aria-hidden="true"></div></div>
         </article>
@@ -118,56 +124,56 @@
     </section>
 
     <section class="section home-price-section" id="pricing">
-      <div class="section-head center"><h2>Pricing that grows with your traffic.</h2></div>
+      <div class="section-head center"><h2 data-i18n="pricing.title">随业务流量灵活增长的价格方案。</h2></div>
       <div class="home-price-card">
         <div class="home-price-panel">
-          <span class="home-price-kicker">Choose how you start</span>
-          <div class="home-price-amount">$0<span class="home-price-per">/start</span></div>
-          <p class="home-price-note" data-auth-pricing-note>Create an account before adding usage credit</p>
+          <span class="home-price-kicker" data-i18n="pricing.kicker">选择你的起步方式</span>
+          <div class="home-price-amount">$0<span class="home-price-per">/起步</span></div>
+          <p class="home-price-note" data-auth-pricing-note>注册账号后即可充值并开始使用</p>
         </div>
-        <div class="home-price-tiers" role="radiogroup" aria-label="Gateway plan">
-          <button type="button" role="radio" aria-checked="true" class="home-price-tier selected" data-plan="starter" data-price="$0" data-period="/start">Starter</button>
-          <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="usage" data-price="Usage" data-period="/based">Usage based</button>
-          <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="scale" data-price="Custom" data-period="/plan">Scale</button>
+        <div class="home-price-tiers" role="radiogroup" aria-label="网关方案" data-i18n-aria="pricing.group">
+          <button type="button" role="radio" aria-checked="true" class="home-price-tier selected" data-plan="starter" data-price="$0" data-price-key="pricing.price.starter" data-period="/起步" data-period-key="pricing.period.starter" data-i18n="pricing.starter">入门</button>
+          <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="usage" data-price="按量" data-price-key="pricing.price.usage" data-period="/计费" data-period-key="pricing.period.usage" data-i18n="pricing.usage">按量计费</button>
+          <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="scale" data-price="定制" data-price-key="pricing.price.scale" data-period="/方案" data-period-key="pricing.period.scale" data-i18n="pricing.scale">规模化</button>
         </div>
-        <a class="btn btn-glass home-price-action" data-auth-pricing-action data-plan="starter" href="/register?plan=starter"><span class="btn-content" data-auth-pricing-label>Create an account</span></a>
+        <a class="btn btn-glass home-price-action" data-auth-pricing-action data-plan="starter" href="/register?plan=starter"><span class="btn-content" data-auth-pricing-label>注册账号</span></a>
         <ul class="home-price-list">
-          <li>One OpenAI-compatible endpoint for supported model providers</li>
-          <li>Project keys with request-level usage and cost visibility</li>
-          <li>Provider health, routing policies, retries, and fallback controls</li>
-          <li>Text, code, image, and reasoning workloads in one account</li>
-          <li>No separate client integration for every upstream provider</li>
+          <li data-i18n="pricing.benefit.endpoint">一个兼容 OpenAI 的端点，连接所有受支持的模型服务商</li>
+          <li data-i18n="pricing.benefit.keys">项目级 API 密钥，请求用量与费用清晰可见</li>
+          <li data-i18n="pricing.benefit.routing">服务商健康监控、路由策略、重试与故障回退控制</li>
+          <li data-i18n="pricing.benefit.workloads">一个账号承载文本、代码、图像和推理工作负载</li>
+          <li data-i18n="pricing.benefit.integration">无需为每个上游服务商分别集成客户端</li>
         </ul>
-        <a class="price-download" data-auth-login-prompt href="/login"><span class="btn-content">Already have an account? Log in</span></a>
+        <a class="price-download" data-auth-login-prompt href="/login"><span class="btn-content" data-i18n="pricing.login">已有账号？立即登录</span></a>
       </div>
     </section>
 
     <section class="faq-section section" id="faq">
-      <div class="section-head center"><h2>Questions, answered.</h2></div>
+      <div class="section-head center"><h2 data-i18n="faq.title">常见问题。</h2></div>
       <div class="faq">
         <div class="faq-item" data-open="false">
-          <button class="faq-q" type="button" aria-expanded="false"><span>What is Sentence AI?</span><span class="chev" aria-hidden="true">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Sentence AI is an AI gateway that gives applications one API for multiple model providers. It centralizes access keys, request routing, usage records, and provider health in one place.</div></div></div>
+          <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="faq.what.question">Sentence AI 是什么？</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body" data-i18n="faq.what.answer">Sentence AI 是一个 AI 网关，让应用通过一个 API 连接多家模型服务商，并在一个平台中统一管理访问密钥、请求路由、用量记录和服务商健康状态。</div></div></div>
         </div>
         <div class="faq-item" data-open="false">
-          <button class="faq-q" type="button" aria-expanded="false"><span>Can I use an OpenAI client library?</span><span class="chev" aria-hidden="true">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Yes. Point a compatible client at the Sentence AI base URL, provide your Sentence AI key, and select a supported model. Most integrations only need those configuration changes.</div></div></div>
+          <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="faq.client.question">可以使用 OpenAI 客户端库吗？</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body" data-i18n="faq.client.answer">可以。将兼容客户端的基础地址指向 Sentence AI，填入 Sentence AI 密钥并选择受支持的模型即可。大多数集成只需修改这些配置。</div></div></div>
         </div>
         <div class="faq-item" data-open="false">
-          <button class="faq-q" type="button" aria-expanded="false"><span>How are requests monitored?</span><span class="chev" aria-hidden="true">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Request records can include status, route, latency, token usage, estimated cost, retries, and errors so teams can diagnose behavior without building a separate observability layer.</div></div></div>
+          <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="faq.monitor.question">如何监控请求？</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body" data-i18n="faq.monitor.answer">请求记录可包含状态、路由、延迟、Token 用量、预估费用、重试和错误，团队无需额外搭建可观测平台也能快速定位问题。</div></div></div>
         </div>
         <div class="faq-item" data-open="false">
-          <button class="faq-q" type="button" aria-expanded="false"><span>What happens when a provider is unavailable?</span><span class="chev" aria-hidden="true">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Provider health and routing policies help you identify degraded upstreams. Where a compatible backup is configured, requests can be retried or routed through another available channel.</div></div></div>
+          <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="faq.provider.question">服务商不可用时会怎样？</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body" data-i18n="faq.provider.answer">服务商健康状态与路由策略可以帮助识别异常上游。配置兼容的备用通道后，请求可以自动重试或切换到其他可用通道。</div></div></div>
         </div>
         <div class="faq-item" data-open="false">
-          <button class="faq-q" type="button" aria-expanded="false"><span>How do I control access and spend?</span><span class="chev" aria-hidden="true">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Use separate keys for projects or environments, then review request and token usage by key, model, and time range. Keep production keys on your server and rotate them when needed.</div></div></div>
+          <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="faq.spend.question">如何控制访问权限和费用？</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body" data-i18n="faq.spend.answer">为不同项目或环境创建独立密钥，再按密钥、模型和时间范围查看请求及 Token 用量。生产密钥应保存在服务端，并按需轮换。</div></div></div>
         </div>
         <div class="faq-item" data-open="false">
-          <button class="faq-q" type="button" aria-expanded="false"><span>How do I get started?</span><span class="chev" aria-hidden="true">+</span></button>
-          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body">Create a Sentence AI account, generate a project key, update your client base URL, and send your first request using a supported model identifier.</div></div></div>
+          <button class="faq-q" type="button" aria-expanded="false"><span data-i18n="faq.start.question">如何开始使用？</span><span class="chev" aria-hidden="true">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><div class="faq-a-body" data-i18n="faq.start.answer">注册 Sentence AI 账号，创建项目密钥，更新客户端基础地址，然后使用受支持的模型标识发送第一个请求。</div></div></div>
         </div>
       </div>
     </section>
@@ -177,21 +183,21 @@
     <div class="footer-card">
       <div class="footer-top">
         <aside class="footer-note">
-          <p>Build against one stable AI interface while Sentence AI keeps provider access, routing, and usage visible.</p>
+          <p data-i18n="footer.note">只需对接一个稳定的 AI 接口，Sentence AI 会让服务商接入、请求路由和用量始终清晰可见。</p>
         </aside>
         <div class="footer-grid">
           <div class="footer-col">
-            <h4>Product</h4>
-            <ul><li><a href="#features">Features</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#faq">FAQ</a></li></ul>
+            <h4 data-i18n="footer.product">产品</h4>
+            <ul><li><a href="#features" data-i18n="nav.features">功能</a></li><li><a href="#pricing" data-i18n="nav.pricing">价格</a></li><li><a href="#faq" data-i18n="nav.faq">常见问题</a></li></ul>
           </div>
           <div class="footer-col">
-            <h4>Account</h4>
-            <ul><li><a href="/login">Log in</a></li><li><a href="/register">Create account</a></li></ul>
+            <h4 data-i18n="footer.account">账号</h4>
+            <ul><li><a href="/login" data-i18n="auth.login">登录</a></li><li><a href="/register" data-i18n="auth.createAccount">注册账号</a></li></ul>
           </div>
         </div>
       </div>
       <span class="footer-wordmark" aria-hidden="true">Sentence AI</span>
-      <div class="footer-base"><span>© 2026 Sentence AI</span><span>AI gateway for developers</span></div>
+      <div class="footer-base"><span>© 2026 Sentence AI</span><span data-i18n="footer.tagline">为开发者打造的 AI 网关</span></div>
     </div>
   </footer>
 </div>

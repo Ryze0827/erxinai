@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Children, isValidElement, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
 import { useConsole } from "./ConsoleContext";
@@ -7,13 +7,14 @@ import { useTheme } from "./theme";
 import { formatTokenMillions } from "./utils";
 
 export function Page({ title, subtitle, actions, children, className = "" }) {
+  const hasActions = Boolean(actions);
   return (
     <div className={`console-page ${className}`}>
       {title && <h1 className="console-page-title">{title}</h1>}
-      {(subtitle || actions) && (
+      {hasActions && (
         <div className="console-page-head console-page-head--subtitle-only">
           <div>{subtitle && <p>{subtitle}</p>}</div>
-          {actions && <div className="console-page-actions">{actions}</div>}
+          <div className="console-page-actions">{actions}</div>
         </div>
       )}
       {children}
@@ -46,8 +47,177 @@ export function TextInput({ className = "", ...props }) {
   return <input className={`console-input ${className}`} {...props} />;
 }
 
-export function SelectInput({ children, className = "", ...props }) {
-  return <select className={`console-input console-select ${className}`} {...props}>{children}</select>;
+function selectOptionText(children) {
+  return Children.toArray(children).map((child) => {
+    if (typeof child === "string" || typeof child === "number") return String(child);
+    return isValidElement(child) ? selectOptionText(child.props.children) : "";
+  }).join("");
+}
+
+function selectOptions(children) {
+  return Children.toArray(children).filter(isValidElement).map((option, index) => ({
+    key: option.key ?? index,
+    value: String(option.props.value ?? selectOptionText(option.props.children)),
+    label: option.props.label || selectOptionText(option.props.children),
+    disabled: Boolean(option.props.disabled),
+  }));
+}
+
+function selectMenuPosition(rect, optionCount, searchable) {
+  const margin = 8;
+  const gap = 5;
+  const viewportRight = Math.max(margin, window.innerWidth - margin);
+  const left = Math.min(Math.max(margin, rect.left), viewportRight);
+  const availableWidth = Math.max(0, viewportRight - left);
+  const width = Math.min(Math.max(200, rect.width), availableWidth);
+  const estimatedHeight = Math.min(360, Math.max(72, optionCount * 39 + (searchable ? 58 : 12)));
+  const below = window.innerHeight - rect.bottom - gap - margin;
+  const above = rect.top - gap - margin;
+  const opensAbove = below < estimatedHeight && above > below;
+  return {
+    left,
+    width,
+    maxHeight: Math.max(84, Math.min(360, opensAbove ? above : below)),
+    top: opensAbove ? "auto" : rect.bottom + gap,
+    bottom: opensAbove ? window.innerHeight - rect.top + gap : "auto",
+  };
+}
+
+export function SelectInput({ children, className = "", value = "", onChange, disabled = false, searchable = "auto", name, id, ...props }) {
+  const { locale } = useLocale();
+  const options = useMemo(() => selectOptions(children), [children]);
+  const selectedValue = String(value ?? "");
+  const selected = options.find((option) => option.value === selectedValue);
+  const shouldSearch = searchable === true || (searchable === "auto" && options.length > 5);
+  const reactId = useId();
+  const menuId = `console-select-${reactId}`;
+  const rootRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+  const searchRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [focused, setFocused] = useState(-1);
+  const [position, setPosition] = useState(null);
+  const filtered = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase();
+    return normalized ? options.filter((option) => option.label.toLocaleLowerCase().includes(normalized)) : options;
+  }, [options, query]);
+
+  const updatePosition = () => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (rect) setPosition(selectMenuPosition(rect, filtered.length, shouldSearch));
+  };
+  const close = () => {
+    setOpen(false);
+    setQuery("");
+    setFocused(-1);
+    setPosition(null);
+  };
+  const firstEnabled = (items, start = 0, direction = 1) => {
+    if (!items.length) return -1;
+    for (let offset = 0; offset < items.length; offset += 1) {
+      const index = (start + offset * direction + items.length * 2) % items.length;
+      if (!items[index].disabled) return index;
+    }
+    return -1;
+  };
+  const move = (direction) => {
+    const start = focused < 0 ? (direction > 0 ? 0 : filtered.length - 1) : focused + direction;
+    setFocused(firstEnabled(filtered, start, direction));
+  };
+  const select = (option) => {
+    if (!option || option.disabled) return;
+    const target = { value: option.value, name };
+    onChange?.({ target, currentTarget: target });
+    close();
+    window.requestAnimationFrame(() => triggerRef.current?.focus());
+  };
+
+  useEffect(() => {
+    if (!open) return undefined;
+    updatePosition();
+    const selectedIndex = filtered.findIndex((option) => option.value === selectedValue && !option.disabled);
+    setFocused(selectedIndex >= 0 ? selectedIndex : firstEnabled(filtered));
+    const handlePointerDown = (event) => {
+      if (!rootRef.current?.contains(event.target) && !menuRef.current?.contains(event.target)) close();
+    };
+    const handleViewport = () => updatePosition();
+    document.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("resize", handleViewport);
+    window.addEventListener("scroll", handleViewport, true);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("resize", handleViewport);
+      window.removeEventListener("scroll", handleViewport, true);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !position) return;
+    window.requestAnimationFrame(() => (shouldSearch ? searchRef.current : menuRef.current)?.focus());
+  }, [open, position, shouldSearch]);
+
+  useEffect(() => {
+    if (!open) return;
+    updatePosition();
+    setFocused((current) => {
+      if (current >= 0 && current < filtered.length && !filtered[current].disabled) return current;
+      const selectedIndex = filtered.findIndex((option) => option.value === selectedValue && !option.disabled);
+      return selectedIndex >= 0 ? selectedIndex : firstEnabled(filtered);
+    });
+  }, [filtered, open, selectedValue, shouldSearch]);
+
+  useEffect(() => {
+    if (!open || focused < 0) return;
+    menuRef.current?.querySelector(".console-select-option.is-focused")?.scrollIntoView({ block: "nearest" });
+  }, [focused, open]);
+
+  const handleTriggerKeyDown = (event) => {
+    if (["ArrowDown", "ArrowUp", "Enter", " "].includes(event.key)) {
+      event.preventDefault();
+      if (!open) setOpen(true);
+      else if (event.key === "ArrowDown") move(1);
+      else if (event.key === "ArrowUp") move(-1);
+    } else if (event.key === "Escape" && open) {
+      event.preventDefault();
+      close();
+    }
+  };
+  const handleMenuKeyDown = (event) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      move(event.key === "ArrowDown" ? 1 : -1);
+    } else if (event.key === "Enter" && focused >= 0) {
+      event.preventDefault();
+      select(filtered[focused]);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      close();
+      triggerRef.current?.focus();
+    } else if (event.key === "Tab") close();
+  };
+  const menu = open && position && createPortal(
+    <div
+      id={menuId}
+      className="console-group-menu console-select-menu"
+      ref={menuRef}
+      style={{ left: position.left, width: position.width, maxHeight: position.maxHeight, top: position.top, bottom: position.bottom }}
+      role="listbox"
+      tabIndex={-1}
+      aria-label={props["aria-label"]}
+      onKeyDown={handleMenuKeyDown}
+    >
+      {shouldSearch && <div className="console-select-search"><Icon name="search" size={15} /><input ref={searchRef} value={query} onChange={(event) => { setQuery(event.target.value); setFocused(-1); }} placeholder={locale === "zh" ? "搜索选项" : "Search options"} aria-label={locale === "zh" ? "搜索选项" : "Search options"} /></div>}
+      <div className="console-select-options">
+        {filtered.map((option, index) => <button key={option.key} type="button" role="option" aria-selected={option.value === selectedValue} aria-disabled={option.disabled || undefined} disabled={option.disabled} className={`console-select-option ${option.value === selectedValue ? "is-selected" : ""} ${focused === index ? "is-focused" : ""}`} onMouseEnter={() => !option.disabled && setFocused(index)} onClick={() => select(option)}><span>{option.label}</span>{option.value === selectedValue && <Icon name="check" size={15} />}</button>)}
+        {!filtered.length && <p className="console-select-empty">{locale === "zh" ? "没有匹配选项" : "No matching options"}</p>}
+      </div>
+    </div>,
+    document.body,
+  );
+
+  return <div className={`console-select-root ${className}`} ref={rootRef}><button ref={triggerRef} id={id} type="button" className={`console-input console-select console-select-trigger ${open ? "is-open" : ""}`} disabled={disabled} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? menuId : undefined} aria-label={props["aria-label"]} aria-describedby={props["aria-describedby"]} onClick={() => open ? close() : setOpen(true)} onKeyDown={handleTriggerKeyDown}><span>{selected?.label || (locale === "zh" ? "请选择" : "Select an option")}</span><Icon name="chevronDown" size={15} /></button>{menu}</div>;
 }
 
 export function TextArea({ className = "", ...props }) {

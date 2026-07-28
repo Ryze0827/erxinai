@@ -30,10 +30,9 @@ function restoreFocus(ref) {
 }
 
 export function GroupOption({ group, selected, rates, onClick }) {
-  const { locale } = useLocale();
   const rate = rateFor(group, rates);
   const original = Number(group.rate_multiplier || 1);
-  return <button type="button" role="option" aria-selected={selected} className={`console-group-option ${selected ? "is-selected" : ""}`} onClick={onClick}><div><GroupBadge name={group.name} platform={group.platform} /><p>{group.description || (locale === "zh" ? "用户 API 分组" : "User API group")}</p></div><div className="console-group-rates">{selected && <Icon name="check" size={16} />}{rate !== original && <del>{original}×</del>}{group.subscription_type === "subscription" && <small>SUB</small>}<strong>{rate}×</strong></div></button>;
+  return <button type="button" role="option" aria-selected={selected} className={`console-group-option ${selected ? "is-selected" : ""}`} onClick={onClick}><div><GroupBadge name={group.name} platform={group.platform} />{group.description && <p>{group.description}</p>}</div><div className="console-group-rates">{selected && <Icon name="check" size={16} />}{rate !== original && <del>{original}×</del>}{group.subscription_type === "subscription" && <small>SUB</small>}<strong>{rate}×</strong></div></button>;
 }
 
 function EmptyGroupOption({ visible, selected, locale, onSelect }) {

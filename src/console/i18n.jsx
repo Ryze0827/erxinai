@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const STORAGE_KEY = "sentence_locale";
 const dictionaries = {
@@ -490,8 +490,12 @@ function interpolate(value, variables = {}) {
 const LocaleContext = createContext(null);
 
 export function LocaleProvider({ children }) {
-  const [locale, setLocaleState] = useState(() => localStorage.getItem(STORAGE_KEY) === "zh" ? "zh" : "en");
-  const setLocale = (value) => setLocaleState(value === "zh" ? "zh" : "en");
+  const [locale, setLocaleState] = useState(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "zh" || stored === "en") return stored;
+    return window.location.pathname === "/" ? "zh" : "en";
+  });
+  const setLocale = useCallback((value) => setLocaleState(value === "zh" ? "zh" : "en"), []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, locale);

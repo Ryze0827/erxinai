@@ -10,7 +10,8 @@ When implementing from a selected generated mock, treat that image as the source
 
 - Authentication, registration, email verification, and OAuth success open the API Keys route at `/keys`.
 - The authenticated homepage navigation shows the user's initial and a Dashboard entry; regular users go to `/dashboard`, while administrators go to `/admin/dashboard`.
-- The authenticated homepage pricing card keeps its copy in English, uses `Start using` with the `/keys` destination, replaces account-creation guidance with an API-key-ready message, and hides the login prompt; dedicated homepage internationalization is deferred.
+- The homepage is bilingual in Chinese and English, defaults to Chinese when no locale has been saved, persists language selection through the shared locale preference, and localizes navigation, hero, feature, pricing, FAQ, demo, and footer copy.
+- The authenticated homepage pricing card follows the selected homepage locale, uses the localized `Start using` action with the `/keys` destination, replaces account-creation guidance with an API-key-ready message, and hides the login prompt.
 - Turnstile verification fills the available authentication form width and remains responsive on narrow screens.
 - The homepage `Start building` action opens `/keys` when the user is authenticated and otherwise opens registration.
 - The Hero keeps the `Text / Code / Image / Reasoning` capability pills above the original overlapping AI tool icon strip.
@@ -41,9 +42,9 @@ When implementing from a selected generated mock, treat that image as the source
 - Console table row hover and selection highlights use one compositor-moved overlay per table so they follow the pointer immediately; avoid repainting full rows or adding background transitions.
 - Primary console actions such as `New key` keep their solid fluorescent-green default fill in every theme; generic glass button styling must not override them.
 - Selected API-group platform colors fill the entire group-select trigger, including the chevron area; the nested badge must not remain a smaller isolated color pill.
-- API-group search inputs keep the filled-state height before and after typing; group options omit peak multipliers and align the effective multiplier at the far right.
+- API-group search inputs keep the filled-state height before and after typing, and filter-search focus does not add a purple inner ring; group options omit peak multipliers, do not fabricate a `User API group` description, and align the effective multiplier at the far right.
 - Desktop sidebar collapse and expansion retain a smooth slide while avoiding per-frame layout: animate the workspace with a compositor transform and the fixed-width sidebar shell with clipping, never with sidebar width or workspace offsets. Keep transform animation for the mobile drawer.
-- On wide desktop API-key tables, give the name column a comfortable left inset and use the spare space before the actions column to shift concurrency, usage, expiry, status, and creation-time content right as one visual group, keeping the creation-time-to-actions gap compact.
+- On wide desktop API-key tables, give the name column a comfortable left inset, keep the name-to-key and group-to-concurrency gaps compact, and retain concurrency, usage, expiry, status, and creation-time as one visual group with a compact creation-time-to-actions gap.
 - Discounted API-group badges show the original multiplier struck through beside the emphasized effective multiplier in the same compact rate capsule; non-discounted badges show only the effective multiplier.
 - The API Keys content area omits its duplicate page title because the console header already names the route; keep only the explanatory subtitle above the keys panel.
 - Persist only public brand fields and restore them before React starts so custom sidebar logos, site names, and favicons never flash the built-in Sentence AI brand during refresh; if no cached brand exists, keep the brand surface blank until public settings resolve.
@@ -51,6 +52,7 @@ When implementing from a selected generated mock, treat that image as the source
 - Announcement bodies preserve both real and escaped line breaks in list previews and detail dialogs.
 - The API endpoint capsule is a prominent toolbar element with readable endpoint text and full-size copy and latency-test controls.
 - Every console route uses the sticky header as its single visible page title; omit duplicate content-level large headings while retaining subtitles and page actions in a compact intro row.
+- Console pages omit the content intro row entirely when it would contain only subtitle copy and no right-side action, allowing the first functional panel to move upward.
 - The desktop Purchase route follows a single reference-led checkout flow: recharge/subscription tabs, available balance, 4×2 USD credit presets, custom USD credit input, vertically stacked real payment methods, security note, and one full-width confirmation action. Do not show discounts, bonus percentages, or CNY conversions outside the confirmation button; only that button shows the final payable RMB amount.
 - The desktop Purchase flow is horizontally centered within the console workspace. Its balance overview follows the reference hierarchy with a wallet mark, current balance and account on the left, plus real cumulative recharge, cumulative consumption, and latest-recharge data from existing order and usage APIs; unavailable values use a visible dash instead of being omitted or fabricated.
 - USD balance surfaces use the narrow `$` symbol and exactly two decimal places on the Purchase overview and persistent console-header balance; other monetary surfaces follow the global two-decimal display rule.
@@ -68,3 +70,7 @@ When implementing from a selected generated mock, treat that image as the source
 - Profile avatar/status, login-method actions, and balance-notification controls use page-scoped layout classes so generic direct-child styling cannot distort badges or buttons.
 - The announcement popover closes automatically when the user clicks outside its trigger and content, while interactions inside the popover keep it open.
 - The persisted glass-transparency slider lives at the bottom-left of the expanded console sidebar, immediately above the homepage and collapse actions; higher percentages reveal more of the backdrop, and the control stays hidden in the collapsed desktop rail.
+- The dashboard's six summary cards use a compact height and slightly smaller labels, figures, metadata, and icon controls than generic console statistic cards.
+- The API-key table keeps its original non-pinned desktop layout without a dedicated internal horizontal-scrolling treatment. The actions omit the usage-detail icon, `Use key` uses a light-green emphasis treatment, and Edit appears before Enable/Disable.
+- The API Keys action-column header is left-aligned while row actions remain right-aligned. The API endpoint label has no leading icon, and a simple vertical divider separates the default label from its URL.
+- Generic console selects use the API-group selector's custom interaction language: glass triggers and portal menus, rounded option rows, selected checks, viewport-aware placement, click-outside dismissal, keyboard navigation, and search only for longer lists; browser-native select popups are not used.

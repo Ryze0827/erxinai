@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import landingPageMarkup from "./landing-page.html?raw";
 import { AUTH_SESSION_EVENT, getAccessToken, getStoredUser } from "./api/session";
@@ -9,9 +9,10 @@ import { OAuthCallbackPage } from "./auth/OAuthCallbackPage";
 import { RegisterPage } from "./auth/RegisterPage";
 import { SessionManager } from "./auth/SessionManager";
 import { mountGatewayDemos } from "./gatewayDemos";
+import { applyLandingTranslations, landingT } from "./landingI18n";
 import { ConsoleProvider } from "./console/ConsoleContext";
 import { ConsoleLayout, ProtectedRoute } from "./console/ConsoleLayout";
-import { LocaleProvider } from "./console/i18n";
+import { LocaleProvider, useLocale } from "./console/i18n";
 import { DashboardPage } from "./console/pages/DashboardPage";
 import { KeysPage } from "./console/pages/KeysPage";
 import { UsagePage } from "./console/pages/UsagePage";
@@ -25,6 +26,8 @@ import { BatchImagesPage } from "./console/pages/BatchImagesPage";
 import { CustomPage } from "./console/pages/CustomPage";
 import { KeyUsagePage } from "./console/pages/KeyUsagePage";
 import { AirwallexPaymentPage, OrdersPage, PaymentQRCodePage, PaymentResultPage, PurchasePage, StripePaymentPage, StripePopupPage, WeChatPaymentCallbackPage } from "./console/pages/Payments";
+
+const LANDING_PAGE_CONTENT = { __html: landingPageMarkup };
 
 function setNavigationState({ header, drawer, toggle }, open) {
   header?.setAttribute("data-open", String(open));
@@ -94,6 +97,16 @@ function mountFaq(root, signal) {
   root.querySelector(".faq")?.addEventListener("click", handleFaq, { signal });
 }
 
+function mountLandingLocale(root, signal, setLocale) {
+  const handleLocale = (event) => {
+    const button = event.target.closest("[data-language-toggle]");
+    if (!button) return;
+    setLocale(button.dataset.languageTarget);
+  };
+
+  root.addEventListener("click", handleLocale, { signal });
+}
+
 function observeGatewayDemos(root) {
   const observer = new IntersectionObserver(
     (entries) => entries.forEach(({ isIntersecting, target }) => target.setAttribute("data-active", String(isIntersecting))),
@@ -124,26 +137,26 @@ function setPricingActionHref(action, authenticated) {
   action.href = authenticated ? "/keys" : `/register?plan=${plan}`;
 }
 
-function syncPricingAuth(root, authenticated) {
+function syncPricingAuth(root, authenticated, locale) {
   const action = root.querySelector("[data-auth-pricing-action]");
   const label = root.querySelector("[data-auth-pricing-label]");
   const note = root.querySelector("[data-auth-pricing-note]");
   const loginPrompt = root.querySelector("[data-auth-login-prompt]");
 
   if (action) setPricingActionHref(action, authenticated);
-  if (label) label.textContent = authenticated ? "Start using" : "Create an account";
-  if (note) note.textContent = authenticated ? "Your account is ready. Go to API keys to get started." : "Create an account before adding usage credit";
+  if (label) label.textContent = landingT(locale, authenticated ? "pricing.action.authenticated" : "pricing.action.guest");
+  if (note) note.textContent = landingT(locale, authenticated ? "pricing.note.authenticated" : "pricing.note.guest");
   if (loginPrompt) loginPrompt.hidden = authenticated;
 }
 
-function syncLandingAuth(root) {
+function syncLandingAuth(root, locale = "zh") {
   const { user, authenticated } = getLandingAuthState();
   root.querySelectorAll("[data-auth-link]").forEach((link) => {
     link.href = authenticated ? getDashboardPath(user) : "/login";
     link.dataset.authenticated = String(authenticated);
     const label = link.querySelector("[data-auth-label]");
     const initial = link.querySelector("[data-auth-initial]");
-    if (label) label.textContent = authenticated ? "Dashboard" : "Log in";
+    if (label) label.textContent = landingT(locale, authenticated ? "auth.dashboard" : "auth.login");
     if (initial) initial.textContent = getUserInitial(user);
   });
   root.querySelectorAll("[data-auth-dashboard]").forEach((link) => {
@@ -152,27 +165,38 @@ function syncLandingAuth(root) {
   root.querySelectorAll("[data-auth-register]").forEach((link) => {
     link.hidden = authenticated;
   });
-  syncPricingAuth(root, authenticated);
+  syncPricingAuth(root, authenticated, locale);
 }
 
 function mountLandingAuth(root, signal) {
-  const sync = () => syncLandingAuth(root);
+  const sync = () => syncLandingAuth(root, root.dataset.landingLocale);
   sync();
   window.addEventListener(AUTH_SESSION_EVENT, sync, { signal });
   window.addEventListener("storage", sync, { signal });
 }
 
 function LandingPage() {
+  const { locale, setLocale } = useLocale();
+  const rootRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    mountGatewayDemos(root);
+    applyLandingTranslations(root, locale);
+    syncLandingAuth(root, locale);
+  }, [locale]);
+
   useEffect(() => {
-    const root = document.querySelector(".app-shell");
+    const root = rootRef.current;
     if (!root) return undefined;
     const controller = new AbortController();
     const { signal } = controller;
 
-    mountGatewayDemos(root);
     const closeNavigation = mountNavigation(root, signal);
     mountPricing(root, signal);
     mountFaq(root, signal);
+    mountLandingLocale(root, signal, setLocale);
     mountLandingAuth(root, signal);
     const observer = observeGatewayDemos(root);
     document.documentElement.classList.add("reveal-on");
@@ -183,9 +207,9 @@ function LandingPage() {
       closeNavigation();
       document.documentElement.classList.remove("reveal-on");
     };
-  }, []);
+  }, [setLocale]);
 
-  return <div dangerouslySetInnerHTML={{ __html: landingPageMarkup }} />;
+  return <div ref={rootRef} dangerouslySetInnerHTML={LANDING_PAGE_CONTENT} />;
 }
 
 function ConsoleRoute({ children, ...guard }) {

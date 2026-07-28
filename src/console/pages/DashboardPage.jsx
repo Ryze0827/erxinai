@@ -109,7 +109,7 @@ export function DashboardPage() {
 
   const actions = <div className="console-dashboard-actions"><span>{locale === "zh" ? "时间范围：" : "Time range:"}</span><DateRangePicker startDate={range.start_date} endDate={range.end_date} onChange={setRange} /><button className="console-refresh-action" onClick={load}><Icon name="refresh" size={17} />{t("common.refresh")}</button></div>;
   return <Page title={t("dashboard.title")} subtitle={t("dashboard.subtitle")} actions={actions}>
-    <div className="console-stat-grid">
+    <div className="console-stat-grid console-dashboard-stat-grid">
       {!simpleMode && <StatCard className="console-stat--balance" label={t("dashboard.balance")} value={formatCurrency(user?.balance || 0)} meta={`${t("dashboard.today")}: ${formatCurrency(stats.today_actual_cost)}`} icon="dollar" />}
       <StatCard label={t("dashboard.keys")} value={`${formatNumber(stats.active_api_keys)} / ${formatNumber(stats.total_api_keys)}`} meta={t("keys.title")} icon="key" tone="green" />
       <StatCard label={t("dashboard.requests")} value={formatCompact(stats.total_requests, locale)} meta={`${t("dashboard.today")}: ${formatNumber(stats.today_requests)}`} icon="pulse" tone="amber" />
