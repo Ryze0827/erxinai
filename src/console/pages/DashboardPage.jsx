@@ -32,6 +32,10 @@ function TokenBreakdown({ stats, locale }) {
   return <div className="console-public-metrics">{items.map(([label, value]) => <div key={label}><span>{label}</span><strong>{formatTokenMillions(value)}</strong></div>)}</div>;
 }
 
+function ThroughputStatCard({ stats, formatNumber, t }) {
+  return <div className="console-stat console-stat--green console-stat--throughput"><div><span>RPM</span><strong>{formatNumber(stats.rpm, { maximumFractionDigits: 0 })}</strong><small>{t("dashboard.latency")}: {formatDuration(stats.average_duration_ms)}</small></div><i><Icon name="pulse" size={20} /></i><div className="console-throughput-tpm"><span>TPM</span><strong>{formatTokenMillionsFixed(stats.tpm)}</strong></div></div>;
+}
+
 function PlatformDistribution({ items, formatCurrency, formatNumber, locale }) {
   if (!items.length) return <EmptyState />;
   return <div className="console-distribution">{items.map((item, index) => {
@@ -111,7 +115,7 @@ export function DashboardPage() {
       <StatCard label={t("dashboard.requests")} value={formatCompact(stats.total_requests, locale)} meta={`${t("dashboard.today")}: ${formatNumber(stats.today_requests)}`} icon="pulse" tone="amber" />
       <StatCard label={t("dashboard.tokens")} value={formatTokenMillions(stats.total_tokens)} meta={`${t("dashboard.today")}: ${formatTokenMillions(stats.today_tokens)}`} icon="chart" />
       <StatCard label={t("dashboard.cost")} value={formatCurrency(stats.today_actual_cost)} meta={`${locale === "zh" ? "今日标准费用" : "Today standard"}: ${formatCurrency(stats.today_cost ?? stats.today_actual_cost)}`} icon="dollar" tone="rose" />
-      <StatCard label="RPM / TPM" value={`${formatNumber(stats.rpm, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${formatTokenMillionsFixed(stats.tpm)}`} meta={`${t("dashboard.latency")}: ${formatDuration(stats.average_duration_ms)}`} icon="pulse" tone="green" />
+      <ThroughputStatCard stats={stats} formatNumber={formatNumber} t={t} />
     </div>
     <div className="console-grid console-grid--sidebar">
       <Panel title={t("dashboard.trend")}><LineChart data={data.trend} valueKey="total_tokens" /></Panel>

@@ -61,9 +61,10 @@ When implementing from a selected generated mock, treat that image as the source
 - Channel Status timeline endpoint labels stay anchored to the rendered bar group rather than stretching across unused grid space.
 - Every USD money surface uses the narrow `$` symbol in every locale; never allow locale formatting to expand it to `US$`.
 - User-facing Token usage values use `M` as the consistent million-token unit; dashboard and shared token-usage line charts label their scale as `Token (M)`.
-- User-facing monetary balances and costs always show exactly two decimal places; RPM and TPM summary values also use exactly two decimal places, with TPM retaining the `M` suffix.
+- User-facing monetary balances and costs always show exactly two decimal places. The dashboard throughput card uses an integer RPM as its large primary value and a smaller purple TPM value with the `M` suffix at the bottom right.
 - The dashboard places a reusable preset/custom time-range picker immediately before Refresh, and range changes reload its trend, model distribution, and recent usage data.
 - The redemption page uses a full-width account summary, dual-theme wallet and gift artwork, paired redemption/about cards, and a recent-activity panel matching the reference hierarchy.
 - User order status filtering follows the concise sub2api set (pending, completed, failed, refunded), uses localized labels, and remains compact rather than stretching across the toolbar.
 - Profile avatar/status, login-method actions, and balance-notification controls use page-scoped layout classes so generic direct-child styling cannot distort badges or buttons.
 - The announcement popover closes automatically when the user clicks outside its trigger and content, while interactions inside the popover keep it open.
+- The persisted glass-transparency slider lives at the bottom-left of the expanded console sidebar, immediately above the homepage and collapse actions; higher percentages reveal more of the backdrop, and the control stays hidden in the collapsed desktop rail.
