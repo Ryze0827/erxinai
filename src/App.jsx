@@ -9,7 +9,7 @@ import { OAuthCallbackPage } from "./auth/OAuthCallbackPage";
 import { RegisterPage } from "./auth/RegisterPage";
 import { SessionManager } from "./auth/SessionManager";
 import { mountGatewayDemos } from "./gatewayDemos";
-import { applyLandingTranslations, landingT } from "./landingI18n";
+import { applyLandingTranslations, landingT, syncPriceAmount } from "./landingI18n";
 import { ConsoleProvider } from "./console/ConsoleContext";
 import { ConsoleLayout, ProtectedRoute } from "./console/ConsoleLayout";
 import { LocaleProvider, useLocale } from "./console/i18n";
@@ -24,6 +24,8 @@ import { AffiliatePage } from "./console/pages/AffiliatePage";
 import { ProfilePage } from "./console/pages/ProfilePage";
 import { BatchImagesPage } from "./console/pages/BatchImagesPage";
 import { CustomPage } from "./console/pages/CustomPage";
+import { ImageApiDocsPage } from "./console/pages/ImageApiDocsPage";
+import { ImageStudioPage } from "./console/pages/ImageStudioPage";
 import { KeyUsagePage } from "./console/pages/KeyUsagePage";
 import { AirwallexPaymentPage, OrdersPage, PaymentQRCodePage, PaymentResultPage, PurchasePage, StripePaymentPage, StripePopupPage, WeChatPaymentCallbackPage } from "./console/pages/Payments";
 
@@ -63,8 +65,6 @@ function mountNavigation(root, signal) {
 
 function mountPricing(root, signal) {
   const tiers = [...root.querySelectorAll(".home-price-tier")];
-  const amount = root.querySelector(".home-price-amount");
-  const action = root.querySelector(".home-price-action");
   const handlePricing = (event) => {
     const selectedTier = event.target.closest(".home-price-tier");
     if (!selectedTier) return;
@@ -73,12 +73,9 @@ function mountPricing(root, signal) {
       tier.classList.toggle("selected", selected);
       tier.setAttribute("aria-checked", String(selected));
     });
-    if (amount) amount.innerHTML = `${selectedTier.dataset.price}<span class="home-price-per">${selectedTier.dataset.period}</span>`;
-    if (action) {
-      action.dataset.plan = selectedTier.dataset.plan;
-      const { authenticated } = getLandingAuthState();
-      setPricingActionHref(action, authenticated);
-    }
+    syncPriceAmount(root);
+    const { authenticated } = getLandingAuthState();
+    syncPricingAuth(root, authenticated, root.dataset.landingLocale || "zh");
   };
 
   root.querySelector(".home-price-tiers")?.addEventListener("click", handlePricing, { signal });
@@ -133,7 +130,7 @@ function getLandingAuthState() {
 }
 
 function setPricingActionHref(action, authenticated) {
-  const plan = action.dataset.plan || "starter";
+  const plan = action.dataset.plan || "usage";
   action.href = authenticated ? "/keys" : `/register?plan=${plan}`;
 }
 
@@ -142,10 +139,24 @@ function syncPricingAuth(root, authenticated, locale) {
   const label = root.querySelector("[data-auth-pricing-label]");
   const note = root.querySelector("[data-auth-pricing-note]");
   const loginPrompt = root.querySelector("[data-auth-login-prompt]");
+  const selectedTier = root.querySelector(".home-price-tier.selected");
+  const unavailable = selectedTier?.dataset.available === "false";
 
-  if (action) setPricingActionHref(action, authenticated);
-  if (label) label.textContent = landingT(locale, authenticated ? "pricing.action.authenticated" : "pricing.action.guest");
-  if (note) note.textContent = landingT(locale, authenticated ? "pricing.note.authenticated" : "pricing.note.guest");
+  if (action) {
+    action.dataset.plan = selectedTier?.dataset.plan || "usage";
+    action.classList.toggle("is-disabled", unavailable);
+    if (unavailable) {
+      action.removeAttribute("href");
+      action.setAttribute("aria-disabled", "true");
+      action.setAttribute("tabindex", "-1");
+    } else {
+      action.removeAttribute("aria-disabled");
+      action.removeAttribute("tabindex");
+      setPricingActionHref(action, authenticated);
+    }
+  }
+  if (label) label.textContent = landingT(locale, unavailable ? "pricing.action.unavailable" : authenticated ? "pricing.action.authenticated" : "pricing.action.guest");
+  if (note) note.textContent = landingT(locale, unavailable ? "pricing.note.subscription" : authenticated ? "pricing.note.authenticated" : "pricing.note.guest");
   if (loginPrompt) loginPrompt.hidden = authenticated;
 }
 
@@ -249,6 +260,8 @@ export function App() {
           <Route path="/available-channels" element={<ConsoleRoute standardOnly feature="available_channels_enabled"><ChannelsPage /></ConsoleRoute>} />
           <Route path="/monitor" element={<ConsoleRoute feature="channel_monitor_enabled" mode="opt-out"><MonitorPage /></ConsoleRoute>} />
           <Route path="/profile" element={<ConsoleRoute><ProfilePage /></ConsoleRoute>} />
+          <Route path="/image-studio" element={<ConsoleRoute><ImageStudioPage /></ConsoleRoute>} />
+          <Route path="/image-api-docs" element={<ConsoleRoute><ImageApiDocsPage /></ConsoleRoute>} />
           <Route path="/subscriptions" element={<ConsoleRoute standardOnly><SubscriptionsPage /></ConsoleRoute>} />
           <Route path="/purchase" element={<ConsoleRoute standardOnly feature="payment_enabled" mode="opt-out"><PurchasePage /></ConsoleRoute>} />
           <Route path="/orders" element={<ConsoleRoute standardOnly feature="payment_enabled" mode="opt-out"><OrdersPage /></ConsoleRoute>} />

@@ -7,7 +7,7 @@ import { useLocale } from "../i18n";
 import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatCardSkeleton, StatusBadge } from "../UI";
 import { downloadBlob, formatCompact, formatDuration, formatTokenMillions } from "../utils";
 import { ColumnPicker, DateRangePicker, SearchSelect, useHiddenColumns } from "../components/ConsoleControls";
-import { DistributionChart, UsageTrendChart } from "../components/UsageCharts";
+import { DistributionChart } from "../components/UsageCharts";
 import { IpGeoBatchToolbar, IpGeoCell } from "../components/IpGeo";
 
 function localDate(date) {
@@ -43,17 +43,26 @@ function errorSortKey(value) {
   return value === "status" ? "status_code" : value;
 }
 
-function typeLabel(type) {
-  if (type === "ws_v2") return "WS";
-  if (type === "stream") return "Stream";
-  if (type === "sync") return "Sync";
-  if (type === "cyber") return "Cyber";
-  return type || "Unknown";
+function typeLabel(type, t) {
+  const keys = {
+    stream: "usage.requestType.stream",
+    sync: "usage.requestType.sync",
+    ws_v2: "usage.requestType.websocket",
+    cyber: "usage.requestType.cyber",
+    unknown: "usage.requestType.unknown",
+  };
+  return t(keys[type] || keys.unknown);
 }
 
 function billingMode(row) {
   if (Number(row.image_count) > 0) return "image";
   return row.billing_mode || (row.billing_type === 1 ? "subscription" : "token");
+}
+
+function billingModeLabel(row, t) {
+  const mode = billingMode(row);
+  if (mode === "token") return t("usage.token");
+  return mode.replaceAll("_", " ");
 }
 
 function reasoningLabel(value) {
@@ -79,7 +88,7 @@ function localized(locale, zh, en) {
 }
 
 function UsageFilters({ filters, setFilter, apiKeys, groups, models, locale, t }) {
-  return <div className="console-usage-filters"><FilterSelect label={t("usage.key")} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{localized(locale, "全部密钥", "All API keys")}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><Field label={t("usage.model")}><SearchSelect id="usage-model-options" value={filters.model} onChange={(event) => setFilter("model", event.target.value)} options={models} placeholder={localized(locale, "全部模型", "All models")} /></Field><FilterSelect label={t("usage.group")} value={filters.group_id} onChange={(value) => setFilter("group_id", value)}><option value="">{localized(locale, "全部分组", "All groups")}</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</FilterSelect><FilterSelect label={t("usage.type")} value={filters.request_type} onChange={(value) => setFilter("request_type", value)}><option value="">{localized(locale, "全部类型", "All types")}</option><option value="ws_v2">WebSocket</option><option value="stream">Stream</option><option value="sync">Sync</option></FilterSelect><FilterSelect label={localized(locale, "计费来源", "Billing source")} value={filters.billing_type} onChange={(value) => setFilter("billing_type", value)}><option value="">{localized(locale, "全部来源", "All sources")}</option><option value="0">{localized(locale, "余额", "Balance")}</option><option value="1">{localized(locale, "订阅", "Subscription")}</option></FilterSelect><FilterSelect label={t("usage.billing")} value={filters.billing_mode} onChange={(value) => setFilter("billing_mode", value)}><option value="">{localized(locale, "全部方式", "All modes")}</option><option value="token">Token</option><option value="per_request">{localized(locale, "按请求", "Per request")}</option><option value="image">Image</option><option value="video">Video</option></FilterSelect></div>;
+  return <div className="console-usage-filters"><FilterSelect label={t("usage.key")} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{localized(locale, "全部密钥", "All API keys")}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><Field label={t("usage.model")}><SearchSelect id="usage-model-options" value={filters.model} onChange={(event) => setFilter("model", event.target.value)} options={models} placeholder={localized(locale, "全部模型", "All models")} /></Field><FilterSelect label={t("usage.group")} value={filters.group_id} onChange={(value) => setFilter("group_id", value)}><option value="">{localized(locale, "全部分组", "All groups")}</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</FilterSelect><FilterSelect label={t("usage.type")} value={filters.request_type} onChange={(value) => setFilter("request_type", value)}><option value="">{localized(locale, "全部类型", "All types")}</option><option value="ws_v2">{t("usage.requestType.websocket")}</option><option value="stream">{t("usage.requestType.stream")}</option><option value="sync">{t("usage.requestType.sync")}</option></FilterSelect><FilterSelect label={localized(locale, "计费来源", "Billing source")} value={filters.billing_type} onChange={(value) => setFilter("billing_type", value)}><option value="">{localized(locale, "全部来源", "All sources")}</option><option value="0">{localized(locale, "余额", "Balance")}</option><option value="1">{localized(locale, "订阅", "Subscription")}</option></FilterSelect><FilterSelect label={t("usage.billing")} value={filters.billing_mode} onChange={(value) => setFilter("billing_mode", value)}><option value="">{localized(locale, "全部方式", "All modes")}</option><option value="token">{t("usage.token")}</option><option value="per_request">{localized(locale, "按请求", "Per request")}</option><option value="image">Image</option><option value="video">Video</option></FilterSelect></div>;
 }
 
 function ErrorFilters({ filters, setFilter, apiKeys, models, locale }) {
@@ -99,16 +108,19 @@ function TokenCell({ row, locale }) {
   return <div className="console-token-cell" title={title}><span><b>↓</b>{formatTokenMillions(row.input_tokens)} <b>↑</b>{formatTokenMillions(row.output_tokens)}</span>{Number(row.cache_read_tokens) > 0 && <small className="is-cache">R {formatTokenMillions(row.cache_read_tokens)}</small>}{Number(row.cache_creation_tokens) > 0 && <small className="is-create">C {formatTokenMillions(row.cache_creation_tokens)}{Number(row.cache_creation_1h_tokens) > 0 && <i>1h</i>}{row.cache_ttl_overridden && <i>R</i>}</small>}</div>;
 }
 
-function CostCell({ row, formatCurrency, locale }) {
-  const title = `${locale === "zh" ? "实际扣费" : "Billed"}: ${formatCurrency(row.actual_cost)}\n${locale === "zh" ? "标准费用" : "Standard"}: ${formatCurrency(row.total_cost)}\n${locale === "zh" ? "倍率" : "Rate"}: ${Number(row.rate_multiplier || 1)}×`;
-  return <div className="console-cost-cell" title={title}><strong>{formatCurrency(row.actual_cost)}</strong><small>{row.long_context_billing_applied && <i>x2</i>}<del>{formatCurrency(row.total_cost)}</del></small></div>;
+function CostCell({ row, formatNumber, locale }) {
+  const formatCost = (value) => formatNumber(value, {
+    style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 6, maximumFractionDigits: 6,
+  });
+  const title = `${locale === "zh" ? "实际扣费" : "Billed"}: ${formatCost(row.actual_cost)}\n${locale === "zh" ? "标准费用" : "Standard"}: ${formatCost(row.total_cost)}\n${locale === "zh" ? "倍率" : "Rate"}: ${Number(row.rate_multiplier || 1)}×`;
+  return <div className="console-cost-cell" title={title}><strong>{formatCost(row.actual_cost)}</strong><small>{row.long_context_billing_applied && <i>x2</i>}<del>{formatCost(row.total_cost)}</del></small></div>;
 }
 
 function LatencyCell({ row, locale }) {
   const first = Number(row.first_token_ms || 0);
   const total = Number(row.duration_ms || 0);
-  const severity = Math.max(first / 5000, total / 30000);
-  return <div className={`console-latency is-${severity > 1 ? "slow" : severity > .45 ? "medium" : "fast"}`} title={`${locale === "zh" ? "首字" : "First token"}: ${formatDuration(first)}\n${locale === "zh" ? "总耗时" : "Duration"}: ${formatDuration(total)}`}><i /><span><small>FT</small>{row.first_token_ms == null ? "—" : formatDuration(first)}</span><span><small>{locale === "zh" ? "总计" : "Total"}</small>{row.duration_ms == null ? "—" : formatDuration(total)}</span></div>;
+  const severity = first > 10000 ? "slow" : first > 5000 ? "medium" : "fast";
+  return <div className={`console-latency is-${severity}`} title={`${locale === "zh" ? "首Token" : "First token"}: ${formatDuration(first)}\n${locale === "zh" ? "总耗时" : "Duration"}: ${formatDuration(total)}`}><i /><span>{row.first_token_ms == null ? "—" : formatDuration(first)}</span><span>{row.duration_ms == null ? "—" : formatDuration(total)}</span></div>;
 }
 
 function ErrorDetail({ item }) {
@@ -124,16 +136,16 @@ function escapeCsv(value) {
   return /[,"\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
-function csvRow(row) {
-  return [row.created_at, row.api_key?.name || "", row.model, reasoningLabel(row.reasoning_effort), row.inbound_endpoint || "", row.ip_address || "", typeLabel(requestType(row)), billingMode(row), row.input_tokens, row.output_tokens, row.cache_read_tokens, row.cache_creation_tokens, row.rate_multiplier, Number(row.actual_cost || 0).toFixed(8), Number(row.total_cost || 0).toFixed(8), row.first_token_ms ?? "", row.duration_ms ?? ""].map(escapeCsv).join(",");
+function csvRow(row, t) {
+  return [row.created_at, row.api_key?.name || "", row.model, reasoningLabel(row.reasoning_effort), row.inbound_endpoint || "", row.ip_address || "", typeLabel(requestType(row), t), billingModeLabel(row, t), row.input_tokens, row.output_tokens, row.cache_read_tokens, row.cache_creation_tokens, row.rate_multiplier, Number(row.actual_cost || 0).toFixed(8), Number(row.total_cost || 0).toFixed(8), row.first_token_ms ?? "", row.duration_ms ?? ""].map(escapeCsv).join(",");
 }
 
-function TimeRangePanel({ filters, granularity, setGranularity, changeRange, locale }) {
-  return <Panel className="console-time-range-panel"><div className="console-time-range"><div><span>{localized(locale, "时间范围", "Time range")}</span><DateRangePicker startDate={filters.start_date} endDate={filters.end_date} onChange={changeRange} /></div><div><span>{localized(locale, "粒度", "Granularity")}</span><SelectInput value={granularity} onChange={(event) => setGranularity(event.target.value)}><option value="day">{localized(locale, "天", "Day")}</option><option value="hour">{localized(locale, "小时", "Hour")}</option></SelectInput></div></div></Panel>;
+function TimeRangePanel({ filters, changeRange, locale }) {
+  return <Panel className="console-time-range-panel"><div className="console-time-range"><div><span>{localized(locale, "时间范围", "Time range")}</span><DateRangePicker startDate={filters.start_date} endDate={filters.end_date} onChange={changeRange} /></div></div></Panel>;
 }
 
 function UsageChartsPanel({ data, loading, locale }) {
-  return <div className="console-usage-chart-grid"><DistributionChart title={localized(locale, "模型分布", "Model distribution")} data={data.models} nameKey="model" loading={loading} /><DistributionChart title={localized(locale, "分组分布", "Group distribution")} data={data.groups} nameKey="group_name" loading={loading} /><DistributionChart title={localized(locale, "端点分布", "Endpoint distribution")} data={data.endpoints} nameKey="endpoint" loading={loading} /><UsageTrendChart data={data.trend} loading={loading} /></div>;
+  return <div className="console-usage-chart-grid"><DistributionChart title={localized(locale, "模型分布", "Model distribution")} data={data.models} nameKey="model" loading={loading} /><DistributionChart title={localized(locale, "分组分布", "Group distribution")} data={data.groups} nameKey="group_name" loading={loading} /></div>;
 }
 
 function UsageFilterPanel({ tab, filters, errorFilters, options, modelOptions, errorModelOptions, setFilter, setErrorFilter, currentColumns, currentHidden, loadUsage, loadErrors, state, reset, exportCsv, exporting, locale, t }) {
@@ -187,7 +199,7 @@ function ErrorDetailModal({ detail, locale, onClose }) {
 }
 
 export function UsagePage() {
-  const { t, locale, formatNumber, formatCurrency, formatDate } = useLocale();
+  const { t, locale, formatNumber, formatDate } = useLocale();
   const { settings, notify } = useConsole();
   const [filters, setFilters] = useState(emptyFilters);
   const [errorFilters, setErrorFilters] = useState(emptyErrorFilters);
@@ -195,10 +207,9 @@ export function UsagePage() {
   const [errorPaging, setErrorPaging] = useState({ page: 1, pageSize: 20 });
   const [sort, setSort] = useState({ key: "created_at", order: "desc" });
   const [errorSort, setErrorSort] = useState({ key: "created_at", order: "desc" });
-  const [granularity, setGranularity] = useState("hour");
   const [tab, setTab] = useState("usage");
   const [options, setOptions] = useState({ keys: [], groups: [] });
-  const [data, setData] = useState({ items: [], total: 0, pages: 1, stats: null, models: [], groups: [], endpoints: [], trend: [] });
+  const [data, setData] = useState({ items: [], total: 0, pages: 1, stats: null, models: [], groups: [] });
   const [errors, setErrors] = useState({ items: [], total: 0, pages: 1 });
   const [state, setState] = useState({ loading: true, chartsLoading: true, error: "", errorLoading: false });
   const [detail, setDetail] = useState(null);
@@ -219,7 +230,7 @@ export function UsagePage() {
     setState((current) => ({ ...current, loading: true, chartsLoading: true, error: "" }));
     const base = usageFilters(filters);
     const listQuery = { ...base, page: paging.page, page_size: paging.pageSize, sort_by: sort.key, sort_order: sort.order };
-    const chartQuery = { ...base, granularity, include_trend: true, include_model_stats: false, include_group_stats: true };
+    const chartQuery = { ...base, include_trend: false, include_model_stats: false, include_group_stats: true };
     const results = await Promise.allSettled([usageApi.list(listQuery, controller.signal), usageApi.stats(base, controller.signal), usageApi.dashboardModels({ ...base, model_source: "requested" }, controller.signal), usageApi.dashboardSnapshot(chartQuery, controller.signal)]);
     if (controller.signal.aborted) return;
     if (results[0].status === "rejected") { setState((current) => ({ ...current, loading: false, chartsLoading: false, error: results[0].reason.message })); return; }
@@ -227,9 +238,9 @@ export function UsagePage() {
     const stats = results[1].status === "fulfilled" ? results[1].value : null;
     const models = results[2].status === "fulfilled" ? results[2].value?.models || [] : [];
     const snapshot = results[3].status === "fulfilled" ? results[3].value || {} : {};
-    setData({ items: list.items || [], total: Number(list.total || 0), pages: Number(list.pages || 1), stats, models, groups: snapshot.groups || [], endpoints: stats?.endpoints || [], trend: snapshot.trend || [] });
+    setData({ items: list.items || [], total: Number(list.total || 0), pages: Number(list.pages || 1), stats, models, groups: snapshot.groups || [] });
     setState((current) => ({ ...current, loading: false, chartsLoading: false, error: "" }));
-  }, [filters, granularity, paging, sort]);
+  }, [filters, paging, sort]);
 
   const loadErrors = useCallback(async () => {
     if (!errorEnabled) return;
@@ -252,8 +263,8 @@ export function UsagePage() {
 
   const setFilter = (key, value) => { setFilters((current) => ({ ...current, [key]: value })); setPaging((current) => ({ ...current, page: 1 })); };
   const setErrorFilter = (key, value) => { setErrorFilters((current) => ({ ...current, [key]: value })); setErrorPaging((current) => ({ ...current, page: 1 })); };
-  const reset = () => { const range = last24Hours(); setFilters({ ...emptyFilters, ...range }); setErrorFilters(emptyErrorFilters); setGranularity("hour"); setPaging((current) => ({ ...current, page: 1 })); setErrorPaging((current) => ({ ...current, page: 1 })); };
-  const changeRange = (range) => { setFilters((current) => ({ ...current, ...range })); const days = Math.round((new Date(range.end_date) - new Date(range.start_date)) / 86400000); setGranularity(days <= 1 ? "hour" : "day"); setPaging((current) => ({ ...current, page: 1 })); };
+  const reset = () => { const range = last24Hours(); setFilters({ ...emptyFilters, ...range }); setErrorFilters(emptyErrorFilters); setPaging((current) => ({ ...current, page: 1 })); setErrorPaging((current) => ({ ...current, page: 1 })); };
+  const changeRange = (range) => { setFilters((current) => ({ ...current, ...range })); setPaging((current) => ({ ...current, page: 1 })); };
   const openError = async (item) => { detailControllerRef.current?.abort(); const controller = new AbortController(); const request = Symbol("error-detail"); detailControllerRef.current = controller; detailRef.current = request; setDetail({ loading: true, item }); try { const full = await usageApi.error(item.id, controller.signal); if (detailRef.current === request) setDetail({ loading: false, item: full }); } catch { if (!controller.signal.aborted && detailRef.current === request) setDetail({ loading: false, item }); } };
   const exportCsv = async () => {
     if (!data.total) return notify("warning", locale === "zh" ? "没有可导出的数据。" : "There is no data to export.");
@@ -263,7 +274,7 @@ export function UsagePage() {
       const pages = Math.ceil(data.total / 100);
       for (let page = 1; page <= pages; page += 1) { const response = await usageApi.list({ ...usageFilters(filters), page, page_size: 100, sort_by: sort.key, sort_order: sort.order }); rows.push(...(response.items || [])); }
       const headers = ["Time", "API Key Name", "Model", "Reasoning Effort", "Inbound Endpoint", "IP Address", "Type", "Billing Mode", "Input Tokens", "Output Tokens", "Cache Read Tokens", "Cache Creation Tokens", "Rate Multiplier", "Billed Cost", "Original Cost", "First Token (ms)", "Duration (ms)"];
-      downloadBlob(new Blob([`\uFEFF${headers.join(",")}\n${rows.map(csvRow).join("\n")}`], { type: "text/csv;charset=utf-8" }), `usage_${filters.start_date}_to_${filters.end_date}.csv`);
+      downloadBlob(new Blob([`\uFEFF${headers.join(",")}\n${rows.map((row) => csvRow(row, t)).join("\n")}`], { type: "text/csv;charset=utf-8" }), `usage_${filters.start_date}_to_${filters.end_date}.csv`);
       notify("success", locale === "zh" ? "CSV 已导出。" : "CSV exported.");
     } catch (error) { notify("error", error.message); } finally { setExporting(false); }
   };
@@ -277,19 +288,19 @@ export function UsagePage() {
     { key: "endpoint", label: locale === "zh" ? "端点" : "Endpoint", render: (row) => <code className="console-endpoint-code">{row.inbound_endpoint || "—"}</code> },
     { key: "ip_address", label: "IP", render: (row) => <IpGeoCell ip={row.ip_address} enabled={geoEnabled} /> },
     { key: "group", label: t("usage.group"), render: (row) => <GroupBadge name={row.group?.name} platform={row.group?.platform} /> },
-    { key: "stream", label: t("usage.type"), render: (row) => <span className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row))}</span> },
-    { key: "billing_mode", label: t("usage.billing"), render: (row) => <span className="console-billing-badge">{billingMode(row).replaceAll("_", " ")}</span> },
+    { key: "stream", label: t("usage.type"), render: (row) => <span className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</span> },
+    { key: "billing_mode", label: t("usage.billing"), render: (row) => <span className="console-billing-badge">{billingModeLabel(row, t)}</span> },
     { key: "tokens", label: t("usage.tokens"), render: (row) => <TokenCell row={row} locale={locale} /> },
-    { key: "cost", label: locale === "zh" ? "费用" : "Cost", render: (row) => <CostCell row={row} formatCurrency={formatCurrency} locale={locale} /> },
-    { key: "latency", label: locale === "zh" ? "延迟" : "Latency", render: (row) => <LatencyCell row={row} locale={locale} /> },
+    { key: "cost", label: locale === "zh" ? "费用" : "Cost", render: (row) => <CostCell row={row} formatNumber={formatNumber} locale={locale} /> },
+    { key: "latency", label: locale === "zh" ? "延迟（首Token / 总计）" : "Latency (FT / Total)", render: (row) => <LatencyCell row={row} locale={locale} /> },
     { key: "created_at", label: locale === "zh" ? "时间" : "Time", sortable: true, render: (row) => formatDate(row.created_at) },
     { key: "user_agent", label: "User-Agent", render: (row) => <span className="console-user-agent" title={row.user_agent}>{row.user_agent || "—"}</span> },
-  ], [formatCurrency, formatDate, formatNumber, geoEnabled, locale, t]);
+  ], [formatDate, formatNumber, geoEnabled, locale, t]);
   const errorColumns = useMemo(() => [
     { key: "key_name", label: locale === "zh" ? "密钥名称" : "Key name", render: (row) => <div className="console-key-name"><strong>{row.key_name || "—"}</strong>{row.key_deleted && <small>{locale === "zh" ? "已删除" : "Deleted"}</small>}</div> },
     { key: "model", label: t("usage.model"), sortable: true }, { key: "endpoint", label: locale === "zh" ? "端点" : "Endpoint", render: (row) => <code className="console-endpoint-code">{row.inbound_endpoint || "—"}</code> },
     { key: "client_ip", label: "IP", render: (row) => <IpGeoCell ip={row.client_ip} enabled={geoEnabled} /> }, { key: "group", label: t("usage.group"), render: (row) => row.group_name || "—" },
-    { key: "type", label: t("usage.type"), render: (row) => <span className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row))}</span> },
+    { key: "type", label: t("usage.type"), render: (row) => <span className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</span> },
     { key: "platform", label: locale === "zh" ? "平台" : "Platform" }, { key: "category", label: locale === "zh" ? "分类" : "Category", render: (row) => <span className="console-chip">{row.category || "—"}</span> },
     { key: "status", label: locale === "zh" ? "状态" : "Status", sortable: true, render: (row) => <StatusBadge status="failed" label={String(row.status_code || "—")} /> },
     { key: "message", label: locale === "zh" ? "错误信息" : "Message", render: (row) => <span className="console-clamp">{row.message || "—"}</span> },
@@ -302,5 +313,5 @@ export function UsagePage() {
   const currentHidden = tab === "errors" ? errorHidden : usageHidden;
 
   const closeDetail = () => { detailControllerRef.current?.abort(); detailRef.current = null; setDetail(null); };
-  return <Page title={t("usage.title")} subtitle={t("usage.subtitle")} className="console-usage-page"><UsageStats stats={data.stats} loading={state.chartsLoading} /><TimeRangePanel filters={filters} granularity={granularity} setGranularity={setGranularity} changeRange={changeRange} locale={locale} /><UsageChartsPanel data={data} loading={state.chartsLoading} locale={locale} /><UsageFilterPanel tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} currentColumns={currentColumns} currentHidden={currentHidden} loadUsage={loadUsage} loadErrors={loadErrors} state={state} reset={reset} exportCsv={exportCsv} exporting={exporting} locale={locale} t={t} /><UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} /><RecordsPanel tab={tab} t={t} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
+  return <Page title={t("usage.title")} className="console-usage-page"><UsageStats stats={data.stats} loading={state.chartsLoading} /><TimeRangePanel filters={filters} changeRange={changeRange} locale={locale} /><UsageChartsPanel data={data} loading={state.chartsLoading} locale={locale} /><UsageFilterPanel tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} currentColumns={currentColumns} currentHidden={currentHidden} loadUsage={loadUsage} loadErrors={loadErrors} state={state} reset={reset} exportCsv={exportCsv} exporting={exporting} locale={locale} t={t} /><UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} /><RecordsPanel tab={tab} t={t} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
 }

@@ -6,14 +6,13 @@ import { useLocale } from "./i18n";
 import { useTheme } from "./theme";
 import { formatTokenMillions } from "./utils";
 
-export function Page({ title, subtitle, actions, children, className = "" }) {
+export function Page({ title, actions, children, className = "" }) {
   const hasActions = Boolean(actions);
   return (
     <div className={`console-page ${className}`}>
       {title && <h1 className="console-page-title">{title}</h1>}
       {hasActions && (
-        <div className="console-page-head console-page-head--subtitle-only">
-          <div>{subtitle && <p>{subtitle}</p>}</div>
+        <div className="console-page-head console-page-head--actions-only">
           <div className="console-page-actions">{actions}</div>
         </div>
       )}
@@ -22,9 +21,9 @@ export function Page({ title, subtitle, actions, children, className = "" }) {
   );
 }
 
-export function Panel({ title, eyebrow, actions, children, className = "" }) {
+export function Panel({ title, eyebrow, actions, children, className = "", ...props }) {
   return (
-    <section className={`console-panel ${className}`}>
+    <section className={`console-panel ${className}`} {...props}>
       {(title || actions) && <div className="console-panel-head"><div>{eyebrow && <span>{eyebrow}</span>}{title && <h2>{title}</h2>}</div>{actions}</div>}
       {children}
     </section>
@@ -461,13 +460,12 @@ export function LineChart({ data = [], valueKey = "total_tokens", labelKey = "da
 const themeMeta = {
   light: { icon: "sun", en: "Light theme", zh: "浅色模式" },
   dark: { icon: "moon", en: "Dark theme", zh: "深色模式" },
-  system: { icon: "monitor", en: "Follow system", zh: "跟随系统" },
 };
 
 export function ThemeToggle({ className = "" }) {
   const { locale } = useLocale();
   const { preference, cycle } = useTheme();
-  const meta = themeMeta[preference] || themeMeta.system;
+  const meta = themeMeta[preference] || themeMeta.light;
   const label = locale === "zh" ? meta.zh : meta.en;
   return <IconButton className={className} icon={meta.icon} label={label} onClick={cycle} />;
 }

@@ -351,5 +351,5 @@ function TotpCard() {
 export function ProfilePage() {
   const { t } = useLocale();
   const { settings } = useConsole();
-  return <Page title={t("profile.title")} subtitle={t("profile.subtitle")} className="console-profile-page"><div className="console-grid console-grid--2 console-profile-grid"><ProfileCard /><IdentityCard /><PasswordCard />{settings?.balance_low_notify_enabled === true && <NotificationsCard />}<TotpCard />{settings?.contact_info && <Panel title={t("common.description")}><div className="console-panel-body console-contact-card"><Icon name="mail" size={22} /><span>{settings.contact_info}</span></div></Panel>}</div></Page>;
+  return <Page title={t("profile.title")} className="console-profile-page"><div className="console-grid console-grid--2 console-profile-grid"><ProfileCard /><IdentityCard /><PasswordCard />{settings?.balance_low_notify_enabled === true && <NotificationsCard />}<TotpCard />{settings?.contact_info && <Panel title={t("common.description")}><div className="console-panel-body console-contact-card"><Icon name="mail" size={22} /><span>{settings.contact_info}</span></div></Panel>}</div></Page>;
 }

@@ -5,3 +5,15 @@ dist/
 .playwright-cli/
 .DS_Store
 .idea/
+
+!.omc/
+.omc/*
+!.omc/skills/
+!.omc/skills/**
+!.omc/rules/
+!.omc/rules/**
+!.omc/repo-mem/
+.omc/repo-mem/*
+!.omc/repo-mem/project-profile.md
+!.omc/repo-mem/error-patterns.md
+.omc/repo-mem/local-personal-context.md

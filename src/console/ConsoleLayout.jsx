@@ -6,8 +6,9 @@ import { applyFavicon, DEFAULT_SITE_LOGO, DEFAULT_SITE_NAME } from "../branding"
 import { useConsole, resolveFeature } from "./ConsoleContext";
 import { Icon } from "./Icon";
 import { useLocale } from "./i18n";
+import { nativeCustomPageIcon, nativeCustomPageKind, nativeCustomPageRoute } from "./nativeCustomPages";
 import { Button, EmptyState, IconButton, Modal, Spinner, ThemeToggle, ToastViewport } from "./UI";
-import { useGlassTransparency } from "./theme";
+import { useConsoleBackground, useGlassTransparency, useTheme } from "./theme";
 import { safeExternalUrl, safeImageUrl } from "./utils";
 import "./console.css";
 
@@ -34,6 +35,8 @@ const accountNav = [
   { path: "/redeem", key: "nav.redeem", icon: "gift", standardOnly: true },
   { path: "/affiliate", key: "nav.affiliate", icon: "users", feature: "affiliate", standardOnly: true },
   { path: "/profile", key: "nav.profile", icon: "user" },
+  { path: "/image-studio", key: "imageStudio.title", icon: "image" },
+  { path: "/image-api-docs", key: "imageDocs.title", icon: "book" },
 ];
 
 const featureDefinitions = {
@@ -83,6 +86,17 @@ function GlassTransparencyControl() {
   const { t } = useLocale();
   const { transparency, setTransparency } = useGlassTransparency();
   return <label className="console-glass-control"><span><strong>{t("appearance.glassTransparency")}</strong><output>{transparency}%</output></span><input type="range" min="0" max="100" step="1" value={transparency} aria-label={t("appearance.glassTransparency")} onChange={(event) => setTransparency(event.target.value)} style={{ "--console-glass-slider-value": `${transparency}%` }} /></label>;
+}
+
+function BackgroundControl() {
+  const { t } = useLocale();
+  const { resolved } = useTheme();
+  const { background, setBackground } = useConsoleBackground();
+  const selectedBackground = resolved === "dark" ? "scene" : background;
+  const options = resolved === "light"
+    ? [{ value: "white", label: t("appearance.backgroundWhite") }, { value: "scene", label: t("appearance.backgroundScene") }]
+    : [{ value: "scene", label: t("appearance.backgroundScene") }];
+  return <div className="console-background-control" role="group" aria-label={t("appearance.background")}><strong>{t("appearance.background")}</strong><div>{options.map((option) => <button type="button" className={`console-background-option ${selectedBackground === option.value ? "is-selected" : ""}`} aria-pressed={selectedBackground === option.value} aria-label={option.label} onClick={() => setBackground(option.value)} key={option.value}><span className={`console-background-swatch is-${option.value}`} aria-hidden="true" />{selectedBackground === option.value && <span className="console-background-selection" aria-hidden="true"><Icon name="check" size={10} /></span>}</button>)}</div></div>;
 }
 
 function announcementContent(item) {
@@ -203,7 +217,7 @@ export function ConsoleLayout({ children }) {
   const workspaceStartLeftRef = useRef(null);
   const batchEnabled = useBatchNavigationAccess(authenticated);
   const simpleMode = user?.run_mode === "simple";
-  const customItems = (settings?.custom_menu_items || []).filter((item) => item.visibility === "user").sort((a, b) => a.sort_order - b.sort_order).map((item) => ({ path: `/custom/${item.id}`, label: item.label, icon: "link" }));
+  const customItems = (settings?.custom_menu_items || []).filter((item) => item.visibility === "user").sort((a, b) => a.sort_order - b.sort_order).flatMap((item) => { const kind = nativeCustomPageKind(item); return nativeCustomPageRoute(kind) ? [] : [{ path: `/custom/${item.id}`, label: item.label, icon: nativeCustomPageIcon(kind) }]; });
   const workspaceItems = coreNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)).map((item) => item.path === "/dashboard" && user?.role === "admin" ? { ...item, path: "/admin/dashboard" } : item);
   const personalItems = [...accountNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...customItems];
   const allItems = [...workspaceItems, ...personalItems];
@@ -257,7 +271,7 @@ export function ConsoleLayout({ children }) {
     workspaceMotionRef.current?.cancel();
     setSidebarCollapsed((value) => !value);
   };
-  return <div className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><div className="console-scene" /><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`}><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <img key={logo} src={logo} alt="" />}{brandingReady && <div><strong>{siteName}</strong><span>AI gateway</span></div>}</Link><nav><SidebarSection title={t("nav.overview")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.account")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><GlassTransparencyControl /><div className="console-sidebar-foot"><Link to="/" title={sidebarCollapsed ? t("nav.home") : undefined}><Icon name="home" size={18} /><span>{t("nav.home")}</span></Link><button type="button" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /><span>{t("nav.collapse")}</span></button></div></aside>{mobileOpen && <button className="console-sidebar-overlay" aria-label="Close menu" onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></div>;
+  return <div className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><div className="console-scene" /><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`}><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <img key={logo} src={logo} alt="" />}{brandingReady && <div><strong>{siteName}</strong><span>AI gateway</span></div>}</Link><nav><SidebarSection title={t("nav.overview")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.account")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><BackgroundControl /><GlassTransparencyControl /><div className="console-sidebar-foot"><Link to="/" title={sidebarCollapsed ? t("nav.home") : undefined}><Icon name="home" size={18} /><span>{t("nav.home")}</span></Link><button type="button" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /><span>{t("nav.collapse")}</span></button></div></aside>{mobileOpen && <button className="console-sidebar-overlay" aria-label="Close menu" onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></div>;
 }
 
 export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false }) {

@@ -1,57 +1,57 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { usageApi, userApi } from "../../api";
+import { usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { DataTable, EmptyState, ErrorState, LineChart, Page, Panel, ProgressBar, Spinner, StatCard, StatusBadge } from "../UI";
+import { NATIVE_CUSTOM_PAGE, nativeCustomPageRoute } from "../nativeCustomPages";
+import { ErrorState, Page, Panel, Spinner, StatCard } from "../UI";
 import { DateRangePicker } from "../components/ConsoleControls";
-import { dateInput, formatCompact, formatDuration, formatTokenMillions, formatTokenMillionsFixed, statusLabel } from "../utils";
+import { DistributionChart, UsageTrendChart } from "../components/UsageCharts";
+import { dateInput, formatCompact, formatDuration, formatTokenMillions, formatTokenMillionsFixed } from "../utils";
+
+const TOKEN_ACTIVITY_DAY_COUNT = 183;
+const TOKEN_ACTIVITY_CELL_COUNT = 189;
+const IMAGE_STUDIO_PATH = nativeCustomPageRoute(NATIVE_CUSTOM_PAGE.imageStudio);
 
 function settledValue(result, fallback) {
   return result.status === "fulfilled" ? result.value : fallback;
 }
 
-function ModelDistribution({ models }) {
-  const total = models.reduce((sum, item) => sum + Number(item.total_tokens || item.tokens || 0), 0) || 1;
-  if (!models.length) return <EmptyState />;
-  return <div className="console-distribution">{models.slice(0, 7).map((item, index) => {
-    const value = Number(item.total_tokens || item.tokens || 0);
-    const percent = value / total * 100;
-    return <div key={item.model || index}><div><strong>{item.model || "Unknown"}</strong><span>{formatTokenMillions(value)} · {percent.toFixed(1)}%</span></div><ProgressBar value={percent} tone={index % 2 ? "green" : "primary"} /></div>;
-  })}</div>;
+function tokenActivityDays(items) {
+  const values = new Map(items.map((item) => [String(item.date || item.day || item.created_at || "").slice(0, 10), Number(item.total_tokens || item.tokens || 0)]));
+  return Array.from({ length: TOKEN_ACTIVITY_DAY_COUNT }, (_, index) => {
+    const date = dateInput(index - TOKEN_ACTIVITY_DAY_COUNT + 1);
+    return { date, tokens: values.get(date) || 0 };
+  });
 }
 
-function TokenBreakdown({ stats, locale }) {
-  const items = [
-    [locale === "zh" ? "输入 Token" : "Input tokens", stats.total_input_tokens],
-    [locale === "zh" ? "输出 Token" : "Output tokens", stats.total_output_tokens],
-    [locale === "zh" ? "缓存创建" : "Cache creation", stats.total_cache_creation_tokens],
-    [locale === "zh" ? "缓存读取" : "Cache read", stats.total_cache_read_tokens],
-  ];
-  return <div className="console-public-metrics">{items.map(([label, value]) => <div key={label}><span>{label}</span><strong>{formatTokenMillions(value)}</strong></div>)}</div>;
+function tokenActivityMonths(days, leading, formatDate) {
+  const labels = new Map();
+  days.forEach((day, index) => {
+    const date = new Date(`${day.date}T00:00:00`);
+    if (index === 0 || date.getDate() === 1) labels.set(Math.floor((leading + index) / 7), formatDate(day.date, { monthOnly: true }));
+  });
+  return Array.from({ length: TOKEN_ACTIVITY_CELL_COUNT / 7 }, (_, index) => labels.get(index) || "");
+}
+
+function TokenActivity({ items, loading, error, formatDate, t }) {
+  const days = tokenActivityDays(items);
+  const maximum = Math.max(...days.map((day) => day.tokens), 0);
+  const leading = new Date(`${days[0].date}T00:00:00`).getDay();
+  const months = tokenActivityMonths(days, leading, formatDate);
+  return <div className={`console-token-activity ${loading ? "console-skeleton" : ""}`}><div className="console-token-activity-grid" role="grid" aria-label={t("dashboard.activity")}>{Array.from({ length: TOKEN_ACTIVITY_CELL_COUNT }, (_, index) => {
+    const day = days[index - leading];
+    if (!day) return <i className="console-token-activity-placeholder" aria-hidden="true" key={`placeholder-${index}`} />;
+    const level = day.tokens > 0 && maximum > 0 ? Math.max(1, Math.ceil(day.tokens / maximum * 4)) : 0;
+    const label = t("dashboard.activityDay", { date: formatDate(day.date, { dateOnly: true }), tokens: formatTokenMillions(day.tokens) });
+    const tooltipEdge = index < 14 ? "is-tooltip-start" : index >= TOKEN_ACTIVITY_CELL_COUNT - 14 ? "is-tooltip-end" : "";
+    return <span className={`console-token-activity-cell is-level-${level} ${tooltipEdge}`} role="gridcell" aria-label={label} data-tooltip={label} key={day.date} />;
+  })}</div><div className="console-token-activity-months" aria-hidden="true">{months.map((month, index) => <span key={`month-${index}`}>{month}</span>)}</div>{error && <small className="console-token-activity-error">{error}</small>}</div>;
 }
 
 function ThroughputStatCard({ stats, formatNumber, t }) {
   return <div className="console-stat console-stat--green console-stat--throughput"><div><span>RPM</span><strong>{formatNumber(stats.rpm, { maximumFractionDigits: 0 })}</strong><small>{t("dashboard.latency")}: {formatDuration(stats.average_duration_ms)}</small></div><i><Icon name="pulse" size={20} /></i><div className="console-throughput-tpm"><span>TPM</span><strong>{formatTokenMillionsFixed(stats.tpm)}</strong></div></div>;
-}
-
-function PlatformDistribution({ items, formatCurrency, formatNumber, locale }) {
-  if (!items.length) return <EmptyState />;
-  return <div className="console-distribution">{items.map((item, index) => {
-    const label = item.platform || (locale === "zh" ? "其他" : "Other");
-    return <div key={`${label}-${index}`}><div><strong>{label}</strong><span>{formatNumber(item.total_requests)} · {formatCurrency(item.total_actual_cost)}</span></div><small>{locale === "zh" ? "今日" : "Today"}: {formatNumber(item.today_requests)} · {formatCurrency(item.today_actual_cost)}</small></div>;
-  })}</div>;
-}
-
-function PlatformQuotas({ items, formatCurrency, locale, t }) {
-  if (!items.length) return <EmptyState />;
-  const labels = locale === "zh" ? { daily: "每日", weekly: "每周", monthly: "每月" } : { daily: "Daily", weekly: "Weekly", monthly: "Monthly" };
-  return <div className="console-quota-list">{items.map((item, index) => {
-    const windows = ["daily", "weekly", "monthly"].flatMap((key) => item[`${key}_limit_usd`] == null ? [] : [{ key, limit: Number(item[`${key}_limit_usd`]), used: Number(item[`${key}_usage_usd`] || 0) }]);
-    const peak = windows.reduce((maximum, entry) => entry.limit > 0 ? Math.max(maximum, entry.used / entry.limit * 100) : Math.max(maximum, 100), 0);
-    return <div key={item.platform || item.name || index}><div><span className="console-platform-icon">{String(item.platform || item.name || "AI").slice(0, 2).toUpperCase()}</span><div><strong>{item.display_name || item.platform || item.name}</strong><small>{windows.length ? `${windows.length} ${locale === "zh" ? "个配额周期" : "quota windows"}` : t("common.unlimited")}</small></div><StatusBadge status={peak >= 90 ? "degraded" : "operational"} /></div>{windows.map((entry) => <div className="console-subscription-quota" key={entry.key}><div><strong>{labels[entry.key]}</strong><span>{entry.limit > 0 ? `${formatCurrency(entry.used)} / ${formatCurrency(entry.limit)}` : (locale === "zh" ? "已禁用" : "Disabled")}</span></div><ProgressBar value={entry.limit > 0 ? entry.used / entry.limit * 100 : 100} tone={entry.limit <= 0 || entry.used / entry.limit >= .9 ? "danger" : "green"} /></div>)}</div>;
-  })}</div>;
 }
 
 export function DashboardPage() {
@@ -59,10 +59,12 @@ export function DashboardPage() {
   const { user, refreshUser, settings } = useConsole();
   const simpleMode = user?.run_mode === "simple";
   const [range, setRange] = useState({ start_date: dateInput(-6), end_date: dateInput() });
-  const [data, setData] = useState({ stats: null, trend: [], models: [], recent: [], quotas: [] });
+  const [data, setData] = useState({ stats: null, models: [], trend: [] });
+  const [activity, setActivity] = useState({ loading: true, error: "", items: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const mountedRef = useRef(true);
+  const activityMountedRef = useRef(true);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,18 +72,15 @@ export function DashboardPage() {
     const query = { ...range, granularity: "day" };
     try {
       const results = await Promise.allSettled([
-        refreshUser(), usageApi.dashboardStats(), usageApi.dashboardTrend(query),
-        usageApi.dashboardModels(query), usageApi.list({ ...query, page: 1, page_size: 5, sort_by: "created_at", sort_order: "desc" }),
-        userApi.getPlatformQuotas(),
+        refreshUser(), usageApi.dashboardStats(), usageApi.dashboardModels(query),
+        usageApi.dashboardTrend(query),
       ]);
       const stats = settledValue(results[1], null);
       if (!stats) throw results[1].reason || new Error(t("common.loadFailed"));
-      const trend = settledValue(results[2], {});
-      const models = settledValue(results[3], {});
-      const recent = settledValue(results[4], {});
-      const quotas = settledValue(results[5], {});
+      const models = settledValue(results[2], {});
+      const trend = settledValue(results[3], {});
       if (!mountedRef.current) return;
-      setData({ stats, trend: trend.trend || [], models: models.models || [], recent: recent.items || [], quotas: quotas.platform_quotas || [] });
+      setData({ stats, models: models.models || [], trend: trend.trend || [] });
     } catch (loadError) {
       if (mountedRef.current) setError(loadError.message || t("common.loadFailed"));
     } finally {
@@ -89,44 +88,44 @@ export function DashboardPage() {
     }
   }, [range, refreshUser, t]);
 
+  const loadActivity = useCallback(async (signal) => {
+    setActivity((current) => ({ ...current, loading: true, error: "" }));
+    try {
+      const response = await usageApi.dashboardTrend({ start_date: dateInput(-TOKEN_ACTIVITY_DAY_COUNT + 1), end_date: dateInput(), granularity: "day" }, signal);
+      if (activityMountedRef.current) setActivity({ loading: false, error: "", items: response.trend || [] });
+    } catch (activityError) {
+      if (activityMountedRef.current) setActivity((current) => ({ ...current, loading: false, error: activityError.message || t("common.loadFailed") }));
+    }
+  }, [t]);
+
   useEffect(() => {
     mountedRef.current = true;
     load();
     return () => { mountedRef.current = false; };
   }, [load]);
+  useEffect(() => {
+    const controller = new AbortController();
+    activityMountedRef.current = true;
+    loadActivity(controller.signal);
+    return () => { activityMountedRef.current = false; controller.abort(); };
+  }, [loadActivity]);
   if (loading) return <Page title={t("nav.dashboard")}><Panel><Spinner /></Panel></Page>;
   if (error) return <Page title={t("nav.dashboard")}><Panel><ErrorState message={error} onRetry={load} /></Panel></Page>;
 
   const stats = data.stats || {};
-  const columns = [
-    { key: "model", label: t("usage.model"), render: (row) => <strong className="console-strong">{row.model || "—"}</strong> },
-    { key: "tokens", label: t("usage.tokens"), render: (row) => formatTokenMillions(row.total_tokens), align: "right" },
-    { key: "cost", label: t("usage.actualCost"), render: (row) => formatCurrency(row.actual_cost ?? row.cost), align: "right" },
-    { key: "duration", label: t("usage.duration"), render: (row) => formatDuration(row.duration_ms), align: "right" },
-    { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={row.status || "completed"} label={statusLabel(row.status || "completed", locale)} /> },
-    { key: "created_at", label: t("common.date"), render: (row) => formatDate(row.created_at) },
-  ];
-
-  const actions = <div className="console-dashboard-actions"><span>{locale === "zh" ? "时间范围：" : "Time range:"}</span><DateRangePicker startDate={range.start_date} endDate={range.end_date} onChange={setRange} /><button className="console-refresh-action" onClick={load}><Icon name="refresh" size={17} />{t("common.refresh")}</button></div>;
-  return <Page title={t("dashboard.title")} subtitle={t("dashboard.subtitle")} actions={actions}>
-    <div className="console-stat-grid console-dashboard-stat-grid">
-      {!simpleMode && <StatCard className="console-stat--balance" label={t("dashboard.balance")} value={formatCurrency(user?.balance || 0)} meta={`${t("dashboard.today")}: ${formatCurrency(stats.today_actual_cost)}`} icon="dollar" />}
-      <StatCard label={t("dashboard.keys")} value={`${formatNumber(stats.active_api_keys)} / ${formatNumber(stats.total_api_keys)}`} meta={t("keys.title")} icon="key" tone="green" />
-      <StatCard label={t("dashboard.requests")} value={formatCompact(stats.total_requests, locale)} meta={`${t("dashboard.today")}: ${formatNumber(stats.today_requests)}`} icon="pulse" tone="amber" />
-      <StatCard label={t("dashboard.tokens")} value={formatTokenMillions(stats.total_tokens)} meta={`${t("dashboard.today")}: ${formatTokenMillions(stats.today_tokens)}`} icon="chart" />
-      <StatCard label={t("dashboard.cost")} value={formatCurrency(stats.today_actual_cost)} meta={`${locale === "zh" ? "今日标准费用" : "Today standard"}: ${formatCurrency(stats.today_cost ?? stats.today_actual_cost)}`} icon="dollar" tone="rose" />
+  const actions = <div className="console-dashboard-actions"><span>{locale === "zh" ? "时间范围：" : "Time range:"}</span><DateRangePicker startDate={range.start_date} endDate={range.end_date} onChange={setRange} /><button className="console-refresh-action" onClick={() => { load(); loadActivity(); }}><Icon name="refresh" size={17} />{t("common.refresh")}</button></div>;
+  return <Page title={t("dashboard.title")} actions={actions}>
+    <div className="console-stat-grid console-stat-grid--4 console-dashboard-stat-grid">
       <ThroughputStatCard stats={stats} formatNumber={formatNumber} t={t} />
+      <StatCard label={t("dashboard.requests")} value={formatCompact(stats.today_requests, locale)} meta={`${t("dashboard.total")}: ${formatCompact(stats.total_requests, locale)}`} icon="pulse" tone="amber" />
+      <StatCard label={t("dashboard.tokens")} value={formatTokenMillions(stats.today_tokens)} meta={`${t("dashboard.total")}: ${formatTokenMillions(stats.total_tokens)}`} icon="chart" />
+      <StatCard className="console-stat--spend" label={t("dashboard.cost")} value={formatNumber(stats.today_actual_cost, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 4, maximumFractionDigits: 4 })} meta={`${locale === "zh" ? "今日标准费用" : "Today standard"}: ${formatCurrency(stats.today_cost ?? stats.today_actual_cost)}`} icon="dollar" />
     </div>
-    <div className="console-grid console-grid--sidebar">
-      <Panel title={t("dashboard.trend")}><LineChart data={data.trend} valueKey="total_tokens" /></Panel>
-      <Panel title={t("dashboard.quick")}><div className="console-quick-actions"><Link to="/keys"><Icon name="key" size={19} /><span><strong>{t("dashboard.createKey")}</strong><small>{t("keys.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>{!simpleMode && <Link to="/usage"><Icon name="chart" size={19} /><span><strong>{t("dashboard.inspectUsage")}</strong><small>{t("usage.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to="/batch-image"><Icon name="image" size={19} /><span><strong>{t("batch.title")}</strong><small>{t("batch.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to="/redeem"><Icon name="gift" size={19} /><span><strong>{t("redeem.title")}</strong><small>{t("redeem.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && settings?.payment_enabled !== false && <Link to="/purchase"><Icon name="cart" size={19} /><span><strong>{t("dashboard.addCredit")}</strong><small>{t("purchase.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}</div></Panel>
+    <div className="console-grid console-dashboard-insights">
+      <Panel className="console-dashboard-quick-panel" title={t("dashboard.quick")}><div className="console-quick-actions"><Link to="/keys"><Icon name="key" size={19} /><span><strong>{t("dashboard.createKey")}</strong><small>{t("keys.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>{!simpleMode && <Link to="/usage"><Icon name="chart" size={19} /><span><strong>{t("dashboard.inspectUsage")}</strong><small>{t("usage.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && settings?.payment_enabled !== false && <Link to="/purchase"><Icon name="cart" size={19} /><span><strong>{t("dashboard.addCredit")}</strong><small>{t("purchase.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to={IMAGE_STUDIO_PATH}><Icon name="image" size={19} /><span><strong>{t("dashboard.generateImage")}</strong><small>{t("dashboard.generateImageHint")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to="/redeem"><Icon name="gift" size={19} /><span><strong>{t("redeem.title")}</strong><small>{t("redeem.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}</div></Panel>
+      <Panel className="console-token-activity-panel" title={t("dashboard.activity")} actions={<span className="console-token-activity-period">{t("dashboard.last6Months")}</span>}><TokenActivity items={activity.items} loading={activity.loading} error={activity.error} formatDate={formatDate} t={t} /></Panel>
+      <DistributionChart className="console-dashboard-model-distribution" title={t("dashboard.models")} data={data.models} nameKey="model" limit={6} showMetricTabs={false} actualOnly itemLabel={t("usage.model")} tokenLabel="Token" />
     </div>
-    <Panel title={locale === "zh" ? "Token 构成" : "Token breakdown"}><div className="console-panel-body"><TokenBreakdown stats={stats} locale={locale} /></div></Panel>
-    <div className="console-grid console-grid--2">
-      <Panel title={t("dashboard.models")}><div className="console-panel-body"><ModelDistribution models={data.models} /></div></Panel>
-      {!simpleMode && <Panel title={t("dashboard.platforms")}><div className="console-panel-body"><PlatformDistribution items={stats.by_platform || []} formatCurrency={formatCurrency} formatNumber={formatNumber} locale={locale} /></div></Panel>}
-    </div>
-    {!simpleMode && <Panel title={locale === "zh" ? "平台配额" : "Platform quotas"}><div className="console-panel-body"><PlatformQuotas items={data.quotas} formatCurrency={formatCurrency} locale={locale} t={t} /></div></Panel>}
-    <Panel title={t("dashboard.recent")} actions={!simpleMode && <Link className="console-text-link" to="/usage">{t("usage.records")}<Icon name="chevronRight" size={14} /></Link>}><DataTable columns={columns} rows={data.recent} /></Panel>
+    <UsageTrendChart data={data.trend} loading={loading} />
   </Page>;
 }

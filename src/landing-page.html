@@ -127,16 +127,15 @@
       <div class="section-head center"><h2 data-i18n="pricing.title">随业务流量灵活增长的价格方案。</h2></div>
       <div class="home-price-card">
         <div class="home-price-panel">
-          <span class="home-price-kicker" data-i18n="pricing.kicker">选择你的起步方式</span>
-          <div class="home-price-amount">$0<span class="home-price-per">/起步</span></div>
+          <span class="home-price-kicker" data-i18n="pricing.kicker">选择计费方式</span>
+          <div class="home-price-amount">按量<span class="home-price-per">/计费</span></div>
           <p class="home-price-note" data-auth-pricing-note>注册账号后即可充值并开始使用</p>
         </div>
-        <div class="home-price-tiers" role="radiogroup" aria-label="网关方案" data-i18n-aria="pricing.group">
-          <button type="button" role="radio" aria-checked="true" class="home-price-tier selected" data-plan="starter" data-price="$0" data-price-key="pricing.price.starter" data-period="/起步" data-period-key="pricing.period.starter" data-i18n="pricing.starter">入门</button>
-          <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="usage" data-price="按量" data-price-key="pricing.price.usage" data-period="/计费" data-period-key="pricing.period.usage" data-i18n="pricing.usage">按量计费</button>
-          <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="scale" data-price="定制" data-price-key="pricing.price.scale" data-period="/方案" data-period-key="pricing.period.scale" data-i18n="pricing.scale">规模化</button>
+        <div class="home-price-tiers" role="radiogroup" aria-label="计费方式" data-i18n-aria="pricing.group">
+          <button type="button" role="radio" aria-checked="true" class="home-price-tier selected" data-plan="usage" data-available="true" data-price="按量" data-price-key="pricing.price.usage" data-period="/计费" data-period-key="pricing.period.usage" data-i18n="pricing.usage">按量计费</button>
+          <button type="button" role="radio" aria-checked="false" class="home-price-tier" data-plan="subscription" data-available="false" data-price="暂未开放" data-price-key="pricing.price.subscription" data-period="" data-i18n="pricing.subscription">订阅</button>
         </div>
-        <a class="btn btn-glass home-price-action" data-auth-pricing-action data-plan="starter" href="/register?plan=starter"><span class="btn-content" data-auth-pricing-label>注册账号</span></a>
+        <a class="btn btn-glass home-price-action" data-auth-pricing-action data-plan="usage" href="/register?plan=usage"><span class="btn-content" data-auth-pricing-label>注册账号</span></a>
         <ul class="home-price-list">
           <li data-i18n="pricing.benefit.endpoint">一个兼容 OpenAI 的端点，连接所有受支持的模型服务商</li>
           <li data-i18n="pricing.benefit.keys">项目级 API 密钥，请求用量与费用清晰可见</li>

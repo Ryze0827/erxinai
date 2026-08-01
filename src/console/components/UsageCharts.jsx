@@ -6,22 +6,36 @@ import { CompactTabs } from "./ConsoleControls";
 
 const colors = [1, 2, 3, 4, 5, 6, 7, 8].map((index) => `var(--console-chart-${index})`);
 
-function Donut({ values }) {
+function Donut({ values, labels, ariaLabel }) {
+  const [active, setActive] = useState(null);
   const total = Math.max(values.reduce((sum, value) => sum + value, 0), 1);
   let offset = 0;
-  return <svg className="console-donut" viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="15.915" fill="none" style={{ stroke: "var(--console-line)" }} strokeWidth="6" />{values.map((value, index) => { const percent = value / total * 100; const segment = <circle key={index} cx="21" cy="21" r="15.915" fill="none" style={{ stroke: colors[index % colors.length] }} strokeWidth="6" strokeDasharray={`${percent} ${100 - percent}`} strokeDashoffset={25 - offset} />; offset += percent; return segment; })}<circle cx="21" cy="21" r="10.7" style={{ fill: "var(--console-surface)" }} /></svg>;
+
+  function showSegment(event, index) {
+    const bounds = event.currentTarget.ownerSVGElement.getBoundingClientRect();
+    const keyboard = event.type === "focus";
+    const x = keyboard ? bounds.width / 2 : Math.min(Math.max(event.clientX - bounds.left, 18), bounds.width - 18);
+    const y = keyboard ? bounds.height / 2 : event.clientY - bounds.top;
+    setActive({ index, label: labels[index] || "—", x, y, placement: keyboard ? "center" : y < bounds.height / 2 ? "below" : "above" });
+  }
+
+  function hideSegment(event) {
+    if (event.type === "blur" || event.currentTarget !== document.activeElement) setActive(null);
+  }
+
+  return <div className="console-donut-wrap"><svg className="console-donut" viewBox="0 0 42 42" role="list" aria-label={ariaLabel}><circle cx="21" cy="21" r="15.915" fill="none" style={{ stroke: "var(--console-line)" }} strokeWidth="6" />{values.map((value, index) => { const percent = value / total * 100; const dashOffset = 25 - offset; const label = labels[index] || "—"; offset += percent; return <g key={`${label}-${index}`}><circle className={`console-donut-segment${active?.index === index ? " is-active" : ""}`} cx="21" cy="21" r="15.915" fill="none" style={{ stroke: colors[index % colors.length] }} strokeWidth="6" strokeDasharray={`${percent} ${100 - percent}`} strokeDashoffset={dashOffset} /><circle className="console-donut-hit" cx="21" cy="21" r="15.915" fill="none" strokeWidth="10" strokeDasharray={`${percent} ${100 - percent}`} strokeDashoffset={dashOffset} role="listitem" tabIndex="0" aria-label={label} onPointerEnter={(event) => showSegment(event, index)} onPointerLeave={hideSegment} onFocus={(event) => showSegment(event, index)} onBlur={hideSegment} /></g>; })}<circle className="console-donut-center" cx="21" cy="21" r="10.7" /></svg>{active && <span className={`console-donut-tooltip is-${active.placement}`} role="tooltip" style={{ left: active.x, top: active.y }}>{active.label}</span>}</div>;
 }
 
 function chartValue(row, metric) {
   return Number(metric === "tokens" ? row.total_tokens : row.actual_cost) || 0;
 }
 
-export function DistributionChart({ title, data = [], nameKey, loading, emptyLabel }) {
+export function DistributionChart({ title, data = [], nameKey, loading, emptyLabel, limit = 8, showMetricTabs = true, actualOnly = false, itemLabel, tokenLabel = "Token (M)", className = "" }) {
   const { locale, formatNumber, formatCurrency } = useLocale();
   const [metric, setMetric] = useState("tokens");
-  const rows = data.slice(0, 8);
+  const rows = data.slice(0, limit);
   const values = rows.map((row) => chartValue(row, metric));
-  return <section className="console-panel console-distribution"><div className="console-panel-head"><div><h2>{title}</h2></div><CompactTabs value={metric} onChange={setMetric} items={[{ value: "tokens", label: locale === "zh" ? "Token" : "Tokens" }, { value: "actual_cost", label: locale === "zh" ? "实际费用" : "Actual cost" }]} /></div>{loading ? <Spinner /> : !rows.length ? <EmptyState description={emptyLabel} /> : <div className="console-distribution-body"><Donut values={values} /><div className="console-distribution-table"><div className="is-head"><span>{locale === "zh" ? "项目" : "Item"}</span><span>{locale === "zh" ? "请求" : "Requests"}</span><span>Token (M)</span><span>{locale === "zh" ? "实际 / 标准" : "Actual / standard"}</span></div>{rows.map((row, index) => <div key={`${row[nameKey]}-${index}`}><span><i style={{ background: colors[index % colors.length] }} /><b title={row[nameKey]}>{row[nameKey] || "—"}</b></span><span>{formatNumber(row.requests)}</span><span>{formatTokenMillions(row.total_tokens)}</span><span><b>{formatCurrency(row.actual_cost)}</b><small>{formatCurrency(row.cost)}</small></span></div>)}</div></div>}</section>;
+  return <section className={`console-panel console-distribution ${className}`.trim()}><div className="console-panel-head"><div><h2>{title}</h2></div>{showMetricTabs && <CompactTabs value={metric} onChange={setMetric} items={[{ value: "tokens", label: locale === "zh" ? "Token" : "Tokens" }, { value: "actual_cost", label: locale === "zh" ? "实际费用" : "Actual cost" }]} />}</div>{loading ? <Spinner /> : !rows.length ? <EmptyState description={emptyLabel} /> : <div className="console-distribution-body"><Donut values={values} labels={rows.map((row) => row[nameKey])} ariaLabel={title} /><div className="console-distribution-table"><div className="is-head"><span>{itemLabel || (locale === "zh" ? "项目" : "Item")}</span><span>{locale === "zh" ? "请求" : "Requests"}</span><span>{tokenLabel}</span><span>{actualOnly ? (locale === "zh" ? "实际" : "Actual") : (locale === "zh" ? "实际 / 标准" : "Actual / standard")}</span></div>{rows.map((row, index) => <div key={`${row[nameKey]}-${index}`}><span><i style={{ background: colors[index % colors.length] }} /><b title={row[nameKey]}>{row[nameKey] || "—"}</b></span><span>{formatNumber(row.requests)}</span><span>{formatTokenMillions(row.total_tokens)}</span><span><b>{formatCurrency(row.actual_cost)}</b>{!actualOnly && <small>{formatCurrency(row.cost)}</small>}</span></div>)}</div></div>}</section>;
 }
 
 function linePoints(data, key, width, height, max) {

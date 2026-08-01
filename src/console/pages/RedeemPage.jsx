@@ -92,7 +92,7 @@ export function RedeemPage() {
       setResult(data); setCode(""); notify("success", data.message || t("common.success")); await Promise.allSettled([refreshUser(), load()]);
     } catch (error) { notify("error", error.message); } finally { setState((current) => ({ ...current, busy: false })); }
   };
-  return <Page title={t("redeem.title")} subtitle={t("redeem.subtitle")}>
+  return <Page title={t("redeem.title")}>
     <RedeemSummary user={user} history={history} locale={locale} formatCurrency={formatCurrency} />
     <div className="console-grid console-grid--2 console-redeem-grid"><RedeemForm code={code} setCode={setCode} busy={state.busy} onSubmit={redeem} result={result} locale={locale} formatCurrency={formatCurrency} t={t} /><RedeemInfo contact={settings?.contact_info} locale={locale} /></div>
     <RedeemHistory state={state} history={history} locale={locale} formatCurrency={formatCurrency} formatDate={formatDate} load={load} />

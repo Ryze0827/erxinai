@@ -3,11 +3,12 @@ import { monitorApi } from "../../api";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 import { Button, EmptyState, ErrorState, Modal, Page, Panel, SelectInput, StatusBadge } from "../UI";
-import { formatDuration, statusLabel } from "../utils";
+import { statusLabel } from "../utils";
 
 const MONITOR_REFRESH_KEY = "sentence_monitor_refresh";
 const MONITOR_WINDOWS = [7, 15, 30, 90];
 const MONITOR_FILTERS = ["all", "operational", "degraded", "failed"];
+const MONITOR_LATENCY_DANGER_MS = 5000;
 
 function storedRefresh() {
   try {
@@ -26,8 +27,9 @@ function monitorTone(status) {
   return "unknown";
 }
 
-function metricDuration(value) {
-  return Number(value) > 0 ? formatDuration(value) : "—";
+function metricDuration(value, formatNumber) {
+  const milliseconds = Number(value);
+  return milliseconds > 0 ? `${formatNumber(milliseconds, { maximumFractionDigits: 0 })} ms` : "—";
 }
 
 function monitorStatusLabel(tone, locale) {
@@ -49,7 +51,7 @@ function itemRequests(item) {
 }
 
 function itemPing(item) {
-  return item.primary_ping_ms ?? item.ping_ms;
+  return item.primary_ping_latency_ms ?? item.primary_ping_ms ?? item.ping_latency_ms ?? item.ping_ms;
 }
 
 function monitorBarHeight(status) {
@@ -137,14 +139,14 @@ function MonitorOverview({ items, counts, windowDays, details, locale, formatNum
     { icon: "channel", label: locale === "zh" ? "渠道总数" : "Total channels", value: formatNumber(items.length), meta: locale === "zh" ? "实时监控中" : "Monitored live", tone: "neutral" },
     { icon: "shield", label: locale === "zh" ? "可用渠道" : "Available", value: formatNumber(counts.operational), meta: `${counts.degraded} ${locale === "zh" ? "警告" : "warning"}`, tone: "success" },
     { icon: "chart", label: locale === "zh" ? "平均可用率" : "Avg. availability", value: `${availability.toFixed(2)}%`, meta: `${windowDays}${locale === "zh" ? " 天窗口" : "d window"}`, tone: "success" },
-    { icon: "pulse", label: locale === "zh" ? "平均延迟" : "Avg. latency", value: metricDuration(latency), meta: locale === "zh" ? "全渠道均值" : "Across all channels", tone: latency > 1000 ? "danger" : "neutral" },
+    { icon: "pulse", label: locale === "zh" ? "平均延迟" : "Avg. latency", value: metricDuration(latency, formatNumber), meta: locale === "zh" ? "全渠道均值" : "Across all channels", tone: latency > MONITOR_LATENCY_DANGER_MS ? "danger" : "success" },
     { icon: "chart", label: locale === "zh" ? "今日请求数" : "Requests today", value: formatNumber(requests), meta: locale === "zh" ? "今日累计" : "Cumulative today", tone: "success" },
   ];
 
   return <section className="console-monitor-overview">{metrics.map((metric) => <div className={`console-monitor-overview-item is-${metric.tone}`} key={metric.label}><i><Icon name={metric.icon} size={22} /></i><div><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.meta}</small></div></div>)}</section>;
 }
 
-function MonitorCard({ item, windowDays, details, locale, formatDate, openDetail }) {
+function MonitorCard({ item, windowDays, details, locale, formatNumber, formatDate, openDetail }) {
   const tone = monitorTone(item.primary_status);
   const availability = Number(windowAvailability(item, windowDays, details)) || 0;
   const checkedAt = latestCheck(item);
@@ -168,8 +170,8 @@ function MonitorCard({ item, windowDays, details, locale, formatDate, openDetail
           </div>
         </header>
         <div className="console-monitor-card-body">
-          <div className="console-monitor-value"><span>{locale === "zh" ? "延迟" : "Latency"}</span><strong>{metricDuration(item.primary_latency_ms)}</strong></div>
-          <div className="console-monitor-value"><span>Ping</span><strong>{metricDuration(itemPing(item))}</strong></div>
+          <div className="console-monitor-value"><span>{locale === "zh" ? "延迟" : "Latency"}</span><strong>{metricDuration(item.primary_latency_ms, formatNumber)}</strong></div>
+          <div className="console-monitor-value"><span>Ping</span><strong>{metricDuration(itemPing(item), formatNumber)}</strong></div>
           <div className="console-monitor-value is-availability"><span>{locale === "zh" ? `可用率（${windowDays} 天）` : `Availability (${windowDays}d)`}</span><strong>{availability.toFixed(2)}%</strong><small>{locale === "zh" ? "实时统计" : "Live window"}</small></div>
           <Sparkline timeline={item.timeline} days={windowDays} locale={locale} />
           <Button className="console-monitor-detail-button" onClick={() => openDetail(item)}>{locale === "zh" ? "查看详情" : "View details"}<Icon name="chevronRight" size={16} /></Button>
@@ -186,7 +188,7 @@ function MonitorLoading({ locale }) {
         {Array.from({ length: 5 }, (_, index) => <div className="console-monitor-overview-item" key={index}><i /><div><span /><strong /><small /></div></div>)}
       </section>
       <div className="console-monitor-list is-loading">
-        {Array.from({ length: 3 }, (_, index) => <article className="console-monitor-card" key={index}><aside className="console-monitor-card-status"><span /><strong /></aside><div className="console-monitor-card-main"><header /><div className="console-monitor-card-body" /></div></article>)}
+        <article className="console-monitor-card"><aside className="console-monitor-card-status"><span /><strong /></aside><div className="console-monitor-card-main"><header /><div className="console-monitor-card-body" /></div></article>
       </div>
     </>
   );
@@ -199,15 +201,15 @@ function MonitorContent({ state, locale, load, items, counts, windowDays, detail
   return (
     <>
       <MonitorOverview items={state.items} counts={counts} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} />
-      {items.length ? <div className="console-monitor-list">{items.map((item) => <MonitorCard key={item.id} item={item} windowDays={windowDays} details={details} locale={locale} formatDate={formatDate} openDetail={openDetail} />)}</div> : <Panel><EmptyState icon="filter" description={locale === "zh" ? "当前筛选条件下没有渠道。" : "No channels match this filter."} /></Panel>}
+      {items.length ? <div className="console-monitor-list">{items.map((item) => <MonitorCard key={item.id} item={item} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} formatDate={formatDate} openDetail={openDetail} />)}</div> : <Panel><EmptyState icon="filter" description={locale === "zh" ? "当前筛选条件下没有渠道。" : "No channels match this filter."} /></Panel>}
     </>
   );
 }
 
-function MonitorDetail({ detail, locale, t }) {
+function MonitorDetail({ detail, locale, formatNumber, t }) {
   if (detail?.loading) return <div className="console-loading"><i /><span>{t("common.loading")}</span></div>;
   if (detail?.error) return <ErrorState message={detail.error} />;
-  return <div className="console-monitor-detail">{(detail?.item?.models || []).map((model) => <div key={model.model}><div><strong>{model.model}</strong><StatusBadge status={model.latest_status} label={statusLabel(model.latest_status, locale)} /></div><div><span>7d <strong>{Number(model.availability_7d || 0).toFixed(2)}%</strong></span><span>15d <strong>{Number(model.availability_15d || 0).toFixed(2)}%</strong></span><span>30d <strong>{Number(model.availability_30d || 0).toFixed(2)}%</strong></span><span>{t("monitor.latency")} <strong>{formatDuration(model.avg_latency_7d_ms)}</strong></span></div></div>)}</div>;
+  return <div className="console-monitor-detail">{(detail?.item?.models || []).map((model) => <div key={model.model}><div><strong>{model.model}</strong><StatusBadge status={model.latest_status} label={statusLabel(model.latest_status, locale)} /></div><div><span>7d <strong>{Number(model.availability_7d || 0).toFixed(2)}%</strong></span><span>15d <strong>{Number(model.availability_15d || 0).toFixed(2)}%</strong></span><span>30d <strong>{Number(model.availability_30d || 0).toFixed(2)}%</strong></span><span>{t("monitor.latency")} <strong>{metricDuration(model.avg_latency_7d_ms, formatNumber)}</strong></span></div></div>)}</div>;
 }
 
 export function MonitorPage() {
@@ -285,10 +287,10 @@ export function MonitorPage() {
   const filteredItems = filter === "all" ? state.items : state.items.filter((item) => monitorTone(item.primary_status) === filter);
 
   return (
-    <Page title={t("monitor.title")} subtitle={locale === "zh" ? "实时监控各渠道的可用性、延迟与稳定性表现。" : "Monitor availability, latency, and stability across every route in real time."} className="console-monitor-page">
+    <Page title={t("monitor.title")} className="console-monitor-page">
       <MonitorToolbar windowDays={windowDays} setWindowDays={setWindowDays} filter={filter} setFilter={setFilter} counts={counts} refresh={refresh} setRefresh={setRefresh} locale={locale} />
       <MonitorContent state={state} locale={locale} load={load} items={filteredItems} counts={counts} windowDays={windowDays} details={details} formatNumber={formatNumber} formatDate={formatDate} openDetail={openDetail} />
-      <Modal open={Boolean(detail)} title={detail?.item?.name || t("monitor.title")} onClose={closeDetail} size="large"><MonitorDetail detail={detail} locale={locale} t={t} /></Modal>
+      <Modal open={Boolean(detail)} title={detail?.item?.name || t("monitor.title")} onClose={closeDetail} size="large"><MonitorDetail detail={detail} locale={locale} formatNumber={formatNumber} t={t} /></Modal>
     </Page>
   );
 }

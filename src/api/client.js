@@ -30,6 +30,7 @@ export function buildApiUrl(path) {
 }
 
 export function buildGatewayUrl(path) {
+  if (/^https?:\/\//i.test(path)) return path;
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   try {
     const origin = new URL(API_BASE_URL, window.location.origin).origin;
