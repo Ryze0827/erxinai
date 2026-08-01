@@ -13,7 +13,10 @@ export const redeemApi = {
 };
 
 export const announcementsApi = {
-  list: (unreadOnly = false) => apiRequest("/announcements", { query: unreadOnly ? { unread_only: 1 } : {} }),
+  list: async (unreadOnly = false) => {
+    const response = await apiRequest("/announcements", { query: unreadOnly ? { unread_only: 1 } : {} });
+    return Array.isArray(response) ? response : [];
+  },
   markRead: (id) => apiRequest(`/announcements/${id}/read`, { method: "POST", body: {} }),
 };
 
