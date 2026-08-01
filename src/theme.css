@@ -6,7 +6,8 @@
 .console-public-shell,
 .console-standalone,
 .console-group-menu,
-.console-modal-layer {
+.console-modal-layer,
+.console-tour-layer {
   --console-font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   --console-font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   --console-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -87,7 +88,8 @@ html[data-console-theme="light"] .console-shell,
 html[data-console-theme="light"] .console-public-shell,
 html[data-console-theme="light"] .console-standalone,
 html[data-console-theme="light"] .console-group-menu,
-html[data-console-theme="light"] .console-modal-layer {
+html[data-console-theme="light"] .console-modal-layer,
+html[data-console-theme="light"] .console-tour-layer {
   --console-canvas: #e8efeb;
   --console-surface: rgba(249, 252, 250, var(--console-surface-alpha, 0.46));
   --console-surface-raised: rgba(255, 255, 255, var(--console-surface-raised-alpha, 0.72));
@@ -151,7 +153,8 @@ html[data-console-theme="dark"] .console-shell,
 html[data-console-theme="dark"] .console-public-shell,
 html[data-console-theme="dark"] .console-standalone,
 html[data-console-theme="dark"] .console-group-menu,
-html[data-console-theme="dark"] .console-modal-layer {
+html[data-console-theme="dark"] .console-modal-layer,
+html[data-console-theme="dark"] .console-tour-layer {
   --console-canvas: #050706;
   --console-surface: rgba(32, 35, 33, var(--console-surface-alpha, 0.56));
   --console-surface-raised: rgba(38, 41, 39, var(--console-surface-raised-alpha, 0.76));

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, Navigate, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { announcementsApi, keysApi, subscriptionsApi } from "../api";
 import { getAccessToken } from "../api/session";
@@ -185,6 +186,136 @@ function UserMenu({ onNavigate }) {
   return <div className="console-user-menu" ref={wrapperRef}><button className="console-user-trigger" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-haspopup="menu">{avatar ? <img src={avatar} alt="" /> : <span>{initial}</span>}<div><strong>{displayName}</strong><small>{user?.role}</small></div><Icon name="chevronDown" size={14} /></button>{open && <div className="console-popover console-user-popover" role="menu"><div className="console-user-summary"><strong>{displayName}</strong><small>{user?.email}</small></div><Link to="/profile" onClick={() => { setOpen(false); onNavigate(); }} role="menuitem"><Icon name="user" size={17} />{t("nav.profile")}</Link><Link to="/keys" onClick={() => { setOpen(false); onNavigate(); }} role="menuitem"><Icon name="key" size={17} />{t("nav.keys")}</Link>{settings?.contact_info && <div className="console-user-contact"><Icon name="chat" size={17} /><div><span>{t("common.contactSupport")}</span><p>{settings.contact_info}</p></div></div>}<button className="console-user-logout" onClick={handleLogout} role="menuitem"><Icon name="logout" size={17} />{t("nav.logout")}</button></div>}</div>;
 }
 
+const walkthroughSteps = [
+  { title: "walkthrough.recharge", description: "walkthrough.rechargeDescription", target: '.console-sidebar a[href="/purchase"]', fallback: ".console-walkthrough-trigger", icon: "wallet" },
+  { title: "walkthrough.apiKeys", description: "walkthrough.apiKeysDescription", target: '.console-sidebar a[href="/keys"]', fallback: ".console-walkthrough-trigger", icon: "key" },
+  { title: "walkthrough.createKey", description: "walkthrough.createKeyDescription", path: "/keys", target: '[data-walkthrough="create-key"]', fallback: '.console-sidebar a[href="/keys"], .console-walkthrough-trigger', icon: "plus" },
+  { title: "walkthrough.useKey", description: "walkthrough.useKeyDescription", path: "/keys", target: '[data-walkthrough="use-key"]', fallback: '[data-walkthrough="create-key"], .console-sidebar a[href="/keys"], .console-walkthrough-trigger', icon: "terminal" },
+];
+let walkthroughSession = { active: false, step: 0 };
+
+function visibleWalkthroughTarget(selector) {
+  return [...document.querySelectorAll(selector)].find((element) => {
+    const rect = element.getBoundingClientRect();
+    const style = window.getComputedStyle(element);
+    return rect.width > 0 && rect.height > 0 && rect.left >= -1 && rect.right <= window.innerWidth + 1 && style.display !== "none" && style.visibility !== "hidden";
+  });
+}
+
+function walkthroughTargetRect(element) {
+  const padding = 8;
+  const rect = element.getBoundingClientRect();
+  const top = Math.max(8, rect.top - padding);
+  const left = Math.max(8, rect.left - padding);
+  const right = Math.min(window.innerWidth - 8, rect.right + padding);
+  const bottom = Math.min(window.innerHeight - 8, rect.bottom + padding);
+  return { top, left, width: Math.max(1, right - left), height: Math.max(1, bottom - top), right, bottom };
+}
+
+function sameWalkthroughRect(current, next) {
+  return current && current.fallback === next.fallback && ["top", "left", "width", "height"].every((key) => Math.abs(current[key] - next[key]) < .5);
+}
+
+function walkthroughCardPosition(target) {
+  const margin = 12;
+  const gap = 16;
+  const width = Math.min(360, window.innerWidth - margin * 2);
+  if (window.innerWidth <= 760 || !target) return { width, left: margin, right: "auto", top: "auto", bottom: margin };
+  const estimatedHeight = 244;
+  const left = Math.min(Math.max(margin, target.left + target.width / 2 - width / 2), window.innerWidth - width - margin);
+  if (target.bottom + gap + estimatedHeight <= window.innerHeight - margin) return { width, left, right: "auto", top: target.bottom + gap, bottom: "auto" };
+  if (target.top - gap - estimatedHeight >= margin) return { width, left, right: "auto", top: target.top - gap - estimatedHeight, bottom: "auto" };
+  return { width, left, right: "auto", top: Math.max(margin, window.innerHeight - estimatedHeight - margin), bottom: "auto" };
+}
+
+function Walkthrough({ setMobileOpen }) {
+  const { t } = useLocale();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const cardRef = useRef(null);
+  const [open, setOpen] = useState(walkthroughSession.active);
+  const [step, setStep] = useState(walkthroughSession.step);
+  const [target, setTarget] = useState(null);
+  const current = walkthroughSteps[step];
+  const close = () => {
+    walkthroughSession = { active: false, step: 0 };
+    if (window.innerWidth <= 980) setMobileOpen(false);
+    setOpen(false);
+    setTarget(null);
+  };
+  const showStep = (nextStep) => {
+    const normalized = Math.max(0, Math.min(walkthroughSteps.length - 1, nextStep));
+    const next = walkthroughSteps[normalized];
+    walkthroughSession = { active: true, step: normalized };
+    if (window.innerWidth <= 980) setMobileOpen(normalized < 2);
+    setStep(normalized);
+    setOpen(true);
+    setTarget(null);
+    if (next.path && location.pathname !== next.path) navigate(next.path);
+  };
+
+  useEffect(() => {
+    if (!open) return undefined;
+    let allowFallback = false;
+    let previousElement = null;
+    let frame;
+    const locate = () => {
+      const primary = visibleWalkthroughTarget(current.target);
+      const element = primary || (allowFallback ? visibleWalkthroughTarget(current.fallback) : null);
+      if (!element) { setTarget(null); return; }
+      if (element !== previousElement) {
+        previousElement = element;
+        element.scrollIntoView({ block: "center", inline: "nearest", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      }
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const next = { ...walkthroughTargetRect(element), fallback: !primary };
+        setTarget((value) => sameWalkthroughRect(value, next) ? value : next);
+      });
+    };
+    const fallbackTimer = window.setTimeout(() => { allowFallback = true; locate(); }, 1200);
+    const interval = window.setInterval(locate, 180);
+    const observer = new MutationObserver(locate);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", locate);
+    window.addEventListener("scroll", locate, true);
+    locate();
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      window.clearInterval(interval);
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", locate);
+      window.removeEventListener("scroll", locate, true);
+    };
+  }, [current.fallback, current.target, location.pathname, open]);
+
+  const targetReady = Boolean(target);
+
+  useEffect(() => {
+    if (!open || !targetReady) return undefined;
+    const focusTimer = window.requestAnimationFrame(() => cardRef.current?.focus());
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") { close(); return; }
+      if (event.key !== "Tab") return;
+      const items = [...(cardRef.current?.querySelectorAll("button:not(:disabled)") || [])];
+      if (!items.length) return;
+      const first = items[0];
+      const last = items.at(-1);
+      if (event.shiftKey && (document.activeElement === first || !cardRef.current?.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !cardRef.current?.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => { window.cancelAnimationFrame(focusTimer); document.removeEventListener("keydown", onKeyDown); };
+  }, [open, targetReady]);
+
+  const position = walkthroughCardPosition(target);
+  const description = step === 3 && target?.fallback ? t("walkthrough.useKeyFallback") : t(current.description);
+  const layer = open && targetReady ? createPortal(<div className="console-tour-layer"><div className="console-tour-capture" aria-hidden="true" /><div className="console-tour-spotlight" style={{ top: target.top, left: target.left, width: target.width, height: target.height }} aria-hidden="true" /><section ref={cardRef} className="console-tour-card" style={position} role="dialog" aria-modal="true" aria-label={t("walkthrough.title")} tabIndex="-1"><header><span>{t("walkthrough.step", { current: step + 1, total: walkthroughSteps.length })}</span><IconButton icon="close" label={t("common.close")} onClick={close} /></header><div className="console-tour-progress" aria-hidden="true">{walkthroughSteps.map((item, index) => <i className={`${index === step ? "is-active" : ""} ${index < step ? "is-complete" : ""}`} key={item.title} />)}</div><div className="console-tour-content"><i><Icon name={current.icon} size={23} /></i><div><h2>{t(current.title)}</h2><p>{description}</p></div></div><footer>{step > 0 ? <Button icon="chevronsLeft" onClick={() => showStep(step - 1)}>{t("walkthrough.previous")}</Button> : <Button onClick={close}>{t("walkthrough.skip")}</Button>}{step < walkthroughSteps.length - 1 ? <Button variant="primary" icon="chevronRight" onClick={() => showStep(step + 1)}>{t("walkthrough.next")}</Button> : <Button variant="primary" icon="check" onClick={close}>{t("walkthrough.finish")}</Button>}</footer></section></div>, document.body) : null;
+
+  return <><button type="button" className="console-header-link console-walkthrough-trigger" onClick={() => showStep(0)} aria-haspopup="dialog" aria-expanded={open} title={t("walkthrough.trigger")}><Icon name="play" size={17} /><span>{t("walkthrough.trigger")}</span></button>{layer}</>;
+}
+
 function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
   const { t, locale, setLocale, formatUsd } = useLocale();
   const { user, settings } = useConsole();
@@ -196,7 +327,7 @@ function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
     return () => { active = false; };
   }, []);
 
-  return <header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label="Menu" onClick={() => setMobileOpen((value) => !value)} /><div><span>{t("app.name")}</span><strong>{title}</strong></div></div><div className="console-header-actions">{summary?.active_count > 0 && <Link className="console-subscription-pill" to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}{safeExternalUrl(settings?.doc_url) && <a className="console-header-link" href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<button className="console-language" onClick={() => setLocale(locale === "en" ? "zh" : "en")}><Icon name="globe" size={17} />{t("nav.language")}</button><ThemeToggle /><AnnouncementMenu /><div className="console-balance"><span>{t("common.balance")}</span><strong>{formatUsd(user?.balance || 0)}</strong></div><UserMenu onNavigate={() => setMobileOpen(false)} /></div></header>;
+  return <header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label="Menu" onClick={() => setMobileOpen((value) => !value)} /><div><span>{t("app.name")}</span><strong>{title}</strong></div></div><div className="console-header-actions">{summary?.active_count > 0 && <Link className="console-subscription-pill" to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<Walkthrough setMobileOpen={setMobileOpen} />{safeExternalUrl(settings?.doc_url) && <a className="console-header-link" href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<button className="console-language" onClick={() => setLocale(locale === "en" ? "zh" : "en")}><Icon name="globe" size={17} />{t("nav.language")}</button><ThemeToggle /><AnnouncementMenu /><div className="console-balance"><span>{t("common.balance")}</span><strong>{formatUsd(user?.balance || 0)}</strong></div><UserMenu onNavigate={() => setMobileOpen(false)} /></div></header>;
 }
 
 function pageTitle(pathname, items, t) {
