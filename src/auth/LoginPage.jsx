@@ -15,7 +15,7 @@ export function LoginPage() {
   const [searchParams] = useSearchParams();
   const { settings, loading: settingsLoading, error: settingsError, retry } = usePublicSettings();
   const agreement = useAgreement(settings);
-  const [form, setForm] = useState({ email: "", password: "", remember: false });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState(sessionStorage.getItem("auth_expired") ? "Your session expired. Please sign in again." : "");
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ export function LoginPage() {
   };
 
   const completeLogin = (response) => {
-    persistAuthResponse(response, form.remember);
+    persistAuthResponse(response);
     sessionStorage.removeItem("auth_expired");
     navigate(safeAuthRedirect(searchParams.get("redirect")), { replace: true });
   };
@@ -99,8 +99,7 @@ export function LoginPage() {
             <AuthField label="Password" error={errors.password}>
               <PasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder="Enter your password" />
             </AuthField>
-            <div className="auth-form-row">
-              <label className="auth-checkbox"><input type="checkbox" checked={form.remember} onChange={(event) => updateForm("remember", event.target.checked)} /><span>Keep me signed in</span></label>
+            <div className="auth-form-row auth-form-row--end">
               {settings?.password_reset_enabled && <Link className="auth-text-link" to="/forgot-password">Forgot password?</Link>}
             </div>
             <TurnstileWidget enabled={settings?.turnstile_enabled} siteKey={settings?.turnstile_site_key} onToken={handleTurnstileToken} resetKey={turnstileReset} />

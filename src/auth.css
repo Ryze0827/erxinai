@@ -406,6 +406,10 @@
   gap: 16px;
 }
 
+.auth-form-row--end {
+  justify-content: flex-end;
+}
+
 .auth-checkbox {
   display: inline-flex;
   align-items: flex-start;

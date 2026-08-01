@@ -77,7 +77,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
   });
 
   const finish = async (response) => {
-    persistAuthResponse(response, true);
+    persistAuthResponse(response);
     try {
       setStoredUser(await authApi.getCurrentUser());
     } catch {

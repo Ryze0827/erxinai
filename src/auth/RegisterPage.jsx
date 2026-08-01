@@ -101,7 +101,7 @@ export function RegisterPage() {
         await beginEmailVerification();
       } else {
         const response = await authApi.register({ ...buildPayload(), turnstile_token: settings.turnstile_enabled ? turnstileToken : undefined });
-        persistAuthResponse(response, true);
+        persistAuthResponse(response);
         navigate("/keys", { replace: true });
       }
     } catch (requestError) {

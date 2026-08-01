@@ -42,7 +42,7 @@ export function EmailVerifyPage() {
     setError("");
     try {
       const response = await authApi.register({ ...data, countdown_until: undefined, verify_code: code });
-      persistAuthResponse(response, true);
+      persistAuthResponse(response);
       sessionStorage.removeItem("register_data");
       navigate("/keys", { replace: true });
     } catch (requestError) {

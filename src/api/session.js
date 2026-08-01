@@ -22,13 +22,24 @@ function storageHasToken(storage) {
   return Boolean(storage.getItem(TOKEN_KEY));
 }
 
+function migrateLegacyTabSession() {
+  if (!storageHasToken(sessionStorage)) return;
+  authKeys.forEach((key) => {
+    const value = sessionStorage.getItem(key);
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+    sessionStorage.removeItem(key);
+  });
+}
+
+migrateLegacyTabSession();
+
 export function getAuthStorage() {
-  if (storageHasToken(sessionStorage)) return sessionStorage;
   return localStorage;
 }
 
 export function isPersistentSession() {
-  return storageHasToken(localStorage) && !storageHasToken(sessionStorage);
+  return storageHasToken(localStorage);
 }
 
 export function clearAuthSession() {
@@ -58,11 +69,10 @@ export function getStoredUser() {
   }
 }
 
-export function persistAuthResponse(response, persistent = true) {
+export function persistAuthResponse(response) {
   removeAuthSessionData();
-  const storage = persistent ? localStorage : sessionStorage;
-  persistTokenResponse(response, storage);
-  if (response.user) storage.setItem(USER_KEY, JSON.stringify(response.user));
+  persistTokenResponse(response, localStorage);
+  if (response.user) localStorage.setItem(USER_KEY, JSON.stringify(response.user));
   notifyAuthSessionChanged();
 }
 

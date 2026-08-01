@@ -6,7 +6,7 @@ This repository contains the browser application. The controls below are the min
 
 - Arbitrary custom-page embeds have been removed. Custom pages render allowlist-sanitized Markdown only; dedicated product pages use normal application routes.
 - External requests and payment redirects require HTTPS, except same-origin or loopback addresses used for local development. Authenticated API requests reject HTTP redirects and disable browser caching.
-- Authentication persistence follows the established application flow: login honors **Keep me signed in**, while registration and OAuth completion retain their existing persistent behavior. Token expiry comes from backend `expires_in`; the client adds no independent session lifetime.
+- Authentication state is shared across same-origin browser tabs. Login, registration, and OAuth completion use the same persistent client store, while token expiry continues to come from backend `expires_in`; the client adds no independent session lifetime.
 - Payment recovery retains the established local-storage flow and honors provider-supplied `expires_at` when present; the client adds no independent recovery lifetime.
 - Password-reset tokens are removed from the address bar synchronously after capture. New reset links should place the token in the URL fragment rather than the query string so it never reaches access logs. Existing client password checks are preserved, while the backend remains authoritative.
 - Markdown HTML is allowlist-sanitized. URLs, images, and external links receive protocol checks and opener/referrer protection; embedded frames are not accepted.
