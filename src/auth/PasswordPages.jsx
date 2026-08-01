@@ -1,11 +1,23 @@
-import { useCallback, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router";
 import { authApi } from "../api/auth";
 import { AuthCard, AuthLayout } from "./AuthLayout";
 import { AuthField, AuthNotice, PasswordInput, SubmitButton, TextInput } from "./AuthControls";
 import { getErrorMessage, isEmail } from "./authUtils";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { usePublicSettings } from "./usePublicSettings";
+
+function takeResetContext() {
+  const url = new URL(window.location.href);
+  const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+  const context = { email: url.searchParams.get("email") || hashParams.get("email") || "", token: hashParams.get("token") || url.searchParams.get("token") || "" };
+  if (!context.token) return context;
+  url.searchParams.delete("token");
+  hashParams.delete("token");
+  url.hash = hashParams.toString();
+  window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  return context;
+}
 
 export function ForgotPasswordPage() {
   const { settings, loading: settingsLoading, error: settingsError, retry } = usePublicSettings();
@@ -49,14 +61,25 @@ export function ForgotPasswordPage() {
 }
 
 export function ResetPasswordPage() {
-  const [searchParams] = useSearchParams();
-  const email = searchParams.get("email") || "";
-  const token = searchParams.get("token") || "";
+  const [{ email, token }, setResetContext] = useState(takeResetContext);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const captureResetContext = () => {
+      const context = takeResetContext();
+      if (context.token) setResetContext(context);
+    };
+    window.addEventListener("hashchange", captureResetContext);
+    window.addEventListener("popstate", captureResetContext);
+    return () => {
+      window.removeEventListener("hashchange", captureResetContext);
+      window.removeEventListener("popstate", captureResetContext);
+    };
+  }, []);
 
   const submit = async (event) => {
     event.preventDefault();

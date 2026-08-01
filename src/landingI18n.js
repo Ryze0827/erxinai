@@ -12,7 +12,6 @@ const landingMessages = {
     "auth.createAccount": "Create account",
     "language.switch": "Switch to Chinese",
     "language.label": "中文",
-    "hero.eyebrow": "OpenAI-compatible AI gateway",
     "hero.titleLabel": "Your AI gateway, built for every model",
     "hero.title": `
       <span aria-hidden="true">
@@ -70,6 +69,8 @@ const landingMessages = {
     "faq.what.answer": "WayX is an AI gateway that gives applications one API for multiple model providers. It centralizes access keys, request routing, usage records, and provider health in one place.",
     "faq.client.question": "Can I use an OpenAI client library?",
     "faq.client.answer": "Yes. Point a compatible client at the WayX base URL, provide your WayX key, and select a supported model. Most integrations only need those configuration changes.",
+    "faq.region.question": "Do you provide services in mainland China, Hong Kong, Macau, or Taiwan?",
+    "faq.region.answer": "Due to policy and regulatory restrictions, services are currently unavailable in mainland China, Hong Kong, Macau, and Taiwan.",
     "faq.monitor.question": "How are requests monitored?",
     "faq.monitor.answer": "Request records can include status, route, latency, token usage, estimated cost, retries, and errors so teams can diagnose behavior without building a separate observability layer.",
     "faq.provider.question": "What happens when a provider is unavailable?",
@@ -127,7 +128,6 @@ const landingMessages = {
     "auth.createAccount": "注册账号",
     "language.switch": "切换到英文",
     "language.label": "EN",
-    "hero.eyebrow": "兼容 OpenAI 的 AI 网关",
     "hero.titleLabel": "你的 AI 网关，连接每一种模型",
     "hero.title": `
       <span aria-hidden="true">
@@ -184,6 +184,8 @@ const landingMessages = {
     "faq.what.answer": "WayX 是一个 AI 网关，让应用通过一个 API 连接多家模型服务商，并在一个平台中统一管理访问密钥、请求路由、用量记录和服务商健康状态。",
     "faq.client.question": "可以使用 OpenAI 客户端库吗？",
     "faq.client.answer": "可以。将兼容客户端的基础地址指向 WayX，填入 WayX 密钥并选择受支持的模型即可。大多数集成只需修改这些配置。",
+    "faq.region.question": "是否向中国大陆及港澳台提供服务？",
+    "faq.region.answer": "由于政策、法规限制，暂不向中国大陆及港澳台提供服务。",
     "faq.monitor.question": "如何监控请求？",
     "faq.monitor.answer": "请求记录可包含状态、路由、延迟、Token 用量、预估费用、重试和错误，团队无需额外搭建可观测平台也能快速定位问题。",
     "faq.provider.question": "服务商不可用时会怎样？",

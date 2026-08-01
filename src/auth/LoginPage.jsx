@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { authApi } from "../api/auth";
 import { persistAuthResponse } from "../api/session";
 import { AgreementPrompt, useAgreement } from "./AgreementPrompt";

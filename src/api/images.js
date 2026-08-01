@@ -1,6 +1,15 @@
 import { gatewayRequest } from "./client";
 
-export const IMAGE_GATEWAY_BASE_URL = String(import.meta.env.VITE_IMAGE_GATEWAY_BASE_URL || "https://image.aiwayxx.com").replace(/\/+$/, "");
+function imageGatewayBaseUrl(value) {
+  const url = new URL(String(value || "https://image.aiwayxx.com"), window.location.origin);
+  const localHosts = ["localhost", "127.0.0.1", "[::1]"];
+  if (url.protocol !== "https:" && !(url.protocol === "http:" && localHosts.includes(window.location.hostname) && localHosts.includes(url.hostname))) {
+    throw new Error("VITE_IMAGE_GATEWAY_BASE_URL must use HTTPS outside local development.");
+  }
+  return url.toString().replace(/\/+$/, "");
+}
+
+export const IMAGE_GATEWAY_BASE_URL = imageGatewayBaseUrl(import.meta.env.VITE_IMAGE_GATEWAY_BASE_URL);
 
 const IMAGE_TIMEOUT_MS = 300_000;
 

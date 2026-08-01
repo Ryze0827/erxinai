@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.VITE_DEV_API_PROXY_TARGET || "http://127.0.0.1:8080";
   return {
     optimizeDeps: {
-      include: ["react", "react-dom/client", "react-router-dom"],
+      include: ["react", "react-dom/client", "react-router"],
     },
     server: {
       host: "0.0.0.0",

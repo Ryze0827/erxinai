@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { paymentApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
@@ -117,16 +117,19 @@ function balanceCreditLimit(charge, checkout, method) {
 
 function withWechatResumeContext(authorizeUrl, context) {
   try {
-    const target = new URL(authorizeUrl, window.location.origin);
-    const redirect = new URL(target.searchParams.get("redirect") || "/purchase", window.location.origin);
+    const allowed = safeExternalUrl(authorizeUrl);
+    if (!allowed) return "";
+    const target = new URL(allowed);
+    const requestedRedirect = new URL(target.searchParams.get("redirect") || "/purchase", window.location.origin);
+    const redirect = requestedRedirect.origin === window.location.origin ? requestedRedirect : new URL("/purchase", window.location.origin);
     redirect.searchParams.set("payment_type", context.paymentType || "wxpay");
     redirect.searchParams.set("order_type", context.orderType || "balance");
     if (context.planId) redirect.searchParams.set("plan_id", String(context.planId));
     if (Number(context.amount) > 0) redirect.searchParams.set("amount", String(context.amount));
     target.searchParams.set("redirect", `${redirect.pathname}${redirect.search}`);
-    return target.toString();
+    return safeExternalUrl(target.toString());
   } catch {
-    return authorizeUrl;
+    return "";
   }
 }
 
@@ -157,7 +160,7 @@ function stripeMethod(paymentType) {
 function stripeTarget(snapshot, context, common) {
   const method = stripeMethod(context.paymentType);
   const suffix = method ? `&method=${method}` : "";
-  return `/payment/stripe?${common}&client_secret=${encodeURIComponent(snapshot.clientSecret)}${suffix}`;
+  return `/payment/stripe?${common}${suffix}`;
 }
 
 function shouldRedirectHosted(hostedUrl, forceQr) {
@@ -165,9 +168,11 @@ function shouldRedirectHosted(hostedUrl, forceQr) {
 }
 
 function openHostedTarget(hostedUrl, common, navigate) {
-  const popup = window.open(hostedUrl, "paymentPopup", "popup=yes,width=520,height=720,resizable=yes,scrollbars=yes");
-  if (!popup || popup.closed) window.location.assign(hostedUrl);
-  else navigate(`/payment/qrcode?${common}`);
+  const popup = window.open("", "_blank", "popup=yes,width=520,height=720,resizable=yes,scrollbars=yes");
+  if (!popup || popup.closed) { window.location.assign(hostedUrl); return; }
+  popup.opener = null;
+  popup.location.replace(hostedUrl);
+  navigate(`/payment/qrcode?${common}`);
 }
 
 function routePaymentTarget(snapshot, context, common, hostedUrl, navigate) {
@@ -185,8 +190,10 @@ function launchPayment(result, context, navigate) {
   const common = paymentQuery(snapshot);
   const hostedUrl = safeExternalUrl(snapshot.payUrl);
   if (result.result_type === "oauth_required" && result.oauth?.authorize_url) {
+    const authorizeUrl = withWechatResumeContext(result.oauth.authorize_url, context);
+    if (!authorizeUrl) throw new Error("The payment provider returned an invalid authorization URL.");
     sessionStorage.setItem(WECHAT_PENDING_KEY, JSON.stringify({ amount: context.amount, paymentType: context.paymentType, orderType: context.orderType, planId: context.planId || 0 }));
-    window.location.assign(withWechatResumeContext(result.oauth.authorize_url, context));
+    window.location.assign(authorizeUrl);
     return snapshot;
   }
   if (result.result_type === "jsapi_ready" && (result.jsapi || result.jsapi_payload)) return { ...snapshot, jsapi: result.jsapi || result.jsapi_payload };
@@ -291,7 +298,7 @@ function SubscriptionPurchase(props) {
 
 function PurchaseHelp({ checkout }) {
   if (!checkout.help_text && !checkout.help_image_url) return null;
-  const image = safeExternalUrl(checkout.help_image_url);
+  const image = safeImageUrl(checkout.help_image_url);
   return <Panel><div className="console-panel-body console-payment-help">{image && <img src={image} alt="" />}<p>{checkout.help_text}</p></div></Panel>;
 }
 
@@ -474,7 +481,7 @@ export function PaymentQRCodePage() {
   }, [navigate, snapshot?.orderId, snapshot?.qrCode]);
   const cancel = async () => { try { await paymentApi.cancel(snapshot.orderId); clearRecovery(); navigate("/purchase", { replace: true }); } catch (error) { notify("error", error.message); } };
   if (!snapshot) return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><ErrorState message={locale === "zh" ? "支付参数不完整或已过期。" : "Payment details are missing or expired."} /><Link className="console-button console-button--primary" to="/purchase">{t("payment.back")}</Link></div></Panel></PaymentShell>;
-  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className="console-payment-state-icon"><Icon name={expired ? "warning" : "card"} size={30} /></span><h1>{expired ? t("payment.failed") : t("payment.waiting")}</h1><p>{snapshot?.qrCode ? t("payment.scan") : (locale === "zh" ? "在新窗口完成付款。" : "Complete payment in the provider window.")}</p>{qr && !expired && <img className="console-qr" src={qr} alt="Payment QR code" />}{paymentUrl && !snapshot?.qrCode && !expired && <a className="console-button console-button--primary" href={paymentUrl} target="_blank" rel="noreferrer">{locale === "zh" ? "打开支付页面" : "Open payment page"}</a>}<strong className="console-countdown">{countdownText(remaining)}</strong><div className="console-payment-state-actions"><Button onClick={() => navigate("/purchase")}>{t("payment.back")}</Button>{snapshot?.orderId && !expired && <Button variant="danger" onClick={cancel}>{t("orders.cancel")}</Button>}</div></div></Panel></PaymentShell>;
+  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className="console-payment-state-icon"><Icon name={expired ? "warning" : "card"} size={30} /></span><h1>{expired ? t("payment.failed") : t("payment.waiting")}</h1><p>{snapshot?.qrCode ? t("payment.scan") : (locale === "zh" ? "在新窗口完成付款。" : "Complete payment in the provider window.")}</p>{qr && !expired && <img className="console-qr" src={qr} alt="Payment QR code" />}{paymentUrl && !snapshot?.qrCode && !expired && <a className="console-button console-button--primary" href={paymentUrl} target="_blank" rel="noopener noreferrer">{locale === "zh" ? "打开支付页面" : "Open payment page"}</a>}<strong className="console-countdown">{countdownText(remaining)}</strong><div className="console-payment-state-actions"><Button onClick={() => navigate("/purchase")}>{t("payment.back")}</Button>{snapshot?.orderId && !expired && <Button variant="danger" onClick={cancel}>{t("orders.cancel")}</Button>}</div></div></Panel></PaymentShell>;
 }
 
 function pendingStatus(status) {
@@ -517,8 +524,8 @@ export function PaymentResultPage() {
   return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className={`console-payment-state-icon ${success ? "is-success" : state.error ? "is-error" : ""}`}><Icon name={success ? "check" : state.error ? "warning" : "clock"} size={30} /></span>{state.loading ? <Spinner label={t("payment.processing")} /> : <><h1>{success ? t("payment.success") : pendingStatus(state.order?.status) ? t("payment.processing") : t("payment.failed")}</h1><p>{state.error || (success ? (locale === "zh" ? "余额或订阅权益将在片刻内更新。" : "Your balance or subscription will update shortly.") : state.order?.status)}</p>{state.order && <div className="console-result-order"><span>{t("orders.number")}</span><strong className="console-mono">{state.order.out_trade_no}</strong><span>{t("common.status")}</span><StatusBadge status={String(state.order.status).toLowerCase()} label={statusLabel(String(state.order.status).toLowerCase(), locale)} /></div>}<div className="console-payment-state-actions"><Link className="console-button console-button--primary" to="/orders">{t("payment.viewOrders")}</Link><Link className="console-button console-button--secondary" to="/purchase">{t("payment.back")}</Link></div></>}</div></Panel></PaymentShell>;
 }
 
-async function loadStripePaymentClient(snapshot, clientSecretParam, locale) {
-  const clientSecret = clientSecretParam || snapshot?.clientSecret;
+async function loadStripePaymentClient(snapshot, locale) {
+  const clientSecret = snapshot?.clientSecret;
   if (!snapshot?.orderId || !clientSecret) throw new Error(locale === "zh" ? "支付参数不完整。" : "Payment parameters are incomplete.");
   const checkout = await paymentApi.checkout().catch(() => ({}));
   const publishableKey = snapshot.stripePublishableKey || checkout.stripe_publishable_key;
@@ -563,15 +570,12 @@ export function StripePaymentPage({ popup = false }) {
   const intervalRef = useRef(null);
   const closeTimerRef = useRef(null);
   const resumeToken = params.get("resume_token") || "";
-  const clientSecretParam = params.get("client_secret") || "";
   const methodParam = params.get("method") || "";
   const routeOrderId = Number(params.get("order_id") || 0);
   const snapshot = useMemo(() => {
     const restored = readRecovery(resumeToken);
-    if (restored && (!routeOrderId || restored.orderId === routeOrderId)) return { ...restored, clientSecret: clientSecretParam || restored.clientSecret };
-    if (!routeOrderId) return null;
-    return createRecovery({ order_id: routeOrderId, client_secret: clientSecretParam, out_trade_no: params.get("out_trade_no") || "", resume_token: resumeToken });
-  }, [clientSecretParam, params, resumeToken, routeOrderId]);
+    return restored && (!routeOrderId || restored.orderId === routeOrderId) ? restored : null;
+  }, [resumeToken, routeOrderId]);
   const finish = useCallback(() => {
     setState((current) => ({ ...current, success: true, qr: "" }));
     window.clearInterval(intervalRef.current);
@@ -582,7 +586,7 @@ export function StripePaymentPage({ popup = false }) {
     let active = true;
     let element = null;
     const initialize = async () => {
-      const { clientSecret, stripe } = await loadStripePaymentClient(snapshot, clientSecretParam, locale);
+      const { clientSecret, stripe } = await loadStripePaymentClient(snapshot, locale);
       if (!active || !stripe) return;
       if (await confirmStripeMethod({ stripe, method: methodParam, clientSecret, snapshot, finish, setState })) return;
       const mounted = mountStripeElement(stripe, clientSecret, () => active && setState((current) => ({ ...current, loading: false, ready: true })));
@@ -592,7 +596,7 @@ export function StripePaymentPage({ popup = false }) {
     initialize().catch((error) => active && setState({ loading: false, error: error.message, ready: false, busy: false, success: false, qr: "" }));
     if (snapshot?.orderId) intervalRef.current = window.setInterval(async () => { try { const order = await paymentApi.order(snapshot.orderId); if (active && successfulOrder(order.status)) finish(); } catch { /* transient poll error */ } }, 3000);
     return () => { active = false; element?.unmount(); window.clearInterval(intervalRef.current); window.clearTimeout(closeTimerRef.current); };
-  }, [clientSecretParam, finish, locale, methodParam, snapshot?.clientSecret, snapshot?.orderId, snapshot?.stripePublishableKey]);
+  }, [finish, locale, methodParam, snapshot?.clientSecret, snapshot?.orderId, snapshot?.stripePublishableKey]);
   const pay = async () => {
     if (!paymentElementRef.current) return;
     setState((current) => ({ ...current, busy: true, error: "" }));
@@ -619,7 +623,11 @@ export function AirwallexPaymentPage() {
       if (!active || !result.payments) return;
       const successUrl = `${window.location.origin}/payment/result?${paymentQuery(snapshot)}`;
       const redirect = result.payments.redirectToCheckout({ intent_id: snapshot.intentId, client_secret: snapshot.clientSecret, currency: snapshot.currency || "CNY", country_code: snapshot.countryCode || "CN", successUrl });
-      if (typeof redirect === "string") window.location.assign(redirect);
+      if (typeof redirect === "string") {
+        const allowed = safeExternalUrl(redirect);
+        if (!allowed) throw new Error(locale === "zh" ? "支付服务返回了无效地址。" : "The payment provider returned an invalid URL.");
+        window.location.assign(allowed);
+      }
     };
     initialize().catch((loadError) => active && setError(loadError.message));
     return () => { active = false; };

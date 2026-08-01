@@ -1660,8 +1660,6 @@
 .console-markdown pre > button { position: absolute; top: 8px; right: 8px; display: flex; align-items: center; gap: 5px; padding: 5px 7px; border-radius: 7px; color: #d5e9f2; background: rgba(255, 255, 255, .1); font-size: 8px; }
 .console-markdown code:not(pre code) { padding: 2px 5px; border-radius: 5px; color: #306783; background: #eaf5f8; font-size: .9em; }
 .console-markdown blockquote { padding: 5px 15px; border-left: 3px solid #5aa3b9; color: #6c8292; background: #f0f8fa; }
-.console-embed-panel { min-height: calc(100svh - 170px); overflow: hidden; }
-.console-embed-panel iframe { display: block; width: 100%; height: calc(100svh - 170px); border: 0; }
 
 .console-key-usage-shell { padding-top: 0; }
 .console-key-usage-shell > header { display: flex; width: min(1120px, calc(100% - 40px)); height: 76px; align-items: center; justify-content: space-between; margin: 0 auto; }
@@ -2030,10 +2028,29 @@
 .console-token-cell small.is-cache { color: #6c56a1; background: #eeeafb; }
 .console-token-cell small.is-create { color: #a65f2f; background: #faecdf; }
 .console-token-cell small i { padding: 1px 3px; border-radius: 3px; background: rgba(255,255,255,.65); font-style: normal; }
-.console-cost-cell { min-width: 90px; font-variant-numeric: tabular-nums; }
-.console-cost-cell > strong { color: #2e5c75; font-size: 10px; }
-.console-cost-cell > small { display: block; margin-top: 3px; color: #9aa7b0; font-size: 8px; }
-.console-cost-cell > small i { margin-right: 4px; padding: 1px 3px; border-radius: 4px; color: #9b5f22; background: #fff0da; font-style: normal; }
+.console-cost-cell { min-width: 104px; font-variant-numeric: tabular-nums; }
+.console-cost-main { display: flex; align-items: center; gap: 5px; }
+.console-cost-main > strong { color: var(--console-success-strong, #1f7a5b); font-size: 11px; font-weight: 720; }
+.console-cost-main > i { padding: 1px 4px; border: 1px solid color-mix(in srgb, var(--console-warning, #91620b) 28%, transparent); border-radius: 4px; color: var(--console-warning-strong, #704a05); background: var(--console-warning-soft, #fff6df); font-size: 8px; font-style: normal; font-weight: 720; }
+.console-cost-main > button { display: grid; width: 16px; height: 16px; flex: none; place-items: center; padding: 0; border: 0; border-radius: 50%; color: var(--console-faint, #8a949f); background: var(--console-surface-muted, #eef1f4); cursor: help; }
+.console-cost-main > button:hover,
+.console-cost-main > button:focus-visible { color: var(--console-accent-strong, #2747b7); background: var(--console-accent-soft, #eef1ff); }
+
+.console-cost-tooltip { position: fixed; z-index: 9999; min-width: 204px; max-width: calc(100vw - 16px); padding: 10px 12px; border: 1px solid rgba(108, 122, 140, .58); border-radius: 8px; color: #f3f6fa; background: rgba(27, 35, 45, .97); box-shadow: 0 18px 45px -20px rgba(0, 0, 0, .82); font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif); font-size: 12px; line-height: 1.45; pointer-events: none; }
+.console-cost-tooltip-breakdown { padding-bottom: 7px; border-bottom: 1px solid rgba(130, 145, 163, .35); }
+.console-cost-tooltip h3 { margin: 0 0 3px; color: #dce3eb; font-size: 12px; font-weight: 720; }
+.console-cost-tooltip-summary { padding-top: 6px; }
+.console-cost-tooltip-row { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; white-space: nowrap; }
+.console-cost-tooltip-row + .console-cost-tooltip-row { margin-top: 2px; }
+.console-cost-tooltip-row > span { color: #a6b0bd; }
+.console-cost-tooltip-row > strong { color: #f6f8fb; font-weight: 590; text-align: right; }
+.console-cost-tooltip-row > strong.is-input,
+.console-cost-tooltip-row > strong.is-tier { color: #67e8f9; }
+.console-cost-tooltip-row > strong.is-output,
+.console-cost-tooltip-row > strong.is-image-output { color: #c4b5fd; }
+.console-cost-tooltip-row > strong.is-image-input { color: #f0abfc; }
+.console-cost-tooltip-row > strong.is-rate { color: #60a5fa; font-weight: 720; }
+.console-cost-tooltip-row > strong.is-billed { color: #34d399; font-weight: 720; }
 .console-latency { display: grid; min-width: 145px; grid-template-columns: 4px 1fr 1fr; align-items: stretch; gap: 7px; }
 .console-latency > i { border-radius: 5px; background: linear-gradient(#48aa90, #6bc0a7); }
 .console-latency.is-medium > i { background: linear-gradient(#dcaa47, #ebc76e); }

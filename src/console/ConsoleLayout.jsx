@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link, Navigate, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, NavLink, useLocation, useNavigate } from "react-router";
 import { announcementsApi, keysApi, subscriptionsApi } from "../api";
 import { getAccessToken } from "../api/session";
 import { applyFavicon, DEFAULT_SITE_LOGO, DEFAULT_SITE_NAME } from "../branding";
@@ -348,7 +348,7 @@ export function ConsoleLayout({ children }) {
   const workspaceStartLeftRef = useRef(null);
   const batchEnabled = useBatchNavigationAccess(authenticated);
   const simpleMode = user?.run_mode === "simple";
-  const customItems = (settings?.custom_menu_items || []).filter((item) => item.visibility === "user").sort((a, b) => a.sort_order - b.sort_order).flatMap((item) => { const kind = nativeCustomPageKind(item); return nativeCustomPageRoute(kind) ? [] : [{ path: `/custom/${item.id}`, label: item.label, icon: nativeCustomPageIcon(kind) }]; });
+  const customItems = (settings?.custom_menu_items || []).filter((item) => item.visibility === "user").sort((a, b) => a.sort_order - b.sort_order).flatMap((item) => { const kind = nativeCustomPageKind(item); const markdown = item.page_slug || String(item.url || "").startsWith("md:"); return nativeCustomPageRoute(kind) || !markdown ? [] : [{ path: `/custom/${item.id}`, label: item.label, icon: nativeCustomPageIcon(kind) }]; });
   const workspaceItems = coreNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)).map((item) => item.path === "/dashboard" && user?.role === "admin" ? { ...item, path: "/admin/dashboard" } : item);
   const personalItems = [...accountNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...customItems];
   const allItems = [...workspaceItems, ...personalItems];

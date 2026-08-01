@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { authApi } from "../api/auth";
 import { persistAuthResponse } from "../api/session";
 import { AuthCard, AuthLayout } from "./AuthLayout";

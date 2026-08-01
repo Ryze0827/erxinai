@@ -81,14 +81,6 @@ html {
   display: none;
 }
 
-.gateway-eyebrow {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
 .hero-supports {
   flex-direction: column;
   gap: 12px;
@@ -169,6 +161,10 @@ html {
   .hero-works .hero-mark + .hero-mark {
     margin-left: -18px;
   }
+}
+
+.nav-brand.is-pending img {
+  visibility: hidden;
 }
 
 .gateway-demo {

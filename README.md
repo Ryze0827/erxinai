@@ -29,14 +29,14 @@ The project combines a static gateway prototype with a real authentication clien
 ## Technology
 
 - React 19
-- Vite 6
+- Vite 8
 - React Router
 - React Markdown
 - JavaScript and CSS
 
 ## Local Development
 
-Node.js 20 or later is recommended. Node.js 22 is supported by the current project setup.
+Node.js 22.22.0 or later is required by the current security-patched dependency set.
 
 ```bash
 npm install
@@ -105,6 +105,7 @@ Production should keep `/api/v1` on the same origin. Configure the backend `serv
 
 ## Before Production
 
+- Complete every item in the [production security baseline](./SECURITY.md) and adapt the included Nginx configuration.
 - Connect the gateway views to production request, usage, billing, and provider-health data.
 - Confirm final pricing and FAQ content, then add WayX legal and contact pages when available.
 - Add social preview metadata and verify the production domain.

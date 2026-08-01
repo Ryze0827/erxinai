@@ -29,14 +29,14 @@ WayX 是一个面向 AI 中转服务的响应式官网原型。它用于展示�
 ## 技术栈
 
 - React 19
-- Vite 6
+- Vite 8
 - React Router
 - React Markdown
 - JavaScript 和 CSS
 
 ## 本地开发
 
-建议使用 Node.js 20 或更高版本，当前工程支持 Node.js 22。
+当前安全修复后的依赖要求使用 Node.js 22.22.0 或更高版本。
 
 ```bash
 npm install

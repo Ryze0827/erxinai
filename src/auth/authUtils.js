@@ -28,14 +28,21 @@ export function getErrorMessage(error, fallback = "Something went wrong. Please 
 }
 
 export function safeAuthRedirect(value, fallback = "/dashboard") {
-  const redirect = String(value || "");
-  return redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : fallback;
+  const redirect = String(value || "").trim();
+  if (!redirect || redirect.length > 2048 || !redirect.startsWith("/") || redirect.startsWith("//") || redirect.includes("\\") || /[\u0000-\u001f\u007f]/.test(redirect)) return fallback;
+  try {
+    const url = new URL(redirect, window.location.origin);
+    if (url.origin !== window.location.origin) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
 }
 
 export function getAffiliateCode(searchParams) {
-  const value = searchParams.get("aff") || searchParams.get("aff_code") || localStorage.getItem(AFFILIATE_KEY) || "";
-  if (value) localStorage.setItem(AFFILIATE_KEY, value.trim());
-  return value.trim();
+  const value = String(searchParams.get("aff") || searchParams.get("aff_code") || localStorage.getItem(AFFILIATE_KEY) || "").trim().slice(0, 128);
+  if (value) localStorage.setItem(AFFILIATE_KEY, value);
+  return value;
 }
 
 export function clearAffiliateCode() {

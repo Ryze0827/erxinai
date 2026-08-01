@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router";
 import landingPageMarkup from "./landing-page.html?raw";
 import { AUTH_SESSION_EVENT, getAccessToken, getStoredUser } from "./api/session";
 import { EmailVerifyPage } from "./auth/EmailVerifyPage";
@@ -10,7 +10,7 @@ import { RegisterPage } from "./auth/RegisterPage";
 import { SessionManager } from "./auth/SessionManager";
 import { mountGatewayDemos } from "./gatewayDemos";
 import { applyLandingTranslations, landingT, syncPriceAmount } from "./landingI18n";
-import { ConsoleProvider } from "./console/ConsoleContext";
+import { ConsoleProvider, useConsole } from "./console/ConsoleContext";
 import { ConsoleLayout, ProtectedRoute } from "./console/ConsoleLayout";
 import { LocaleProvider, useLocale } from "./console/i18n";
 import { DashboardPage } from "./console/pages/DashboardPage";
@@ -176,7 +176,17 @@ function syncLandingAuth(root, locale = "zh") {
   root.querySelectorAll("[data-auth-register]").forEach((link) => {
     link.hidden = authenticated;
   });
+  root.querySelectorAll("[data-auth-account]").forEach((section) => {
+    section.hidden = authenticated;
+  });
   syncPricingAuth(root, authenticated, locale);
+}
+
+function syncLandingLogo(root, branding, ready) {
+  const brand = root?.querySelector(".nav-brand");
+  const logo = brand?.querySelector("img");
+  brand?.classList.toggle("is-pending", !ready);
+  if (ready && logo && branding?.siteLogo) logo.src = branding.siteLogo;
 }
 
 function mountLandingAuth(root, signal) {
@@ -188,6 +198,7 @@ function mountLandingAuth(root, signal) {
 
 function LandingPage() {
   const { locale, setLocale } = useLocale();
+  const { branding, brandingReady } = useConsole();
   const rootRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -197,6 +208,10 @@ function LandingPage() {
     applyLandingTranslations(root, locale);
     syncLandingAuth(root, locale);
   }, [locale]);
+
+  useLayoutEffect(() => {
+    syncLandingLogo(rootRef.current, branding, brandingReady);
+  }, [branding, brandingReady]);
 
   useEffect(() => {
     const root = rootRef.current;

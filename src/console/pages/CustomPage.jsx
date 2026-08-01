@@ -1,19 +1,17 @@
 import { isValidElement, useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import ReactMarkdown from "react-markdown";
-import { getAccessToken } from "../../api/session";
 import { pagesApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, EmptyState, ErrorState, Page, Panel, Spinner } from "../UI";
-import { useTheme } from "../theme";
-import { safeExternalUrl } from "../utils";
+import { EmptyState, ErrorState, Page, Panel, Spinner } from "../UI";
+import { safeExternalUrl, safeImageUrl } from "../utils";
 
 const SAFE_HTML_TAGS = new Set([
   "a", "abbr", "article", "aside", "b", "blockquote", "br", "caption", "code", "col", "colgroup",
   "dd", "del", "details", "div", "dl", "dt", "em", "figcaption", "figure", "h1", "h2", "h3", "h4",
-  "h5", "h6", "hr", "i", "iframe", "img", "ins", "kbd", "li", "mark", "ol", "p", "pre", "q", "s",
+  "h5", "h6", "hr", "i", "img", "ins", "kbd", "li", "mark", "ol", "p", "pre", "q", "s",
   "samp", "section", "small", "span", "strong", "sub", "summary", "sup", "table", "tbody", "td", "tfoot",
   "th", "thead", "tr", "u", "ul", "var",
 ]);
@@ -30,7 +28,6 @@ const SAFE_TAG_ATTRIBUTES = {
   a: new Set(["href", "rel", "target"]),
   col: new Set(["span", "width"]),
   details: new Set(["open"]),
-  iframe: new Set(["height", "src", "title", "width"]),
   img: new Set(["alt", "height", "loading", "src", "width"]),
   ol: new Set(["reversed", "start"]),
   td: new Set(["align", "colspan", "rowspan"]),
@@ -47,17 +44,16 @@ function allowedLinkUrl(value) {
   if (!raw) return "";
   try {
     const url = new URL(raw, window.location.origin);
-    return ["http:", "https:", "mailto:"].includes(url.protocol) ? raw : "";
+    if (url.protocol === "mailto:") return raw;
+    return safeExternalUrl(raw) ? raw : "";
   } catch { return ""; }
 }
 
-function allowedHttpUrl(value, absolute = false) {
+function allowedHttpUrl(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
-  try {
-    const url = absolute ? new URL(raw) : new URL(raw, window.location.origin);
-    return ["http:", "https:"].includes(url.protocol) ? (absolute ? url.toString() : raw) : "";
-  } catch { return ""; }
+  const allowed = safeExternalUrl(raw);
+  return allowed ? raw : "";
 }
 
 function markdownSlug(item) {
@@ -119,19 +115,7 @@ function cleanImage(element, slug) {
   return true;
 }
 
-function cleanIframe(element) {
-  const src = allowedHttpUrl(element.getAttribute("src"), true);
-  if (!src) return false;
-  element.setAttribute("src", src);
-  element.setAttribute("sandbox", "allow-scripts allow-forms allow-popups");
-  element.setAttribute("referrerpolicy", "no-referrer");
-  element.setAttribute("loading", "lazy");
-  element.setAttribute("allow", "fullscreen");
-  element.setAttribute("allowfullscreen", "");
-  return true;
-}
-
-const HTML_ELEMENT_CLEANERS = { a: cleanAnchor, iframe: cleanIframe, img: cleanImage };
+const HTML_ELEMENT_CLEANERS = { a: cleanAnchor, img: cleanImage };
 
 function cleanElementAttributes(element, tag) {
   [...element.attributes].forEach((attribute) => {
@@ -255,26 +239,10 @@ function SafeWrapper({ attributes, children, tag }) {
   return <Tag {...props}>{children}</Tag>;
 }
 
-function embeddedUrl(item, user, locale, theme) {
-  const allowed = safeExternalUrl(item?.url);
-  if (!allowed) return "";
-  const url = new URL(allowed);
-  if (user?.id) url.searchParams.set("user_id", String(user.id));
-  const token = getAccessToken();
-  if (token) url.searchParams.set("token", token);
-  url.searchParams.set("theme", theme);
-  url.searchParams.set("lang", locale);
-  url.searchParams.set("ui_mode", "embedded");
-  url.searchParams.set("src_host", window.location.origin);
-  url.searchParams.set("src_url", window.location.href);
-  return url.toString();
-}
-
 export function CustomPage() {
   const { id } = useParams();
-  const { settings, user } = useConsole();
-  const { t, locale } = useLocale();
-  const { resolved: theme } = useTheme();
+  const { settings } = useConsole();
+  const { t } = useLocale();
   const item = (settings?.custom_menu_items || []).find((entry) => String(entry.id) === String(id) && entry.visibility === "user");
   const slug = markdownSlug(item);
   const [state, setState] = useState({ loading: Boolean(slug), error: "", markdown: "" });
@@ -290,14 +258,11 @@ export function CustomPage() {
   const components = useMemo(() => {
     const byLine = new Map(toc.map((entry) => [entry.line, entry.id]));
     const heading = (level) => ({ children, node }) => { const Tag = `h${level}`; return <Tag id={byLine.get(node?.position?.start?.line) || headingSlug(textContent(children), node?.position?.start?.line || 0)}>{children}</Tag>; };
-    return { "safe-html": SafeHtml, "safe-wrapper": SafeWrapper, h1: heading(1), h2: heading(2), h3: heading(3), h4: heading(4), pre: MarkdownPre, img: ({ src, alt }) => <img src={relativeAsset(src) ? pageImageUrl(slug, src) : src} alt={alt || ""} loading="lazy" />, a: ({ href, children }) => <a href={href} target={href?.startsWith("http") ? "_blank" : undefined} rel="noreferrer">{children}</a> };
+    return { "safe-html": SafeHtml, "safe-wrapper": SafeWrapper, h1: heading(1), h2: heading(2), h3: heading(3), h4: heading(4), pre: MarkdownPre, img: ({ src, alt }) => { const safeSrc = relativeAsset(src) ? pageImageUrl(slug, src) : safeImageUrl(src); return safeSrc ? <img src={safeSrc} alt={alt || ""} loading="lazy" /> : null; }, a: ({ href, children }) => { const safeHref = allowedLinkUrl(href); return safeHref ? <a href={safeHref} target={isExternalLink(safeHref) ? "_blank" : undefined} rel={isExternalLink(safeHref) ? "noopener noreferrer" : undefined}>{children}</a> : <>{children}</>; } };
   }, [slug, toc]);
-  const iframeUrl = embeddedUrl(item, user, locale, theme);
-
   if (!item) return <Page title={t("custom.notFound")}><Panel><EmptyState icon="link" title={t("custom.notFound")} /></Panel></Page>;
   if (state.loading) return <Page title={item.label}><Panel><Spinner /></Panel></Page>;
   if (state.error) return <Page title={item.label}><Panel><ErrorState message={state.error} /></Panel></Page>;
   if (slug) return <Page title={item.label} className="console-custom-page"><Panel className="console-markdown-shell"><div className="console-markdown-layout">{toc.length > 0 && <aside><strong>{t("custom.contents")}</strong>{toc.map((entry) => <a style={{ paddingLeft: `${8 + (entry.level - 1) * 12}px` }} href={`#${entry.id}`} key={entry.id}>{entry.text}</a>)}</aside>}<article className="console-markdown"><ReactMarkdown remarkPlugins={remarkPlugins} components={components}>{state.markdown}</ReactMarkdown></article></div></Panel></Page>;
-  if (!iframeUrl) return <Page title={item.label}><Panel><EmptyState icon="link" title={t("custom.notFound")} /></Panel></Page>;
-  return <Page title={item.label} actions={<a className="console-button console-button--secondary" href={iframeUrl} target="_blank" rel="noreferrer"><Icon name="external" size={16} />{t("custom.open")}</a>} className="console-custom-page"><Panel className="console-embed-panel"><iframe src={iframeUrl} title={item.label} sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-downloads" allow="clipboard-read; clipboard-write; fullscreen" referrerPolicy="strict-origin-when-cross-origin" /></Panel></Page>;
+  return <Page title={item.label}><Panel><EmptyState icon="link" title={t("custom.notFound")} /></Panel></Page>;
 }

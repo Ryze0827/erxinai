@@ -61,7 +61,11 @@ export function safeExternalUrl(value) {
     const raw = String(value || "").trim();
     if (!raw) return "";
     const url = new URL(raw, window.location.origin);
-    return ["http:", "https:"].includes(url.protocol) ? url.toString() : "";
+    if (url.protocol === "https:") return url.toString();
+    if (url.protocol !== "http:") return "";
+    const localHosts = new Set(["localhost", "127.0.0.1", "[::1]"]);
+    const localDevelopment = localHosts.has(window.location.hostname);
+    return url.origin === window.location.origin || (localDevelopment && localHosts.has(url.hostname)) ? url.toString() : "";
   } catch {
     return "";
   }

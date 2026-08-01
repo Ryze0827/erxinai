@@ -8,7 +8,10 @@ import { Button, ConfirmDialog, Field, IconButton, Modal, Page, Panel, Spinner, 
 import { safeImageUrl, statusLabel } from "../utils";
 
 const AVATAR_TARGET_BYTES = 20 * 1024;
+const AVATAR_SOURCE_MAX_BYTES = 10 * 1024 * 1024;
 const AVATAR_MAX_EDGE = 512;
+const AVATAR_MAX_SOURCE_EDGE = 12000;
+const AVATAR_MAX_SOURCE_PIXELS = 25_000_000;
 const AVATAR_SCALE_STEPS = [1, 0.84, 0.68, 0.52, 0.4, 0.32];
 const AVATAR_QUALITY_STEPS = [0.88, 0.74, 0.6, 0.48, 0.36];
 const AVATAR_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
@@ -60,8 +63,11 @@ function avatarDimensions(image, scale) {
   };
 }
 
-async function compressAvatar(file) {
-  const image = await loadAvatarImage(await readFileAsDataUrl(file));
+function validateAvatarDimensions(image) {
+  if (image.naturalWidth <= 0 || image.naturalHeight <= 0 || image.naturalWidth > AVATAR_MAX_SOURCE_EDGE || image.naturalHeight > AVATAR_MAX_SOURCE_EDGE || image.naturalWidth * image.naturalHeight > AVATAR_MAX_SOURCE_PIXELS) throw new Error("avatar_dimensions_too_large");
+}
+
+async function compressAvatar(image) {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
   if (!context) throw new Error("avatar_compress_failed");
@@ -80,20 +86,27 @@ async function compressAvatar(file) {
 
 async function prepareAvatar(file) {
   if (!AVATAR_TYPES.has(file.type)) throw new Error("avatar_invalid_type");
+  if (file.size <= 0 || file.size > AVATAR_SOURCE_MAX_BYTES) throw new Error("avatar_source_too_large");
   if (file.type === "image/gif" && file.size > AVATAR_TARGET_BYTES) throw new Error("avatar_gif_too_large");
+  const image = await loadAvatarImage(await readFileAsDataUrl(file));
+  validateAvatarDimensions(image);
   if (file.size <= AVATAR_TARGET_BYTES) return file;
-  return compressAvatar(file);
+  return compressAvatar(image);
 }
 
 function avatarErrorMessage(code, locale) {
   const messages = locale === "zh" ? {
     avatar_invalid_type: "请选择 PNG、JPEG、WebP 或 GIF 图片。",
+    avatar_source_too_large: "头像源文件不能超过 10 MB。",
+    avatar_dimensions_too_large: "头像像素尺寸过大，请选择不超过 2500 万像素的图片。",
     avatar_gif_too_large: "GIF 头像需小于 20 KB；较大的动图无法在保留动画的同时压缩。",
     avatar_too_large: "无法将这张图片压缩到 20 KB 以内，请尝试构图更简单的图片。",
     avatar_read_failed: "无法读取所选图片。",
     avatar_compress_failed: "浏览器无法处理所选图片。",
   } : {
     avatar_invalid_type: "Choose a PNG, JPEG, WebP, or GIF image.",
+    avatar_source_too_large: "The source avatar must not exceed 10 MB.",
+    avatar_dimensions_too_large: "The avatar dimensions are too large. Choose an image under 25 megapixels.",
     avatar_gif_too_large: "GIF avatars must be under 20 KB to preserve animation.",
     avatar_too_large: "This image could not be compressed below 20 KB. Try a simpler image.",
     avatar_read_failed: "The selected image could not be read.",
@@ -306,7 +319,8 @@ function TotpVerification({ flow, form, setForm, onSendCode, t }) {
 }
 
 function TotpSetup({ flow, form, setForm, t }) {
-  return <div className="console-totp-setup">{flow.setup.qr_code_url && <img src={flow.setup.qr_code_url} alt="TOTP QR code" />}<Field label={t("profile.secret")}><div className="console-code"><span>{flow.setup.secret}</span></div></Field><Field label={t("profile.totpCode")}><TextInput inputMode="numeric" maxLength="6" value={form.totp} onChange={(event) => setForm((current) => ({ ...current, totp: event.target.value }))} /></Field></div>;
+  const qrCode = safeImageUrl(flow.setup.qr_code_url);
+  return <div className="console-totp-setup">{qrCode && <img src={qrCode} alt="TOTP QR code" />}<Field label={t("profile.secret")}><div className="console-code"><span>{flow.setup.secret}</span></div></Field><Field label={t("profile.totpCode")}><TextInput inputMode="numeric" maxLength="6" value={form.totp} onChange={(event) => setForm((current) => ({ ...current, totp: event.target.value }))} /></Field></div>;
 }
 
 function TotpDialog({ flow, form, setForm, busy, onClose, onVerify, onEnable, onSendCode, t }) {

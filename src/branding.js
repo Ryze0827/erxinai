@@ -4,11 +4,21 @@ export const BRANDING_STORAGE_KEY = "sentence_public_branding";
 export const DEFAULT_SITE_NAME = "WayX";
 export const DEFAULT_SITE_LOGO = "/assets/img/sentence-ai-icon.png";
 
+function cleanBrandText(value, fallback, maximumLength) {
+  return String(value || fallback).replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, maximumLength) || fallback;
+}
+
+function safeBrandImage(value) {
+  const raw = String(value || "").trim();
+  if (raw.length > 512 * 1024) return "";
+  return safeImageUrl(raw);
+}
+
 export function resolveBranding(settings = {}) {
   return {
-    siteName: String(settings.site_name || DEFAULT_SITE_NAME).trim() || DEFAULT_SITE_NAME,
-    siteLogo: safeImageUrl(settings.site_logo) || DEFAULT_SITE_LOGO,
-    siteSubtitle: String(settings.site_subtitle || "AI gateway").trim() || "AI gateway",
+    siteName: cleanBrandText(settings.site_name, DEFAULT_SITE_NAME, 100),
+    siteLogo: safeBrandImage(settings.site_logo) || DEFAULT_SITE_LOGO,
+    siteSubtitle: cleanBrandText(settings.site_subtitle, "AI gateway", 240),
   };
 }
 

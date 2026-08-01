@@ -243,6 +243,65 @@ final result: passed
 
 ---
 
+# Design QA — Usage 费用明细（2026-08-02）
+
+## Comparison target
+
+- Source visual truth: `/var/folders/gk/q08f7_l552l_n3fyzsc25v_m0000gn/T/codex-clipboard-e799ca4b-4e0c-465a-9a68-196bf09d7abe.png`
+- Browser-rendered dark implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-tooltip-dark.png`
+- Browser-rendered light implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-tooltip-light.png`
+- Browser-rendered narrow implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-tooltip-mobile.png`
+- Full-view comparison evidence: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-reference-vs-dark.png`
+- Focused region comparison evidence: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-focused-comparison.png`
+- Source pixels: `361 × 280` at the supplied image density.
+- Desktop implementation viewport: `960 × 640` CSS px at `1×`; clipped evidence is `756 × 279` px.
+- Narrow implementation viewport: `390 × 844` CSS px at `1×`; screenshot is `390 × 844` px.
+- Normalization: the full comparison uses equal `361 × 280` panels. The focused comparison places the shared user-visible tooltip region in equal `240 × 244` panels without rescaling typography.
+- State: Chinese user Usage cost cell with representative token-billing data, information control focused, tooltip open. The actual `CostCell` component is mounted in the local browser QA entry because the protected `/usage` route redirects an unauthenticated preview session to login.
+
+## Full-view comparison evidence
+
+- The implementation preserves the source hierarchy: green user charge, circular information affordance, dark compact tooltip, top cost-breakdown section, separator, service tier, rate, original cost, and green user-billed total.
+- Input/output/cache costs use six decimals; derived input/output prices use four decimals per one million Token; the resulting values match the supplied example exactly.
+- The reference includes administrator-only account rate and account billing rows. They are intentionally omitted from the WayX user console, which follows the non-admin `sub2api` view and does not expose administrator billing data.
+
+## Focused region comparison evidence
+
+- The normalized focused comparison confirms the tooltip width, 8px radius, border weight, smoke-black surface, 12px UI typography, row alignment, divider, and cyan/violet/blue/green semantic accents.
+- The implementation tooltip is `204 × 227` px for the shared user-visible content. The source is taller only because it continues with two administrator-only rows.
+
+## Required fidelity surfaces
+
+- Fonts and typography: native UI sans, 12px detail copy, compact line height, medium numeric weights, and tabular currency figures match the `sub2api` density. Long price strings remain on one line.
+- Spacing and layout rhythm: the 204px tooltip width, 12px horizontal padding, 10px vertical padding, 14px label/value gap, 8px radius, and section separator follow the reference. The portal chooses the available side and clamps vertically to the viewport.
+- Colors and visual tokens: the tooltip retains the reference's smoke-black fill and grey border while mapping billed cost, service tier, token prices, and rate to WayX's semantic green/cyan/violet/blue accents.
+- Image quality and asset fidelity: this component contains no raster imagery, logos, or decorative assets. The information mark uses the console's existing icon library.
+- Copy and content: Chinese and English labels cover input/output/image/cache costs, derived unit prices, image billing metadata, service tier, rate, original cost, and user charge. No administrator-only field is fabricated.
+
+## Findings
+
+- P0: none.
+- P1: none.
+- P2: none.
+- P3: the first browser-only tuning pass measured a 218px tooltip; it was tightened to the source's 204px width and slightly relaxed vertically before the normalized comparison.
+
+## Comparison history
+
+- The first normalized full and focused comparisons found no actionable P0/P1/P2 differences.
+- No blocking iteration was required. The final dark, light, and 390px-wide captures all use the same production component and CSS.
+
+## Primary interactions tested
+
+- Click/focus activation of the information control, Escape dismissal, and same-control click reopening while focus remains.
+- Light and dark console themes; the detail surface remains readable in both.
+- `390 × 844` narrow viewport; the `204 × 227` tooltip remains fully inside the viewport with at least 8px edge clearance.
+- Browser console on `localhost:5174`: no warning or error entries for the preview.
+- Production Vite build completed successfully.
+
+final result: passed
+
+---
+
 # Design QA — 余额、今日消费、公告换行与 API 端点（2026-07-28）
 
 ## 对照信息

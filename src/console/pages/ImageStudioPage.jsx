@@ -10,6 +10,9 @@ import { formatDuration, safeImageUrl } from "../utils";
 const STORAGE_KEY = "sentence_image_studio_preferences";
 const IMAGE_GROUP_NAME = "生图";
 const MAX_REFERENCE_IMAGES = 16;
+const MAX_REFERENCE_BYTES = 10 * 1024 * 1024;
+const MAX_REFERENCE_TOTAL_BYTES = 50 * 1024 * 1024;
+const REFERENCE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const IMAGE_PLATFORMS = new Set(["openai", "gemini", "antigravity"]);
 const SIZE_OPTIONS = ["1K", "2K", "4K"];
 const ASPECT_OPTIONS = ["auto", "1:1", "3:4", "9:16", "4:3", "16:9"];
@@ -26,10 +29,10 @@ const OPENAI_SIZES = {
 
 const copy = {
   en: {
-    controls: "Configuration", apiKey: "Available API key", noKeyOption: "Create a key for a ‘生图’ group", parameters: "Generation settings", reset: "Restore defaults", model: "Recommended model", quality: "Quality", count: "Images", aspect: "Aspect ratio", workspace: "Creation workspace", emptyTitle: "What would you like to create?", emptyBody: "Describe an image, optionally attach multiple references, and keep refining the generated result in the same session.", promptPlaceholder: "Describe or edit an image", upload: "Upload reference images", imageTool: "Image", useLast: "Use latest result", submit: "Generate", submitting: "Generating", localReference: "Local upload", clipboardReference: "Clipboard image", generatedReference: "Generated result", clearReference: "Remove reference image", promptRole: "Prompt", resultRole: "Result", thinking: "Creating your image", thinkingBody: "The model is processing the prompt and image settings.", purePrompt: "Text to image", withReference: "{count} reference image(s)", duration: "Duration {value}", continueEdit: "Continue editing", download: "Download", preview: "Preview image", previewTitle: "Generated image preview", noKeysTitle: "No key for a ‘生图’ group", noKeysBody: "Create an active API key for an image-enabled group whose name contains ‘生图’. Image requests remain disabled until one is available.", loadFailed: "Unable to load eligible API keys.", invalidFile: "Please choose image files.", noLatest: "There is no generated image in this session yet.", referenceReady: "Added {count} reference image(s).", referenceLimit: "You can attach up to 16 reference images.", referenceFailed: "Some images could not be loaded as references.", chooseKey: "Create and select a key for a ‘生图’ group first.", enterPrompt: "Enter an image prompt.", enterModel: "Enter a model name.", requestSent: "The image request has been sent.", completed: "Generated {count} image(s).", noImage: "The request completed, but no image was returned.", failed: "Image generation failed", remaining: "{amount} remaining", groupEnabled: "Image generation enabled", retry: "Retry", reminderTitle: "Friendly reminder", reminderBody: "This page does not save history. Please save image files promptly; all session data is discarded when you leave this page.",
+    controls: "Configuration", apiKey: "Available API key", noKeyOption: "Create a key for a ‘生图’ group", parameters: "Generation settings", reset: "Restore defaults", model: "Recommended model", quality: "Quality", count: "Images", aspect: "Aspect ratio", workspace: "Creation workspace", emptyTitle: "What would you like to create?", emptyBody: "Describe an image, optionally attach multiple references, and keep refining the generated result in the same session.", promptPlaceholder: "Describe or edit an image", upload: "Upload reference images", imageTool: "Image", useLast: "Use latest result", submit: "Generate", submitting: "Generating", localReference: "Local upload", clipboardReference: "Clipboard image", generatedReference: "Generated result", clearReference: "Remove reference image", promptRole: "Prompt", resultRole: "Result", thinking: "Creating your image", thinkingBody: "The model is processing the prompt and image settings.", purePrompt: "Text to image", withReference: "{count} reference image(s)", duration: "Duration {value}", continueEdit: "Continue editing", download: "Download", preview: "Preview image", previewTitle: "Generated image preview", noKeysTitle: "No key for a ‘生图’ group", noKeysBody: "Create an active API key for an image-enabled group whose name contains ‘生图’. Image requests remain disabled until one is available.", loadFailed: "Unable to load eligible API keys.", invalidFile: "Choose PNG, JPEG, or WebP images up to 10 MB each and 50 MB total.", noLatest: "There is no generated image in this session yet.", referenceReady: "Added {count} reference image(s).", referenceLimit: "You can attach up to 16 reference images.", referenceFailed: "Some images could not be loaded as references.", chooseKey: "Create and select a key for a ‘生图’ group first.", enterPrompt: "Enter an image prompt.", enterModel: "Enter a model name.", requestSent: "The image request has been sent.", completed: "Generated {count} image(s).", noImage: "The request completed, but no image was returned.", failed: "Image generation failed", remaining: "{amount} remaining", groupEnabled: "Image generation enabled", retry: "Retry", reminderTitle: "Friendly reminder", reminderBody: "This page does not save history. Please save image files promptly; all session data is discarded when you leave this page.",
   },
   zh: {
-    controls: "配置", apiKey: "可用 API 密钥", noKeyOption: "请创建生图分组的密钥", parameters: "生成参数", reset: "恢复推荐", model: "推荐模型", quality: "清晰度", count: "张数", aspect: "宽高比", workspace: "创作区", emptyTitle: "今天想创作什么？", emptyBody: "描述画面，可选上传多张参考图，并在当前会话中继续修改生成结果。", promptPlaceholder: "描述图片或输入修改要求", upload: "上传参考图", imageTool: "图片", useLast: "引用最近结果", submit: "开始生成", submitting: "生成中", localReference: "本地上传", clipboardReference: "剪贴板图片", generatedReference: "来自生成结果", clearReference: "移除参考图", promptRole: "提示词", resultRole: "结果", thinking: "正在创作图片", thinkingBody: "模型正在处理提示词与图片参数，请稍候。", purePrompt: "纯文生图", withReference: "已附带 {count} 张参考图", duration: "耗时 {value}", continueEdit: "继续修改", download: "下载", preview: "预览图片", previewTitle: "生成图片预览", noKeysTitle: "暂无生图分组的密钥", noKeysBody: "请先为名称包含“生图”的生图分组创建已启用密钥。创建完成前无法发送生图请求。", loadFailed: "无法加载可用 API 密钥。", invalidFile: "请选择图片文件。", noLatest: "当前会话还没有可引用的生成图片。", referenceReady: "已添加 {count} 张参考图。", referenceLimit: "最多可添加 16 张参考图。", referenceFailed: "部分图片暂时无法作为参考图读取。", chooseKey: "请先创建并选择生图分组的密钥。", enterPrompt: "请输入图片提示词。", enterModel: "请输入模型名称。", requestSent: "生图请求已发送。", completed: "已生成 {count} 张图片。", noImage: "请求已完成，但没有返回图片。", failed: "图片生成失败", remaining: "剩余 {amount}", groupEnabled: "分组已开启生图", retry: "重试", reminderTitle: "温馨提示", reminderBody: "本页面不保存历史数据，图片资料请及时保存，离开本页面自动作废。",
+    controls: "配置", apiKey: "可用 API 密钥", noKeyOption: "请创建生图分组的密钥", parameters: "生成参数", reset: "恢复推荐", model: "推荐模型", quality: "清晰度", count: "张数", aspect: "宽高比", workspace: "创作区", emptyTitle: "今天想创作什么？", emptyBody: "描述画面，可选上传多张参考图，并在当前会话中继续修改生成结果。", promptPlaceholder: "描述图片或输入修改要求", upload: "上传参考图", imageTool: "图片", useLast: "引用最近结果", submit: "开始生成", submitting: "生成中", localReference: "本地上传", clipboardReference: "剪贴板图片", generatedReference: "来自生成结果", clearReference: "移除参考图", promptRole: "提示词", resultRole: "结果", thinking: "正在创作图片", thinkingBody: "模型正在处理提示词与图片参数，请稍候。", purePrompt: "纯文生图", withReference: "已附带 {count} 张参考图", duration: "耗时 {value}", continueEdit: "继续修改", download: "下载", preview: "预览图片", previewTitle: "生成图片预览", noKeysTitle: "暂无生图分组的密钥", noKeysBody: "请先为名称包含“生图”的生图分组创建已启用密钥。创建完成前无法发送生图请求。", loadFailed: "无法加载可用 API 密钥。", invalidFile: "请选择 PNG、JPEG 或 WebP 图片，单张不超过 10 MB、总计不超过 50 MB。", noLatest: "当前会话还没有可引用的生成图片。", referenceReady: "已添加 {count} 张参考图。", referenceLimit: "最多可添加 16 张参考图。", referenceFailed: "部分图片暂时无法作为参考图读取。", chooseKey: "请先创建并选择生图分组的密钥。", enterPrompt: "请输入图片提示词。", enterModel: "请输入模型名称。", requestSent: "生图请求已发送。", completed: "已生成 {count} 张图片。", noImage: "请求已完成，但没有返回图片。", failed: "图片生成失败", remaining: "剩余 {amount}", groupEnabled: "分组已开启生图", retry: "重试", reminderTitle: "温馨提示", reminderBody: "本页面不保存历史数据，图片资料请及时保存，离开本页面自动作废。",
   },
 };
 
@@ -119,22 +122,55 @@ function readBlob(blob) {
   });
 }
 
+async function limitedResponseBlob(response) {
+  const contentType = String(response.headers.get("content-type") || "").split(";", 1)[0].trim().toLowerCase();
+  if (!REFERENCE_IMAGE_TYPES.has(contentType)) throw new Error("Invalid image response.");
+  if (!response.body?.getReader) {
+    const blob = await response.blob();
+    if (blob.size > MAX_REFERENCE_BYTES) throw new Error("Image is too large.");
+    return blob;
+  }
+  const reader = response.body.getReader();
+  const chunks = [];
+  let size = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > MAX_REFERENCE_BYTES) { await reader.cancel(); throw new Error("Image is too large."); }
+    chunks.push(value);
+  }
+  return new Blob(chunks, { type: contentType });
+}
+
 function clipboardImages(data) {
-  const items = Array.from(data?.items || []).filter((entry) => entry.kind === "file" && entry.type.startsWith("image/")).map((entry) => entry.getAsFile()).filter(Boolean);
-  return items.length ? items : Array.from(data?.files || []).filter((file) => file.type.startsWith("image/"));
+  const items = Array.from(data?.items || []).filter((entry) => entry.kind === "file" && REFERENCE_IMAGE_TYPES.has(entry.type)).map((entry) => entry.getAsFile()).filter(Boolean);
+  return items.length ? items : Array.from(data?.files || []).filter((file) => REFERENCE_IMAGE_TYPES.has(file.type));
+}
+
+async function detectedImageType(file) {
+  const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 && bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) return "image/png";
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (bytes.length >= 12 && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP") return "image/webp";
+  return "";
 }
 
 async function referenceFromFile(file, hint) {
-  if (!file.type.startsWith("image/")) throw new Error("Invalid image file.");
+  if (!REFERENCE_IMAGE_TYPES.has(file.type) || file.size <= 0 || file.size > MAX_REFERENCE_BYTES) throw new Error("Invalid image file.");
+  if (await detectedImageType(file) !== file.type) throw new Error("Invalid image file.");
   return { id: messageId(), file, dataUrl: await readBlob(file), name: file.name || hint, hint };
 }
 
 async function referenceFromUrl(value) {
   const url = safeImageUrl(value);
   if (!url) throw new Error("Invalid image URL.");
-  const response = await fetch(url);
+  const response = await fetch(url, { credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer" });
   if (!response.ok) throw new Error(`Image request failed (${response.status}).`);
-  const blob = await response.blob();
+  const declaredSize = Number(response.headers.get("content-length") || 0);
+  if (declaredSize > MAX_REFERENCE_BYTES) throw new Error("Image is too large.");
+  const blob = await limitedResponseBlob(response);
+  if (!REFERENCE_IMAGE_TYPES.has(blob.type) || blob.size <= 0 || blob.size > MAX_REFERENCE_BYTES || await detectedImageType(blob) !== blob.type) throw new Error("Invalid image response.");
   const dataUrl = await readBlob(blob);
   return { id: messageId(), file: new File([blob], "generated-reference.png", { type: blob.type || "image/png" }), dataUrl, name: "generated-reference.png" };
 }
@@ -215,14 +251,21 @@ export function ImageStudioPage() {
   const changeKey = (keyId) => setForm(formForKey(keysState.items.find((key) => String(key.id) === String(keyId)) || null));
   const resetForm = () => selectedKey && setForm(formForKey(selectedKey, true));
   const attachReferenceFiles = async (files, hint) => {
-    const images = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    const images = Array.from(files);
     if (!images.length) { notify("error", c.invalidFile); return; }
     const available = Math.max(0, MAX_REFERENCE_IMAGES - references.length);
     if (!available) { notify("warning", c.referenceLimit); return; }
-    const settled = await Promise.allSettled(images.slice(0, available).map((file) => referenceFromFile(file, hint)));
+    let totalBytes = references.reduce((sum, reference) => sum + Number(reference.file?.size || 0), 0);
+    const candidates = images.slice(0, available).filter((file) => {
+      if (!REFERENCE_IMAGE_TYPES.has(file.type) || file.size <= 0 || file.size > MAX_REFERENCE_BYTES || totalBytes + file.size > MAX_REFERENCE_TOTAL_BYTES) return false;
+      totalBytes += file.size;
+      return true;
+    });
+    const settled = await Promise.allSettled(candidates.map((file) => referenceFromFile(file, hint)));
     const loaded = settled.filter((result) => result.status === "fulfilled").map((result) => result.value);
     if (loaded.length) setReferences((current) => [...current, ...loaded].slice(0, MAX_REFERENCE_IMAGES));
     if (loaded.length) notify("success", c.referenceReady.replace("{count}", String(loaded.length)));
+    if (candidates.length !== Math.min(images.length, available)) notify("error", c.invalidFile);
     if (settled.some((result) => result.status === "rejected")) notify("error", c.referenceFailed);
     if (images.length > available) notify("warning", c.referenceLimit);
   };
@@ -241,6 +284,8 @@ export function ImageStudioPage() {
     if (references.length >= MAX_REFERENCE_IMAGES) { notify("warning", c.referenceLimit); return; }
     try {
       const next = await referenceFromUrl(url);
+      const totalBytes = references.reduce((sum, reference) => sum + Number(reference.file?.size || 0), 0);
+      if (totalBytes + next.file.size > MAX_REFERENCE_TOTAL_BYTES) throw new Error("Reference image total is too large.");
       setReferences((current) => [...current, { ...next, hint: c.generatedReference }].slice(0, MAX_REFERENCE_IMAGES));
       notify("success", c.referenceReady.replace("{count}", "1"));
       formRef.current?.querySelector("textarea")?.focus();
@@ -299,5 +344,5 @@ export function ImageStudioPage() {
     formRef.current?.requestSubmit();
   };
 
-  return <Page title={c.workspace} className="console-image-studio-page"><div className="console-image-studio-layout"><StudioControls copy={c} keys={keysState.items} state={keysState} form={form} selectedKey={selectedKey} preset={preset} disabled={submitting} onKeyChange={changeKey} onChange={changeForm} onReset={resetForm} onRetry={() => setLoadVersion((value) => value + 1)} /><Panel title={c.workspace} className="console-image-workspace"><div className="console-image-thread" ref={threadRef}>{keysState.loading && !messages.length ? <Spinner /> : !messages.length ? <EmptyState icon="image" title={keysState.items.length ? c.emptyTitle : c.noKeysTitle} description={keysState.items.length ? c.emptyBody : c.noKeysBody} /> : <div className="console-image-message-list">{messages.map((message) => <StudioMessage key={message.id} message={message} copy={c} now={now} onPreview={setPreview} onReference={(url) => void useReference(url)} />)}</div>}</div><form className="console-image-composer" ref={formRef} onSubmit={submit}>{references.length > 0 && <div className="console-image-reference-list">{references.map((reference) => <div className="console-image-reference" key={reference.id}><img src={reference.dataUrl} alt={reference.name} /><div><strong>{reference.name}</strong><span>{reference.hint}</span></div><IconButton icon="close" label={c.clearReference} onClick={() => removeReference(reference.id)} /></div>)}</div>}<TextArea value={prompt} onChange={(event) => setPrompt(event.target.value)} onKeyDown={promptKeyDown} onPaste={pasteImage} placeholder={c.promptPlaceholder} rows="3" disabled={!selectedKey || submitting} /><div className="console-image-composer-actions"><div><label className="console-image-upload"><Icon name="plus" size={17} /><span>{c.imageTool}</span><input ref={fileRef} type="file" accept="image/*" multiple onChange={selectFile} disabled={!selectedKey || submitting} /></label><SelectInput className="console-image-aspect" value={form.aspectRatio} onChange={(event) => changeForm("aspectRatio", event.target.value)} disabled={!selectedKey || submitting}>{ASPECT_OPTIONS.map((value) => <option key={value} value={value}>{value === "auto" ? "Auto" : value}</option>)}</SelectInput></div><div><Button onClick={useLatest} disabled={!selectedKey || submitting}>{c.useLast}</Button><Button type="submit" variant="primary" icon="arrowUp" disabled={!selectedKey || submitting}>{submitting ? c.submitting : c.submit}</Button></div></div></form></Panel></div><Modal open={Boolean(preview)} title={c.previewTitle} onClose={() => setPreview("")} size="large">{preview && <div className="console-image-preview"><img src={preview} alt={c.previewTitle} /><a className="console-button console-button--primary" href={preview} download="generated-image.png" target="_blank" rel="noreferrer"><Icon name="download" size={17} />{c.download}</a></div>}</Modal></Page>;
+  return <Page title={c.workspace} className="console-image-studio-page"><div className="console-image-studio-layout"><StudioControls copy={c} keys={keysState.items} state={keysState} form={form} selectedKey={selectedKey} preset={preset} disabled={submitting} onKeyChange={changeKey} onChange={changeForm} onReset={resetForm} onRetry={() => setLoadVersion((value) => value + 1)} /><Panel title={c.workspace} className="console-image-workspace"><div className="console-image-thread" ref={threadRef}>{keysState.loading && !messages.length ? <Spinner /> : !messages.length ? <EmptyState icon="image" title={keysState.items.length ? c.emptyTitle : c.noKeysTitle} description={keysState.items.length ? c.emptyBody : c.noKeysBody} /> : <div className="console-image-message-list">{messages.map((message) => <StudioMessage key={message.id} message={message} copy={c} now={now} onPreview={setPreview} onReference={(url) => void useReference(url)} />)}</div>}</div><form className="console-image-composer" ref={formRef} onSubmit={submit}>{references.length > 0 && <div className="console-image-reference-list">{references.map((reference) => <div className="console-image-reference" key={reference.id}><img src={reference.dataUrl} alt={reference.name} /><div><strong>{reference.name}</strong><span>{reference.hint}</span></div><IconButton icon="close" label={c.clearReference} onClick={() => removeReference(reference.id)} /></div>)}</div>}<TextArea value={prompt} onChange={(event) => setPrompt(event.target.value)} onKeyDown={promptKeyDown} onPaste={pasteImage} placeholder={c.promptPlaceholder} rows="3" maxLength={20000} disabled={!selectedKey || submitting} /><div className="console-image-composer-actions"><div><label className="console-image-upload"><Icon name="plus" size={17} /><span>{c.imageTool}</span><input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={selectFile} disabled={!selectedKey || submitting} /></label><SelectInput className="console-image-aspect" value={form.aspectRatio} onChange={(event) => changeForm("aspectRatio", event.target.value)} disabled={!selectedKey || submitting}>{ASPECT_OPTIONS.map((value) => <option key={value} value={value}>{value === "auto" ? "Auto" : value}</option>)}</SelectInput></div><div><Button onClick={useLatest} disabled={!selectedKey || submitting}>{c.useLast}</Button><Button type="submit" variant="primary" icon="arrowUp" disabled={!selectedKey || submitting}>{submitting ? c.submitting : c.submit}</Button></div></div></form></Panel></div><Modal open={Boolean(preview)} title={c.previewTitle} onClose={() => setPreview("")} size="large">{preview && <div className="console-image-preview"><img src={preview} alt={c.previewTitle} /><a className="console-button console-button--primary" href={preview} download="generated-image.png" target="_blank" rel="noopener noreferrer"><Icon name="download" size={17} />{c.download}</a></div>}</Modal></Page>;
 }

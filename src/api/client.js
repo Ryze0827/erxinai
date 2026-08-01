@@ -21,7 +21,13 @@ export class ApiError extends Error {
 
 function normalizeBaseURL(value) {
   const normalized = String(value).trim().replace(/\/+$/, "");
-  return normalized.startsWith("/") || /^https?:\/\//i.test(normalized) ? normalized : `/${normalized}`;
+  if (normalized.startsWith("/") && !normalized.startsWith("//")) return normalized;
+  if (normalized.startsWith("//")) throw new Error("VITE_API_BASE_URL cannot be protocol-relative.");
+  if (!/^https?:\/\//i.test(normalized)) return `/${normalized}`;
+  const url = new URL(normalized);
+  const localHosts = ["localhost", "127.0.0.1", "[::1]"];
+  if (url.protocol === "https:" || (url.protocol === "http:" && localHosts.includes(window.location.hostname) && localHosts.includes(url.hostname))) return normalized;
+  throw new Error("VITE_API_BASE_URL must use HTTPS outside local development.");
 }
 
 export function buildApiUrl(path) {
@@ -30,13 +36,17 @@ export function buildApiUrl(path) {
 }
 
 export function buildGatewayUrl(path) {
-  if (/^https?:\/\//i.test(path)) return path;
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const rawPath = String(path || "");
+  if (rawPath.startsWith("//")) throw new ApiError("The gateway URL is invalid.", { status: 0, reason: "INVALID_GATEWAY_URL" });
+  const normalizedPath = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
   try {
     const origin = new URL(API_BASE_URL, window.location.origin).origin;
-    return new URL(normalizedPath, origin).toString();
-  } catch {
-    return normalizedPath;
+    const url = /^https?:\/\//i.test(path) ? new URL(path) : new URL(normalizedPath, origin);
+    if (url.protocol === "https:" || (url.protocol === "http:" && (url.origin === window.location.origin || ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)))) return url.toString();
+    throw new ApiError("Gateway requests require HTTPS.", { status: 0, reason: "INSECURE_GATEWAY_URL" });
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError("The gateway URL is invalid.", { status: 0, reason: "INVALID_GATEWAY_URL" });
   }
 }
 
@@ -78,9 +88,11 @@ function buildHeaders(options) {
 
 async function readErrorResponse(response) {
   const contentType = response.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) return response.json();
+  if (contentType.includes("application/json")) {
+    try { return await response.json(); } catch { return null; }
+  }
   const message = await response.text();
-  return message ? { message } : null;
+  return message ? { message: message.slice(0, 2000) } : null;
 }
 
 async function readResponse(response, responseType = "json") {
@@ -96,13 +108,17 @@ async function readResponse(response, responseType = "json") {
 function unwrapResponse(response, payload) {
   const isEnvelope = payload && typeof payload === "object" && "code" in payload;
   if (response.ok && (!isEnvelope || payload.code === 0)) return isEnvelope ? payload.data : payload;
-  const message = payload?.error?.message || payload?.message || `Request failed with status ${response.status}`;
+  const backendMessage = payload?.error?.message || payload?.message || "";
+  const sanitizedMessage = typeof backendMessage === "string"
+    ? backendMessage.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim().slice(0, 300)
+    : "";
+  const message = response.status >= 500
+    ? "The service is temporarily unavailable. Please try again later."
+    : sanitizedMessage || `Request failed with status ${response.status}`;
   throw new ApiError(message, {
     status: response.status,
     code: payload?.code,
     reason: payload?.reason,
-    metadata: payload?.metadata,
-    data: payload?.data,
   });
 }
 
@@ -141,6 +157,9 @@ async function fetchJSON(path, options) {
   const response = await fetchWithTimeout(url, {
     method,
     credentials: "include",
+    cache: "no-store",
+    redirect: "error",
+    referrerPolicy: "no-referrer",
     headers: buildHeaders(options),
     body,
   }, options.signal, options.timeoutMs);
@@ -207,6 +226,10 @@ export async function gatewayRequest(path, options = {}) {
   try {
     const response = await fetchWithTimeout(url, {
       method,
+      cache: "no-store",
+      credentials: "omit",
+      redirect: "error",
+      referrerPolicy: "no-referrer",
       headers,
       body: options.body === undefined || options.body instanceof FormData ? options.body : JSON.stringify(options.body),
     }, options.signal, options.timeoutMs);
