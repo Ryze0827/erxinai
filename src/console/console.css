@@ -1309,7 +1309,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .console-page, .console-popover, .console-modal, .console-toast { animation: none; }
+  .console-page, .console-popover, .console-modal, .console-toast,
+  .console-refresh-action.is-loading > svg { animation: none; }
 }
 
 /* Console feature surfaces */
@@ -1329,6 +1330,15 @@
   border: 1px solid rgba(91, 139, 174, .23);
   border-radius: 12px;
   background: rgba(255, 255, 255, .6);
+}
+
+.console-refresh-action:disabled {
+  cursor: wait;
+  opacity: .72;
+}
+
+.console-refresh-action.is-loading > svg {
+  animation: console-spin .8s linear infinite;
 }
 
 .console-quick-actions,
@@ -2091,7 +2101,7 @@
   .console-table-actions { grid-template-columns: 1fr; }
 }
 
-/* Sentence AI console theme
+/* WayX console theme
    The public landing and authentication surfaces intentionally keep their own
    visual system. These tokens are scoped to console-owned roots only. */
 :root {
@@ -3512,6 +3522,59 @@ html[data-console-theme="dark"] .console-modal-layer {
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.console-other-client-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 9px;
+  padding: 10px 11px;
+  border: 1px solid var(--console-line);
+  border-radius: var(--console-r-md);
+  color: var(--console-muted);
+  background: var(--console-surface-subtle);
+}
+
+.console-other-client-note > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--console-info);
+}
+
+.console-other-client-note strong {
+  display: block;
+  color: var(--console-ink);
+  font-size: 11.5px;
+}
+
+.console-other-client-note p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.console-config-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 10px;
+  padding: 11px 12px;
+  border: 1px solid color-mix(in srgb, var(--console-warning) 25%, var(--console-line));
+  border-radius: var(--console-r-sm);
+  color: var(--console-warning-strong);
+  background: var(--console-warning-soft);
+}
+
+.console-config-notice > svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.console-config-notice p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.55;
 }
 
 .console-config-stack {

@@ -62,12 +62,19 @@ export function DashboardPage() {
   const [data, setData] = useState({ stats: null, models: [], trend: [] });
   const [activity, setActivity] = useState({ loading: true, error: "", items: [] });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const mountedRef = useRef(true);
   const activityMountedRef = useRef(true);
+  const loadedRef = useRef(false);
+  const loadRequestRef = useRef(0);
+  const activityRequestRef = useRef(0);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async ({ showRefreshing = loadedRef.current } = {}) => {
+    const request = ++loadRequestRef.current;
+    const initial = !loadedRef.current;
+    if (initial) setLoading(true);
+    else if (showRefreshing) setRefreshing(true);
     setError("");
     const query = { ...range, granularity: "day" };
     try {
@@ -79,41 +86,56 @@ export function DashboardPage() {
       if (!stats) throw results[1].reason || new Error(t("common.loadFailed"));
       const models = settledValue(results[2], {});
       const trend = settledValue(results[3], {});
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || request !== loadRequestRef.current) return;
+      loadedRef.current = true;
       setData({ stats, models: models.models || [], trend: trend.trend || [] });
     } catch (loadError) {
-      if (mountedRef.current) setError(loadError.message || t("common.loadFailed"));
+      if (mountedRef.current && request === loadRequestRef.current) setError(loadError.message || t("common.loadFailed"));
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current && request === loadRequestRef.current) {
+        if (initial) setLoading(false);
+        if (showRefreshing) setRefreshing(false);
+      }
     }
   }, [range, refreshUser, t]);
 
-  const loadActivity = useCallback(async (signal) => {
-    setActivity((current) => ({ ...current, loading: true, error: "" }));
+  const loadActivity = useCallback(async (signal, background = false) => {
+    const request = ++activityRequestRef.current;
+    setActivity((current) => ({ ...current, loading: background ? current.loading : true, error: "" }));
     try {
       const response = await usageApi.dashboardTrend({ start_date: dateInput(-TOKEN_ACTIVITY_DAY_COUNT + 1), end_date: dateInput(), granularity: "day" }, signal);
-      if (activityMountedRef.current) setActivity({ loading: false, error: "", items: response.trend || [] });
+      if (activityMountedRef.current && request === activityRequestRef.current) setActivity({ loading: false, error: "", items: response.trend || [] });
     } catch (activityError) {
-      if (activityMountedRef.current) setActivity((current) => ({ ...current, loading: false, error: activityError.message || t("common.loadFailed") }));
+      if (activityMountedRef.current && request === activityRequestRef.current) setActivity((current) => ({ ...current, loading: false, error: activityError.message || t("common.loadFailed") }));
     }
   }, [t]);
+
+  const refresh = useCallback(async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    await Promise.allSettled([
+      load({ showRefreshing: false }),
+      loadActivity(undefined, true),
+    ]);
+    if (mountedRef.current) setRefreshing(false);
+  }, [load, loadActivity, refreshing]);
 
   useEffect(() => {
     mountedRef.current = true;
     load();
-    return () => { mountedRef.current = false; };
+    return () => { mountedRef.current = false; loadRequestRef.current += 1; };
   }, [load]);
   useEffect(() => {
     const controller = new AbortController();
     activityMountedRef.current = true;
     loadActivity(controller.signal);
-    return () => { activityMountedRef.current = false; controller.abort(); };
+    return () => { activityMountedRef.current = false; activityRequestRef.current += 1; controller.abort(); };
   }, [loadActivity]);
   if (loading) return <Page title={t("nav.dashboard")}><Panel><Spinner /></Panel></Page>;
-  if (error) return <Page title={t("nav.dashboard")}><Panel><ErrorState message={error} onRetry={load} /></Panel></Page>;
+  if (error && !data.stats) return <Page title={t("nav.dashboard")}><Panel><ErrorState message={error} onRetry={() => load()} /></Panel></Page>;
 
   const stats = data.stats || {};
-  const actions = <div className="console-dashboard-actions"><span>{locale === "zh" ? "时间范围：" : "Time range:"}</span><DateRangePicker startDate={range.start_date} endDate={range.end_date} onChange={setRange} /><button className="console-refresh-action" onClick={() => { load(); loadActivity(); }}><Icon name="refresh" size={17} />{t("common.refresh")}</button></div>;
+  const actions = <div className="console-dashboard-actions"><span>{locale === "zh" ? "时间范围：" : "Time range:"}</span><DateRangePicker startDate={range.start_date} endDate={range.end_date} onChange={setRange} /><button type="button" className={`console-refresh-action ${refreshing ? "is-loading" : ""}`} onClick={() => refresh()} disabled={refreshing} aria-busy={refreshing}><Icon name="refresh" size={17} />{t("common.refresh")}</button></div>;
   return <Page title={t("dashboard.title")} actions={actions}>
     <div className="console-stat-grid console-stat-grid--4 console-dashboard-stat-grid">
       <ThroughputStatCard stats={stats} formatNumber={formatNumber} t={t} />

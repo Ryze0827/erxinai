@@ -2,7 +2,7 @@
 
 ## Basic Information
 
-- Project name: Sentence AI Gateway Website Prototype
+- Project name: WayX Gateway Website Prototype
 - Repository path: repository root (`.`)
 - Primary purpose: Public AI-gateway website, production-oriented authentication client, and user console compatible with a `sub2api` backend.
 - Owning team: Not documented.

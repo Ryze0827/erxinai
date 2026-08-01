@@ -20,7 +20,7 @@
 
 ## Project Exceptions
 
-- Exception: Light console mode retains the existing Sentence AI palette instead of deriving a new Halo light palette.
+- Exception: Light console mode retains the existing WayX palette instead of deriving a new Halo light palette.
   - Applicable scope: Console-owned surfaces only.
   - Evidence: Approved design decision in `docs/superpowers/specs/2026-07-16-halo-console-design.md`.
 

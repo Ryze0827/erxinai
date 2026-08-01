@@ -2,7 +2,7 @@ const demoMarkup = {
   endpoint: `
     <div class="gateway-demo-shell">
       <div class="gateway-demo-topbar">
-        <span class="gateway-demo-product" data-i18n="demo.gateway">Sentence AI 网关</span>
+        <span class="gateway-demo-product" data-i18n="demo.gateway">WayX 网关</span>
         <span class="gateway-demo-live"><i></i> <span data-i18n="demo.live">实时</span></span>
       </div>
       <div class="endpoint-layout">

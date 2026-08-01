@@ -1,5 +1,5 @@
 import { getOAuthStartUrl } from "../api/auth";
-import { getAffiliateCode } from "./authUtils";
+import { getAffiliateCode, safeAuthRedirect } from "./authUtils";
 
 const providerLabels = {
   github: "GitHub",
@@ -64,7 +64,8 @@ export function OAuthButtons({ settings, searchParams, onError }) {
 
   const startOAuth = (provider) => {
     const affiliateCode = getAffiliateCode(searchParams);
-    const params = affiliateCode && ["github", "google"].includes(provider) ? { aff_code: affiliateCode } : {};
+    const params = { redirect: safeAuthRedirect(searchParams.get("redirect")) };
+    if (affiliateCode && ["github", "google"].includes(provider)) params.aff_code = affiliateCode;
     if (provider === "wechat") {
       const result = resolveWeChatStart(settings);
       if (!result.mode) return onError(result.error);

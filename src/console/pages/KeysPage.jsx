@@ -280,7 +280,7 @@ export function KeysPage() {
   const updateKey = async (item, payload, success) => { setBusy(true); try { const saved = await keysApi.update(item.id, payload); if (editor?.item?.id === item.id && saved) setEditor((current) => current ? { ...current, item: saved } : current); notify("success", success || t("common.saved")); setDialog(null); await load(); } catch (error) { notify("error", error.message); } finally { setBusy(false); } };
   const remove = async () => { setBusy(true); try { await keysApi.remove(dialog.item.id); notify("success", t("keys.deleted")); setDialog(null); load(); } catch (error) { notify("error", error.message); } finally { setBusy(false); } };
   const changeGroup = async (item, group_id) => { try { await keysApi.update(item.id, { group_id: group_id === "" ? null : Number(group_id) }); notify("success", t("common.saved")); load(); } catch (error) { notify("error", error.message); } };
-  const importCcs = (item, clientType = "claude") => { const base = endpointItems(settings, "Default")[0].endpoint; window.location.href = ccsImportUrl(item, base, String(settings?.site_name || "Sentence AI"), clientType); };
+  const importCcs = (item, clientType = "claude") => { const base = endpointItems(settings, "Default")[0].endpoint; window.location.href = ccsImportUrl(item, base, String(settings?.site_name || "WayX"), clientType); };
 
   const allColumns = useMemo(() => [
     { key: "name", label: t("common.name"), sortable: true, render: (row) => <div className="console-key-title"><strong>{row.name}</strong>{Boolean(row.ip_whitelist?.length || row.ip_blacklist?.length) && <Icon name="shield" size={14} />}</div> },

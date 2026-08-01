@@ -15,7 +15,7 @@ When implementing from a selected generated mock, treat that image as the source
 - The Hero keeps the `Text / Code / Image / Reasoning` capability pills above the original overlapping AI tool icon strip.
 - OAuth provider buttons follow the `sub2api` interaction: a single provider fills the row with a 48px branded button and `Sign in with …` label.
 - Password visibility uses the `sub2api` eye/eye-off icon button instead of `Show/Hide` text.
-- The user console covers the complete non-admin `sub2api` feature set while keeping Sentence AI's light fluted-glass visual language; no administrator APIs or administrator navigation are included.
+- The user console covers the complete non-admin `sub2api` feature set while keeping WayX's light fluted-glass visual language; no administrator APIs or administrator navigation are included.
 - New console, payment helper, and public key-usage surfaces are bilingual, default to English, persist the selected language, and send it through `Accept-Language`.
 - `/admin/dashboard` remains a compatibility alias for the user dashboard; it does not expose administrator functionality.
 - Console pages use the available desktop workspace more fully instead of centering content in a narrow admin column.
@@ -24,6 +24,6 @@ When implementing from a selected generated mock, treat that image as the source
 - The API Keys page shows the configured default and custom API endpoints with copy actions and uses the default endpoint in quick-start examples.
 - Group badges retain the group name while using platform-specific colors and recognizable platform marks, following `sub2api` semantics.
 - Administrator contact details are not persistent in the sidebar; they appear in the top-right user dropdown, following `sub2api` interaction hierarchy.
-- API Keys and Usage preserve the complete `sub2api` user-facing component hierarchy, dense table layout, column controls, filters, charts, dialogs, platform configuration, and mobile card behavior while using Sentence AI styling.
-- User-console visuals are original to Sentence AI: calm solid-color surfaces, restrained gradients, clear component borders, compact corner radii, and strong contrast for icons, figures, units, and typography.
+- API Keys and Usage preserve the complete `sub2api` user-facing component hierarchy, dense table layout, column controls, filters, charts, dialogs, platform configuration, and mobile card behavior while using WayX styling.
+- User-console visuals are original to WayX: calm solid-color surfaces, restrained gradients, clear component borders, compact corner radii, and strong contrast for icons, figures, units, and typography.
 - Every user-console surface supports persisted light, dark, and system themes; custom embedded pages receive the resolved theme.

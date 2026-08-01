@@ -117,7 +117,7 @@ export function RegisterPage() {
 
   return (
     <AuthLayout>
-      <AuthCard kicker="Start building" title="Create your Sentence AI account" description="One account for every key, model, and project." footer={<><span>Already have an account?</span> <Link to="/login">Log in</Link></>}>
+      <AuthCard kicker="Start building" title="Create your WayX account" description="One account for every key, model, and project." footer={<><span>Already have an account?</span> <Link to="/login">Log in</Link></>}>
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <AuthNotice tone={settingsError || error || registrationClosed ? "error" : "info"}>{settingsError || error || (registrationClosed ? "Registration is currently closed." : "")}</AuthNotice>
           {settingsError && <button className="auth-link-button" type="button" onClick={retry}>Retry loading settings</button>}

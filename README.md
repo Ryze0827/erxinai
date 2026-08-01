@@ -1,8 +1,8 @@
-# Sentence AI Gateway Website Prototype
+# WayX Gateway Website Prototype
 
 [简体中文](./README.zh-CN.md)
 
-Sentence AI is a responsive website prototype for an AI gateway service. It presents a unified, OpenAI-compatible entry point for multiple model providers, together with request tracing, usage and cost visibility, provider health, and failover concepts.
+WayX is a responsive website prototype for an AI gateway service. It presents a unified, OpenAI-compatible entry point for multiple model providers, together with request tracing, usage and cost visibility, provider health, and failover concepts.
 
 This repository contains the public website, interactive gateway demonstrations, and a production-oriented authentication client compatible with the `sub2api` backend. Gateway demonstrations remain front-end-only.
 
@@ -81,7 +81,7 @@ npm run preview  # Preview the production build locally
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Main Sentence AI gateway landing page |
+| `/` | Main WayX gateway landing page |
 | `/login`, `/register`, `/email-verify` | Password registration and sign-in flows |
 | `/forgot-password`, `/reset-password` | Password recovery |
 | `/auth/success` | Unified authentication result page |
@@ -106,6 +106,6 @@ Production should keep `/api/v1` on the same origin. Configure the backend `serv
 ## Before Production
 
 - Connect the gateway views to production request, usage, billing, and provider-health data.
-- Confirm final pricing and FAQ content, then add Sentence AI legal and contact pages when available.
+- Confirm final pricing and FAQ content, then add WayX legal and contact pages when available.
 - Add social preview metadata and verify the production domain.
 - Add appropriate security headers and secret management when backend integrations are introduced.

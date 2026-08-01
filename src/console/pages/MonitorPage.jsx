@@ -93,7 +93,7 @@ function windowAvailability(item, days, details) {
   return model?.[`availability_${days}d`] ?? item[`availability_${days}d`] ?? item.availability_7d;
 }
 
-function MonitorToolbar({ windowDays, setWindowDays, filter, setFilter, counts, refresh, setRefresh, locale }) {
+function MonitorToolbar({ windowDays, setWindowDays, filter, setFilter, counts, refresh, setRefresh, loading, onRefresh, locale }) {
   const filterLabels = {
     all: locale === "zh" ? "全部" : "All",
     operational: locale === "zh" ? "正常" : "Healthy",
@@ -117,16 +117,19 @@ function MonitorToolbar({ windowDays, setWindowDays, filter, setFilter, counts, 
           {MONITOR_FILTERS.map((value) => <button type="button" key={value} className={`is-${value} ${filter === value ? "is-active" : ""}`} onClick={() => setFilter(value)}><i />{filterLabels[value]} <b>{value === "all" ? counts.total : counts[value]}</b></button>)}
         </div>
       </div>
-      <label className="console-monitor-auto-refresh">
-        <Icon name="refresh" size={17} />
-        <span>{locale === "zh" ? "自动刷新" : "Auto refresh"}</span>
-        <SelectInput aria-label={locale === "zh" ? "自动刷新间隔" : "Auto refresh interval"} value={refreshValue} onChange={updateRefresh}>
-          <option value="off">{locale === "zh" ? "已暂停" : "Paused"}</option>
-          <option value="30">30s</option>
-          <option value="60">60s</option>
-          <option value="120">120s</option>
-        </SelectInput>
-      </label>
+      <div className="console-monitor-refresh-actions">
+        <Button className={`console-monitor-manual-refresh ${loading ? "is-loading" : ""}`} icon="refresh" onClick={() => onRefresh()} disabled={loading}>{locale === "zh" ? "手动刷新" : "Refresh now"}</Button>
+        <label className={`console-monitor-auto-refresh ${refresh.auto ? "is-active" : ""}`}>
+          <Icon name="refresh" size={17} />
+          <span>{locale === "zh" ? "自动刷新" : "Auto refresh"}</span>
+          <SelectInput aria-label={locale === "zh" ? "自动刷新间隔" : "Auto refresh interval"} value={refreshValue} onChange={updateRefresh}>
+            <option value="off">{locale === "zh" ? "已暂停" : "Paused"}</option>
+            <option value="30">30s</option>
+            <option value="60">60s</option>
+            <option value="120">120s</option>
+          </SelectInput>
+        </label>
+      </div>
     </section>
   );
 }
@@ -288,7 +291,7 @@ export function MonitorPage() {
 
   return (
     <Page title={t("monitor.title")} className="console-monitor-page">
-      <MonitorToolbar windowDays={windowDays} setWindowDays={setWindowDays} filter={filter} setFilter={setFilter} counts={counts} refresh={refresh} setRefresh={setRefresh} locale={locale} />
+      <MonitorToolbar windowDays={windowDays} setWindowDays={setWindowDays} filter={filter} setFilter={setFilter} counts={counts} refresh={refresh} setRefresh={setRefresh} loading={state.loading} onRefresh={load} locale={locale} />
       <MonitorContent state={state} locale={locale} load={load} items={filteredItems} counts={counts} windowDays={windowDays} details={details} formatNumber={formatNumber} formatDate={formatDate} openDetail={openDetail} />
       <Modal open={Boolean(detail)} title={detail?.item?.name || t("monitor.title")} onClose={closeDetail} size="large"><MonitorDetail detail={detail} locale={locale} formatNumber={formatNumber} t={t} /></Modal>
     </Page>

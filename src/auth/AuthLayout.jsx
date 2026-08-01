@@ -7,9 +7,9 @@ export function AuthLayout({ children }) {
     <main className="auth-page">
       <div className="auth-scene" aria-hidden="true" />
       <header className="auth-topbar">
-        <Link className="auth-brand" to="/" aria-label="Sentence AI home">
+        <Link className="auth-brand" to="/" aria-label="WayX home">
           <img src="/assets/img/sentence-ai-icon.png" alt="" width="32" height="32" />
-          <span>Sentence AI</span>
+          <span>WayX</span>
         </Link>
         <Link className="auth-home-link" to="/">Back to home</Link>
       </header>

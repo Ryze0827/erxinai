@@ -2,7 +2,7 @@
 
 ## Scope
 
-Refactor the Sentence AI user console to use the Halo design system. The landing page and every authentication-related route remain visually and structurally unchanged. Existing APIs, routing, permissions, payment behavior, localization, sidebar persistence, and user workflows remain unchanged.
+Refactor the WayX user console to use the Halo design system. The landing page and every authentication-related route remain visually and structurally unchanged. Existing APIs, routing, permissions, payment behavior, localization, sidebar persistence, and user workflows remain unchanged.
 
 Included surfaces are the authenticated console layout and its dashboard, API key, batch image, usage, channel, monitor, subscription, purchase, order, redeem, affiliate, profile, custom-page, and console-owned payment/key-usage surfaces.
 
@@ -17,7 +17,7 @@ Included surfaces are the authenticated console layout and its dashboard, API ke
 
 - Preserve `light`, `dark`, and `system` preferences and the existing persisted theme behavior.
 - In dark mode, map console tokens exactly to Halo: `#0A0B0F`, `#14151C`, `#1E2029`, `#2A2D38`, `#3A3D4A`, `#F2F4F8`, `#9AA0AE`, `#5C6170`, `#5B6BFF`, `#7886FF`, `#4A59E6`, `#2BE08C`, `#F5D547`, `#3DD7E5`, and `#FF3A5C`.
-- In light mode, retain the existing Sentence AI neutral/light-blue palette while using the same Halo anatomy, sizing, spacing, borders, and interaction states.
+- In light mode, retain the existing WayX neutral/light-blue palette while using the same Halo anatomy, sizing, spacing, borders, and interaction states.
 - `system` continues to resolve through the operating-system preference, including the resolved theme passed to embedded custom pages.
 
 ## Layout and components

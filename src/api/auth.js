@@ -25,7 +25,7 @@ export const authApi = {
 };
 
 export function getOAuthStartUrl(provider, params = {}) {
-  const query = new URLSearchParams({ redirect: "/keys" });
+  const query = new URLSearchParams({ redirect: "/dashboard" });
   Object.entries(params).forEach(([key, value]) => {
     if (value) query.set(key, value);
   });

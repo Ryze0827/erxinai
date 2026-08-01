@@ -27,6 +27,11 @@ export function getErrorMessage(error, fallback = "Something went wrong. Please 
   return errorMessages[error?.reason] || error?.message || fallback;
 }
 
+export function safeAuthRedirect(value, fallback = "/dashboard") {
+  const redirect = String(value || "");
+  return redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : fallback;
+}
+
 export function getAffiliateCode(searchParams) {
   const value = searchParams.get("aff") || searchParams.get("aff_code") || localStorage.getItem(AFFILIATE_KEY) || "";
   if (value) localStorage.setItem(AFFILIATE_KEY, value.trim());

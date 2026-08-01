@@ -5,7 +5,7 @@ import { persistAuthResponse } from "../api/session";
 import { AgreementPrompt, useAgreement } from "./AgreementPrompt";
 import { AuthCard, AuthLayout } from "./AuthLayout";
 import { AuthField, AuthNotice, PasswordInput, SubmitButton, TextInput, TotpForm } from "./AuthControls";
-import { getErrorMessage, isEmail } from "./authUtils";
+import { getErrorMessage, isEmail, safeAuthRedirect } from "./authUtils";
 import { OAuthButtons } from "./OAuthButtons";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { usePublicSettings } from "./usePublicSettings";
@@ -41,7 +41,7 @@ export function LoginPage() {
   const completeLogin = (response) => {
     persistAuthResponse(response, form.remember);
     sessionStorage.removeItem("auth_expired");
-    navigate("/keys", { replace: true });
+    navigate(safeAuthRedirect(searchParams.get("redirect")), { replace: true });
   };
 
   const handleSubmit = async (event) => {
@@ -82,11 +82,11 @@ export function LoginPage() {
     }
   };
 
-  const footer = settings?.backend_mode_enabled ? null : <><span>New to Sentence AI?</span> <Link to="/register">Create an account</Link></>;
+  const footer = settings?.backend_mode_enabled ? null : <><span>New to WayX?</span> <Link to="/register">Create an account</Link></>;
 
   return (
     <AuthLayout>
-      <AuthCard kicker="Welcome back" title="Log in to Sentence AI" description="Pick up exactly where your last request left off." footer={footer}>
+      <AuthCard kicker="Welcome back" title="Log in to WayX" description="Pick up exactly where your last request left off." footer={footer}>
         {totp ? (
           <TotpForm loading={loading} error={error} email={totp.user_email_masked} onSubmit={handleTotp} onCancel={() => { setTotp(null); setError(""); }} />
         ) : (

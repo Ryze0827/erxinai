@@ -47,7 +47,7 @@ function codexFiles(client, shell, baseUrl, apiKey) {
 function grokFiles(shell, baseUrl, apiKey) {
   const windows = shell === "windows";
   const home = windows ? "%userprofile%\\.grok" : "~/.grok";
-  return [{ path: `${home}${windows ? "\\" : "/"}config.toml`, content: `[models]\ndefault = "sentence-ai-grok"\nweb_search = "sentence-ai-grok"\n\n[model."sentence-ai-grok"]\nmodel = "grok-4.5"\nbase_url = "${baseUrl}"\nname = "Grok 4.5 via Sentence AI"\napi_key = "${apiKey}"\napi_backend = "responses"\ncontext_window = 1000000\nsupports_backend_search = true`, hint: "Grok CLI configuration" }];
+  return [{ path: `${home}${windows ? "\\" : "/"}config.toml`, content: `[models]\ndefault = "sentence-ai-grok"\nweb_search = "sentence-ai-grok"\n\n[model."sentence-ai-grok"]\nmodel = "grok-4.5"\nbase_url = "${baseUrl}"\nname = "Grok 4.5 via WayX"\napi_key = "${apiKey}"\napi_backend = "responses"\ncontext_window = 1000000\nsupports_backend_search = true`, hint: "Grok CLI configuration" }];
 }
 
 function opencodeFiles(platform, baseUrl, apiKey) {
@@ -124,11 +124,11 @@ function MissingGroup({ locale }) {
 
 function ToolPicker({ tabs, client, setClient, platform, locale }) {
   const description = localText(locale, `这把密钥属于 ${platform} 分组,可以在下面这些客户端中使用。`, `This key belongs to the ${platform} group and works with these clients.`);
-  return <StepCard number={1} title={localText(locale, "选择你的工具", "Choose your tool")} description={description}><div className="console-tool-grid" role="radiogroup">{tabs.map((tab) => {
+  return <StepCard number={1} title={localText(locale, "选择你的工具", "Choose your tool")} description={description}><><div className="console-tool-grid" role="radiogroup">{tabs.map((tab) => {
     const meta = clientMeta[tab.value] || {};
     const selected = client === tab.value;
     return <button type="button" key={tab.value} role="radio" aria-checked={selected} className={selected ? "is-active" : ""} onClick={() => setClient(tab.value)}><Icon name="terminal" size={17} /><span><strong>{tab.label}</strong><small>{locale === "zh" ? meta.zh : meta.en}</small></span>{selected && <Icon name="check" size={15} />}</button>;
-  })}</div></StepCard>;
+  })}</div><aside className="console-other-client-note"><Icon name="book" size={17} /><div><strong>{localText(locale, "其他客户端", "Other clients")}</strong><p>{localText(locale, "请仔细查阅客户端的官方文档,并按照官方说明配置 API 地址和密钥。", "Please consult the client's official documentation and follow its instructions to configure the API URL and key.")}</p></div></aside></></StepCard>;
 }
 
 function ShellStep({ visible, tabs, shell, setShell, locale }) {
@@ -137,8 +137,13 @@ function ShellStep({ visible, tabs, shell, setShell, locale }) {
 }
 
 function ConfigStep({ number, files, locale }) {
-  const description = files.length > 1 ? localText(locale, `共 ${files.length} 处,每一处都有说明。`, `${files.length} snippets — each card tells you where it goes.`) : undefined;
-  return <StepCard number={number} title={localText(locale, "应用下面的配置", "Apply the configuration")} description={description}><div className="console-config-stack">{files.map((file) => <ConfigFile file={file} key={file.path} />)}</div></StepCard>;
+  const hasAuthFile = files.some((file) => file.path.endsWith("auth.json"));
+  const notice = hasAuthFile
+    ? localText(locale, "两个文件都打开全部覆盖进去，auth.json如果不存在，请手动创建。", "Open both files and replace their entire contents. If auth.json does not exist, create it manually.")
+    : files.length > 1
+      ? localText(locale, "请分别按照下面的说明应用两处配置。", "Apply both configurations using the instructions below.")
+      : "";
+  return <StepCard number={number} title={localText(locale, "应用下面的配置", "Apply the configuration")}><>{notice && <aside className="console-config-notice"><Icon name="info" size={17} /><p>{notice}</p></aside>}<div className="console-config-stack">{files.map((file) => <ConfigFile file={file} key={file.path} />)}</div></></StepCard>;
 }
 
 function RestartStep({ number, clientLabel, locale }) {

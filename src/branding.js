@@ -1,7 +1,7 @@
 import { safeImageUrl } from "./console/utils";
 
 export const BRANDING_STORAGE_KEY = "sentence_public_branding";
-export const DEFAULT_SITE_NAME = "Sentence AI";
+export const DEFAULT_SITE_NAME = "WayX";
 export const DEFAULT_SITE_LOGO = "/assets/img/sentence-ai-icon.png";
 
 export function resolveBranding(settings = {}) {

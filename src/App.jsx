@@ -239,7 +239,7 @@ export function App() {
           <Route path="/email-verify" element={<EmailVerifyPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/auth/success" element={<Navigate to="/keys" replace />} />
+          <Route path="/auth/success" element={<Navigate to="/dashboard" replace />} />
           <Route path="/auth/callback" element={<OAuthCallbackPage />} />
           <Route path="/auth/oauth/callback" element={<OAuthCallbackPage />} />
           <Route path="/auth/linuxdo/callback" element={<OAuthCallbackPage provider="linuxdo" />} />

@@ -10,7 +10,7 @@ import {
 } from "../api/session";
 import { AuthCard, AuthLayout } from "./AuthLayout";
 import { AuthField, AuthNotice, PasswordInput, SubmitButton, TextInput, TotpForm } from "./AuthControls";
-import { booleanParam, clearAffiliateCode, getErrorMessage, readOAuthFragment } from "./authUtils";
+import { booleanParam, clearAffiliateCode, getErrorMessage, readOAuthFragment, safeAuthRedirect } from "./authUtils";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { usePublicSettings } from "./usePublicSettings";
 
@@ -86,7 +86,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
     clearPendingAuthSession();
     clearAffiliateCode();
     sessionStorage.removeItem("email_oauth_pending_provider");
-    navigate("/keys", { replace: true });
+    navigate(safeAuthRedirect(response.redirect || callbackParams.get("redirect")), { replace: true });
   };
 
   const finishBinding = async (response = {}) => {
