@@ -43,13 +43,14 @@ npm install
 npm run dev
 ```
 
-开发服务器默认监听所有本地网络接口，并将 `/api` 代理到 `http://127.0.0.1:8080`。
+开发服务器默认监听所有本地网络接口，将 `/api` 代理到 `http://127.0.0.1:8080`，并通过同源路径 `/image-api` 代理生图网关，避免本地开发时触发浏览器跨域限制。
 
 可选环境变量：
 
 ```bash
 VITE_API_BASE_URL=/api/v1
 VITE_DEV_API_PROXY_TARGET=http://127.0.0.1:8080
+VITE_DEV_IMAGE_PROXY_TARGET=https://image.aiwayxx.com
 VITE_DASHBOARD_URL=/dashboard
 ```
 

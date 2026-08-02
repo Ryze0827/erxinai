@@ -243,6 +243,50 @@ final result: passed
 
 ---
 
+# Video Workflow Landscape Poster Design QA
+
+- Source visual truth: `/var/folders/gk/q08f7_l552l_n3fyzsc25v_m0000gn/T/codex-clipboard-76d50c9b-1b40-4707-847e-38dbcb5a631a.png`
+- Generated landscape poster: `/Users/liwei/WebstormProjects/erxinai/src/assets/console/video-workflow-poster-wide.png`
+- Implementation screenshot: `/private/tmp/video-workflow-wide-implementation.png`
+- Combined comparison input: `/private/tmp/video-workflow-qa-comparison.png`
+- Viewport and density: source 1920 × 928 pixels; implementation 1920 × 936 CSS px at device pixel ratio 2. Both sides were normalized to 1920 × 936 before horizontal comparison.
+- State: authenticated desktop console, light theme, expanded sidebar, Video workflow route.
+
+## Full-view comparison evidence
+
+The supplied red-frame reference and the final route screenshot were inspected together in one 3840 × 936 comparison image. The previous centered portrait poster has been replaced by a native 1829 × 860 landscape composition. It fills the requested wide content panel from left to right, preserves every workflow step, keeps the complete coming-soon and capability sections visible, and removes the source poster's site identity and advertisement area.
+
+## Focused-region comparison evidence
+
+A separate crop was unnecessary because the poster itself occupies 1594 × 750 CSS px—most of the implementation viewport—and all outer edges, glass-frame padding, workflow cards, and footer features remain legible in the full-size comparison. Browser measurements confirm the rendered poster and frame share the intended 2.13:1 geometry without portrait scaling, content cropping, or uncovered side gutters.
+
+## Required fidelity surfaces
+
+- Fonts and typography: the landscape asset preserves the source's bold Chinese title, compact supporting copy, numbered workflow hierarchy, and bilingual coming-soon chip.
+- Spacing and layout rhythm: the input references, generation stages, two output stages, launch notice, four capabilities, and footer benefits were recomposed horizontally to use the complete panel width.
+- Colors and visual tokens: the blue-green landscape, cyan glow, emerald process icons, and translucent white cards remain visually aligned with the supplied poster and the WayX console substrate.
+- Image quality and asset fidelity: the route uses the native 1829 × 860 PNG directly. It is neither stretched from the portrait source nor blurred into a background fill.
+- Glass material: the image stays inside the shared `Panel` component, so its perimeter, border, highlight, and surface alpha continue to respond to the global console glass-transparency variables.
+- Runtime fit: document and body `scrollHeight` both equal the 936px viewport height. The 1612 × 758 frame and 1594 × 750 poster fit without page scrolling.
+
+## Comparison history
+
+1. P1: the portrait poster was centered inside the desktop route, leaving most of the red-frame target area unused.
+   - Fix: generated and integrated a true 2.13:1 landscape composition using the supplied poster as the authoritative content and style source.
+2. P1: an intermediate blurred full-bleed portrait backdrop visually filled the panel but still read as a small portrait poster and did not meet the requested layout.
+   - Fix: removed the backdrop treatment and rendered only the purpose-built landscape poster inside the live glass frame.
+3. Final pass: combined visual comparison and browser geometry checks found no remaining P0, P1, or P2 mismatch in the requested desktop scope.
+
+## Findings
+
+- P0: none.
+- P1: none.
+- P2: none.
+- The existing console sidebar and sticky header are intentionally retained as product-level chrome.
+
+final result: passed
+---
+
 # Design QA — Usage 费用明细（2026-08-02）
 
 ## Comparison target
@@ -421,5 +465,56 @@ final result: passed
 - P1：无。
 - P2：无。
 - P3：无阻塞项。
+
+final result: passed
+
+---
+
+# Image Studio Thinking Animation Design QA
+
+- Source visual truth: `/var/folders/gk/q08f7_l552l_n3fyzsc25v_m0000gn/T/codex-clipboard-2d17df78-fc06-439f-888e-897729704f3a.png`
+- Implementation screenshots:
+  - `/tmp/wayx-thinking-orbit-top-left.png`
+  - `/tmp/wayx-thinking-orbit-top-right.png`
+  - `/tmp/wayx-thinking-orbit-bottom-right.png`
+  - `/tmp/wayx-thinking-orbit-bottom-left.png`
+- Viewport: 1231 × 721 CSS px, device pixel ratio 1
+- Source pixels: 1231 × 721; every implementation screenshot is 1231 × 721. No density normalization was required.
+- State: Image Studio, light theme, pending image generation across the four requested cluster phases.
+
+## Full-view comparison evidence
+
+The reported screenshot and all four implementation phases were opened together in one comparison input. The point matrix is now centered horizontally and vertically inside the 480 × 480 square stage. The animation no longer treats the top edge as its permanent active region and the existing WayX pending-card hierarchy remains unchanged.
+
+## Focused-region comparison evidence
+
+The 330 × 234 matrix and 480 × 480 stage share the exact browser-measured center `(492, 389)`. Deterministic phase captures measured the dominant corner opacity as `0.82`, while the other corners remained near `0.08`, in this order: top-left, top-right, bottom-right, bottom-left. A live 6.4-second cycle independently reproduced `topLeft → topRight → bottomRight → bottomLeft → topLeft`, with no browser console errors.
+
+## Required fidelity surfaces
+
+- Fonts and typography: unchanged from the established WayX pending state; title, supporting copy, and elapsed time keep their existing hierarchy.
+- Spacing and layout rhythm: the matrix is geometrically centered in both axes; the square stage, card spacing, radii, and elapsed-time placement remain stable.
+- Colors and visual tokens: inactive points remain subtle while the active cluster uses the WayX green status tint with sufficient phase contrast.
+- Image quality and asset fidelity: no raster or illustrative asset is present; the functional point animation is rendered at native CSS resolution without scaling artifacts.
+- Copy and content: pending title, description, role label, and elapsed-time copy are unchanged.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain within the requested animation behavior and alignment scope.
+- Reduced-motion mode intentionally shows a centered static matrix without the orbit animation.
+
+## Comparison history
+
+- Pass 1: The matrix was top-aligned and its distance-based delays radiated from the center, matching the reported P1 regression.
+- Pass 2: The matrix was centered and the timing model was replaced with a 16-anchor clockwise perimeter path. Four deterministic captures confirmed each requested corner phase.
+- Pass 3: A live full cycle confirmed the actual runtime order returns to top-left after bottom-left; no further P0/P1/P2 issues were found.
+
+## Implementation checklist
+
+- [x] Center the complete matrix horizontally and vertically.
+- [x] Remove center-distance delay timing.
+- [x] Move one compact cluster clockwise around 16 perimeter anchors.
+- [x] Verify top-left, top-right, bottom-right, bottom-left, and loop-back phases.
+- [x] Preserve responsive sizing, themes, and reduced-motion behavior.
 
 final result: passed

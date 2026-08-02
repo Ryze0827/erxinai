@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const proxyTarget = env.VITE_DEV_API_PROXY_TARGET || "http://127.0.0.1:8080";
+  const imageProxyTarget = env.VITE_DEV_IMAGE_PROXY_TARGET || "https://image.aiwayxx.com";
   return {
     optimizeDeps: {
       include: ["react", "react-dom/client", "react-router"],
@@ -19,6 +20,11 @@ export default defineConfig(({ mode }) => {
         "/v1": {
           target: proxyTarget,
           changeOrigin: true,
+        },
+        "/image-api": {
+          target: imageProxyTarget,
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/image-api/, ""),
         },
       },
       warmup: {

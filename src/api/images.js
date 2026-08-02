@@ -1,7 +1,9 @@
 import { gatewayRequest } from "./client";
 
+const DEFAULT_IMAGE_GATEWAY_BASE_URL = import.meta.env.DEV ? "/image-api" : "https://image.aiwayxx.com";
+
 function imageGatewayBaseUrl(value) {
-  const url = new URL(String(value || "https://image.aiwayxx.com"), window.location.origin);
+  const url = new URL(String(value || DEFAULT_IMAGE_GATEWAY_BASE_URL), window.location.origin);
   const localHosts = ["localhost", "127.0.0.1", "[::1]"];
   if (url.protocol !== "https:" && !(url.protocol === "http:" && localHosts.includes(window.location.hostname) && localHosts.includes(url.hostname))) {
     throw new Error("VITE_IMAGE_GATEWAY_BASE_URL must use HTTPS outside local development.");

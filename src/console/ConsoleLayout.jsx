@@ -38,6 +38,7 @@ const accountNav = [
   { path: "/profile", key: "nav.profile", icon: "user" },
   { path: "/image-studio", key: "imageStudio.title", icon: "image" },
   { path: "/image-api-docs", key: "imageDocs.title", icon: "book" },
+  { path: "/video-workflow", key: "videoWorkflow.title", icon: "play" },
 ];
 
 const featureDefinitions = {

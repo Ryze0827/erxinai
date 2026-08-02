@@ -43,13 +43,14 @@ npm install
 npm run dev
 ```
 
-The development server listens on all local interfaces and proxies `/api` to `http://127.0.0.1:8080` by default.
+The development server listens on all local interfaces, proxies `/api` to `http://127.0.0.1:8080`, and exposes the image gateway through the same-origin `/image-api` path to avoid browser CORS restrictions during local development.
 
 Optional environment variables:
 
 ```bash
 VITE_API_BASE_URL=/api/v1
 VITE_DEV_API_PROXY_TARGET=http://127.0.0.1:8080
+VITE_DEV_IMAGE_PROXY_TARGET=https://image.aiwayxx.com
 VITE_DASHBOARD_URL=/dashboard
 ```
 
