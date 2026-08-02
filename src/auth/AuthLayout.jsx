@@ -1,14 +1,16 @@
 import { useRef } from "react";
 import { Link } from "react-router";
+import { useConsole } from "../console/ConsoleContext";
 import "../auth.css";
 
 export function AuthLayout({ children }) {
+  const { branding, brandingReady } = useConsole();
   return (
     <main className="auth-page">
       <div className="auth-scene" aria-hidden="true" />
       <header className="auth-topbar">
         <Link className="auth-brand" to="/" aria-label="WayX home">
-          <img src="/assets/img/sentence-ai-icon.png" alt="" width="32" height="32" />
+          {brandingReady && <img key={branding.siteLogo} src={branding.siteLogo} alt="" width="32" height="32" />}
           <span>WayX</span>
         </Link>
         <Link className="auth-home-link" to="/">Back to home</Link>
