@@ -35,7 +35,6 @@ const accountNav = [
   { path: "/orders", key: "nav.orders", icon: "order", feature: "payment", standardOnly: true },
   { path: "/redeem", key: "nav.redeem", icon: "gift", standardOnly: true },
   { path: "/affiliate", key: "nav.affiliate", icon: "users", feature: "affiliate", standardOnly: true },
-  { path: "/profile", key: "nav.profile", icon: "user" },
   { path: "/image-studio", key: "imageStudio.title", icon: "image" },
   { path: "/image-api-docs", key: "imageDocs.title", icon: "book" },
   { path: "/video-workflow", key: "videoWorkflow.title", icon: "play" },
