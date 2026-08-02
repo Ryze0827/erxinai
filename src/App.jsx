@@ -130,9 +130,8 @@ function getLandingAuthState() {
   return { user, authenticated: Boolean(getAccessToken() && user) };
 }
 
-function setPricingActionHref(action, authenticated) {
-  const plan = action.dataset.plan || "usage";
-  action.href = authenticated ? "/keys" : `/register?plan=${plan}`;
+function setPricingActionHref(action) {
+  action.href = "/dashboard";
 }
 
 function syncPricingAuth(root, authenticated, locale) {
@@ -153,7 +152,7 @@ function syncPricingAuth(root, authenticated, locale) {
     } else {
       action.removeAttribute("aria-disabled");
       action.removeAttribute("tabindex");
-      setPricingActionHref(action, authenticated);
+      setPricingActionHref(action);
     }
   }
   if (label) label.textContent = landingT(locale, unavailable ? "pricing.action.unavailable" : authenticated ? "pricing.action.authenticated" : "pricing.action.guest");
@@ -172,7 +171,7 @@ function syncLandingAuth(root, locale = "zh") {
     if (initial) initial.textContent = getUserInitial(user);
   });
   root.querySelectorAll("[data-auth-dashboard]").forEach((link) => {
-    link.href = authenticated ? "/keys" : "/register";
+    link.href = "/dashboard";
   });
   root.querySelectorAll("[data-auth-register]").forEach((link) => {
     link.hidden = authenticated;
