@@ -30,7 +30,7 @@ const coreNav = [
 ];
 
 const accountNav = [
-  { path: "/subscriptions", key: "nav.subscriptions", icon: "card", standardOnly: true },
+  { path: "/subscriptions", key: "nav.subscriptions", icon: "card", standardOnly: true, sidebarHidden: true },
   { path: "/purchase", key: "nav.purchase", icon: "cart", feature: "payment", standardOnly: true },
   { path: "/orders", key: "nav.orders", icon: "order", feature: "payment", standardOnly: true },
   { path: "/redeem", key: "nav.redeem", icon: "gift", standardOnly: true },
@@ -356,8 +356,8 @@ export function ConsoleLayout({ children }) {
   const simpleMode = user?.run_mode === "simple";
   const customItems = (settings?.custom_menu_items || []).filter((item) => item.visibility === "user").sort((a, b) => a.sort_order - b.sort_order).flatMap((item) => { const kind = nativeCustomPageKind(item); const markdown = item.page_slug || String(item.url || "").startsWith("md:"); return nativeCustomPageRoute(kind) || !markdown ? [] : [{ path: `/custom/${item.id}`, label: item.label, icon: nativeCustomPageIcon(kind) }]; });
   const workspaceItems = coreNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)).map((item) => item.path === "/dashboard" && user?.role === "admin" ? { ...item, path: "/admin/dashboard" } : item);
-  const personalItems = [...accountNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...customItems];
-  const allItems = [...workspaceItems, ...personalItems];
+  const personalItems = [...accountNav.filter((item) => !item.sidebarHidden && itemEnabled(item, settings, simpleMode, batchEnabled)), ...customItems];
+  const allItems = [...workspaceItems, ...accountNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...customItems];
   const title = pageTitle(location.pathname, allItems, t);
   const logo = branding?.siteLogo || DEFAULT_SITE_LOGO;
   const siteName = branding?.siteName || DEFAULT_SITE_NAME;

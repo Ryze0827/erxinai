@@ -26,6 +26,7 @@ When implementing from a selected generated mock, treat that image as the source
 - `/admin/dashboard` remains a compatibility alias for the user dashboard; it does not expose administrator functionality.
 - Console pages use the available desktop workspace more fully instead of centering content in a narrow admin column.
 - The desktop console sidebar can collapse to an icon rail, persists the user's choice, and remains a drawer on mobile.
+- The console sidebar hides the `My subscriptions` entry while preserving its navigation definition, `/subscriptions` route, and page implementation for direct access and future re-enablement.
 - Payment selectors retain recognizable provider branding and the backend-provided payment method display name.
 - The API Keys page shows the configured default and custom API endpoints with copy actions and uses the default endpoint in quick-start examples.
 - Group badges retain the group name while using platform-specific colors and recognizable platform marks, following `sub2api` semantics.
