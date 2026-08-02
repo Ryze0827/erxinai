@@ -9,6 +9,7 @@ const THEME_EVENT = "sentence-console-theme";
 const GLASS_EVENT = "sentence-console-glass-transparency";
 const BACKGROUND_EVENT = "sentence-console-background";
 const DEFAULT_GLASS_TRANSPARENCY = 50;
+const ANNOUNCEMENT_TRANSPARENCY_OFFSET = 30;
 const GLASS_ALPHA = {
   light: { surface: 0.46, raised: 0.72, subtle: 0.38, muted: 0.5 },
   dark: { surface: 0.56, raised: 0.76, subtle: 0.48, muted: 0.52 },
@@ -44,11 +45,13 @@ export function resolveTheme(preference = getThemePreference()) {
 export function applyGlassTransparency(transparency = getGlassTransparency()) {
   const next = normalizeGlassTransparency(transparency);
   const alpha = GLASS_ALPHA[resolveTheme()];
+  const announcementTransparency = Math.max(0, next - ANNOUNCEMENT_TRANSPARENCY_OFFSET);
   const root = document.documentElement;
   root.style.setProperty("--console-surface-alpha", scaledGlassAlpha(alpha.surface, next));
   root.style.setProperty("--console-surface-raised-alpha", scaledGlassAlpha(alpha.raised, next));
   root.style.setProperty("--console-surface-subtle-alpha", scaledGlassAlpha(alpha.subtle, next));
   root.style.setProperty("--console-surface-muted-alpha", scaledGlassAlpha(alpha.muted, next));
+  root.style.setProperty("--console-announcement-surface-alpha", scaledGlassAlpha(alpha.raised, announcementTransparency));
 }
 
 export function applyConsoleBackground(background = getConsoleBackground(), theme = resolveTheme()) {
