@@ -4597,3 +4597,110 @@ html[data-console-theme="dark"] .console-key-actions > .console-key-use-action:h
     transform: scale(0.82);
   }
 }
+
+@keyframes console-site-announcement-scroll {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.console-site-announcement-slot {
+  width: min(700px, 36vw);
+  min-width: 180px;
+  display: flex;
+  flex: 1 1 700px;
+  justify-content: flex-end;
+}
+
+.console-site-announcement {
+  width: 50%;
+  min-width: 0;
+  height: 34px;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid rgba(223, 143, 63, 0.34);
+  border-radius: var(--console-r-sm);
+  color: #8a4b13;
+  background: rgba(247, 174, 99, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  font-family: var(--console-font-body);
+  font-size: 12px;
+  line-height: 32px;
+}
+
+.console-site-announcement-viewport {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.console-site-announcement-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  white-space: nowrap;
+  animation: console-site-announcement-scroll 32s linear infinite;
+  will-change: transform;
+}
+
+.console-site-announcement-track > span {
+  min-width: min(350px, 18vw);
+  padding: 0 52px 0 20px;
+  font-weight: 600;
+}
+
+.console-site-announcement:hover .console-site-announcement-track {
+  animation-play-state: paused;
+}
+
+html[data-console-theme="dark"] .console-site-announcement {
+  border-color: rgba(244, 168, 91, 0.3);
+  color: #f2bd83;
+  background: rgba(201, 110, 32, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 232, 205, 0.08);
+}
+
+@media (max-width: 1440px) {
+  .console-site-announcement-slot {
+    width: min(360px, 25vw);
+    min-width: 140px;
+    flex-basis: 360px;
+  }
+
+  .console-site-announcement-track > span {
+    min-width: min(180px, 12.5vw);
+  }
+}
+
+@media (max-width: 760px) {
+  .console-site-announcement-slot {
+    min-width: 84px;
+  }
+
+  .console-site-announcement {
+    width: 100%;
+  }
+
+  .console-site-announcement-track > span {
+    min-width: 84px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .console-site-announcement-track {
+    width: 100%;
+    animation: none;
+    will-change: auto;
+  }
+
+  .console-site-announcement-track > span:first-child {
+    overflow: hidden;
+    min-width: 0;
+    padding-right: 18px;
+    text-overflow: ellipsis;
+  }
+
+  .console-site-announcement-track > span[aria-hidden="true"] {
+    display: none;
+  }
+}

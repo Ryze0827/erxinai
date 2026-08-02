@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, Navigate, NavLink, useLocation, useNavigate } from "react-router";
 import { announcementsApi, keysApi, subscriptionsApi } from "../api";
@@ -102,6 +102,12 @@ function BackgroundControl() {
 
 function announcementContent(item) {
   return String(item?.content || item?.message || "").replace(/\\r\\n|\\n|\\r/g, "\n");
+}
+
+function SiteAnnouncementBar() {
+  const { t } = useLocale();
+  const message = "GPT分组按充值金额，调低倍率，详情看倒数第二条公告";
+  return <div className="console-site-announcement-slot"><aside className="console-site-announcement" role="status" aria-label={t("announcement.title")}><div className="console-site-announcement-viewport"><div className="console-site-announcement-track"><span>{message}</span><span aria-hidden="true">{message}</span></div></div></aside></div>;
 }
 
 function AnnouncementMenu() {
@@ -327,7 +333,7 @@ function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
     return () => { active = false; };
   }, []);
 
-  return <header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label="Menu" onClick={() => setMobileOpen((value) => !value)} /><div><span>{t("app.name")}</span><strong>{title}</strong></div></div><div className="console-header-actions">{summary?.active_count > 0 && <Link className="console-subscription-pill" to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<Walkthrough setMobileOpen={setMobileOpen} />{safeExternalUrl(settings?.doc_url) && <a className="console-header-link" href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<button className="console-language" onClick={() => setLocale(locale === "en" ? "zh" : "en")}><Icon name="globe" size={17} />{t("nav.language")}</button><ThemeToggle /><AnnouncementMenu /><div className="console-balance"><span>{t("common.balance")}</span><strong>{formatUsd(user?.balance || 0)}</strong></div><UserMenu onNavigate={() => setMobileOpen(false)} /></div></header>;
+  return <header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label="Menu" onClick={() => setMobileOpen((value) => !value)} /><div><span>{t("app.name")}</span><strong>{title}</strong></div></div><SiteAnnouncementBar /><div className="console-header-actions">{summary?.active_count > 0 && <Link className="console-subscription-pill" to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<Walkthrough setMobileOpen={setMobileOpen} />{safeExternalUrl(settings?.doc_url) && <a className="console-header-link" href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<button className="console-language" onClick={() => setLocale(locale === "en" ? "zh" : "en")}><Icon name="globe" size={17} />{t("nav.language")}</button><ThemeToggle /><AnnouncementMenu /><div className="console-balance"><span>{t("common.balance")}</span><strong>{formatUsd(user?.balance || 0)}</strong></div><UserMenu onNavigate={() => setMobileOpen(false)} /></div></header>;
 }
 
 function pageTitle(pathname, items, t) {
