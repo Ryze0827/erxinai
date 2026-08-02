@@ -106,7 +106,7 @@ function announcementContent(item) {
 
 function SiteAnnouncementBar() {
   const { t } = useLocale();
-  const message = "GPT分组按充值金额，调低倍率，详情看倒数第二条公告";
+  const message = "GPT分组按充值金额，调低倍率/开通专线，详情见历史公告";
   return <div className="console-site-announcement-slot"><aside className="console-site-announcement" role="status" aria-label={t("announcement.title")}><div className="console-site-announcement-viewport"><div className="console-site-announcement-track"><span>{message}</span><span aria-hidden="true">{message}</span></div></div></aside></div>;
 }
 
