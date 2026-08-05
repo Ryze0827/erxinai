@@ -95,7 +95,7 @@ function BackgroundControl() {
   const { background, setBackground } = useConsoleBackground();
   const selectedBackground = resolved === "dark" ? "scene" : background;
   const options = resolved === "light"
-    ? [{ value: "white", label: t("appearance.backgroundWhite") }, { value: "scene", label: t("appearance.backgroundScene") }]
+    ? [{ value: "white", label: t("appearance.backgroundWhite") }, { value: "scene", label: t("appearance.backgroundScene") }, { value: "doodle", label: t("appearance.backgroundDoodle") }]
     : [{ value: "scene", label: t("appearance.backgroundScene") }];
   return <div className="console-background-control" role="group" aria-label={t("appearance.background")}><strong>{t("appearance.background")}</strong><div>{options.map((option) => <button type="button" className={`console-background-option ${selectedBackground === option.value ? "is-selected" : ""}`} aria-pressed={selectedBackground === option.value} aria-label={option.label} onClick={() => setBackground(option.value)} key={option.value}><span className={`console-background-swatch is-${option.value}`} aria-hidden="true" />{selectedBackground === option.value && <span className="console-background-selection" aria-hidden="true"><Icon name="check" size={10} /></span>}</button>)}</div></div>;
 }

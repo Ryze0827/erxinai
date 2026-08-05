@@ -250,6 +250,16 @@ html[data-console-theme="light"][data-console-background="white"] .console-scene
   display: none;
 }
 
+html[data-console-theme="light"][data-console-background="doodle"] .console-scene {
+  background: #f8f4ed url("/assets/img/console-doodle-wallpaper.jpg") center / cover no-repeat;
+  background-blend-mode: normal;
+  filter: none;
+}
+
+html[data-console-theme="light"][data-console-background="doodle"] .console-scene::after {
+  display: none;
+}
+
 .console-sidebar {
   top: 16px;
   bottom: 16px;
@@ -414,6 +424,10 @@ html[data-console-theme="light"][data-console-background="white"] .console-scene
 
 .console-background-swatch.is-white {
   background: #fff;
+}
+
+.console-background-swatch.is-doodle {
+  background: #f8f4ed url("/assets/img/console-doodle-wallpaper.jpg") center / cover no-repeat;
 }
 
 .console-background-selection {

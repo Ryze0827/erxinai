@@ -4,7 +4,7 @@ const STORAGE_KEY = "sentence_console_theme";
 const GLASS_STORAGE_KEY = "sentence_console_glass_transparency";
 const BACKGROUND_STORAGE_KEY = "sentence_console_background";
 const PREFERENCES = ["light", "dark"];
-const BACKGROUND_PREFERENCES = ["scene", "white"];
+const BACKGROUND_PREFERENCES = ["scene", "white", "doodle"];
 const THEME_EVENT = "sentence-console-theme";
 const GLASS_EVENT = "sentence-console-glass-transparency";
 const BACKGROUND_EVENT = "sentence-console-background";
@@ -56,7 +56,7 @@ export function applyGlassTransparency(transparency = getGlassTransparency()) {
 
 export function applyConsoleBackground(background = getConsoleBackground(), theme = resolveTheme()) {
   const next = BACKGROUND_PREFERENCES.includes(background) ? background : "scene";
-  document.documentElement.dataset.consoleBackground = theme === "dark" && next === "white" ? "scene" : next;
+  document.documentElement.dataset.consoleBackground = theme === "dark" && next !== "scene" ? "scene" : next;
 }
 
 export function applyTheme(preference = getThemePreference()) {
