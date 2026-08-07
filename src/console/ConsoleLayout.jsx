@@ -38,7 +38,6 @@ const accountNav = [
   { path: "/affiliate", key: "nav.affiliate", icon: "users", feature: "affiliate", standardOnly: true },
   { path: "/image-studio", key: "imageStudio.title", icon: "image" },
   { path: "/image-api-docs", key: "imageDocs.title", icon: "book" },
-  { path: "/video-workflow", key: "videoWorkflow.title", icon: "play" },
 ];
 
 const featureDefinitions = {
