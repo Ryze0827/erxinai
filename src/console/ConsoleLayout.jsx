@@ -15,6 +15,7 @@ import "./console.css";
 
 const SIDEBAR_STORAGE_KEY = "sentence_console_sidebar_collapsed";
 const SIDEBAR_MOTION = { duration: 220, easing: "cubic-bezier(.2, .76, .25, 1)" };
+const STORE_URL = "https://shop.erxin.store";
 
 function canAnimateSidebar() {
   return window.matchMedia("(min-width: 981px)").matches && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -81,6 +82,12 @@ function useBatchNavigationAccess(authenticated) {
 function SidebarSection({ title, items, onNavigate, collapsed }) {
   const { t } = useLocale();
   return <div className="console-nav-section"><span className="console-nav-label">{title}</span>{items.map((item) => { const label = item.label || t(item.key); return <NavLink key={item.path} to={item.path} title={collapsed ? label : undefined} aria-label={collapsed ? label : undefined} className={({ isActive }) => `console-nav-link ${isActive ? "is-active" : ""}`} onClick={onNavigate}><Icon name={item.icon} size={19} /><span>{label}</span><Icon name="chevronRight" size={14} /></NavLink>; })}</div>;
+}
+
+function StoreNavigation({ collapsed, onNavigate }) {
+  const { t } = useLocale();
+  const label = t("nav.store");
+  return <div className="console-nav-section"><a className="console-nav-link" href={STORE_URL} target="_blank" rel="noopener noreferrer" title={collapsed ? label : undefined} aria-label={collapsed ? label : undefined} onClick={onNavigate}><Icon name="external" size={19} /><span>{label}</span><Icon name="chevronRight" size={14} /></a></div>;
 }
 
 function GlassTransparencyControl() {
@@ -408,7 +415,7 @@ export function ConsoleLayout({ children }) {
     workspaceMotionRef.current?.cancel();
     setSidebarCollapsed((value) => !value);
   };
-  return <div className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><div className="console-scene" /><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`}><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <img key={logo} src={logo} alt="" />}{brandingReady && <div><strong>{siteName}</strong><span>AI gateway</span></div>}</Link><nav><SidebarSection title={t("nav.overview")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.account")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><BackgroundControl /><GlassTransparencyControl /><div className="console-sidebar-foot"><Link to="/" title={sidebarCollapsed ? t("nav.home") : undefined}><Icon name="home" size={18} /><span>{t("nav.home")}</span></Link><button type="button" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /><span>{t("nav.collapse")}</span></button></div></aside>{mobileOpen && <button className="console-sidebar-overlay" aria-label="Close menu" onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></div>;
+  return <div className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><div className="console-scene" /><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`}><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <img key={logo} src={logo} alt="" />}{brandingReady && <div><strong>{siteName}</strong><span>AI gateway</span></div>}</Link><nav><SidebarSection title={t("nav.overview")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.account")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><BackgroundControl /><GlassTransparencyControl /><div className="console-sidebar-foot"><Link to="/" title={sidebarCollapsed ? t("nav.home") : undefined}><Icon name="home" size={18} /><span>{t("nav.home")}</span></Link><button type="button" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /><span>{t("nav.collapse")}</span></button></div></aside>{mobileOpen && <button className="console-sidebar-overlay" aria-label="Close menu" onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></div>;
 }
 
 export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false }) {
