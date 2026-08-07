@@ -76,6 +76,7 @@ function endpointItems(settings, defaultLabel) {
 
 function EndpointPopover({ settings }) {
   const { t } = useLocale();
+  if (!settings) return <div className="console-endpoint-popover" role="status" aria-label={t("common.loading")}><span>{t("keys.endpoints")}</span><div className="console-endpoint-placeholder console-skeleton" aria-hidden="true" /></div>;
   const defaultLabel = t("keys.endpointDefault");
   const items = endpointItems(settings, defaultLabel);
   return <div className="console-endpoint-popover"><span>{t("keys.endpoints")}</span>{items.map((item) => <div key={item.endpoint} title={item.description || item.endpoint}><b>{item.name}{item.primary && item.name !== defaultLabel && <small>{defaultLabel}</small>}</b><code>{item.endpoint}</code><CopyButton value={item.endpoint} /><a href={`https://www.tcptest.cn/http/${encodeURIComponent(item.endpoint)}`} target="_blank" rel="noreferrer" aria-label={t("keys.endpointSpeed")}><Icon name="pulse" size={16} /></a></div>)}</div>;

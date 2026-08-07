@@ -1789,6 +1789,7 @@
 .console-endpoint-popover { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 13px; }
 .console-endpoint-popover > span { display: inline-flex; align-items: center; gap: 6px; margin-right: 2px; color: #6a8496; font-size: 12px; font-weight: 700; }
 .console-endpoint-popover > div { display: inline-grid; max-width: 560px; min-height: 42px; grid-template-columns: auto minmax(180px, 1fr) 34px 34px; align-items: center; gap: 8px; padding: 6px 7px 6px 11px; border: 1px solid rgba(96, 142, 175, .2); border-radius: 12px; background: rgba(242, 250, 252, .77); }
+.console-endpoint-popover > .console-endpoint-placeholder { width: min(100%, 560px); background: var(--console-surface-muted); }
 .console-endpoint-popover b { color: #42657b; font-size: 11.5px; white-space: nowrap; }
 .console-endpoint-popover b small { margin-left: 5px; padding: 2px 5px; border-radius: 5px; color: #2b806d; background: #dff5ed; font-size: 8.5px; text-transform: uppercase; }
 .console-endpoint-popover code { overflow: hidden; color: #31637d; font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
