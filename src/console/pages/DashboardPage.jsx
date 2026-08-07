@@ -5,7 +5,7 @@ import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 import { NATIVE_CUSTOM_PAGE, nativeCustomPageRoute } from "../nativeCustomPages";
-import { ErrorState, Page, Panel, Spinner, StatCard } from "../UI";
+import { Button, ErrorState, Page, Panel, StatCard, StatCardSkeleton } from "../UI";
 import { DateRangePicker } from "../components/ConsoleControls";
 import { DistributionChart, UsageTrendChart } from "../components/UsageCharts";
 import { dateInput, formatCompact, formatDuration, formatTokenMillions, formatTokenMillionsFixed } from "../utils";
@@ -35,7 +35,7 @@ function tokenActivityMonths(days, leading, formatDate) {
   return Array.from({ length: TOKEN_ACTIVITY_CELL_COUNT / 7 }, (_, index) => labels.get(index) || "");
 }
 
-function TokenActivity({ items, loading, error, formatDate, t }) {
+function TokenActivity({ items, loading, error, formatDate, onRetry, t }) {
   const days = tokenActivityDays(items);
   const maximum = Math.max(...days.map((day) => day.tokens), 0);
   const leading = new Date(`${days[0].date}T00:00:00`).getDay();
@@ -47,11 +47,20 @@ function TokenActivity({ items, loading, error, formatDate, t }) {
     const label = t("dashboard.activityDay", { date: formatDate(day.date, { dateOnly: true }), tokens: formatTokenMillions(day.tokens) });
     const tooltipEdge = index < 14 ? "is-tooltip-start" : index >= TOKEN_ACTIVITY_CELL_COUNT - 14 ? "is-tooltip-end" : "";
     return <span className={`console-token-activity-cell is-level-${level} ${tooltipEdge}`} role="gridcell" aria-label={label} data-tooltip={label} key={day.date} />;
-  })}</div><div className="console-token-activity-months" aria-hidden="true">{months.map((month, index) => <span key={`month-${index}`}>{month}</span>)}</div>{error && <small className="console-token-activity-error">{error}</small>}</div>;
+  })}</div><div className="console-token-activity-months" aria-hidden="true">{months.map((month, index) => <span key={`month-${index}`}>{month}</span>)}</div>{error && <div className="console-token-activity-error" role="alert"><small>{error}</small><button type="button" onClick={onRetry}>{t("common.retry")}</button></div>}</div>;
 }
 
 function ThroughputStatCard({ stats, formatNumber, t }) {
   return <div className="console-stat console-stat--green console-stat--throughput"><div><span>RPM</span><strong>{formatNumber(stats.rpm, { maximumFractionDigits: 0 })}</strong><small>{t("dashboard.latency")}: {formatDuration(stats.average_duration_ms)}</small></div><i><Icon name="pulse" size={20} /></i><div className="console-throughput-tpm"><span>TPM</span><strong>{formatTokenMillionsFixed(stats.tpm)}</strong></div></div>;
+}
+
+function DashboardPanelSkeleton({ className = "", rows = 4 }) {
+  return <section className={`console-panel console-dashboard-panel-skeleton console-skeleton ${className}`.trim()} aria-hidden="true"><div className="console-panel-head"><i /></div><div className="console-dashboard-panel-skeleton-body">{Array.from({ length: rows }, (_, index) => <span key={index} />)}</div></section>;
+}
+
+function DashboardSkeleton({ title, loadingLabel }) {
+  const actions = <div className="console-dashboard-actions console-dashboard-actions-skeleton console-skeleton" aria-hidden="true"><span /><i /><b /></div>;
+  return <Page title={title} actions={actions} className="console-dashboard-loading"><span className="console-visually-hidden" role="status">{loadingLabel}</span><div className="console-stat-grid console-stat-grid--4 console-dashboard-stat-grid"><StatCardSkeleton tone="green" /><StatCardSkeleton tone="amber" /><StatCardSkeleton /><StatCardSkeleton /></div><div className="console-grid console-dashboard-insights"><DashboardPanelSkeleton rows={5} /><DashboardPanelSkeleton rows={7} /><DashboardPanelSkeleton className="console-dashboard-model-distribution" rows={6} /></div><DashboardPanelSkeleton className="console-trend" rows={3} /></Page>;
 }
 
 export function DashboardPage() {
@@ -64,6 +73,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [sectionErrors, setSectionErrors] = useState({ models: "", trend: "" });
   const mountedRef = useRef(true);
   const activityMountedRef = useRef(true);
   const loadedRef = useRef(false);
@@ -84,11 +94,17 @@ export function DashboardPage() {
       ]);
       const stats = settledValue(results[1], null);
       if (!stats) throw results[1].reason || new Error(t("common.loadFailed"));
-      const models = settledValue(results[2], {});
-      const trend = settledValue(results[3], {});
       if (!mountedRef.current || request !== loadRequestRef.current) return;
       loadedRef.current = true;
-      setData({ stats, models: models.models || [], trend: trend.trend || [] });
+      setData((current) => ({
+        stats,
+        models: results[2].status === "fulfilled" ? results[2].value?.models || [] : current.models,
+        trend: results[3].status === "fulfilled" ? results[3].value?.trend || [] : current.trend,
+      }));
+      setSectionErrors({
+        models: results[2].status === "rejected" ? results[2].reason?.message || t("common.loadFailed") : "",
+        trend: results[3].status === "rejected" ? results[3].reason?.message || t("common.loadFailed") : "",
+      });
     } catch (loadError) {
       if (mountedRef.current && request === loadRequestRef.current) setError(loadError.message || t("common.loadFailed"));
     } finally {
@@ -131,12 +147,13 @@ export function DashboardPage() {
     loadActivity(controller.signal);
     return () => { activityMountedRef.current = false; activityRequestRef.current += 1; controller.abort(); };
   }, [loadActivity]);
-  if (loading) return <Page title={t("nav.dashboard")}><Panel><Spinner /></Panel></Page>;
+  if (loading) return <DashboardSkeleton title={t("nav.dashboard")} loadingLabel={t("common.loading")} />;
   if (error && !data.stats) return <Page title={t("nav.dashboard")}><Panel><ErrorState message={error} onRetry={() => load()} /></Panel></Page>;
 
   const stats = data.stats || {};
   const actions = <div className="console-dashboard-actions"><span>{locale === "zh" ? "时间范围：" : "Time range:"}</span><DateRangePicker startDate={range.start_date} endDate={range.end_date} onChange={setRange} /><button type="button" className={`console-refresh-action ${refreshing ? "is-loading" : ""}`} onClick={() => refresh()} disabled={refreshing} aria-busy={refreshing}><Icon name="refresh" size={17} />{t("common.refresh")}</button></div>;
   return <Page title={t("dashboard.title")} actions={actions}>
+    {error && <div className="console-dashboard-inline-error" role="alert"><Icon name="warning" size={17} /><span>{error}</span><Button onClick={() => load()}>{t("common.retry")}</Button></div>}
     <div className="console-stat-grid console-stat-grid--4 console-dashboard-stat-grid">
       <ThroughputStatCard stats={stats} formatNumber={formatNumber} t={t} />
       <StatCard label={t("dashboard.requests")} value={formatCompact(stats.today_requests, locale)} meta={`${t("dashboard.total")}: ${formatCompact(stats.total_requests, locale)}`} icon="pulse" tone="amber" />
@@ -145,9 +162,9 @@ export function DashboardPage() {
     </div>
     <div className="console-grid console-dashboard-insights">
       <Panel className="console-dashboard-quick-panel" title={t("dashboard.quick")}><div className="console-quick-actions"><Link to="/keys"><Icon name="key" size={19} /><span><strong>{t("dashboard.createKey")}</strong><small>{t("keys.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>{!simpleMode && <Link to="/usage"><Icon name="chart" size={19} /><span><strong>{t("dashboard.inspectUsage")}</strong><small>{t("usage.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && settings?.payment_enabled !== false && <Link to="/purchase"><Icon name="cart" size={19} /><span><strong>{t("dashboard.addCredit")}</strong><small>{t("purchase.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to={IMAGE_STUDIO_PATH}><Icon name="image" size={19} /><span><strong>{t("dashboard.generateImage")}</strong><small>{t("dashboard.generateImageHint")}</small></span><Icon name="chevronRight" size={15} /></Link>}{!simpleMode && <Link to="/redeem"><Icon name="gift" size={19} /><span><strong>{t("redeem.title")}</strong><small>{t("redeem.subtitle")}</small></span><Icon name="chevronRight" size={15} /></Link>}</div></Panel>
-      <Panel className="console-token-activity-panel" title={t("dashboard.activity")} actions={<span className="console-token-activity-period">{t("dashboard.last6Months")}</span>}><TokenActivity items={activity.items} loading={activity.loading} error={activity.error} formatDate={formatDate} t={t} /></Panel>
-      <DistributionChart className="console-dashboard-model-distribution" title={t("dashboard.models")} data={data.models} nameKey="model" limit={6} showMetricTabs={false} actualOnly itemLabel={t("usage.model")} tokenLabel="Token" />
+      <Panel className="console-token-activity-panel" title={t("dashboard.activity")} actions={<span className="console-token-activity-period">{t("dashboard.last6Months")}</span>}><TokenActivity items={activity.items} loading={activity.loading} error={activity.error} formatDate={formatDate} onRetry={() => loadActivity()} t={t} /></Panel>
+      {sectionErrors.models ? <Panel className="console-dashboard-model-distribution console-dashboard-section-error" title={t("dashboard.models")}><ErrorState message={sectionErrors.models} onRetry={() => load()} /></Panel> : <DistributionChart className="console-dashboard-model-distribution" title={t("dashboard.models")} data={data.models} nameKey="model" limit={6} showMetricTabs={false} actualOnly itemLabel={t("usage.model")} tokenLabel="Token" />}
     </div>
-    <UsageTrendChart data={data.trend} loading={loading} />
+    {sectionErrors.trend ? <Panel className="console-trend console-dashboard-section-error" title={locale === "zh" ? "Token 用量趋势" : "Token usage trend"}><ErrorState message={sectionErrors.trend} onRetry={() => load()} /></Panel> : <UsageTrendChart data={data.trend} loading={loading} />}
   </Page>;
 }

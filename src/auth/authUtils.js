@@ -27,7 +27,7 @@ export function getErrorMessage(error, fallback = "Something went wrong. Please 
   return errorMessages[error?.reason] || error?.message || fallback;
 }
 
-export function safeAuthRedirect(value, fallback = "/dashboard") {
+export function safeAuthRedirect(value, fallback = "/admin/dashboard") {
   const redirect = String(value || "").trim();
   if (!redirect || redirect.length > 2048 || !redirect.startsWith("/") || redirect.startsWith("//") || redirect.includes("\\") || /[\u0000-\u001f\u007f]/.test(redirect)) return fallback;
   try {

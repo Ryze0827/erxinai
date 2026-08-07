@@ -9,12 +9,12 @@ When implementing from a selected generated mock, treat that image as the source
 ## Durable prototype decisions
 
 - All user-facing brand copy uses `WayX`; do not reintroduce the previous brand name.
-- Successful sign-in, 2FA, OAuth authentication, and generic authentication success open `/dashboard` by default, while a safe explicit local redirect takes precedence. Email/password registration and email verification continue to open `/keys`.
-- The authenticated homepage navigation shows the user's initial and a Dashboard entry; regular users go to `/dashboard`, while administrators go to `/admin/dashboard`.
+- Successful sign-in, 2FA, OAuth authentication, and generic authentication success open `/admin/dashboard` by default, while a safe explicit local redirect takes precedence. Email/password registration and email verification continue to open `/keys`.
+- The authenticated homepage navigation shows the user's initial and a Dashboard entry that opens `/admin/dashboard` for every authenticated user.
 - The homepage is bilingual in Chinese and English, defaults to Chinese when no locale has been saved, persists language selection through the shared locale preference, and localizes navigation, hero, feature, pricing, FAQ, demo, and footer copy.
-- The homepage pricing card offers only usage-based billing and subscription. Usage-based billing remains actionable and uses the localized `Start using` action with the `/dashboard` destination; subscription is visibly marked as not yet available and exposes no actionable destination. Authenticated pricing replaces account-creation guidance with an API-key-ready message and hides the login prompt.
+- The homepage pricing card offers only usage-based billing and subscription. Usage-based billing remains actionable and uses the localized `Start using` action with the `/admin/dashboard` destination; subscription is visibly marked as not yet available and exposes no actionable destination. Authenticated pricing replaces account-creation guidance with an API-key-ready message and hides the login prompt.
 - Turnstile verification fills the available authentication form width and remains responsive on narrow screens.
-- The homepage `Start building` action opens `/dashboard`.
+- The homepage `Start building` action opens `/admin/dashboard`.
 - The homepage navigation and authentication-page top-left logos use the same resolved public `siteLogo` as the console sidebar, while the visible wordmark remains `WayX`; keep the icon hidden until public branding resolves so a custom logo never flashes the default asset.
 - The homepage hero omits the OpenAI-compatibility eyebrow. When authenticated, the footer hides the complete Account column instead of showing login or registration links. The bilingual FAQ states that service is currently unavailable in mainland China, Hong Kong, Macau, and Taiwan because of policy and regulatory restrictions.
 - The Hero keeps the `Text / Code / Image / Reasoning` capability pills above the original overlapping AI tool icon strip.
@@ -23,7 +23,7 @@ When implementing from a selected generated mock, treat that image as the source
 - Password visibility uses the `sub2api` eye/eye-off icon button instead of `Show/Hide` text.
 - The user console covers the complete non-admin `sub2api` feature set while keeping WayX's light fluted-glass visual language; no administrator APIs or administrator navigation are included.
 - New console, payment helper, and public key-usage surfaces are bilingual, default to English, persist the selected language, and send it through `Accept-Language`.
-- `/admin/dashboard` remains a compatibility alias for the user dashboard; it does not expose administrator functionality.
+- `/admin/dashboard` is the canonical user-dashboard route and does not expose administrator functionality; `/dashboard` remains a compatibility alias that redirects to it.
 - Console pages use the available desktop workspace more fully instead of centering content in a narrow admin column.
 - The desktop console sidebar can collapse to an icon rail, persists the user's choice, and remains a drawer on mobile.
 - The console sidebar includes a third top-level external entry named `二星会员店铺` / `Erxin Member Store` after the Overview and Account sections, linking to `https://shop.erxin.store` in a new tab.

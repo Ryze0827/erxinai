@@ -114,10 +114,8 @@ function observeGatewayDemos(root) {
   return observer;
 }
 
-function getDashboardPath(user) {
-  if (user?.role === "admin") return "/admin/dashboard";
-  if (import.meta.env.VITE_DASHBOARD_URL) return import.meta.env.VITE_DASHBOARD_URL;
-  return "/dashboard";
+function getDashboardPath() {
+  return "/admin/dashboard";
 }
 
 function getUserInitial(user) {
@@ -131,7 +129,7 @@ function getLandingAuthState() {
 }
 
 function setPricingActionHref(action) {
-  action.href = "/dashboard";
+  action.href = "/admin/dashboard";
 }
 
 function syncPricingAuth(root, authenticated, locale) {
@@ -163,7 +161,7 @@ function syncPricingAuth(root, authenticated, locale) {
 function syncLandingAuth(root, locale = "zh") {
   const { user, authenticated } = getLandingAuthState();
   root.querySelectorAll("[data-auth-link]").forEach((link) => {
-    link.href = authenticated ? getDashboardPath(user) : "/login";
+    link.href = authenticated ? getDashboardPath() : "/login";
     link.dataset.authenticated = String(authenticated);
     const label = link.querySelector("[data-auth-label]");
     const initial = link.querySelector("[data-auth-initial]");
@@ -171,7 +169,7 @@ function syncLandingAuth(root, locale = "zh") {
     if (initial) initial.textContent = getUserInitial(user);
   });
   root.querySelectorAll("[data-auth-dashboard]").forEach((link) => {
-    link.href = "/dashboard";
+    link.href = "/admin/dashboard";
   });
   root.querySelectorAll("[data-auth-register]").forEach((link) => {
     link.hidden = authenticated;
@@ -254,7 +252,7 @@ export function App() {
           <Route path="/email-verify" element={<EmailVerifyPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/auth/success" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/auth/success" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/auth/callback" element={<OAuthCallbackPage />} />
           <Route path="/auth/oauth/callback" element={<OAuthCallbackPage />} />
           <Route path="/auth/linuxdo/callback" element={<OAuthCallbackPage provider="linuxdo" />} />
@@ -264,7 +262,7 @@ export function App() {
           <Route path="/auth/oidc/callback" element={<OAuthCallbackPage provider="oidc" />} />
           <Route path="/auth/wechat/payment/callback" element={<WeChatPaymentCallbackPage />} />
 
-          <Route path="/dashboard" element={<ConsoleRoute><DashboardPage /></ConsoleRoute>} />
+          <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={<ConsoleRoute><DashboardPage /></ConsoleRoute>} />
           <Route path="/keys" element={<ConsoleRoute><KeysPage /></ConsoleRoute>} />
           <Route path="/batch-image" element={<ConsoleRoute standardOnly><BatchImagesPage /></ConsoleRoute>} />

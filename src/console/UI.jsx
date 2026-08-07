@@ -30,12 +30,31 @@ export function Panel({ title, eyebrow, actions, children, className = "", ...pr
   );
 }
 
+function pointerPressProps(props) {
+  const { onPointerDown, onPointerUp, onPointerCancel, onPointerLeave, onBlur, ...rest } = props;
+  const clear = (event, handler) => {
+    delete event.currentTarget.dataset.pointerPressed;
+    handler?.(event);
+  };
+  return {
+    ...rest,
+    onPointerDown: (event) => {
+      if (!event.currentTarget.disabled && (event.pointerType !== "mouse" || event.button === 0)) event.currentTarget.dataset.pointerPressed = "true";
+      onPointerDown?.(event);
+    },
+    onPointerUp: (event) => clear(event, onPointerUp),
+    onPointerCancel: (event) => clear(event, onPointerCancel),
+    onPointerLeave: (event) => clear(event, onPointerLeave),
+    onBlur: (event) => clear(event, onBlur),
+  };
+}
+
 export function Button({ variant = "secondary", icon, className = "", children, ...props }) {
-  return <button type="button" className={`console-button console-button--${variant} ${className}`} {...props}>{icon && <Icon name={icon} size={17} />}{children}</button>;
+  return <button type="button" className={`console-button console-button--${variant} ${className}`} {...pointerPressProps(props)}>{icon && <Icon name={icon} size={17} />}{children}</button>;
 }
 
 export function IconButton({ icon, label, className = "", ...props }) {
-  return <button type="button" className={`console-icon-button ${className}`} aria-label={label} title={label} {...props}><Icon name={icon} size={18} /></button>;
+  return <button type="button" className={`console-icon-button ${className}`} aria-label={label} title={label} {...pointerPressProps(props)}><Icon name={icon} size={18} /></button>;
 }
 
 export function Field({ label, hint, error, className = "", children }) {
@@ -102,6 +121,7 @@ export function SelectInput({ children, className = "", value = "", onChange, di
     const normalized = query.trim().toLocaleLowerCase();
     return normalized ? options.filter((option) => option.label.toLocaleLowerCase().includes(normalized)) : options;
   }, [options, query]);
+  const focusedOptionId = open && focused >= 0 ? `${menuId}-option-${focused}` : undefined;
 
   const updatePosition = () => {
     const rect = triggerRef.current?.getBoundingClientRect();
@@ -125,6 +145,7 @@ export function SelectInput({ children, className = "", value = "", onChange, di
     const start = focused < 0 ? (direction > 0 ? 0 : filtered.length - 1) : focused + direction;
     setFocused(firstEnabled(filtered, start, direction));
   };
+  const moveToEdge = (edge) => setFocused(firstEnabled(filtered, edge === "start" ? 0 : filtered.length - 1, edge === "start" ? 1 : -1));
   const select = (option) => {
     if (!option || option.disabled) return;
     const target = { value: option.value, name };
@@ -178,6 +199,9 @@ export function SelectInput({ children, className = "", value = "", onChange, di
       if (!open) setOpen(true);
       else if (event.key === "ArrowDown") move(1);
       else if (event.key === "ArrowUp") move(-1);
+    } else if (open && (event.key === "Home" || event.key === "End")) {
+      event.preventDefault();
+      moveToEdge(event.key === "Home" ? "start" : "end");
     } else if (event.key === "Escape" && open) {
       event.preventDefault();
       close();
@@ -187,6 +211,9 @@ export function SelectInput({ children, className = "", value = "", onChange, di
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       move(event.key === "ArrowDown" ? 1 : -1);
+    } else if (event.key === "Home" || event.key === "End") {
+      event.preventDefault();
+      moveToEdge(event.key === "Home" ? "start" : "end");
     } else if (event.key === "Enter" && focused >= 0) {
       event.preventDefault();
       select(filtered[focused]);
@@ -201,22 +228,23 @@ export function SelectInput({ children, className = "", value = "", onChange, di
       id={menuId}
       className="console-group-menu console-select-menu"
       ref={menuRef}
-      style={{ left: position.left, width: position.width, maxHeight: position.maxHeight, top: position.top, bottom: position.bottom }}
+      style={{ left: position.left, width: position.width, maxHeight: position.maxHeight, top: position.top, bottom: position.bottom, "--console-popover-origin": position.top === "auto" ? "bottom left" : "top left" }}
       role="listbox"
       tabIndex={-1}
       aria-label={props["aria-label"]}
+      aria-activedescendant={focusedOptionId}
       onKeyDown={handleMenuKeyDown}
     >
-      {shouldSearch && <div className="console-select-search"><Icon name="search" size={15} /><input ref={searchRef} value={query} onChange={(event) => { setQuery(event.target.value); setFocused(-1); }} placeholder={locale === "zh" ? "搜索选项" : "Search options"} aria-label={locale === "zh" ? "搜索选项" : "Search options"} /></div>}
+      {shouldSearch && <div className="console-select-search"><Icon name="search" size={15} /><input ref={searchRef} value={query} onChange={(event) => { setQuery(event.target.value); setFocused(-1); }} placeholder={locale === "zh" ? "搜索选项" : "Search options"} aria-label={locale === "zh" ? "搜索选项" : "Search options"} aria-controls={menuId} aria-activedescendant={focusedOptionId} /></div>}
       <div className="console-select-options">
-        {filtered.map((option, index) => <button key={option.key} type="button" role="option" aria-selected={option.value === selectedValue} aria-disabled={option.disabled || undefined} disabled={option.disabled} className={`console-select-option ${option.value === selectedValue ? "is-selected" : ""} ${focused === index ? "is-focused" : ""}`} onMouseEnter={() => !option.disabled && setFocused(index)} onClick={() => select(option)}><span>{option.label}</span>{option.value === selectedValue && <Icon name="check" size={15} />}</button>)}
+        {filtered.map((option, index) => <button id={`${menuId}-option-${index}`} key={option.key} type="button" role="option" aria-selected={option.value === selectedValue} aria-disabled={option.disabled || undefined} disabled={option.disabled} className={`console-select-option ${option.value === selectedValue ? "is-selected" : ""} ${focused === index ? "is-focused" : ""}`} onMouseEnter={() => !option.disabled && setFocused(index)} onClick={() => select(option)}><span>{option.label}</span>{option.value === selectedValue && <Icon name="check" size={15} />}</button>)}
         {!filtered.length && <p className="console-select-empty">{locale === "zh" ? "没有匹配选项" : "No matching options"}</p>}
       </div>
     </div>,
     document.body,
   );
 
-  return <div className={`console-select-root ${className}`} ref={rootRef}><button ref={triggerRef} id={id} type="button" className={`console-input console-select console-select-trigger ${open ? "is-open" : ""}`} disabled={disabled} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? menuId : undefined} aria-label={props["aria-label"]} aria-describedby={props["aria-describedby"]} onClick={() => open ? close() : setOpen(true)} onKeyDown={handleTriggerKeyDown}><span>{selected?.label || (locale === "zh" ? "请选择" : "Select an option")}</span><Icon name="chevronDown" size={15} /></button>{menu}</div>;
+  return <div className={`console-select-root ${className}`} ref={rootRef}><button ref={triggerRef} id={id} type="button" role="combobox" className={`console-input console-select console-select-trigger ${open ? "is-open" : ""}`} disabled={disabled} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? menuId : undefined} aria-activedescendant={focusedOptionId} aria-label={props["aria-label"]} aria-describedby={props["aria-describedby"]} onClick={() => open ? close() : setOpen(true)} onKeyDown={handleTriggerKeyDown}><span>{selected?.label || (locale === "zh" ? "请选择" : "Select an option")}</span><Icon name="chevronDown" size={15} /></button>{menu}</div>;
 }
 
 export function TextArea({ className = "", ...props }) {
@@ -435,12 +463,14 @@ function formatChartTick(value) {
   return formatTokenMillions(value).slice(0, -1);
 }
 
-export function LineChart({ data = [], valueKey = "total_tokens", labelKey = "date", unit = "Token (M)" }) {
+export function LineChart({ data = [], valueKey = "total_tokens", labelKey = "date", unit = "Token (M)", ariaLabel }) {
+  const { locale } = useLocale();
   const maximum = useMemo(() => chartMaximum(data, valueKey), [data, valueKey]);
   const points = useMemo(() => chartPoints(data, valueKey, 680, maximum), [data, valueKey, maximum]);
   const ticks = useMemo(() => Array.from({ length: 5 }, (_, index) => maximum * (4 - index) / 4), [maximum]);
   if (!data.length) return <EmptyState />;
-  return <div className="console-line-chart">
+  const accessibleLabel = ariaLabel || (locale === "zh" ? "Token 用量趋势" : "Token usage trend");
+  return <div className="console-line-chart" role="group" aria-label={accessibleLabel}>
     <div className="console-line-chart-plot">
       <div className="console-line-chart-y-axis" aria-hidden="true">
         <strong>{unit}</strong>
@@ -454,6 +484,7 @@ export function LineChart({ data = [], valueKey = "total_tokens", labelKey = "da
       </svg>
     </div>
     <div className="console-line-chart-x-axis"><i aria-hidden="true" /><div className="console-chart-labels">{data.map((item, index) => <span key={`${item[labelKey]}-${index}`}>{String(item[labelKey] || "").slice(5, 10)}</span>)}</div></div>
+    <table className="console-visually-hidden"><caption>{accessibleLabel}</caption><thead><tr><th scope="col">{locale === "zh" ? "日期" : "Date"}</th><th scope="col">{unit}</th></tr></thead><tbody>{data.map((item, index) => <tr key={`${item[labelKey]}-accessible-${index}`}><th scope="row">{String(item[labelKey] || "")}</th><td>{formatTokenMillions(Number(item[valueKey]) || 0)}</td></tr>)}</tbody></table>
   </div>;
 }
 

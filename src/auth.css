@@ -1028,3 +1028,73 @@
     transition: none;
   }
 }
+
+/* Registration keeps the authentication visual language but removes the
+   decorative pointer tracking from this high-intent form. */
+.auth-page--register .auth-card-wrap {
+  animation-duration: 220ms;
+  animation-delay: 0ms;
+  animation-timing-function: var(--ease-out);
+}
+
+.auth-page--register .auth-heading {
+  animation-duration: 180ms;
+  animation-timing-function: var(--ease-out);
+}
+
+.auth-card--static {
+  transform: none;
+  transform-style: flat;
+}
+
+.auth-page--register .auth-submit:active:not(:disabled),
+.auth-page--register .auth-password-toggle:active:not(:disabled),
+.auth-page--register .auth-extras-toggle:active:not(:disabled),
+.auth-page--register .auth-link-button:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 120ms;
+  transition-timing-function: var(--ease-out);
+}
+
+.auth-page--register .auth-submit::before {
+  left: -34%;
+  transform: translate3d(-120%, 0, 0) rotate(18deg);
+  transition: transform 180ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-page--register .auth-submit:hover:not(:disabled)::before {
+    left: -34%;
+    transform: translate3d(520%, 0, 0) rotate(18deg);
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .auth-page--register .auth-submit:hover:not(:disabled),
+  .auth-page--register .auth-home-link:hover,
+  .auth-page--register .auth-oauth-grid button:hover,
+  .auth-page--register .auth-extras-toggle:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-page--register .auth-submit,
+  .auth-page--register .auth-password-toggle,
+  .auth-page--register .auth-extras-toggle,
+  .auth-page--register .auth-link-button {
+    transition-property: color, background-color, border-color, box-shadow, opacity;
+    transition-duration: 120ms;
+  }
+
+  .auth-page--register .auth-submit:active:not(:disabled),
+  .auth-page--register .auth-password-toggle:active:not(:disabled),
+  .auth-page--register .auth-extras-toggle:active:not(:disabled),
+  .auth-page--register .auth-link-button:active:not(:disabled) {
+    transform: none;
+  }
+
+  .auth-page--register .auth-submit::before {
+    display: none;
+  }
+}

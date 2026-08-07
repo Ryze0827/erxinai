@@ -1,5 +1,3 @@
-@import url("../css/system.css") layer(halo);
-
 html {
   font-variant-numeric: tabular-nums;
 }
@@ -1029,5 +1027,51 @@ html {
   .health-error em,
   .health-route-switch span:last-child {
     opacity: 0;
+  }
+}
+
+/* Interaction foundation: content is available on the first frame and motion
+   only reinforces an action the user has already taken. */
+.hero-char {
+  animation: none;
+}
+
+.reveal-on .hero .lead,
+.reveal-on .hero-cta {
+  animation: none;
+}
+
+:where(.btn, .nav-language, .nav-toggle, .faq-q):active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 120ms;
+  transition-timing-function: var(--ease-out);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .hero-works .hero-mark:hover,
+  .btn-glass:hover,
+  .nav-language:hover,
+  .nav-toggle:hover {
+    transform: none;
+  }
+
+  .hero-works .hero-mark:hover {
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on .hero .lead,
+  .reveal-on .hero-cta {
+    animation: none;
+  }
+
+  :where(.btn, .nav-language, .nav-toggle, .faq-q) {
+    transition-property: color, background-color, border-color, opacity !important;
+    transition-duration: 120ms !important;
+  }
+
+  :where(.btn, .nav-language, .nav-toggle, .faq-q):active:not(:disabled) {
+    transform: none;
   }
 }

@@ -3350,9 +3350,115 @@ html[data-console-theme="light"] .console-purchase-overview-art {
 }
 
 .console-token-activity-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   color: var(--console-danger-strong);
   font-size: 10px;
   text-align: center;
+}
+
+.console-token-activity-error button {
+  color: inherit;
+  font: inherit;
+  font-weight: 720;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.console-dashboard-inline-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 8px 10px 8px 14px;
+  border: 1px solid color-mix(in srgb, var(--console-danger) 35%, var(--console-line));
+  border-radius: var(--console-r-md);
+  color: var(--console-danger-strong);
+  background: color-mix(in srgb, var(--console-danger-soft) 76%, var(--console-surface));
+}
+
+.console-dashboard-inline-error > span {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.console-dashboard-inline-error .console-button {
+  min-height: 30px;
+  padding-inline: 10px;
+}
+
+.console-dashboard-section-error > .console-empty {
+  min-height: 300px;
+}
+
+.console-dashboard-actions-skeleton {
+  width: min(100%, 390px);
+  min-height: 38px;
+  overflow: hidden;
+}
+
+.console-dashboard-actions-skeleton > span,
+.console-dashboard-actions-skeleton > i,
+.console-dashboard-actions-skeleton > b,
+.console-dashboard-panel-skeleton .console-panel-head > i,
+.console-dashboard-panel-skeleton-body > span {
+  display: block;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--console-ink) 11%, transparent);
+}
+
+.console-dashboard-actions-skeleton > span {
+  width: 70px;
+  height: 9px;
+}
+
+.console-dashboard-actions-skeleton > i {
+  width: 210px;
+  height: 36px;
+}
+
+.console-dashboard-actions-skeleton > b {
+  width: 78px;
+  height: 36px;
+}
+
+.console-dashboard-panel-skeleton {
+  min-height: 410px;
+}
+
+.console-dashboard-panel-skeleton.console-trend {
+  min-height: 330px;
+}
+
+.console-dashboard-panel-skeleton .console-panel-head > i {
+  width: 132px;
+  height: 12px;
+}
+
+.console-dashboard-panel-skeleton-body {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 18px;
+}
+
+.console-dashboard-panel-skeleton-body > span {
+  width: 100%;
+  height: 42px;
+  border-radius: var(--console-r-sm);
+}
+
+.console-dashboard-panel-skeleton-body > span:nth-child(2n) {
+  width: 86%;
+}
+
+.console-dashboard-loading .console-skeleton::after,
+.console-dashboard-actions-skeleton::after {
+  z-index: 3;
+  pointer-events: none;
 }
 
 @media (max-width: 1599px) {
@@ -4704,5 +4810,69 @@ html[data-console-theme="dark"] .console-site-announcement {
 
   .console-site-announcement-track > span[aria-hidden="true"] {
     display: none;
+  }
+}
+
+/* Shared interaction contract for authenticated surfaces. */
+.console-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+.console-popover {
+  transform-origin: top right;
+}
+
+.console-group-menu {
+  transform-origin: var(--console-popover-origin, top left);
+}
+
+.console-date-menu {
+  transform-origin: top left;
+}
+
+.console-button[data-pointer-pressed="true"],
+.console-icon-button[data-pointer-pressed="true"] {
+  transform: scale(0.97);
+  transition-duration: 120ms;
+  transition-timing-function: var(--ease-out);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .console-nav-link:hover,
+  .console-sidebar-foot a:hover,
+  .console-sidebar-toggle:hover,
+  .console-icon-button:hover,
+  .console-button:hover,
+  .console-user-trigger:hover,
+  .console-quick-actions a:hover,
+  .console-payment-methods > button:hover,
+  .console-plan-card:hover,
+  .console-amounts > button:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .console-button,
+  .console-icon-button,
+  .console-nav-link,
+  .console-select-trigger,
+  .console-select-option {
+    transition-property: color, background-color, border-color, box-shadow, opacity !important;
+    transition-duration: 120ms !important;
+    transition-timing-function: var(--ease-out) !important;
+  }
+
+  .console-button[data-pointer-pressed="true"],
+  .console-icon-button[data-pointer-pressed="true"] {
+    transform: none;
   }
 }

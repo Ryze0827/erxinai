@@ -3,10 +3,10 @@ import { Link } from "react-router";
 import { useConsole } from "../console/ConsoleContext";
 import "../auth.css";
 
-export function AuthLayout({ children }) {
+export function AuthLayout({ children, surface }) {
   const { branding, brandingReady } = useConsole();
   return (
-    <main className="auth-page">
+    <main className={`auth-page${surface ? ` auth-page--${surface}` : ""}`}>
       <div className="auth-scene" aria-hidden="true" />
       <header className="auth-topbar">
         <Link className="auth-brand" to="/" aria-label="WayX home">
@@ -40,12 +40,12 @@ function AuthIntro() {
   );
 }
 
-export function AuthCard({ kicker, title, description, children, footer }) {
+export function AuthCard({ kicker, title, description, children, footer, interactive = true }) {
   const cardRef = useRef(null);
 
   const handlePointerMove = (event) => {
     const card = cardRef.current;
-    if (!card || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!interactive || !card || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const rect = card.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width;
     const y = (event.clientY - rect.top) / rect.height;
@@ -61,7 +61,7 @@ export function AuthCard({ kicker, title, description, children, footer }) {
   };
 
   return (
-    <div className="auth-card" ref={cardRef} onPointerMove={handlePointerMove} onPointerLeave={resetTilt}>
+    <div className={`auth-card${interactive ? "" : " auth-card--static"}`} ref={cardRef} onPointerMove={interactive ? handlePointerMove : undefined} onPointerLeave={interactive ? resetTilt : undefined}>
       <div className="auth-card-shine" aria-hidden="true" />
       <div className="auth-heading">
         <span className="auth-heading-kicker">{kicker}</span>

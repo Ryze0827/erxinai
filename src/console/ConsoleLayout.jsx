@@ -22,7 +22,7 @@ function canAnimateSidebar() {
 }
 
 const coreNav = [
-  { path: "/dashboard", key: "nav.dashboard", icon: "dashboard" },
+  { path: "/admin/dashboard", key: "nav.dashboard", icon: "dashboard" },
   { path: "/keys", key: "nav.keys", icon: "key" },
   { path: "/batch-image", key: "nav.batch", icon: "image", feature: "batch", standardOnly: true },
   { path: "/usage", key: "nav.usage", icon: "chart", standardOnly: true },
@@ -130,7 +130,8 @@ function AnnouncementMenu() {
 
   const load = async () => {
     try {
-      const nextItems = await announcementsApi.list(false);
+      const response = await announcementsApi.list(false);
+      const nextItems = Array.isArray(response) ? response : [];
       if (!mountedRef.current) return;
       setItems(nextItems);
       setLoaded(true);
@@ -361,7 +362,7 @@ export function ConsoleLayout({ children }) {
   const batchEnabled = useBatchNavigationAccess(authenticated);
   const simpleMode = user?.run_mode === "simple";
   const customItems = (settings?.custom_menu_items || []).filter((item) => item.visibility === "user").sort((a, b) => a.sort_order - b.sort_order).flatMap((item) => { const kind = nativeCustomPageKind(item); const markdown = item.page_slug || String(item.url || "").startsWith("md:"); return nativeCustomPageRoute(kind) || !markdown ? [] : [{ path: `/custom/${item.id}`, label: item.label, icon: nativeCustomPageIcon(kind) }]; });
-  const workspaceItems = coreNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)).map((item) => item.path === "/dashboard" && user?.role === "admin" ? { ...item, path: "/admin/dashboard" } : item);
+  const workspaceItems = coreNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled));
   const personalItems = [...accountNav.filter((item) => !item.sidebarHidden && itemEnabled(item, settings, simpleMode, batchEnabled)), ...customItems];
   const allItems = [...workspaceItems, ...accountNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...customItems];
   const title = pageTitle(location.pathname, allItems, t);
@@ -423,9 +424,9 @@ export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnl
   if (getAccessToken() && !user) return <div className="console-standalone"><Spinner /></div>;
   if (!authenticated) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   if (settings?.backend_mode_enabled && user?.role !== "admin") return <Navigate to="/login" replace />;
-  if (standardOnly && user?.run_mode === "simple") return <Navigate to="/dashboard" replace />;
+  if (standardOnly && user?.run_mode === "simple") return <Navigate to="/admin/dashboard" replace />;
   if (feature && settingsLoading) return <div className="console-standalone"><Spinner /></div>;
-  if (feature && !settingsError && !resolveFeature(settings, feature, mode)) return <Navigate to="/dashboard" replace />;
+  if (feature && !settingsError && !resolveFeature(settings, feature, mode)) return <Navigate to="/admin/dashboard" replace />;
   return children;
 }
 

@@ -116,9 +116,10 @@ export function RegisterPage() {
   const registrationClosed = settings && (settings.registration_enabled === false || settings.backend_mode_enabled);
 
   return (
-    <AuthLayout>
-      <AuthCard kicker="Start building" title="Create your WayX account" description="One account for every key, model, and project." footer={<><span>Already have an account?</span> <Link to="/login">Log in</Link></>}>
+    <AuthLayout surface="register">
+      <AuthCard interactive={false} kicker="Start building" title="Create your WayX account" description="One account for every key, model, and project." footer={<><span>Already have an account?</span> <Link to="/login">Log in</Link></>}>
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          <AuthNotice>{settingsLoading ? "Loading registration options…" : ""}</AuthNotice>
           <AuthNotice tone={settingsError || error || registrationClosed ? "error" : "info"}>{settingsError || error || (registrationClosed ? "Registration is currently closed." : "")}</AuthNotice>
           {settingsError && <button className="auth-link-button" type="button" onClick={retry}>Retry loading settings</button>}
           <AuthField label="Email address" error={errors.email}>

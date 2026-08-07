@@ -60,8 +60,26 @@ function methodFits(method, amount) {
   return !(Number(method.single_max) > 0 && amount > Number(method.single_max));
 }
 
+function handleRadioGroupKeyDown(event) {
+  if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+  const group = event.currentTarget.closest('[role="radiogroup"]');
+  const options = [...(group?.querySelectorAll('button[role="radio"]:not(:disabled)') || [])];
+  if (!options.length) return;
+  event.preventDefault();
+  const current = Math.max(0, options.indexOf(event.currentTarget));
+  const next = event.key === "Home" ? options[0]
+    : event.key === "End" ? options.at(-1)
+      : options[(current + (["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : -1) + options.length) % options.length];
+  next.focus();
+  next.click();
+}
+
 function PaymentMethods({ methods, selected, setSelected, amount, amountForMethod, locale }) {
-  return <div className="console-payment-methods" role="radiogroup" aria-label={locale === "zh" ? "支付方式" : "Payment method"}>{Object.entries(methods).map(([type, method]) => <button type="button" role="radio" aria-checked={selected === type} key={type} className={selected === type ? "is-selected" : ""} disabled={!methodFits(method, amountForMethod ? amountForMethod(method) : amount)} onClick={() => setSelected(type)}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{paymentDescription(type, locale)}</small></div><span className="console-payment-method-selected">{selected === type && <Icon name="check" size={15} />}</span></button>)}</div>;
+  const entries = Object.entries(methods);
+  const enabled = ([, method]) => methodFits(method, amountForMethod ? amountForMethod(method) : amount);
+  const selectedEnabled = entries.some(([type, method]) => type === selected && enabled([type, method]));
+  const tabStop = selectedEnabled ? selected : entries.find(enabled)?.[0];
+  return <div className="console-payment-methods" role="radiogroup" aria-label={locale === "zh" ? "支付方式" : "Payment method"}>{entries.map(([type, method]) => <button type="button" role="radio" aria-checked={selected === type} tabIndex={tabStop === type ? 0 : -1} key={type} className={selected === type ? "is-selected" : ""} disabled={!enabled([type, method])} onKeyDown={handleRadioGroupKeyDown} onClick={() => setSelected(type)}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{paymentDescription(type, locale)}</small></div><span className="console-payment-method-selected">{selected === type && <Icon name="check" size={15} />}</span></button>)}</div>;
 }
 
 function makeOrderBody({ amount, paymentType, orderType, planId, resumeToken, openid, forceQr }) {
@@ -201,8 +219,8 @@ function launchPayment(result, context, navigate) {
   return snapshot;
 }
 
-function PlanCard({ plan, selected, onSelect, locale }) {
-  return <button type="button" role="radio" aria-checked={selected} className={`console-plan-card ${selected ? "is-selected" : ""}`} onClick={() => onSelect(plan)}><div><span>{plan.group_platform || "AI"}</span>{selected && <Icon name="check" size={17} />}</div><h3>{plan.name}</h3><p>{plan.description}</p><strong>{currency(plan.price, "USD", locale)}</strong><small>/ {plan.validity_days} {locale === "zh" ? "天" : "days"}</small><div className="console-chip-list">{plan.daily_limit_usd != null && <span className="console-chip">${plan.daily_limit_usd}/day</span>}{plan.weekly_limit_usd != null && <span className="console-chip">${plan.weekly_limit_usd}/week</span>}{plan.monthly_limit_usd != null && <span className="console-chip">${plan.monthly_limit_usd}/month</span>}{(plan.features || []).slice(0, 3).map((feature) => <span className="console-chip" key={feature}>{feature}</span>)}</div></button>;
+function PlanCard({ plan, selected, tabStop, onSelect, locale }) {
+  return <button type="button" role="radio" aria-checked={selected} tabIndex={tabStop ? 0 : -1} className={`console-plan-card ${selected ? "is-selected" : ""}`} onKeyDown={handleRadioGroupKeyDown} onClick={() => onSelect(plan)}><div><span>{plan.group_platform || "AI"}</span>{selected && <Icon name="check" size={17} />}</div><h3>{plan.name}</h3><p>{plan.description}</p><strong>{currency(plan.price, "USD", locale)}</strong><small>/ {plan.validity_days} {locale === "zh" ? "天" : "days"}</small><div className="console-chip-list">{plan.daily_limit_usd != null && <span className="console-chip">${plan.daily_limit_usd}/day</span>}{plan.weekly_limit_usd != null && <span className="console-chip">${plan.weekly_limit_usd}/week</span>}{plan.monthly_limit_usd != null && <span className="console-chip">${plan.monthly_limit_usd}/month</span>}{(plan.features || []).slice(0, 3).map((feature) => <span className="console-chip" key={feature}>{feature}</span>)}</div></button>;
 }
 
 function PurchaseTabs({ hidden, tab, setTab, setPlan, locale, t }) {
@@ -293,7 +311,7 @@ function SubscriptionCheckout({ plan, locale, chargeAmount, selectedLimit, metho
 
 function SubscriptionPurchase(props) {
   const { checkout, plan, setPlan, locale } = props;
-  return <><div className="console-plan-grid" role="radiogroup" aria-label={locale === "zh" ? "订阅套餐" : "Subscription plan"}>{checkout.plans.map((item) => <PlanCard key={item.id} plan={item} selected={plan?.id === item.id} onSelect={setPlan} locale={locale} />)}</div>{!checkout.plans.length && <Panel><EmptyState icon="gift" /></Panel>}{plan && <SubscriptionCheckout {...props} />}</>;
+  return <><div className="console-plan-grid" role="radiogroup" aria-label={locale === "zh" ? "订阅套餐" : "Subscription plan"}>{checkout.plans.map((item, index) => <PlanCard key={item.id} plan={item} selected={plan?.id === item.id} tabStop={plan ? plan.id === item.id : index === 0} onSelect={setPlan} locale={locale} />)}</div>{!checkout.plans.length && <Panel><EmptyState icon="gift" /></Panel>}{plan && <SubscriptionCheckout {...props} />}</>;
 }
 
 function PurchaseHelp({ checkout }) {
