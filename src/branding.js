@@ -2,7 +2,7 @@ import { safeImageUrl } from "./console/utils";
 
 export const BRANDING_STORAGE_KEY = "sentence_public_branding";
 export const DEFAULT_SITE_NAME = "WayX";
-export const DEFAULT_SITE_LOGO = "/assets/img/sentence-ai-icon.png";
+export const DEFAULT_SITE_LOGO = "/assets/img/wayx-mark.png";
 
 function cleanBrandText(value, fallback, maximumLength) {
   return String(value || fallback).replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, maximumLength) || fallback;

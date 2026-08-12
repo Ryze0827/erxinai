@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@appica/ui-react/accordion";
+import { Alert, AlertDescription, AlertIcon, AlertTitle } from "@appica/ui-react/alert";
+import { Radio } from "@appica/ui-react/radio";
+import { RadioGroup } from "@appica/ui-react/radio-group";
 import { Icon } from "../Icon";
-import { Button, CopyButton, Modal } from "../UI";
+import { Button, CopyButton, Modal, Panel } from "../UI";
 import { useLocale } from "../i18n";
 import { CompactTabs } from "./ConsoleControls";
 
@@ -93,10 +97,10 @@ function fileMeta(file, locale) {
 }
 
 function StepCard({ number, title, description, children }) {
-  return <section className="console-use-step">
+  return <Panel className="console-use-step">
     <header><span className="console-step-badge">{number}</span><div><strong>{title}</strong>{description && <p>{description}</p>}</div></header>
     {children && <div className="console-use-step-body">{children}</div>}
-  </section>;
+  </Panel>;
 }
 
 function ConfigFile({ file }) {
@@ -119,16 +123,16 @@ function localText(locale, zh, en) {
 }
 
 function MissingGroup({ locale }) {
-  return <div className="console-callout console-callout--warning"><Icon name="warning" size={20} /><div><strong>{localText(locale, "尚未分配分组", "No group assigned")}</strong><p>{localText(locale, "请先为密钥选择平台分组,再查看对应客户端配置。", "Assign a platform group before using a client-specific configuration.")}</p></div></div>;
+  return <Alert variant="warning" layout="inline" className="console-callout console-callout--warning"><AlertIcon><Icon name="warning" size={20} /></AlertIcon><div><AlertTitle as="div">{localText(locale, "尚未分配分组", "No group assigned")}</AlertTitle><AlertDescription>{localText(locale, "请先为密钥选择平台分组,再查看对应客户端配置。", "Assign a platform group before using a client-specific configuration.")}</AlertDescription></div></Alert>;
 }
 
 function ToolPicker({ tabs, client, setClient, platform, locale }) {
   const description = localText(locale, `这把密钥属于 ${platform} 分组,可以在下面这些客户端中使用。`, `This key belongs to the ${platform} group and works with these clients.`);
-  return <StepCard number={1} title={localText(locale, "选择你的工具", "Choose your tool")} description={description}><><div className="console-tool-grid" role="radiogroup">{tabs.map((tab) => {
+  return <StepCard number={1} title={localText(locale, "选择你的工具", "Choose your tool")} description={description}><><RadioGroup value={client} onValueChange={setClient} className="console-tool-grid" aria-label={localText(locale, "客户端工具", "Client tool")}>{tabs.map((tab) => {
     const meta = clientMeta[tab.value] || {};
     const selected = client === tab.value;
-    return <button type="button" key={tab.value} role="radio" aria-checked={selected} className={selected ? "is-active" : ""} onClick={() => setClient(tab.value)}><Icon name="terminal" size={17} /><span><strong>{tab.label}</strong><small>{locale === "zh" ? meta.zh : meta.en}</small></span>{selected && <Icon name="check" size={15} />}</button>;
-  })}</div><aside className="console-other-client-note"><Icon name="book" size={17} /><div><strong>{localText(locale, "其他客户端", "Other clients")}</strong><p>{localText(locale, "请仔细查阅客户端的官方文档,并按照官方说明配置 API 地址和密钥。", "Please consult the client's official documentation and follow its instructions to configure the API URL and key.")}</p></div></aside></></StepCard>;
+    return <label key={tab.value} className={selected ? "is-active" : ""}><Icon name="terminal" size={17} /><span><strong>{tab.label}</strong><small>{locale === "zh" ? meta.zh : meta.en}</small></span><Radio value={tab.value} aria-label={tab.label} /></label>;
+  })}</RadioGroup><Alert variant="info" layout="inline" className="console-other-client-note"><AlertIcon><Icon name="book" size={17} /></AlertIcon><div><AlertTitle as="div">{localText(locale, "其他客户端", "Other clients")}</AlertTitle><AlertDescription>{localText(locale, "请仔细查阅客户端的官方文档,并按照官方说明配置 API 地址和密钥。", "Please consult the client's official documentation and follow its instructions to configure the API URL and key.")}</AlertDescription></div></Alert></></StepCard>;
 }
 
 function ShellStep({ visible, tabs, shell, setShell, locale }) {
@@ -143,16 +147,16 @@ function ConfigStep({ number, files, locale }) {
     : files.length > 1
       ? localText(locale, "请分别按照下面的说明应用两处配置。", "Apply both configurations using the instructions below.")
       : "";
-  return <StepCard number={number} title={localText(locale, "应用下面的配置", "Apply the configuration")}><>{notice && <aside className="console-config-notice"><Icon name="info" size={17} /><p>{notice}</p></aside>}<div className="console-config-stack">{files.map((file) => <ConfigFile file={file} key={file.path} />)}</div></></StepCard>;
+  return <StepCard number={number} title={localText(locale, "应用下面的配置", "Apply the configuration")}><>{notice && <Alert variant="warning" layout="inline" className="console-config-notice"><AlertIcon><Icon name="info" size={17} /></AlertIcon><AlertDescription>{notice}</AlertDescription></Alert>}<div className="console-config-stack">{files.map((file) => <ConfigFile file={file} key={file.path} />)}</div></></StepCard>;
 }
 
 function RestartStep({ number, clientLabel, locale }) {
   const description = localText(locale, `完全退出并重新打开 ${clientLabel},随便发一条消息。收到回复,就说明接入成功了。`, `Fully quit and reopen ${clientLabel}, then send any message. If you get a reply, you're connected.`);
-  return <StepCard number={number} title={localText(locale, "重启,然后试一试", "Restart, then try it")} description={description}><details className="console-use-faq"><summary><Icon name="chat" size={15} />{localText(locale, "没有生效?看看这几点", "Not working? Check these")}</summary><ul><li>{localText(locale, "确认已经完全退出客户端后再重新打开(终端环境变量只在当前窗口生效)。", "Make sure the client was fully restarted — terminal env vars only apply to the current window.")}</li><li>{localText(locale, "检查配置有没有被完整粘贴,地址和密钥前后不能有多余空格。", "Check the snippet was pasted in full, with no stray spaces around the URL or key.")}</li><li>{localText(locale, "回到「API 密钥」页面确认密钥状态是启用,并且没有超出额度。", "Confirm on the API keys page that this key is active and hasn't exhausted its quota.")}</li><li>{localText(locale, "仍有问题?到「用量记录」的错误标签页查看具体报错。", "Still stuck? The Errors tab under Usage shows the exact failure.")}</li></ul></details><div className="console-callout"><Icon name="shield" size={18} /><p>{localText(locale, "密钥等同于账户凭证:不要发给别人,也不要提交到代码仓库。泄露时回到密钥页删除或停用即可。", "Treat the key like a password: don't share it or commit it to a repo. If it leaks, disable or delete it from the keys page.")}</p></div></StepCard>;
+  return <StepCard number={number} title={localText(locale, "重启,然后试一试", "Restart, then try it")} description={description}><Accordion variant="flush" className="console-use-faq"><AccordionItem value="troubleshooting"><AccordionTrigger><Icon name="chat" size={16} />{localText(locale, "没有生效?看看这几点", "Not working? Check these")}</AccordionTrigger><AccordionContent><ul><li>{localText(locale, "确认已经完全退出客户端后再重新打开(终端环境变量只在当前窗口生效)。", "Make sure the client was fully restarted — terminal env vars only apply to the current window.")}</li><li>{localText(locale, "检查配置有没有被完整粘贴,地址和密钥前后不能有多余空格。", "Check the snippet was pasted in full, with no stray spaces around the URL or key.")}</li><li>{localText(locale, "回到「API 密钥」页面确认密钥状态是启用,并且没有超出额度。", "Confirm on the API keys page that this key is active and hasn't exhausted its quota.")}</li><li>{localText(locale, "仍有问题?到「用量记录」的错误标签页查看具体报错。", "Still stuck? The Errors tab under Usage shows the exact failure.")}</li></ul></AccordionContent></AccordionItem></Accordion><Alert variant="info" layout="inline" className="console-callout"><AlertIcon><Icon name="shield" size={18} /></AlertIcon><AlertDescription>{localText(locale, "密钥等同于账户凭证:不要发给别人,也不要提交到代码仓库。泄露时回到密钥页删除或停用即可。", "Treat the key like a password: don't share it or commit it to a repo. If it leaks, disable or delete it from the keys page.")}</AlertDescription></Alert></StepCard>;
 }
 
 function UseKeyContent({ tabs, client, setClient, platform, locale, hasShellStep, shellTabs, shell, setShell, copyStep, files, clientLabel }) {
-  return <div className="console-use-key"><div className="console-use-intro"><Icon name="info" size={18} /><p>{localText(locale, "原理很简单:让工具把请求发到我们的网关地址,并用这把密钥做身份验证。下面的配置已经帮你填好了地址和密钥,复制即可。", "The idea is simple: point your tool at our gateway URL and authenticate with this key. The snippets below already include both — just copy them.")}</p></div><ToolPicker tabs={tabs} client={client} setClient={setClient} platform={platform} locale={locale} /><ShellStep visible={hasShellStep} tabs={shellTabs} shell={shell} setShell={setShell} locale={locale} /><ConfigStep number={copyStep} files={files} locale={locale} /><RestartStep number={copyStep + 1} clientLabel={clientLabel} locale={locale} /></div>;
+  return <div className="console-use-key"><Alert variant="info" layout="inline" className="console-use-intro"><AlertIcon><Icon name="info" size={18} /></AlertIcon><AlertDescription>{localText(locale, "原理很简单:让工具把请求发到我们的网关地址,并用这把密钥做身份验证。下面的配置已经帮你填好了地址和密钥,复制即可。", "The idea is simple: point your tool at our gateway URL and authenticate with this key. The snippets below already include both — just copy them.")}</AlertDescription></Alert><ToolPicker tabs={tabs} client={client} setClient={setClient} platform={platform} locale={locale} /><ShellStep visible={hasShellStep} tabs={shellTabs} shell={shell} setShell={setShell} locale={locale} /><ConfigStep number={copyStep} files={files} locale={locale} /><RestartStep number={copyStep + 1} clientLabel={clientLabel} locale={locale} /></div>;
 }
 
 export function UseKeyModal({ open, apiKey, baseUrl, platform, allowMessagesDispatch, onClose }) {

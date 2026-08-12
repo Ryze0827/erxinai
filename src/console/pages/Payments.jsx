@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BrandAlipay, BrandStripe, BrandWechat, CreditCard } from "@appica/icons-react";
+import { Radio } from "@appica/ui-react/radio";
+import { RadioGroup } from "@appica/ui-react/radio-group";
+import { Toggle as AppicaToggle } from "@appica/ui-react/toggle";
+import { ToggleGroup } from "@appica/ui-react/toggle-group";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { paymentApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, ConfirmDialog, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatusBadge, TextArea } from "../UI";
+import { Button, ConfirmDialog, DataTable, EmptyState, ErrorState, Field, InlineButton, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatusBadge, TextArea, TextInput, buttonLinkClass } from "../UI";
+import { CompactTabs } from "../components/ConsoleControls";
 import { clearRecovery, createRecovery, paymentQuery, readRecovery, saveRecovery, successfulOrder, terminalOrder, visibleMethods } from "../paymentFlow";
 import { safeExternalUrl, safeImageUrl, statusLabel } from "../utils";
 
@@ -42,11 +48,9 @@ function PaymentMark({ type, method }) {
   const normalized = type === "alipay_direct" ? "alipay" : type === "wxpay_direct" ? "wxpay" : type;
   const customIcon = safeImageUrl(method?.icon_url || method?.icon);
   if (customIcon) return <span className="console-payment-mark"><img src={customIcon} alt="" /></span>;
-  if (normalized === "alipay") return <span className="console-payment-mark"><svg viewBox="0 0 1024 1024" aria-hidden="true"><path fill="#02A9F1" d="M902 653 651 568s19-29 40-85c20-57 24-88 24-88l-163-1v-56l197-1v-39H552v-89h-96v89H272v39l184-1v59H308v31h303s-3 25-14 57c-12 31-24 59-24 59s-142-50-217-50-166 30-175 118c-9 87 42 134 114 152 73 17 139 0 197-29 58-28 115-93 115-93l293 142c-12 69-72 120-142 120H266c-80 0-144-65-144-144V266c0-80 64-144 144-144h492c80 0 144 64 144 144v387ZM536 604s-91 115-199 115c-107 0-130-55-130-94 0-40 22-82 114-88 91-6 215 67 215 67Z" /></svg></span>;
-  if (normalized === "wxpay") return <span className="console-payment-mark"><svg viewBox="0 0 1024 1024" aria-hidden="true"><path fill="#09BB07" d="M396 604c-4 2-8 3-13 3-11 0-20-6-25-15l-2-4-78-168c-1-2-1-4-1-6 0-8 6-13 14-13 3 0 6 1 9 3l92 64c7 4 15 7 24 7 5 0 10-1 15-3l431-190c-77-90-205-148-349-148-236 0-428 157-428 351 0 106 58 202 148 266 7 5 12 14 12 22 0 3-1 6-2 9l-19 71c-1 3-2 7-2 11 0 8 6 14 14 14 3 0 6-1 8-3l93-54c7-4 15-7 23-7 4 0 9 1 13 2 43 13 91 20 139 20 236 0 427-158 427-352 0-58-18-114-48-163L399 602l-3 2Z" /></svg></span>;
-  if (normalized === "stripe") return <span className="console-payment-mark"><svg viewBox="0 0 1024 1024" aria-hidden="true"><circle cx="512" cy="512" r="448" fill="#676BE5" /><path fill="#fff" d="M472 417c0-21 17-29 45-29 44 0 89 13 133 35V297c-42-17-87-25-133-25-109 0-181 57-181 152 0 148 204 124 204 188 0 25-22 33-52 33-49 0-98-14-146-43v121c47 20 96 30 146 30 112 0 188-48 188-144 0-160-204-132-204-192Z" /></svg></span>;
-  if (normalized === "airwallex") return <span className="console-payment-mark"><svg viewBox="0 0 48 33" aria-hidden="true"><defs><linearGradient id="console-airwallex" x1="0" y1="2" x2="48" y2="30"><stop stopColor="#FF4F42" /><stop offset="1" stopColor="#FF8E3C" /></linearGradient></defs><path fill="url(#console-airwallex)" d="M46.6 12.7a6 6 0 0 1 1.4 6.4l-3.2 8.6a6.9 6.9 0 0 1-5 4.5 6.6 6.6 0 0 1-6.4-2.3L14.4 7.2a.4.4 0 0 0-.7.1L7.5 24a.4.4 0 0 0 .6.5l7.5-3.1a3.3 3.3 0 0 1 4.5 2.1 3.5 3.5 0 0 1-2 4.2l-9.9 4A5.9 5.9 0 0 1 .3 24.2L7.6 4.5A6.8 6.8 0 0 1 19.3 2.4l10.9 13 10-4.1a5.8 5.8 0 0 1 6.4 1.4Zm-5.8 6.5a.4.4 0 0 0-.5-.5l-5.6 2.2 3.4 4a.4.4 0 0 0 .7-.1Z" /></svg></span>;
-  return <span className="console-payment-mark console-payment-mark--generic"><Icon name="card" size={22} /></span>;
+  const marks = { alipay: BrandAlipay, wxpay: BrandWechat, stripe: BrandStripe };
+  const Mark = marks[normalized] || CreditCard;
+  return <span className={`console-payment-mark ${marks[normalized] ? "" : "console-payment-mark--generic"}`}><Mark size={22} aria-hidden="true" /></span>;
 }
 
 function currency(value, code, locale) {
@@ -60,26 +64,13 @@ function methodFits(method, amount) {
   return !(Number(method.single_max) > 0 && amount > Number(method.single_max));
 }
 
-function handleRadioGroupKeyDown(event) {
-  if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
-  const group = event.currentTarget.closest('[role="radiogroup"]');
-  const options = [...(group?.querySelectorAll('button[role="radio"]:not(:disabled)') || [])];
-  if (!options.length) return;
-  event.preventDefault();
-  const current = Math.max(0, options.indexOf(event.currentTarget));
-  const next = event.key === "Home" ? options[0]
-    : event.key === "End" ? options.at(-1)
-      : options[(current + (["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : -1) + options.length) % options.length];
-  next.focus();
-  next.click();
-}
-
 function PaymentMethods({ methods, selected, setSelected, amount, amountForMethod, locale }) {
   const entries = Object.entries(methods);
   const enabled = ([, method]) => methodFits(method, amountForMethod ? amountForMethod(method) : amount);
-  const selectedEnabled = entries.some(([type, method]) => type === selected && enabled([type, method]));
-  const tabStop = selectedEnabled ? selected : entries.find(enabled)?.[0];
-  return <div className="console-payment-methods" role="radiogroup" aria-label={locale === "zh" ? "支付方式" : "Payment method"}>{entries.map(([type, method]) => <button type="button" role="radio" aria-checked={selected === type} tabIndex={tabStop === type ? 0 : -1} key={type} className={selected === type ? "is-selected" : ""} disabled={!enabled([type, method])} onKeyDown={handleRadioGroupKeyDown} onClick={() => setSelected(type)}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{paymentDescription(type, locale)}</small></div><span className="console-payment-method-selected">{selected === type && <Icon name="check" size={15} />}</span></button>)}</div>;
+  return <RadioGroup value={selected} onValueChange={setSelected} className="console-payment-methods" aria-label={locale === "zh" ? "支付方式" : "Payment method"}>{entries.map(([type, method]) => {
+    const available = enabled([type, method]);
+    return <label key={type} className={`${selected === type ? "is-selected" : ""} ${available ? "" : "is-disabled"}`}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{paymentDescription(type, locale)}</small></div><span className="console-payment-method-selected"><Radio value={type} disabled={!available} aria-label={method.display_name || paymentLabel(type, locale)} /></span></label>;
+  })}</RadioGroup>;
 }
 
 function makeOrderBody({ amount, paymentType, orderType, planId, resumeToken, openid, forceQr }) {
@@ -219,21 +210,30 @@ function launchPayment(result, context, navigate) {
   return snapshot;
 }
 
-function PlanCard({ plan, selected, tabStop, onSelect, locale }) {
-  return <button type="button" role="radio" aria-checked={selected} tabIndex={tabStop ? 0 : -1} className={`console-plan-card ${selected ? "is-selected" : ""}`} onKeyDown={handleRadioGroupKeyDown} onClick={() => onSelect(plan)}><div><span>{plan.group_platform || "AI"}</span>{selected && <Icon name="check" size={17} />}</div><h3>{plan.name}</h3><p>{plan.description}</p><strong>{currency(plan.price, "USD", locale)}</strong><small>/ {plan.validity_days} {locale === "zh" ? "天" : "days"}</small><div className="console-chip-list">{plan.daily_limit_usd != null && <span className="console-chip">${plan.daily_limit_usd}/day</span>}{plan.weekly_limit_usd != null && <span className="console-chip">${plan.weekly_limit_usd}/week</span>}{plan.monthly_limit_usd != null && <span className="console-chip">${plan.monthly_limit_usd}/month</span>}{(plan.features || []).slice(0, 3).map((feature) => <span className="console-chip" key={feature}>{feature}</span>)}</div></button>;
+function PlanCard({ plan, selected, locale }) {
+  return <label className={`console-plan-card ${selected ? "is-selected" : ""}`}><div><span>{plan.group_platform || "AI"}</span><Radio value={String(plan.id)} aria-label={plan.name} /></div><h3>{plan.name}</h3><p>{plan.description}</p><strong>{currency(plan.price, "USD", locale)}</strong><small>/ {plan.validity_days} {locale === "zh" ? "天" : "days"}</small><div className="console-chip-list">{plan.daily_limit_usd != null && <span className="console-chip">${plan.daily_limit_usd}/day</span>}{plan.weekly_limit_usd != null && <span className="console-chip">${plan.weekly_limit_usd}/week</span>}{plan.monthly_limit_usd != null && <span className="console-chip">${plan.monthly_limit_usd}/month</span>}{(plan.features || []).slice(0, 3).map((feature) => <span className="console-chip" key={feature}>{feature}</span>)}</div></label>;
 }
 
 function PurchaseTabs({ hidden, tab, setTab, setPlan, locale, t }) {
   if (hidden) return null;
-  return <div className="console-tabs console-purchase-tabs" role="tablist" aria-label={locale === "zh" ? "购买类型" : "Purchase type"}><button type="button" role="tab" aria-selected={tab === "balance"} className={tab === "balance" ? "is-active" : ""} onClick={() => { setTab("balance"); setPlan(null); }}><Icon name="card" size={16} />{locale === "zh" ? "充值" : t("purchase.balance")}</button><button type="button" role="tab" aria-selected={tab === "subscription"} className={tab === "subscription" ? "is-active" : ""} onClick={() => setTab("subscription")}><Icon name="gift" size={16} />{locale === "zh" ? "订阅" : t("purchase.plan")}</button></div>;
+  const items = [
+    { value: "balance", label: <><Icon name="card" size={16} data-icon="start" />{locale === "zh" ? "充值" : t("purchase.balance")}</> },
+    { value: "subscription", label: <><Icon name="gift" size={16} data-icon="start" />{locale === "zh" ? "订阅" : t("purchase.plan")}</> },
+  ];
+  return <CompactTabs value={tab} items={items} label={locale === "zh" ? "购买类型" : "Purchase type"} className="console-purchase-tabs" onChange={(next) => { setTab(next); if (next === "balance") setPlan(null); }} />;
 }
 
 function AmountPresets({ amount, setAmount }) {
-  return <div className="console-amounts console-purchase-amounts">{[10, 20, 50, 100, 200, 500, 1000, 2000].map((value) => <button type="button" aria-pressed={Number(amount) === value} className={Number(amount) === value ? "is-selected" : ""} key={value} onClick={() => setAmount(value)}><strong>${value}</strong><span className="console-purchase-amount-check"><Icon name="check" size={13} /></span></button>)}</div>;
+  const selected = [10, 20, 50, 100, 200, 500, 1000, 2000].includes(Number(amount)) ? [String(amount)] : [];
+  return <ToggleGroup value={selected} className="console-amounts console-purchase-amounts" onValueChange={(values) => values.at(-1) && setAmount(Number(values.at(-1)))}>{[10, 20, 50, 100, 200, 500, 1000, 2000].map((value) => <AppicaToggle type="button" value={String(value)} className={Number(amount) === value ? "is-selected" : ""} key={value}><strong>${value}</strong><span className="console-purchase-amount-check"><Icon name="check" size={13} /></span></AppicaToggle>)}</ToggleGroup>;
 }
 
 function PurchaseSectionTitle({ title, description }) {
   return <div className="console-purchase-section-title"><strong>{title}</strong>{description && <small>{description}</small>}</div>;
+}
+
+function PurchaseStepTitle({ number, title }) {
+  return <div className="console-purchase-step-title"><span>{String(number).padStart(2, "0")}</span><strong>{title}</strong></div>;
 }
 
 function successfulBalanceOrders(items = []) {
@@ -284,10 +284,10 @@ function BalanceOverview({ user, overview, formatUsd, locale }) {
   const recharge = overview.totalRecharge == null ? "—" : formatUsd(overview.totalRecharge);
   const spend = overview.totalSpend == null ? "—" : formatUsd(overview.totalSpend);
   const latest = overview.lastRecharge ? overviewDate(overview.lastRecharge) : "—";
-  return <section className="console-purchase-overview">
+  return <Panel className="console-purchase-overview">
     <div className="console-purchase-overview-balance">
       <span className="console-purchase-overview-icon"><Icon name="wallet" size={30} /></span>
-      <div className="console-purchase-overview-copy"><small>{locale === "zh" ? "当前余额 (USD)" : "Current balance (USD)"}</small><strong>{formatUsd(user?.balance)}</strong><span>{locale === "zh" ? "账户" : "Account"} · {account || "—"}</span></div>
+      <div className="console-purchase-overview-copy"><small>{locale === "zh" ? "可用余额" : "Available balance"}</small><strong>{formatUsd(user?.balance)}</strong><span>{locale === "zh" ? "账户" : "Account"} · {account || "—"}</span></div>
     </div>
     <div className="console-purchase-overview-stats">
       <OverviewMetric label={locale === "zh" ? "累计充值" : "Total recharged"} value={recharge} loading={overview.loading} />
@@ -295,14 +295,16 @@ function BalanceOverview({ user, overview, formatUsd, locale }) {
       <OverviewMetric label={locale === "zh" ? "最近充值" : "Latest recharge"} value={latest} loading={overview.loading} />
     </div>
     <img className="console-purchase-overview-art" src="/assets/img/purchase-wallet-stack.png" alt="" aria-hidden="true" />
-  </section>;
+  </Panel>;
 }
 
 function BalancePurchase({ user, overview, locale, t, formatUsd, amount, setAmount, methods, method, setMethod, orderAmount, selectedLimit, payable, state, methodAvailable, minimumCredit, maximumCredit, onPay }) {
   const methodCount = Object.keys(methods).length;
   const buttonAmount = currency(payable, selectedLimit?.currency || "CNY", "zh");
   const minimumLabel = minimumCredit > 0 ? `$${minimumCredit}` : "$10";
-  return <div className="console-purchase-balance"><BalanceOverview user={user} overview={overview} formatUsd={formatUsd} locale={locale} /><section><PurchaseSectionTitle title={locale === "zh" ? "快捷充值" : "Quick top-up"} description={locale === "zh" ? "选择以下金额快速充值，到账即时生效" : "Choose an amount to add credit instantly"} /><AmountPresets amount={amount} setAmount={setAmount} /></section><section><PurchaseSectionTitle title={locale === "zh" ? "自定义金额" : "Custom amount"} /><label className="console-purchase-custom-input"><span>$</span><input type="number" min={minimumCredit || undefined} max={maximumCredit || undefined} value={amount} placeholder={locale === "zh" ? `输入充值金额，最低 ${minimumLabel}` : `Enter an amount, minimum ${minimumLabel}`} onChange={(event) => setAmount(event.target.value)} /></label></section><section><PurchaseSectionTitle title={t("purchase.method")} />{methodCount ? <PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={orderAmount} locale={locale} /> : <div className="console-payment-empty">{locale === "zh" ? "暂未配置可用支付方式" : "No payment methods are available"}</div>}</section><div className="console-purchase-security"><Icon name="shield" size={15} />{locale === "zh" ? "您的支付信息将通过加密通道传输，我们不会存储您的支付凭证。" : "Your payment information is encrypted in transit and payment credentials are never stored."}</div><Button variant="primary" className="console-purchase-submit" icon="shield" onClick={onPay} disabled={state.busy || !methodAvailable || orderAmount <= 0}>{state.busy ? t("common.loading") : `${locale === "zh" ? "确认支付" : "Confirm payment"} ${buttonAmount}`}</Button></div>;
+  const balance = Number(user?.balance || 0);
+  const credit = Math.max(0, Number(amount || 0));
+  return <div className="console-purchase-balance"><BalanceOverview user={user} overview={overview} formatUsd={formatUsd} locale={locale} /><Panel className="console-purchase-checkout"><div className="console-purchase-progress" aria-hidden="true">{[1, 2, 3].map((step) => <span key={step}><i><Icon name="check" size={12} /></i></span>)}</div><div className="console-purchase-step is-amount"><PurchaseStepTitle number={1} title={locale === "zh" ? "金额" : "Amount"} /><AmountPresets amount={amount} setAmount={setAmount} /><PurchaseSectionTitle title={locale === "zh" ? "自定义" : "Custom"} /><label className="console-purchase-custom-input"><span>$</span><TextInput type="number" min={minimumCredit || undefined} max={maximumCredit || undefined} value={amount} placeholder={locale === "zh" ? `最低 ${minimumLabel}` : `Minimum ${minimumLabel}`} onChange={(event) => setAmount(event.target.value)} /></label><small className="console-purchase-minimum">{locale === "zh" ? `最低充值 ${minimumLabel}` : `Minimum ${minimumLabel}`}</small></div><div className="console-purchase-step is-payment"><PurchaseStepTitle number={2} title={locale === "zh" ? "支付" : "Payment"} />{methodCount ? <PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={orderAmount} locale={locale} /> : <div className="console-payment-empty">{locale === "zh" ? "暂未配置可用支付方式" : "No payment methods are available"}</div>}</div><div className="console-purchase-step is-review"><PurchaseStepTitle number={3} title={locale === "zh" ? "确认" : "Review"} /><dl className="console-purchase-review"><div><dt>{locale === "zh" ? "充值额度" : "Credit to add"}</dt><dd>{formatUsd(credit)}</dd></div><div><dt>{locale === "zh" ? "当前余额" : "Current balance"}</dt><dd>{formatUsd(balance)}</dd></div><div><dt>{locale === "zh" ? "充值后余额" : "Balance after top-up"}</dt><dd>{formatUsd(balance + credit)}</dd></div></dl><div className="console-purchase-security"><Icon name="shield" size={18} />{locale === "zh" ? "加密支付" : "Encrypted payment"}</div></div><Button variant="primary" className="console-purchase-submit" icon="shield" onClick={onPay} disabled={state.busy || !methodAvailable || orderAmount <= 0}>{state.busy ? t("common.loading") : `${locale === "zh" ? "确认支付" : "Confirm payment"} ${buttonAmount}`}</Button><Link className="console-purchase-history" to="/orders">{locale === "zh" ? "查看支付记录" : "View payment history"}</Link></Panel></div>;
 }
 
 function SubscriptionCheckout({ plan, locale, chargeAmount, selectedLimit, methods, method, setMethod, payable, subscriptionTotalForMethod, state, methodAvailable, onPay, t }) {
@@ -311,7 +313,7 @@ function SubscriptionCheckout({ plan, locale, chargeAmount, selectedLimit, metho
 
 function SubscriptionPurchase(props) {
   const { checkout, plan, setPlan, locale } = props;
-  return <><div className="console-plan-grid" role="radiogroup" aria-label={locale === "zh" ? "订阅套餐" : "Subscription plan"}>{checkout.plans.map((item, index) => <PlanCard key={item.id} plan={item} selected={plan?.id === item.id} tabStop={plan ? plan.id === item.id : index === 0} onSelect={setPlan} locale={locale} />)}</div>{!checkout.plans.length && <Panel><EmptyState icon="gift" /></Panel>}{plan && <SubscriptionCheckout {...props} />}</>;
+  return <><RadioGroup value={plan ? String(plan.id) : ""} onValueChange={(id) => setPlan(checkout.plans.find((item) => String(item.id) === id) || null)} className="console-plan-grid" aria-label={locale === "zh" ? "订阅套餐" : "Subscription plan"}>{checkout.plans.map((item) => <PlanCard key={item.id} plan={item} selected={plan?.id === item.id} locale={locale} />)}</RadioGroup>{!checkout.plans.length && <Panel><EmptyState icon="gift" /></Panel>}{plan && <SubscriptionCheckout {...props} />}</>;
 }
 
 function PurchaseHelp({ checkout }) {
@@ -329,7 +331,7 @@ export function PurchasePage() {
   const [overview, setOverview] = useState({ loading: true, totalRecharge: null, totalSpend: null, lastRecharge: null });
   const [state, setState] = useState({ loading: true, error: "", busy: false });
   const [tab, setTab] = useState("balance");
-  const [amount, setAmount] = useState(10);
+  const [amount, setAmount] = useState(50);
   const [method, setMethod] = useState("");
   const [plan, setPlan] = useState(null);
   const resumeHandled = useRef(false);
@@ -456,14 +458,16 @@ export function OrdersPage() {
   };
   const columns = [
     { key: "out_trade_no", label: t("orders.number"), render: (row) => <span className="console-mono">{row.out_trade_no}</span> },
-    { key: "amount", label: t("orders.amount"), render: (row) => currency(row.pay_amount || row.amount, row.currency, locale), align: "right" },
-    { key: "payment_type", label: t("orders.method"), render: (row) => paymentLabel(row.payment_type, locale) },
+    { key: "amount", label: t("orders.amount"), render: (row) => currency(row.pay_amount || row.amount, row.currency, locale) },
+    { key: "payment_type", label: t("orders.method"), render: (row) => <div className="console-order-method"><PaymentMark type={row.payment_type} method={row} /><span>{paymentLabel(row.payment_type, locale)}</span></div> },
     { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={String(row.status).toLowerCase()} label={statusLabel(String(row.status).toLowerCase(), locale)} /> },
     { key: "created_at", label: t("common.date"), render: (row) => formatDate(row.created_at) },
-    { key: "actions", label: t("common.actions"), align: "right", render: (row) => <div className="console-inline-actions">{String(row.status).toUpperCase() === "PENDING" && <Button variant="danger" onClick={() => setDialog({ type: "cancel", item: row })}>{t("orders.cancel")}</Button>}{String(row.status).toUpperCase() === "COMPLETED" && row.provider_instance_id && state.eligible.has(row.provider_instance_id) && <Button onClick={() => setDialog({ type: "refund", item: row })}>{t("orders.refund")}</Button>}</div> },
+    { key: "actions", label: t("common.actions"), render: (row) => <div className="console-inline-actions"><InlineButton className="console-order-view" onClick={() => setDialog({ type: "view", item: row })}>{locale === "zh" ? "查看" : "View"}</InlineButton>{String(row.status).toUpperCase() === "PENDING" && <Button variant="danger" onClick={() => setDialog({ type: "cancel", item: row })}>{t("orders.cancel")}</Button>}{String(row.status).toUpperCase() === "COMPLETED" && row.provider_instance_id && state.eligible.has(row.provider_instance_id) && <Button onClick={() => setDialog({ type: "refund", item: row })}>{t("orders.refund")}</Button>}</div> },
   ];
   const filterOptions = ["PENDING", "COMPLETED", "FAILED", "REFUNDED"];
-  return <Page title={t("orders.title")} actions={<Button variant="primary" icon="cart" onClick={() => navigate("/purchase")}>{t("purchase.title")}</Button>}><Panel><div className="console-toolbar console-orders-toolbar"><Field label={t("common.status")}><SelectInput value={filter} onChange={(event) => { setFilter(event.target.value); setPaging((current) => ({ ...current, page: 1 })); }}><option value="">{t("common.all")}</option>{filterOptions.map((status) => <option key={status} value={status}>{statusLabel(status.toLowerCase(), locale)}</option>)}</SelectInput></Field><Button icon="refresh" onClick={load}>{t("common.refresh")}</Button></div>{state.loading ? <Spinner /> : state.error ? <ErrorState message={state.error} onRetry={load} /> : <><DataTable className="console-orders-table" columns={columns} rows={state.items} empty={<EmptyState icon="order" />} /><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>}</Panel><ConfirmDialog open={dialog?.type === "cancel"} title={t("orders.cancel")} description={locale === "zh" ? "确定取消这个待支付订单吗？" : "Cancel this pending order?"} busy={state.busy} onClose={() => setDialog(null)} onConfirm={submitAction} /><Modal open={dialog?.type === "refund"} title={t("orders.refund")} onClose={() => setDialog(null)} size="small" footer={<><Button onClick={() => setDialog(null)}>{t("common.cancel")}</Button><Button variant="primary" onClick={submitAction} disabled={!reason.trim() || state.busy}>{t("common.confirm")}</Button></>}><Field label={t("orders.reason")}><TextArea rows="4" value={reason} onChange={(event) => setReason(event.target.value)} /></Field></Modal></Page>;
+  const setStatusFilter = (value) => { setFilter(value); setPaging((current) => ({ ...current, page: 1 })); };
+  const statusTabs = [{ value: "", label: t("common.all") }, ...filterOptions.map((status) => ({ value: status, label: statusLabel(status.toLowerCase(), locale) }))];
+  return <Page title={t("orders.title")} className="console-orders-page" actions={<Button variant="primary" icon="plus" onClick={() => navigate("/purchase")}>{t("purchase.title")}</Button>}><Panel className="console-orders-panel"><div className="console-orders-toolbar"><CompactTabs value={filter} items={statusTabs} label={locale === "zh" ? "订单状态" : "Order status"} className="console-orders-status-tabs" onChange={setStatusFilter} /><Button icon="refresh" onClick={load}>{t("common.refresh")}</Button></div>{state.loading ? <Spinner /> : state.error ? <ErrorState message={state.error} onRetry={load} /> : <><DataTable className="console-orders-table" columns={columns} rows={state.items} empty={<EmptyState icon="order" />} /><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>}</Panel><ConfirmDialog open={dialog?.type === "cancel"} title={t("orders.cancel")} description={locale === "zh" ? "确定取消这个待支付订单吗？" : "Cancel this pending order?"} busy={state.busy} onClose={() => setDialog(null)} onConfirm={submitAction} /><Modal open={dialog?.type === "refund"} title={t("orders.refund")} onClose={() => setDialog(null)} size="small" footer={<><Button onClick={() => setDialog(null)}>{t("common.cancel")}</Button><Button variant="primary" onClick={submitAction} disabled={!reason.trim() || state.busy}>{t("common.confirm")}</Button></>}><Field label={t("orders.reason")}><TextArea rows="4" value={reason} onChange={(event) => setReason(event.target.value)} /></Field></Modal><Modal open={dialog?.type === "view"} title={locale === "zh" ? "订单详情" : "Order details"} onClose={() => setDialog(null)} size="small"><dl className="console-order-detail">{dialog?.item && [[t("orders.number"), dialog.item.out_trade_no], [t("orders.amount"), currency(dialog.item.pay_amount || dialog.item.amount, dialog.item.currency, locale)], [t("orders.method"), paymentLabel(dialog.item.payment_type, locale)], [t("common.status"), statusLabel(String(dialog.item.status).toLowerCase(), locale)], [t("common.date"), formatDate(dialog.item.created_at)]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></Modal></Page>;
 }
 
 function PaymentShell({ children }) {
@@ -498,8 +502,8 @@ export function PaymentQRCodePage() {
     return () => { mounted = false; window.clearInterval(countdown); window.clearInterval(poll); };
   }, [navigate, snapshot?.orderId, snapshot?.qrCode]);
   const cancel = async () => { try { await paymentApi.cancel(snapshot.orderId); clearRecovery(); navigate("/purchase", { replace: true }); } catch (error) { notify("error", error.message); } };
-  if (!snapshot) return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><ErrorState message={locale === "zh" ? "支付参数不完整或已过期。" : "Payment details are missing or expired."} /><Link className="console-button console-button--primary" to="/purchase">{t("payment.back")}</Link></div></Panel></PaymentShell>;
-  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className="console-payment-state-icon"><Icon name={expired ? "warning" : "card"} size={30} /></span><h1>{expired ? t("payment.failed") : t("payment.waiting")}</h1><p>{snapshot?.qrCode ? t("payment.scan") : (locale === "zh" ? "在新窗口完成付款。" : "Complete payment in the provider window.")}</p>{qr && !expired && <img className="console-qr" src={qr} alt="Payment QR code" />}{paymentUrl && !snapshot?.qrCode && !expired && <a className="console-button console-button--primary" href={paymentUrl} target="_blank" rel="noopener noreferrer">{locale === "zh" ? "打开支付页面" : "Open payment page"}</a>}<strong className="console-countdown">{countdownText(remaining)}</strong><div className="console-payment-state-actions"><Button onClick={() => navigate("/purchase")}>{t("payment.back")}</Button>{snapshot?.orderId && !expired && <Button variant="danger" onClick={cancel}>{t("orders.cancel")}</Button>}</div></div></Panel></PaymentShell>;
+  if (!snapshot) return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><ErrorState message={locale === "zh" ? "支付参数不完整或已过期。" : "Payment details are missing or expired."} /><Link className={buttonLinkClass({ variant: "primary" })} to="/purchase">{t("payment.back")}</Link></div></Panel></PaymentShell>;
+  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className="console-payment-state-icon"><Icon name={expired ? "warning" : "card"} size={30} /></span><h1>{expired ? t("payment.failed") : t("payment.waiting")}</h1><p>{snapshot?.qrCode ? t("payment.scan") : (locale === "zh" ? "在新窗口完成付款。" : "Complete payment in the provider window.")}</p>{qr && !expired && <img className="console-qr" src={qr} alt="Payment QR code" />}{paymentUrl && !snapshot?.qrCode && !expired && <a className={buttonLinkClass({ variant: "primary" })} href={paymentUrl} target="_blank" rel="noopener noreferrer">{locale === "zh" ? "打开支付页面" : "Open payment page"}</a>}<strong className="console-countdown">{countdownText(remaining)}</strong><div className="console-payment-state-actions"><Button onClick={() => navigate("/purchase")}>{t("payment.back")}</Button>{snapshot?.orderId && !expired && <Button variant="danger" onClick={cancel}>{t("orders.cancel")}</Button>}</div></div></Panel></PaymentShell>;
 }
 
 function pendingStatus(status) {
@@ -539,7 +543,7 @@ export function PaymentResultPage() {
     return () => { mounted = false; mountedRef.current = false; window.clearInterval(refreshRef.current); };
   }, [resolve]);
   const success = successfulOrder(state.order?.status);
-  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className={`console-payment-state-icon ${success ? "is-success" : state.error ? "is-error" : ""}`}><Icon name={success ? "check" : state.error ? "warning" : "clock"} size={30} /></span>{state.loading ? <Spinner label={t("payment.processing")} /> : <><h1>{success ? t("payment.success") : pendingStatus(state.order?.status) ? t("payment.processing") : t("payment.failed")}</h1><p>{state.error || (success ? (locale === "zh" ? "余额或订阅权益将在片刻内更新。" : "Your balance or subscription will update shortly.") : state.order?.status)}</p>{state.order && <div className="console-result-order"><span>{t("orders.number")}</span><strong className="console-mono">{state.order.out_trade_no}</strong><span>{t("common.status")}</span><StatusBadge status={String(state.order.status).toLowerCase()} label={statusLabel(String(state.order.status).toLowerCase(), locale)} /></div>}<div className="console-payment-state-actions"><Link className="console-button console-button--primary" to="/orders">{t("payment.viewOrders")}</Link><Link className="console-button console-button--secondary" to="/purchase">{t("payment.back")}</Link></div></>}</div></Panel></PaymentShell>;
+  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className={`console-payment-state-icon ${success ? "is-success" : state.error ? "is-error" : ""}`}><Icon name={success ? "check" : state.error ? "warning" : "clock"} size={30} /></span>{state.loading ? <Spinner label={t("payment.processing")} /> : <><h1>{success ? t("payment.success") : pendingStatus(state.order?.status) ? t("payment.processing") : t("payment.failed")}</h1><p>{state.error || (success ? (locale === "zh" ? "余额或订阅权益将在片刻内更新。" : "Your balance or subscription will update shortly.") : state.order?.status)}</p>{state.order && <div className="console-result-order"><span>{t("orders.number")}</span><strong className="console-mono">{state.order.out_trade_no}</strong><span>{t("common.status")}</span><StatusBadge status={String(state.order.status).toLowerCase()} label={statusLabel(String(state.order.status).toLowerCase(), locale)} /></div>}<div className="console-payment-state-actions"><Link className={buttonLinkClass({ variant: "primary" })} to="/orders">{t("payment.viewOrders")}</Link><Link className={buttonLinkClass()} to="/purchase">{t("payment.back")}</Link></div></>}</div></Panel></PaymentShell>;
 }
 
 async function loadStripePaymentClient(snapshot, locale) {
@@ -571,8 +575,11 @@ async function confirmStripeMethod({ stripe, method, clientSecret, snapshot, fin
 
 function mountStripeElement(stripe, clientSecret, onReady) {
   const darkTheme = document.documentElement.dataset.consoleTheme === "dark";
-  const accent = getComputedStyle(document.documentElement).getPropertyValue("--console-accent").trim() || "#0e7d73";
-  const elements = stripe.elements({ clientSecret, appearance: { theme: darkTheme ? "night" : "stripe", variables: { borderRadius: "12px", colorPrimary: accent } } });
+  const rootStyle = getComputedStyle(document.documentElement);
+  const accent = rootStyle.getPropertyValue("--primary").trim();
+  const borderRadius = rootStyle.getPropertyValue("--radius").trim();
+  const appearanceVariables = { ...(accent && { colorPrimary: accent }), ...(borderRadius && { borderRadius }) };
+  const elements = stripe.elements({ clientSecret, appearance: { theme: darkTheme ? "night" : "stripe", variables: appearanceVariables } });
   const element = elements.create("payment", { layout: "tabs" });
   element.mount("#stripe-payment-element");
   element.on("ready", onReady);
@@ -684,5 +691,5 @@ export function WeChatPaymentCallbackPage() {
     }
     navigate(`${redirect.pathname}${redirect.search}`, { replace: true });
   }, [locale, navigate, params]);
-  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body">{error ? <ErrorState message={error} /> : <Spinner label={locale === "zh" ? "正在恢复微信支付…" : "Resuming WeChat payment…"} />}{error && <Link className="console-button console-button--primary" to="/purchase">{locale === "zh" ? "返回支付" : "Back to payment"}</Link>}</div></Panel></PaymentShell>;
+  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body">{error ? <ErrorState message={error} /> : <Spinner label={locale === "zh" ? "正在恢复微信支付…" : "Resuming WeChat payment…"} />}{error && <Link className={buttonLinkClass({ variant: "primary" })} to="/purchase">{locale === "zh" ? "返回支付" : "Back to payment"}</Link>}</div></Panel></PaymentShell>;
 }

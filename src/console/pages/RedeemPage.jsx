@@ -7,7 +7,7 @@ import redeemWalletLight from "../../assets/console/redeem-wallet-light.png";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, EmptyState, ErrorState, Page, Panel, Spinner, TextInput } from "../UI";
+import { Button, EmptyState, ErrorState, IconButton, Page, Panel, Spinner, TextInput } from "../UI";
 
 function redeemType(item) {
   return item?.type || item?.code_type || "unknown";
@@ -42,30 +42,39 @@ function RedeemSummary({ user, history, locale, formatCurrency }) {
   const balance = Number(user?.balance) || 0;
   const concurrency = Number(user?.concurrency ?? user?.current_concurrency) || 0;
   const metrics = [
-    ["user", locale === "zh" ? "可转返利额度" : "Transferable rebate", formatCurrency(user?.aff_quota || 0)],
-    ["clock", locale === "zh" ? "历史返利额度" : "Historical rebate", formatCurrency(user?.aff_history_quota || 0)],
-    ["gift", locale === "zh" ? "累计兑换次数" : "Total redemptions", `${history.length} ${locale === "zh" ? "次" : ""}`],
+    [locale === "zh" ? "当前余额" : "Current balance", formatCurrency(balance)],
+    [locale === "zh" ? "并发数" : "Concurrency", concurrency.toLocaleString(), locale === "zh" ? "请求" : "requests"],
+    [locale === "zh" ? "可转返利额度" : "Transferable rebate", formatCurrency(user?.aff_quota || 0)],
+    [locale === "zh" ? "历史返利额度" : "Historical rebate", formatCurrency(user?.aff_history_quota || 0)],
+    [locale === "zh" ? "累计兑换次数" : "Total redemptions", history.length.toLocaleString()],
   ];
-  return <section className="console-redeem-summary"><div className="console-redeem-summary-balance"><span>{locale === "zh" ? "当前余额" : "Current balance"}</span><strong>{formatCurrency(balance)}</strong><small>{locale === "zh" ? "并发数" : "Concurrency"}：<b>{concurrency}</b> {locale === "zh" ? "请求" : "requests"}</small></div><div className="console-redeem-summary-metrics">{metrics.map(([icon, label, value]) => <div key={label}><i><Icon name={icon} size={22} /></i><span><small>{label}</small><strong>{value}</strong></span></div>)}</div><picture className="console-redeem-wallet"><img className="is-light" src={redeemWalletLight} alt="" /><img className="is-dark" src={redeemWalletDark} alt="" /></picture></section>;
+  return <section className="console-redeem-summary"><div className="console-redeem-summary-metrics">{metrics.map(([label, value, suffix]) => <div key={label}><small>{label}<Icon name="info" size={13} /></small><strong>{value}</strong>{suffix && <span>{suffix}</span>}</div>)}</div><picture className="console-redeem-wallet"><img className="is-light" src={redeemWalletLight} alt="" /><img className="is-dark" src={redeemWalletDark} alt="" /></picture></section>;
 }
 
-function RedeemForm({ code, setCode, busy, onSubmit, result, locale, formatCurrency, t }) {
-  return <Panel className="console-redeem-entry"><div className="console-panel-body"><h2>{locale === "zh" ? "兑换码" : "Redemption code"}</h2><p>{locale === "zh" ? "输入兑换码，快速兑换余额或并发数" : "Enter a code to redeem balance or concurrency."}</p><form onSubmit={onSubmit}><div className="console-redeem-input"><Icon name="gift" size={21} /><TextInput value={code} onChange={(event) => setCode(event.target.value)} placeholder={t("redeem.placeholder")} autoComplete="off" />{code && <button type="button" aria-label={locale === "zh" ? "清空兑换码" : "Clear code"} onClick={() => setCode("")}><Icon name="close" size={15} /></button>}</div><Button type="submit" variant="primary" icon="gift" disabled={!code.trim() || busy}>{busy ? t("common.loading") : t("redeem.action")}</Button></form><RedemptionResult result={result} locale={locale} formatCurrency={formatCurrency} t={t} /></div></Panel>;
-}
-
-function RedeemInfo({ contact, locale }) {
+function RedeemForm({ code, setCode, busy, onSubmit, result, contact, locale, formatCurrency, t }) {
   const items = locale === "zh"
-    ? ["每个兑换码只能使用一次", "兑换码可以增加余额、并发数或试用权限", contact ? `如有兑换问题，请联系 ${contact}` : "如有兑换问题，请联系客服", "余额和并发数即时更新"]
-    : ["Each code can only be used once", "Codes can add balance, concurrency, or trial access", contact ? `For help, contact ${contact}` : "Contact support if you have any issues", "Balance and concurrency update immediately"];
-  return <Panel className="console-redeem-about"><div className="console-panel-body"><h2>{locale === "zh" ? "关于兑换码" : "About codes"}</h2><div className="console-redeem-info-list">{items.map((item) => <p key={item}><i><Icon name="circleCheck" size={17} /></i><span>{item}</span></p>)}</div><picture className="console-redeem-gift"><img className="is-light" src={redeemGiftLight} alt="" /><img className="is-dark" src={redeemGiftDark} alt="" /></picture></div></Panel>;
+    ? [
+      ["wallet", "余额", "增加账户可用余额。"],
+      ["pulse", "并发数", "提高可同时发起的请求数量。"],
+      ["calendar", "订阅", "解锁高级订阅与专属功能。"],
+      ["gift", "试用权限", "获得免费试用天数和功能体验。"],
+    ]
+    : [
+      ["wallet", "Balance", "Add funds to your account balance."],
+      ["pulse", "Concurrency", "Increase the number of requests you can run."],
+      ["calendar", "Subscription", "Unlock premium subscriptions and features."],
+      ["gift", "Trial access", "Get free trial days and feature evaluations."],
+    ];
+  const supportHref = contact?.startsWith("http") ? contact : contact?.includes("@") ? `mailto:${contact}` : "";
+  return <Panel className="console-redeem-entry"><div className="console-panel-body"><h2>{locale === "zh" ? "兑换码" : "Redeem a code"}</h2><p>{locale === "zh" ? "兑换余额、并发、订阅或试用权益。" : "Apply balance, concurrency, subscription, or trial benefits."}</p><form onSubmit={onSubmit}><div className="console-redeem-input"><TextInput value={code} onChange={(event) => setCode(event.target.value)} placeholder={t("redeem.placeholder")} autoComplete="off" />{code && <IconButton className="console-redeem-clear" icon="close" label={locale === "zh" ? "清空兑换码" : "Clear code"} onClick={() => setCode("")} />}</div><Button type="submit" variant="primary" disabled={!code.trim() || busy}>{busy ? t("common.loading") : (locale === "zh" ? "立即兑换" : "Redeem now")}</Button></form><div className="console-redeem-security"><Icon name="shield" size={17} /><span>{locale === "zh" ? "兑换码仅可使用一次，并会立即生效。" : "Codes are single-use and applied instantly."}</span></div><RedemptionResult result={result} locale={locale} formatCurrency={formatCurrency} t={t} /><div className="console-redeem-divider" /><h3>{locale === "zh" ? "关于兑换码" : "About redemption codes"}</h3><div className="console-redeem-info-list">{items.map(([icon, label, description], index) => <div className={`is-tone-${index + 1}`} key={label}><i><Icon name={icon} size={18} /></i><span><strong>{label}</strong><small>{description}</small></span></div>)}</div><picture className="console-redeem-gift"><img className="is-light" src={redeemGiftLight} alt="" /><img className="is-dark" src={redeemGiftDark} alt="" /></picture><div className="console-redeem-support"><span>{locale === "zh" ? "需要帮助？" : "Need help?"}</span>{supportHref ? <a href={supportHref} target={supportHref.startsWith("http") ? "_blank" : undefined} rel="noreferrer">{locale === "zh" ? "联系客服" : "Contact support"}<Icon name="external" size={13} /></a> : <span>{contact || (locale === "zh" ? "联系客服" : "Contact support")}</span>}</div></div></Panel>;
 }
 
 function RedeemHistory({ state, history, locale, formatCurrency, formatDate, load }) {
-  let content = <div className="console-redeem-history-list">{history.map((item, index) => <div key={item.id || `${item.code}-${index}`}><i className={redeemType(item).includes("concurrency") ? "is-concurrency" : ""}><Icon name={redeemType(item).includes("concurrency") ? "users" : "dollar"} size={20} /></i><span><strong>{redeemTitle(item, locale)}</strong></span><time>{formatDate(item.used_at || item.redeemed_at || item.created_at)}</time><p>{locale === "zh" ? "使用兑换码" : "Used code"} <code>{item.code || item.redeem_code || "—"}</code> {item.notes || item.message || ""}</p><b>{redeemValue(item, locale, formatCurrency)}</b></div>)}</div>;
+  let content = <div className="console-redeem-history-list">{history.map((item, index) => { const type = redeemType(item); const concurrency = type.includes("concurrency"); const subscription = type === "subscription"; return <div className={concurrency ? "is-concurrency" : subscription ? "is-subscription" : "is-balance"} key={item.id || `${item.code}-${index}`}><i><Icon name={concurrency ? "pulse" : subscription ? "calendar" : "wallet"} size={19} /></i><time>{formatDate(item.used_at || item.redeemed_at || item.created_at)}</time><code>{item.code || item.redeem_code || "—"}</code><span><strong>{redeemTitle(item, locale)}</strong>{(item.group?.name || item.group_name) && <small>{item.group?.name || item.group_name}</small>}</span><b>{redeemValue(item, locale, formatCurrency)}</b></div>; })}</div>;
   if (!history.length) content = <EmptyState icon="gift" />;
   if (state.loading) content = <Spinner />;
   else if (state.error) content = <ErrorState message={state.error} onRetry={load} />;
-  return <Panel className="console-redeem-history"><div className="console-panel-body"><h2>{locale === "zh" ? "最近活动" : "Recent activity"}</h2>{content}</div></Panel>;
+  return <Panel className="console-redeem-history"><div className="console-panel-body"><div className="console-redeem-history-head"><span><h2>{locale === "zh" ? "最近活动" : "Recent activity"}</h2><p>{locale === "zh" ? "来自兑换码和管理员调整的账户权益记录" : "Account benefits applied from codes and administrator adjustments"}</p></span><b>{history.length} {locale === "zh" ? "条记录" : "records"}</b></div>{content}</div></Panel>;
 }
 
 export function RedeemPage() {
@@ -94,7 +103,6 @@ export function RedeemPage() {
   };
   return <Page title={t("redeem.title")}>
     <RedeemSummary user={user} history={history} locale={locale} formatCurrency={formatCurrency} />
-    <div className="console-grid console-grid--2 console-redeem-grid"><RedeemForm code={code} setCode={setCode} busy={state.busy} onSubmit={redeem} result={result} locale={locale} formatCurrency={formatCurrency} t={t} /><RedeemInfo contact={settings?.contact_info} locale={locale} /></div>
-    <RedeemHistory state={state} history={history} locale={locale} formatCurrency={formatCurrency} formatDate={formatDate} load={load} />
+    <div className="console-redeem-grid"><RedeemForm code={code} setCode={setCode} busy={state.busy} onSubmit={redeem} result={result} contact={settings?.contact_info} locale={locale} formatCurrency={formatCurrency} t={t} /><RedeemHistory state={state} history={history} locale={locale} formatCurrency={formatCurrency} formatDate={formatDate} load={load} /></div>
   </Page>;
 }

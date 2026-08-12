@@ -4,7 +4,7 @@ import { GroupBadge } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useConsole } from "../ConsoleContext";
 import { useLocale } from "../i18n";
-import { Button, EmptyState, ErrorState, Field, IconButton, Modal, Page, Panel, SelectInput, Spinner, TextArea, TextInput } from "../UI";
+import { Button, EmptyState, ErrorState, Field, IconButton, Modal, Page, Panel, SelectInput, Spinner, TextArea, TextInput, buttonLinkClass } from "../UI";
 import { formatDuration, safeImageUrl } from "../utils";
 
 const STORAGE_KEY = "sentence_image_studio_preferences";
@@ -116,11 +116,6 @@ function keyOptionLabel(key) {
   return `${key?.name || `Key ${key?.id || ""}`} (${key?.group?.name || "—"})`;
 }
 
-function remainingQuota(key) {
-  if (!Number.isFinite(key?.quota) || key.quota <= 0) return null;
-  return Math.max(0, key.quota - (Number.isFinite(key.quota_used) ? key.quota_used : 0));
-}
-
 function messageId() {
   return crypto?.randomUUID?.() || `image-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
@@ -196,40 +191,44 @@ function StudioMessageReferences({ references = [], label }) {
   return <div className="console-image-message-references" aria-label={label}>{references.map((reference, index) => <figure key={reference.id || `${reference.name}-${index}`}><img src={reference.dataUrl} alt={reference.name || `${label} ${index + 1}`} /><figcaption>{reference.hint || reference.name}</figcaption></figure>)}</div>;
 }
 
-function RecentResultPicker({ images, copy: c, disabled, onSelect }) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef(null);
-
-  useEffect(() => {
-    if (disabled || !images.length) setOpen(false);
-  }, [disabled, images.length]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const close = (event) => {
-      if (event.type === "keydown" && event.key === "Escape") setOpen(false);
-      if (event.type === "pointerdown" && !rootRef.current?.contains(event.target)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", close);
-    document.addEventListener("keydown", close);
-    return () => {
-      document.removeEventListener("pointerdown", close);
-      document.removeEventListener("keydown", close);
-    };
-  }, [open]);
-
-  return <div className="console-image-recent-picker" ref={rootRef}><button type="button" className="console-button console-button--secondary" aria-expanded={open} aria-haspopup="menu" title={!images.length ? c.noLatest : undefined} disabled={disabled || !images.length} onClick={() => setOpen((value) => !value)}><span>{c.useLast}</span><Icon name="chevronDown" size={15} /></button>{open && <div className="console-image-recent-menu" role="menu" aria-label={c.selectRecent}>{images.map((image, index) => <button type="button" role="menuitem" key={image.id} onClick={() => { setOpen(false); onSelect(image.url); }}><img src={image.url} alt={c.recentItem.replace("{index}", String(index + 1))} /><span>{c.recentItem.replace("{index}", String(index + 1))}</span></button>)}</div>}</div>;
+function studioTurns(messages) {
+  const turns = [];
+  for (const message of messages) {
+    if (message.role === "user") turns.push({ user: message, assistant: null });
+    else if (turns.length) turns[turns.length - 1].assistant = message;
+  }
+  return turns;
 }
 
-function StudioMessage({ message, copy: c, now, onPreview, onReference }) {
-  const duration = message.durationMs > 0 ? c.duration.replace("{value}", formatDuration(message.durationMs)) : "";
-  return <article className={`console-image-message is-${message.role}`}><header><strong>{message.role === "user" ? c.promptRole : c.resultRole}</strong>{duration && <span>{duration}</span>}</header>{message.status === "pending" ? <StudioThinking copy={c} startedAt={message.startedAt} now={now} /> : <div className={`console-image-message-card ${message.status === "error" ? "is-error" : ""}`}><StudioMessageReferences references={message.references} label={c.withReference.replace("{count}", String(message.references?.length || 0))} /><p>{message.text}</p>{message.images?.length > 0 && <div className="console-image-results">{message.images.map((image, index) => <figure key={`${message.id}-${index}`}><button type="button" className="console-image-result-preview" onClick={() => onPreview(image.url)} aria-label={c.preview}><img src={image.url} alt={`${c.resultRole} ${index + 1}`} loading="lazy" /></button><figcaption><Button icon="edit" onClick={() => onReference(image.url)}>{c.continueEdit}</Button><a className="console-button console-button--secondary" href={image.url} download={`generated-${message.id}-${index + 1}.png`} target="_blank" rel="noreferrer"><Icon name="download" size={17} />{c.download}</a></figcaption></figure>)}</div>}{message.meta?.length > 0 && <small>{message.meta.join(" · ")}</small>}</div>}</article>;
+function StudioCurrentTurn({ turn, copy: c }) {
+  return <Panel className="console-image-current-turn"><div className="console-panel-body"><strong>{c.promptRole === "提示词" ? "当前轮次" : "Current turn"}</strong>{turn?.user ? <div><StudioMessageReferences references={turn.user.references} label={c.withReference.replace("{count}", String(turn.user.references?.length || 0))} /><span><p>{turn.user.text}</p><small>{[...(turn.user.meta || []), turn.assistant?.durationMs ? formatDuration(turn.assistant.durationMs) : ""].filter(Boolean).join(" · ")}</small></span></div> : <p className="console-image-current-empty">{c.emptyBody}</p>}</div></Panel>;
+}
+
+function StudioResultStage({ turn, copy: c, now, onPreview, onReference }) {
+  const assistant = turn?.assistant;
+  const images = assistant?.images || [];
+  const primary = images[0];
+  let body = <EmptyState icon="image" title={c.emptyTitle} description={c.emptyBody} />;
+  if (assistant?.status === "pending") body = <StudioThinking copy={c} startedAt={assistant.startedAt} now={now} />;
+  else if (assistant?.status === "error") body = <div className="console-image-stage-error"><Icon name="warning" size={26} /><strong>{c.failed}</strong><p>{assistant.text}</p></div>;
+  else if (primary) body = <><Button variant="ghost" className="console-image-stage-preview" onClick={() => onPreview(primary.url)} aria-label={c.preview}><img src={primary.url} alt={`${c.resultRole} 1`} /><span><Icon name="search" size={18} /></span></Button><footer><div><Button icon="edit" onClick={() => onReference(primary.url)}>{c.continueEdit}</Button><a className={buttonLinkClass()} href={primary.url} download={`generated-${assistant.id}-1.png`} target="_blank" rel="noreferrer"><Icon name="download" size={17} />{c.download}</a></div><span>{c.resultRole} 1{images.length > 1 ? ` / ${images.length}` : ""}</span></footer></>;
+  return <Panel className={`console-image-result-stage ${assistant?.status === "pending" ? "is-pending" : ""}`}><div className="console-image-result-stage-body">{body}</div></Panel>;
+}
+
+function StudioSession({ turns, copy: c, threadRef, onSelect }) {
+  return <Panel className="console-image-session"><div className="console-panel-body"><strong>{c.promptRole === "提示词" ? "当前会话" : "Current session"}</strong><div className="console-image-session-track" ref={threadRef}>{turns.length ? turns.map((turn, index) => { const image = turn.assistant?.images?.[0]; return <Button variant="ghost" className={index === turns.length - 1 ? "is-active" : ""} key={turn.user.id} onClick={() => image?.url && onSelect(image.url)} disabled={!image?.url}><b>{index + 1}</b><span className="console-image-session-media">{turn.user.references?.slice(0, 2).map((reference) => <img key={reference.id} src={reference.dataUrl} alt="" />)}{image?.url && <img src={image.url} alt="" />}</span><span><p>{image?.url ? `${c.resultRole} ${index + 1}` : turn.user.text}</p><small>{turn.assistant?.durationMs ? c.duration.replace("{value}", formatDuration(turn.assistant.durationMs)) : turn.assistant?.status === "pending" ? c.submitting : ""}</small></span></Button>; }) : <p>{c.emptyBody}</p>}</div></div></Panel>;
+}
+
+function StudioReferences({ references, copy: c, fileRef, disabled, onSelectFile, onRemove }) {
+  return <section className="console-image-workbench-references"><strong>{c.promptRole === "提示词" ? "参考图" : "References"}</strong><div>{references.map((reference) => <figure key={reference.id}><img src={reference.dataUrl} alt={reference.name} /><IconButton icon="close" label={c.clearReference} onClick={() => onRemove(reference.id)} /><figcaption>{reference.hint}</figcaption></figure>)}<input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={onSelectFile} disabled={disabled} /><Button variant="secondary" className="console-image-reference-add" icon="plus" onClick={() => fileRef.current?.click()} disabled={disabled}>{c.promptRole === "提示词" ? "添加图片" : "Add image"}</Button></div><small>{references.length} / {MAX_REFERENCE_IMAGES}</small></section>;
+}
+
+function StudioRecentResults({ images, copy: c, disabled, onSelect }) {
+  return <section className="console-image-workbench-recent"><strong>{c.useLast}<Icon name="chevronDown" size={13} /></strong><div>{images.map((image, index) => <Button variant="ghost" className="console-image-recent-button" key={image.id} disabled={disabled} onClick={() => onSelect(image.url)} aria-label={c.recentItem.replace("{index}", String(index + 1))}><img src={image.url} alt="" /></Button>)}</div></section>;
 }
 
 function StudioControls({ copy: c, keys, state, form, selectedKey, preset, disabled, onKeyChange, onChange, onReset, onRetry }) {
-  const { formatCurrency } = useLocale();
-  const quota = remainingQuota(selectedKey);
-  return <Panel title={c.controls} className="console-image-controls"><div className="console-image-controls-body">{state.loading ? <Spinner /> : state.error ? <ErrorState message={state.error || c.loadFailed} onRetry={onRetry} /> : <><section><Field label={c.apiKey}><SelectInput value={form.keyId} onChange={(event) => onKeyChange(event.target.value)} disabled={!keys.length || disabled} searchable={keys.length > 5}>{keys.length ? keys.map((key) => <option key={key.id} value={key.id}>{keyOptionLabel(key)}</option>) : <option value="">{c.noKeyOption}</option>}</SelectInput></Field>{selectedKey && <div className="console-image-key-summary"><GroupBadge name={selectedKey.group?.name} platform={selectedKey.group?.platform} /><p>{c.groupEnabled}{quota !== null ? ` · ${c.remaining.replace("{amount}", formatCurrency(quota))}` : ""}</p></div>}</section><section><div className="console-image-section-head"><strong>{c.parameters}</strong><button type="button" onClick={onReset} disabled={!selectedKey || disabled}>{c.reset}</button></div><Field label={c.model}><SelectInput value={form.model} onChange={(event) => onChange("model", event.target.value)} disabled={!preset || disabled}>{(preset?.models || []).map((model) => <option key={model} value={model}>{model}</option>)}</SelectInput></Field><div className="console-image-parameter-grid"><Field label={c.quality}><SelectInput value={form.size} onChange={(event) => onChange("size", event.target.value)} disabled={!preset || disabled}>{SIZE_OPTIONS.map((value) => <option key={value} value={value}>{value}</option>)}</SelectInput></Field><Field label={c.count}><TextInput type="number" min="1" max="4" step="1" value={form.count} onChange={(event) => onChange("count", event.target.value)} disabled={!preset || preset.countLocked || disabled} /></Field></div></section></>}</div><aside className="console-image-session-notice"><Icon name="info" size={17} /><div><strong>{c.reminderTitle}</strong><p>{c.reminderBody}</p></div></aside></Panel>;
+  return <div className="console-image-controls"><div className="console-image-controls-body">{state.loading ? <Spinner /> : state.error ? <ErrorState message={state.error || c.loadFailed} onRetry={onRetry} /> : <><section><Field label={c.apiKey}><div className="console-image-key-field"><SelectInput value={form.keyId} onChange={(event) => onKeyChange(event.target.value)} disabled={!keys.length || disabled} searchable={keys.length > 5}>{keys.length ? keys.map((key) => <option key={key.id} value={key.id}>{keyOptionLabel(key)}</option>) : <option value="">{c.noKeyOption}</option>}</SelectInput>{selectedKey && <GroupBadge name={selectedKey.group?.name} platform={selectedKey.group?.platform} />}</div></Field></section><section><div className="console-image-parameter-grid"><Field label={c.model}><SelectInput value={form.model} onChange={(event) => onChange("model", event.target.value)} disabled={!preset || disabled}>{(preset?.models || []).map((model) => <option key={model} value={model}>{model}</option>)}</SelectInput></Field><Field label={c.quality}><SelectInput value={form.size} onChange={(event) => onChange("size", event.target.value)} disabled={!preset || disabled}>{SIZE_OPTIONS.map((value) => <option key={value} value={value}>{value}</option>)}</SelectInput></Field><Field label={c.count}><TextInput type="number" min="1" max="4" step="1" value={form.count} onChange={(event) => onChange("count", event.target.value)} disabled={!preset || preset.countLocked || disabled} /></Field><Field label={c.aspect}><SelectInput value={form.aspectRatio} onChange={(event) => onChange("aspectRatio", event.target.value)} disabled={!preset || disabled}>{ASPECT_OPTIONS.map((value) => <option key={value} value={value}>{value === "auto" ? "Auto" : value}</option>)}</SelectInput></Field><Button variant="ghost" className="console-image-reset" icon="reset" onClick={onReset} disabled={!selectedKey || disabled}>{c.reset}</Button></div></section></>}</div></div>;
 }
 
 export function ImageStudioPage() {
@@ -261,6 +260,8 @@ export function ImageStudioPage() {
     }
     return images;
   }, [messages]);
+  const turns = useMemo(() => studioTurns(messages), [messages]);
+  const currentTurn = turns[turns.length - 1] || null;
   const platform = selectedKey?.group?.platform || "";
   const preset = PLATFORM_PRESETS[platform] || null;
 
@@ -290,7 +291,7 @@ export function ImageStudioPage() {
   useEffect(() => () => requestRef.current?.abort(), []);
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight;
+      if (threadRef.current) threadRef.current.scrollLeft = threadRef.current.scrollWidth;
     });
     return () => window.cancelAnimationFrame(frame);
   }, [messages, submitting]);
@@ -396,5 +397,5 @@ export function ImageStudioPage() {
     formRef.current?.requestSubmit();
   };
 
-  return <Page title={c.workspace} className="console-image-studio-page"><div className="console-image-studio-layout"><StudioControls copy={c} keys={keysState.items} state={keysState} form={form} selectedKey={selectedKey} preset={preset} disabled={submitting} onKeyChange={changeKey} onChange={changeForm} onReset={resetForm} onRetry={() => setLoadVersion((value) => value + 1)} /><Panel title={c.workspace} className="console-image-workspace"><div className="console-image-thread" ref={threadRef}>{keysState.loading && !messages.length ? <Spinner /> : !messages.length ? <EmptyState icon="image" title={keysState.items.length ? c.emptyTitle : c.noKeysTitle} description={keysState.items.length ? c.emptyBody : c.noKeysBody} /> : <div className="console-image-message-list">{messages.map((message) => <StudioMessage key={message.id} message={message} copy={c} now={now} onPreview={setPreview} onReference={(url) => void useReference(url)} />)}</div>}</div><form className="console-image-composer" ref={formRef} onSubmit={submit}>{references.length > 0 && <div className="console-image-reference-list">{references.map((reference) => <div className="console-image-reference" key={reference.id}><img src={reference.dataUrl} alt={reference.name} /><div><strong>{reference.name}</strong><span>{reference.hint}</span></div><IconButton icon="close" label={c.clearReference} onClick={() => removeReference(reference.id)} /></div>)}</div>}<TextArea value={prompt} onChange={(event) => setPrompt(event.target.value)} onKeyDown={promptKeyDown} onPaste={pasteImage} placeholder={c.promptPlaceholder} rows="3" maxLength={20000} disabled={!selectedKey || submitting} /><div className="console-image-composer-actions"><div><label className="console-image-upload"><Icon name="plus" size={17} /><span>{c.imageTool}</span><input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={selectFile} disabled={!selectedKey || submitting} /></label><SelectInput className="console-image-aspect" value={form.aspectRatio} onChange={(event) => changeForm("aspectRatio", event.target.value)} disabled={!selectedKey || submitting}>{ASPECT_OPTIONS.map((value) => <option key={value} value={value}>{value === "auto" ? "Auto" : value}</option>)}</SelectInput></div><div><RecentResultPicker images={recentImages} copy={c} disabled={!selectedKey || submitting} onSelect={(url) => void useReference(url)} /><Button type="submit" variant="primary" icon="arrowUp" disabled={!selectedKey || submitting}>{submitting ? c.submitting : c.submit}</Button></div></div></form></Panel></div><Modal open={Boolean(preview)} title={c.previewTitle} onClose={() => setPreview("")} size="large">{preview && <div className="console-image-preview"><img src={preview} alt={c.previewTitle} /><a className="console-button console-button--primary" href={preview} download="generated-image.png" target="_blank" rel="noopener noreferrer"><Icon name="download" size={17} />{c.download}</a></div>}</Modal></Page>;
+  return <Page title={c.workspace} className="console-image-studio-page"><div className="console-image-studio-layout"><div className="console-image-result-column"><StudioCurrentTurn turn={currentTurn} copy={c} /><StudioResultStage turn={currentTurn} copy={c} now={now} onPreview={setPreview} onReference={(url) => void useReference(url)} /><StudioSession turns={turns} copy={c} threadRef={threadRef} onSelect={setPreview} /></div><Panel className="console-image-workbench"><form ref={formRef} onSubmit={submit}><h2>{messages.length ? (locale === "zh" ? "下一轮修改" : "Next iteration") : c.controls}</h2><StudioControls copy={c} keys={keysState.items} state={keysState} form={form} selectedKey={selectedKey} preset={preset} disabled={submitting} onKeyChange={changeKey} onChange={changeForm} onReset={resetForm} onRetry={() => setLoadVersion((value) => value + 1)} /><StudioReferences references={references} copy={c} fileRef={fileRef} disabled={!selectedKey || submitting} onSelectFile={selectFile} onRemove={removeReference} /><section className="console-image-workbench-prompt"><label htmlFor="console-image-studio-prompt">{c.promptRole}</label><TextArea id="console-image-studio-prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} onKeyDown={promptKeyDown} onPaste={pasteImage} placeholder={c.promptPlaceholder} rows="5" maxLength={4000} disabled={!selectedKey || submitting} /><small>{prompt.length} / 4000</small></section><StudioRecentResults images={recentImages} copy={c} disabled={!selectedKey || submitting} onSelect={(url) => void useReference(url)} /><Button className="console-image-generate" type="submit" variant="primary" icon="arrowUp" disabled={!selectedKey || submitting}>{submitting ? c.submitting : messages.length ? (locale === "zh" ? "生成下一轮" : "Generate next iteration") : c.submit}</Button><aside className="console-image-session-notice"><Icon name="info" size={17} /><div><strong>{c.reminderTitle}</strong><p>{c.reminderBody}</p></div></aside></form></Panel></div><Modal open={Boolean(preview)} title={c.previewTitle} onClose={() => setPreview("")} size="large">{preview && <div className="console-image-preview"><img src={preview} alt={c.previewTitle} /><a className={buttonLinkClass({ variant: "primary" })} href={preview} download="generated-image.png" target="_blank" rel="noopener noreferrer"><Icon name="download" size={17} />{c.download}</a></div>}</Modal></Page>;
 }

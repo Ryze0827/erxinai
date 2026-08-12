@@ -1,5 +1,23 @@
-import { useEffect, useId, useRef, useState } from "react";
-import { Button, TextInput } from "../UI";
+import { useEffect, useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@appica/ui-react/dropdown-menu";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@appica/ui-react/combobox";
+import { DatePicker } from "@appica/ui-react/date-picker";
+import { Tabs, TabsList, TabsTrigger } from "@appica/ui-react/tabs";
+import { Button } from "../UI";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 
@@ -25,20 +43,8 @@ export function useHiddenColumns(storageKey, defaults = []) {
 
 export function ColumnPicker({ columns, hidden, onToggle, alwaysVisible = [] }) {
   const { locale } = useLocale();
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef(null);
-  const menuId = `console-column-menu-${useId()}`;
-  useEffect(() => {
-    if (!open) return undefined;
-    const close = (event) => !rootRef.current?.contains(event.target) && setOpen(false);
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [open]);
   const choices = columns.filter((column) => !alwaysVisible.includes(column.key));
-  return <div className="console-column-picker" ref={rootRef}>
-    <Button icon="grid" aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined} onClick={() => setOpen((value) => !value)}>{locale === "zh" ? "列设置" : "Columns"}</Button>
-    {open && <div id={menuId} className="console-column-menu" role="menu">{choices.map((column) => <button type="button" role="menuitemcheckbox" aria-checked={!hidden.has(column.key)} key={column.key} onClick={() => onToggle(column.key)}><span>{column.label}</span>{!hidden.has(column.key) && <i className="is-checked">✓</i>}</button>)}</div>}
-  </div>;
+  return <DropdownMenu size="sm"><DropdownMenuTrigger render={<Button icon="grid" />}>{locale === "zh" ? "列设置" : "Columns"}</DropdownMenuTrigger><DropdownMenuContent align="end" className="console-column-menu">{choices.map((column) => <DropdownMenuCheckboxItem checked={!hidden.has(column.key)} onCheckedChange={() => onToggle(column.key)} key={column.key}>{column.label}</DropdownMenuCheckboxItem>)}</DropdownMenuContent></DropdownMenu>;
 }
 
 function localDate(date) {
@@ -68,19 +74,22 @@ function selectedPreset(startDate, endDate, presets) {
   });
 }
 
+function parseLocalDate(value) {
+  const [year, month, day] = String(value || "").split("-").map(Number);
+  if (!year || !month || !day) return undefined;
+  const date = new Date(year, month - 1, day);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function datePickerRange(startDate, endDate) {
+  return { from: parseLocalDate(startDate), to: parseLocalDate(endDate) };
+}
+
 export function DateRangePicker({ startDate, endDate, onChange }) {
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState({ start_date: startDate, end_date: endDate });
-  const rootRef = useRef(null);
-  const menuId = `console-date-menu-${useId()}`;
-  useEffect(() => setDraft({ start_date: startDate, end_date: endDate }), [startDate, endDate]);
-  useEffect(() => {
-    if (!open) return undefined;
-    const close = (event) => !rootRef.current?.contains(event.target) && setOpen(false);
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [open]);
+  const [draft, setDraft] = useState(() => datePickerRange(startDate, endDate));
+  useEffect(() => setDraft(datePickerRange(startDate, endDate)), [startDate, endDate]);
   const presets = [
     ["today", "Today", "今天"], ["yesterday", "Yesterday", "昨天"], ["24h", "Last 24 hours", "最近 24 小时"],
     ["7d", "Last 7 days", "最近 7 天"], ["14d", "Last 14 days", "最近 14 天"], ["30d", "Last 30 days", "最近 30 天"],
@@ -88,18 +97,33 @@ export function DateRangePicker({ startDate, endDate, onChange }) {
   ];
   const selected = selectedPreset(startDate, endDate, presets);
   const buttonLabel = selected ? (locale === "zh" ? selected[2] : selected[1]) : `${startDate} → ${endDate}`;
-  const apply = (range = draft) => { onChange(range); setOpen(false); };
-  return <div className="console-date-picker" ref={rootRef}>
-    <Button icon="calendar" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? menuId : undefined} onClick={() => setOpen((value) => !value)}><span>{buttonLabel}</span><Icon className={`console-date-chevron ${open ? "is-open" : ""}`} name="chevronDown" size={14} /></Button>
-    {open && <div id={menuId} className="console-date-menu" role="dialog" aria-label={locale === "zh" ? "选择日期范围" : "Choose date range"}><div className="console-date-presets">{presets.map(([value, en, zh]) => <button className={selected?.[0] === value ? "is-active" : ""} type="button" key={value} onClick={() => apply(rangeFor(value))}>{locale === "zh" ? zh : en}</button>)}</div><div className="console-date-custom"><label><span>{locale === "zh" ? "开始日期" : "Start date"}</span><TextInput type="date" value={draft.start_date} onChange={(event) => setDraft((current) => ({ ...current, start_date: event.target.value }))} /></label><i>→</i><label><span>{locale === "zh" ? "结束日期" : "End date"}</span><TextInput type="date" value={draft.end_date} onChange={(event) => setDraft((current) => ({ ...current, end_date: event.target.value }))} /></label><Button variant="primary" onClick={() => apply()}>{locale === "zh" ? "应用" : "Apply"}</Button></div></div>}
-  </div>;
+  const applyPreset = (preset) => {
+    const range = rangeFor(preset);
+    setDraft(datePickerRange(range.start_date, range.end_date));
+    onChange(range);
+  };
+  const applyCustom = (range) => {
+    setDraft(range || {});
+    if (!range?.from || !range?.to) return;
+    onChange({ start_date: localDate(range.from), end_date: localDate(range.to) });
+    setOpen(false);
+  };
+  return <div className="console-date-picker"><DropdownMenu size="sm"><DropdownMenuTrigger render={<Button className="console-date-preset-trigger" icon="calendar" />}><span>{buttonLabel}</span><Icon name="chevronDown" size={14} data-icon="end" /></DropdownMenuTrigger><DropdownMenuContent align="start" className="console-date-preset-menu"><DropdownMenuRadioGroup value={selected?.[0] || ""} onValueChange={applyPreset}>{presets.map(([value, en, zh]) => <DropdownMenuRadioItem value={value} key={value}>{locale === "zh" ? zh : en}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup></DropdownMenuContent></DropdownMenu><DatePicker mode="range" value={draft} onValueChange={applyCustom} open={open} onOpenChange={setOpen} dateFormat="yyyy-MM-dd" size="md" variant="outline" align="start" className="console-date-native" inputClassName="console-date-native-input" triggerIcon={<Icon name="calendar" size={16} />} triggerAriaLabel={locale === "zh" ? "打开日期范围日历" : "Open date range calendar"} /></div>;
 }
 
 export function SearchSelect({ value, onChange, options, placeholder, id }) {
-  const listId = id || `console-select-${String(placeholder || "options").replace(/\W/g, "-")}`;
-  return <><TextInput list={listId} value={value} onChange={onChange} placeholder={placeholder} /><datalist id={listId}>{options.map((option) => <option key={option.value ?? option} value={option.value ?? option}>{option.label ?? option}</option>)}</datalist></>;
+  const { locale } = useLocale();
+  const items = options.map((option) => ({
+    label: String(option.label ?? option),
+    value: String(option.value ?? option),
+  }));
+  const emitChange = (nextValue) => {
+    const target = { id, value: nextValue };
+    onChange?.({ target, currentTarget: target });
+  };
+  return <Combobox items={items} value={items.find((option) => option.value === String(value ?? "")) || null} onValueChange={(next) => emitChange(next?.value ?? "")} inputValue={String(value ?? "")} onInputValueChange={emitChange} itemToStringLabel={(option) => option?.label || ""} itemToStringValue={(option) => option?.value || ""} isItemEqualToValue={(option, selected) => option?.value === selected?.value} filter={(option, query) => option.label.toLowerCase().includes(String(query || "").toLowerCase())} size="md" variant="outline" clearable modal={false}><ComboboxInput id={id} className="console-input console-search-select" placeholder={placeholder} /><ComboboxContent className="console-select-menu console-search-select-menu"><ComboboxEmpty>{locale === "zh" ? "没有匹配选项" : "No matching options"}</ComboboxEmpty><ComboboxList>{(option) => <ComboboxItem value={option} key={option.value}>{option.label}</ComboboxItem>}</ComboboxList></ComboboxContent></Combobox>;
 }
 
-export function CompactTabs({ items, value, onChange, label }) {
-  return <div className="console-compact-tabs" role="tablist" aria-label={label}>{items.map((item) => <button type="button" role="tab" aria-selected={value === item.value} className={value === item.value ? "is-active" : ""} onClick={() => onChange(item.value)} key={item.value}>{item.label}</button>)}</div>;
+export function CompactTabs({ items, value, onChange, label, className = "" }) {
+  return <Tabs value={value} onValueChange={onChange} variant="pill" size="sm" className="console-compact-tabs-root"><TabsList className={`console-compact-tabs ${className}`} aria-label={label}>{items.map((item) => <TabsTrigger value={item.value} className={value === item.value ? "is-active" : ""} key={item.value}>{item.label}</TabsTrigger>)}</TabsList></Tabs>;
 }

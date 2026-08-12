@@ -1,11 +1,11 @@
-import { isValidElement, useEffect, useMemo, useRef, useState } from "react";
+import { isValidElement, useMemo } from "react";
 import { useParams } from "react-router";
 import ReactMarkdown from "react-markdown";
 import { pagesApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { EmptyState, ErrorState, Page, Panel, Spinner } from "../UI";
+import { CopyButton, EmptyState, ErrorState, Page, Panel, Spinner } from "../UI";
 import { safeExternalUrl, safeImageUrl } from "../utils";
 
 const SAFE_HTML_TAGS = new Set([
@@ -217,13 +217,7 @@ function textContent(node) {
 
 function MarkdownPre({ children }) {
   const { t } = useLocale();
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef(null);
-  useEffect(() => () => window.clearTimeout(timerRef.current), []);
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(textContent(children)); setCopied(true); window.clearTimeout(timerRef.current); timerRef.current = window.setTimeout(() => setCopied(false), 1600); } catch { setCopied(false); }
-  };
-  return <pre><button type="button" onClick={copy}><Icon name={copied ? "check" : "copy"} size={14} />{copied ? t("common.copied") : t("common.copy")}</button>{children}</pre>;
+  return <pre><CopyButton value={textContent(children)} label={t("common.copy")} copiedLabel={t("common.copied")} />{children}</pre>;
 }
 
 function SafeHtml({ inline, value }) {
