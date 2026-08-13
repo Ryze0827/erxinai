@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { authApi } from "../api/auth";
-import { persistBranding } from "../branding";
+import { normalizeSiteName, persistBranding } from "../branding";
 
 let cachedSettings = null;
 let settingsPromise = null;
@@ -10,9 +10,10 @@ function fetchSettings(force) {
   if (settingsPromise && !force) return settingsPromise;
   settingsPromise = authApi.getPublicSettings()
     .then((settings) => {
-      cachedSettings = settings;
-      persistBranding(settings);
-      return settings;
+      const normalizedSettings = { ...settings, site_name: normalizeSiteName(settings.site_name) };
+      cachedSettings = normalizedSettings;
+      persistBranding(normalizedSettings);
+      return normalizedSettings;
     })
     .finally(() => {
       settingsPromise = null;

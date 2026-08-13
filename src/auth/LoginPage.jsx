@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { Button } from "@appica/ui-react/button";
 import { authApi } from "../api/auth";
 import { persistAuthResponse } from "../api/session";
+import { useConsole } from "../console/ConsoleContext";
 import { AgreementPrompt, useAgreement } from "./AgreementPrompt";
 import {
   AppicaAuthCard,
@@ -22,6 +23,7 @@ import { usePublicSettings } from "./usePublicSettings";
 export function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { notify } = useConsole();
   const { settings, loading: settingsLoading, error: settingsError, retry } = usePublicSettings();
   const agreement = useAgreement(settings);
   const [form, setForm] = useState({ email: "", password: "" });
@@ -71,7 +73,13 @@ export function LoginPage() {
         completeLogin(response);
       }
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "Login failed."));
+      const message = getErrorMessage(requestError, "Login failed.");
+      if (requestError?.reason === "INVALID_CREDENTIALS") {
+        setError("");
+        notify("error", message);
+      } else {
+        setError(message);
+      }
       setTurnstileToken("");
       setTurnstileReset((value) => value + 1);
     } finally {
@@ -103,7 +111,7 @@ export function LoginPage() {
             <AppicaAuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error}</AppicaAuthNotice>
             {settingsError && <Button className="w-fit" variant="ghost" size="sm" type="button" onClick={retry}>Retry loading settings</Button>}
             <AppicaAuthField label="Email address" error={errors.email}>
-              <AppicaEmailInput type="email" value={form.email} onChange={(event) => updateForm("email", event.target.value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
+              <AppicaEmailInput type="email" value={form.email} onValueChange={(value) => updateForm("email", value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
             </AppicaAuthField>
             <AppicaAuthField label="Password" error={errors.password}>
               <AppicaPasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder="Enter your password" />

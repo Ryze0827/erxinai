@@ -1,3 +1,5 @@
+import { normalizeSiteName } from "./branding";
+
 const BRANDING_STORAGE_KEY = "sentence_public_branding";
 const DEFAULT_SITE_LOGO = "/assets/img/wayx-mark-64.png";
 
@@ -9,7 +11,7 @@ try {
   const cached = JSON.parse(localStorage.getItem(BRANDING_STORAGE_KEY) || "null");
   if (cached && typeof cached === "object") {
     const branding = {
-      site_name: cleanText(cached.site_name, 100),
+      site_name: normalizeSiteName(cached.site_name),
       site_logo: DEFAULT_SITE_LOGO,
       site_subtitle: cleanText(cached.site_subtitle, 240),
     };

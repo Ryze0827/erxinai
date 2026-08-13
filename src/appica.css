@@ -64,3 +64,40 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]) {
+  color: var(--foreground);
+  caret-color: var(--foreground);
+  font-family: var(--font-sans);
+  font-feature-settings: inherit;
+  font-size: var(--text-base);
+  font-variation-settings: inherit;
+  font-weight: var(--font-weight-normal);
+  letter-spacing: inherit;
+  line-height: var(--text-base--line-height);
+}
+
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill,
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill:hover,
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill:focus,
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill:active {
+  -webkit-text-fill-color: var(--foreground);
+  caret-color: var(--foreground);
+  box-shadow: 0 0 0 100vmax var(--background) inset;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--text-base--line-height);
+}
+
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill::first-line {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-normal);
+  letter-spacing: inherit;
+  line-height: var(--text-base--line-height);
+}
+
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-internal-autofill-previewed {
+  opacity: 0 !important;
+}

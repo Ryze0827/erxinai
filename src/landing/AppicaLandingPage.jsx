@@ -64,7 +64,7 @@ import {
   Accessible,
   ActivityHeartbeat,
   ArrowsShuffle,
-  ArrowUp,
+  ArrowBarToUp,
   ArrowUpRight,
   BrandFigma,
   BrandGithub,
@@ -91,6 +91,7 @@ import {
   Palette,
   Paperclip,
   PlayerPauseFilled,
+  PlayerPlayFilled,
   PlayerSkipBackFilled,
   PlayerSkipForwardFilled,
   Plus,
@@ -116,6 +117,7 @@ import "./AppicaLandingPage.css";
 
 const APPICA_ORIGIN = "https://appica.dev";
 const HEADLINE_ROTATION_INTERVAL_MS = 3200;
+const AUDIO_TRACK_DURATION_SECONDS = 222;
 
 const headlinePhrases = [
   "modern web apps",
@@ -277,7 +279,6 @@ function LandingHeader({ theme, onThemeChange }) {
         <div className="flex items-center gap-1.5">
           <Button className="-ms-1 lg:hidden" type="button" variant="ghost" size="icon-md" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu2 /></Button>
           <Link className="outline-ring flex w-fit shrink-0 items-center gap-2 rounded-sm" to="/" aria-label={`${DEFAULT_SITE_NAME} home`}><img className="size-8" src={DEFAULT_SITE_LOGO} alt="" width="32" height="32" /><span className="text-foreground-intense hidden text-lg font-semibold sm:inline">{DEFAULT_SITE_NAME}</span></Link>
-          <SourceLink href="/ui/changelog" className="bg-background-muted text-foreground-intense mt-1 shrink-0 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap sm:px-3 sm:text-sm">UI 1.1.0</SourceLink>
         </div>
         <Navigation className="hidden lg:block" variant="line" aria-label="Primary">
           <NavigationList>
@@ -289,8 +290,8 @@ function LandingHeader({ theme, onThemeChange }) {
           </NavigationList>
         </Navigation>
         <div className="flex items-center justify-self-end gap-1.5 sm:gap-2">
-          <Button className="hidden w-45 justify-start xl:inline-flex" variant="soft" onClick={() => setSearchOpen(true)}><Search data-icon="start" /><span className="text-foreground-subtle font-normal">Search</span><span className="ms-auto">⌘ K</span></Button>
-          <Button className="xl:hidden" variant="ghost" size="icon-md" aria-label="Open search" onClick={() => setSearchOpen(true)}><Search /></Button>
+          <Button className="text-foreground hidden w-45 justify-start lg:inline-flex" variant="soft" onClick={() => setSearchOpen(true)}><Search data-icon="start" /><span className="text-foreground-subtle font-normal">Search</span><span className="ms-auto flex gap-1"><Kbd>⌘</Kbd><Kbd>K</Kbd></span></Button>
+          <Button className="lg:hidden" variant="ghost" size="icon-md" aria-label="Open search" onClick={() => setSearchOpen(true)}><Search /></Button>
           <Button variant="ghost" size="sm" aria-label={locale === "zh" ? "Switch to English" : "切换至中文"} onClick={() => setLocale(nextLocale)}><Language className="hidden size-4 sm:block" /><span className="min-w-5">{nextLocale === "zh" ? "中" : "EN"}</span></Button>
           <Button variant="ghost" size="icon-md" aria-label={themeLabel} title={themeLabel} onClick={() => onThemeChange(theme === "dark" ? "light" : "dark")}>{theme === "dark" ? <MoonStars /> : <SunHigh />}</Button>
           <Link className={`${buttonVariants({ variant: "primary", size: "sm" })} w-16 max-sm:px-3 sm:w-18`} to={authenticated ? "/admin/dashboard" : "/login"}>{authLabel}</Link>
@@ -366,17 +367,42 @@ function CommandCard() {
 
 function AudioCard() {
   const [favorite, setFavorite] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(84);
+
+  useEffect(() => {
+    if (!playing) return undefined;
+    const timer = window.setInterval(() => {
+      setElapsedSeconds((elapsed) => Math.min(elapsed + 1, AUDIO_TRACK_DURATION_SECONDS));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [playing]);
+
+  useEffect(() => {
+    if (elapsedSeconds >= AUDIO_TRACK_DURATION_SECONDS) setPlaying(false);
+  }, [elapsedSeconds]);
+
+  const togglePlayback = (pressed) => {
+    if (pressed && elapsedSeconds >= AUDIO_TRACK_DURATION_SECONDS) setElapsedSeconds(0);
+    setPlaying(pressed);
+  };
+
+  const formatTrackTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
+  };
+
   return (
     <ShowcaseCard className="order-5 min-[85rem]:h-[36%]" contentClassName="flex flex-col justify-between gap-4">
       <div className="flex items-center gap-3">
         <img className="size-12 shrink-0 rounded-md object-cover" src="/assets/appica/landing/album-cover.webp" alt="Album cover" />
         <div className="min-w-0 flex-1"><div className="text-foreground-intense truncate text-sm font-medium">Midnight Drive</div><div className="text-foreground-muted truncate text-xs">Neon Waves - Retrograde</div></div>
-        <Toggle className={buttonVariants({ variant: "ghost", size: "icon-sm" })} pressed={favorite} onPressedChange={setFavorite} aria-label="Favorite this track"><Heart /></Toggle>
+        <Toggle className={buttonVariants({ variant: "ghost", size: "icon-sm" })} pressed={favorite} onPressedChange={setFavorite} aria-label="Favorite this track"><Heart className="in-data-pressed:hidden" /><HeartFilled className="hidden in-data-pressed:block" /></Toggle>
       </div>
-      <div><Slider defaultValue={84} max={222} tooltipVisibility="never" thumbAriaLabel="Seek" /><div className="text-foreground-muted mt-1.5 flex justify-between text-xs tabular-nums"><span>1:24</span><span>-2:18</span></div></div>
+      <div><Slider value={elapsedSeconds} onValueChange={setElapsedSeconds} max={AUDIO_TRACK_DURATION_SECONDS} tooltipVisibility="never" thumbAriaLabel="Seek" /><div className="text-foreground-muted mt-1.5 flex justify-between text-xs tabular-nums"><span>{formatTrackTime(elapsedSeconds)}</span><span>-{formatTrackTime(AUDIO_TRACK_DURATION_SECONDS - elapsedSeconds)}</span></div></div>
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="icon-sm" aria-label="Shuffle"><ArrowsShuffle /></Button>
-        <div className="flex items-center gap-1"><Button className="rounded-full" variant="ghost" size="icon-md" aria-label="Previous track"><PlayerSkipBackFilled /></Button><Toggle className={`${buttonVariants({ variant: "primary", size: "icon-md" })} rounded-full!`} pressed aria-label="Pause"><PlayerPauseFilled /></Toggle><Button className="rounded-full" variant="ghost" size="icon-md" aria-label="Next track"><PlayerSkipForwardFilled /></Button></div>
+        <div className="flex items-center gap-1"><Button className="rounded-full" variant="ghost" size="icon-md" aria-label="Previous track"><PlayerSkipBackFilled /></Button><Toggle className={`${buttonVariants({ variant: "primary", size: "icon-md" })} rounded-full!`} pressed={playing} onPressedChange={togglePlayback} aria-label={playing ? "Pause" : "Play"}>{playing ? <PlayerPauseFilled /> : <PlayerPlayFilled />}</Toggle><Button className="rounded-full" variant="ghost" size="icon-md" aria-label="Next track"><PlayerSkipForwardFilled /></Button></div>
         <Button variant="ghost" size="icon-sm" aria-label="Repeat"><Repeat /></Button>
       </div>
     </ShowcaseCard>
@@ -420,7 +446,7 @@ function RevenueCard() {
     <ShowcaseCard className="order-1 min-[85rem]:h-[47.5%]" contentClassName="flex flex-col">
       <div className="flex items-center justify-between gap-2">
         <p className="text-foreground-muted text-sm">Monthly revenue</p>
-        <Badge variant="success" size="sm"><ArrowUpRight className="size-3.5" />+12.4%</Badge>
+        <Badge variant="success" size="sm"><TrendingUp data-icon="start" />+12.4%</Badge>
       </div>
       <div className="mt-1 flex items-baseline gap-2"><h3 className="text-foreground-intense text-3xl font-semibold tabular-nums">$48,210</h3><p className="text-foreground-muted text-xs">vs $42,900 last month</p></div>
       <div className="mt-4 flex flex-col gap-2.5">
@@ -669,12 +695,12 @@ function FooterMedia() {
       <GradientGlow className="rounded-2xl" blur="3xl" style={{ "--gradient-glow-opacity": 0.2 }}>
         <div className="grid grid-cols-2 items-center gap-7">
           <div className="flex flex-col gap-7">
-            <FooterMediaCard src="/assets/appica/landing/footer-1.webp" />
-            <FooterMediaCard src="/assets/appica/landing/footer-2.webp" />
+            <FooterMediaCard src="/assets/appica/landing/footer-1.webp" beamDelay={0} fadeFrom="top" />
+            <FooterMediaCard src="/assets/appica/landing/footer-2.webp" beamDelay={-5} fadeFrom="bottom" />
           </div>
           <div className="flex flex-col gap-7">
-            <FooterMediaCard src="/assets/appica/landing/footer-3.webp" />
-            <FooterMediaCard src="/assets/appica/landing/footer-4.webp" />
+            <FooterMediaCard src="/assets/appica/landing/footer-3.webp" beamDelay={-1} fadeFrom="top" />
+            <FooterMediaCard src="/assets/appica/landing/footer-4.webp" beamDelay={-0.35} fadeFrom="bottom" />
           </div>
         </div>
       </GradientGlow>
@@ -682,14 +708,23 @@ function FooterMedia() {
   );
 }
 
-function FooterMediaCard({ src }) {
+function FooterMediaCard({ src, beamDelay, fadeFrom }) {
   return (
     <div className="relative mx-auto w-full max-w-83 overflow-hidden">
-      <BorderBeam className="rounded-2xl">
-        <div className="border-border-muted bg-background-subtle rounded-2xl border p-2.25 backdrop-blur-sm">
-          <img className="h-auto w-full rounded-lg shadow-xl" src={src} alt="" />
+      <BorderBeam
+        className="rounded-2xl"
+        color="color-mix(in srgb, var(--color-white) 80%, transparent)"
+        speed={6}
+        delay={beamDelay}
+      >
+        <div className="border-background/10 bg-background/15 dark:border-foreground-intense/10 dark:bg-foreground-intense/15 rounded-2xl border p-2.25 backdrop-blur-sm">
+          <img className="h-auto w-full rounded-lg shadow-[0_30px_40px_-12px_var(--shadow-color)]" src={src} alt="" />
         </div>
       </BorderBeam>
+      <div
+        className={`pointer-events-none absolute inset-0 to-60% rounded-2xl ${fadeFrom === "top" ? "bg-linear-to-b" : "bg-linear-to-t"} from-background-inverse dark:from-background`}
+        aria-hidden="true"
+      />
     </div>
   );
 }
@@ -718,7 +753,7 @@ function LandingFooter() {
           </div>
           <div className="max-md:order-first md:col-span-7"><FooterMedia /></div>
         </div>
-        <div className="dark flex items-center justify-between gap-4 pb-6"><p className="text-foreground-subtle text-sm">©2026 Appica UI. A free component library, crafted by the Appica team.</p><Button className="text-foreground-muted" variant="ghost" size="icon-md" aria-label="Scroll to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><ArrowUp /></Button></div>
+        <div className="dark flex items-center justify-between gap-4 pb-6"><p className="text-foreground-subtle text-sm">©2026 Appica UI. A free component library, crafted by the Appica team.</p><Button className="text-foreground-muted" variant="ghost" size="icon-md" aria-label="Scroll to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><ArrowBarToUp className="size-5" /></Button></div>
       </div>
     </footer>
   );

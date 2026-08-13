@@ -134,3 +134,18 @@ final result: passed
 - 复验未发现 P0、P1 或 P2 问题。
 
 final result: passed
+
+## 2026-08-13 页脚图片阴影与置顶按钮复验
+
+- 源真值：`https://appica.dev/ui` 的实时页脚；实现目标：`http://127.0.0.1:5174/`。
+- 桌面证据：`artifacts/design-qa/2026-08-13-footer-details/appica-footer-desktop.jpg` 与 `artifacts/design-qa/2026-08-13-footer-details/local-footer-desktop.jpg`，均为 1044 × 814 CSS px、1044 × 814 像素、deviceScaleFactor 1。
+- 移动端证据：`artifacts/design-qa/2026-08-13-footer-details/appica-footer-mobile.jpg` 与 `artifacts/design-qa/2026-08-13-footer-details/local-footer-mobile.jpg`，均为 390 × 844 CSS px、390 × 844 像素、deviceScaleFactor 1。
+- 全视图比较覆盖页脚四图、订阅区域和底栏；聚焦比较覆盖图片渐隐、卡片边缘和置顶按钮。源站与本地的品牌、页头操作项属于既有产品差异，不纳入本轮页脚判断。
+- 首轮 P2：四张图只有通用 `shadow-xl`，缺少源站的定向渐隐层；卡片背景与边框过亮；置顶按钮使用普通 `ArrowUp`，轮廓与源站不符。
+- 修复后四图均使用 `0 30px 40px -12px var(--shadow-color)` 投影、60% 渐隐范围，左上/右上从上向下渐隐，左下/右下从下向上渐隐；卡片层恢复为 15% 白色背景和 10% 白色边框。
+- 置顶按钮已改为 Appica `ArrowBarToUp`：SVG 路径为 `M12 10v10m0-10 4 4m-4-4-4 4M4 4h16`，图标 20 × 20 CSS px，按钮 40 × 40 CSS px，与源站一致。
+- 字体与文案没有变更；间距、布局节奏、图片资源和清晰度保持不变；颜色继续通过 Appica 角色 token 与透明度表达，没有新增替代资源或自绘图标。
+- 交互复验：置顶按钮把页面从 `scrollY=3324.5` 平滑滚动至 `0`；浏览器 error 日志为 0。
+- 对照修复后未发现仍需处理的 P0、P1 或 P2 问题。
+
+final result: passed

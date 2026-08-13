@@ -1,14 +1,22 @@
 export const BRANDING_STORAGE_KEY = "sentence_public_branding";
 export const DEFAULT_SITE_NAME = "WayX";
 export const DEFAULT_SITE_LOGO = "/assets/img/wayx-mark-64.png";
+const LEGACY_SITE_NAMES = new Map([
+  ["WayXStoreAI", "WayX AI"],
+]);
 
 function cleanBrandText(value, fallback, maximumLength) {
   return String(value || fallback).replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, maximumLength) || fallback;
 }
 
+export function normalizeSiteName(value) {
+  const siteName = cleanBrandText(value, DEFAULT_SITE_NAME, 100);
+  return LEGACY_SITE_NAMES.get(siteName) || siteName;
+}
+
 export function resolveBranding(settings = {}) {
   return {
-    siteName: cleanBrandText(settings.site_name, DEFAULT_SITE_NAME, 100),
+    siteName: normalizeSiteName(settings.site_name),
     siteLogo: DEFAULT_SITE_LOGO,
     siteSubtitle: cleanBrandText(settings.site_subtitle, "AI gateway", 240),
   };

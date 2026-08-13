@@ -94,13 +94,13 @@ html {
 
 .hero-works .hero-mark {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 60px;
+  height: 60px;
   transition: transform 180ms ease, filter 180ms ease;
 }
 
 .hero-works .hero-mark + .hero-mark {
-  margin-left: -22px;
+  margin-left: -18px;
 }
 
 .hero-works .hero-mark:hover {
@@ -152,12 +152,12 @@ html {
   }
 
   .hero-works .hero-mark {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
   }
 
   .hero-works .hero-mark + .hero-mark {
-    margin-left: -18px;
+    margin-left: -15px;
   }
 }
 

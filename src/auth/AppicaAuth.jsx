@@ -3,6 +3,11 @@ import { Link } from "react-router";
 import { Alert } from "@appica/ui-react/alert";
 import { AlertDescription } from "@appica/ui-react/alert";
 import { AlertIcon } from "@appica/ui-react/alert";
+import { Autocomplete } from "@appica/ui-react/autocomplete";
+import { AutocompleteContent } from "@appica/ui-react/autocomplete";
+import { AutocompleteInput } from "@appica/ui-react/autocomplete";
+import { AutocompleteItem } from "@appica/ui-react/autocomplete";
+import { AutocompleteList } from "@appica/ui-react/autocomplete";
 import { BackgroundPattern } from "@appica/ui-react/background-pattern";
 import { Badge } from "@appica/ui-react/badge";
 import { Button } from "@appica/ui-react/button";
@@ -18,6 +23,7 @@ import { FieldError } from "@appica/ui-react/field";
 import { FieldLabel } from "@appica/ui-react/field";
 import { Input } from "@appica/ui-react/input";
 import { Spinner } from "@appica/ui-react/spinner";
+import { Toaster } from "@appica/ui-react/toast";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -31,12 +37,39 @@ import {
 import { DEFAULT_SITE_LOGO } from "../branding";
 import { useConsole } from "../console/ConsoleContext";
 
+const COMMON_EMAIL_DOMAINS = [
+  "gmail.com",
+  "outlook.com",
+  "icloud.com",
+  "qq.com",
+  "163.com",
+  "126.com",
+  "hotmail.com",
+  "yahoo.com",
+  "foxmail.com",
+];
+
+function getEmailSuggestions(value) {
+  if (!value || value !== value.trim() || /\s/.test(value)) return [];
+
+  const parts = value.split("@");
+  if (parts.length > 2 || !parts[0]) return [];
+
+  const [localPart, domainQuery = ""] = parts;
+  const normalizedQuery = domainQuery.toLowerCase();
+
+  return COMMON_EMAIL_DOMAINS
+    .filter((domain) => domain.startsWith(normalizedQuery))
+    .map((domain) => `${localPart}@${domain}`)
+    .filter((suggestion) => suggestion.toLowerCase() !== value.toLowerCase());
+}
+
 export function AppicaAuthLayout({ children }) {
   const { branding } = useConsole();
   const siteName = branding?.siteName || "WayX";
 
   return (
-    <main className="bg-background text-foreground relative min-h-svh overflow-hidden">
+    <main className="appica-auth bg-background text-foreground relative min-h-svh overflow-hidden">
       <BackgroundPattern className="pointer-events-none absolute inset-0 opacity-60" variant="dots" spotlight={{ persistent: true }} />
       <header className="relative z-1 mx-auto flex h-18 max-w-7xl items-center justify-between px-4 md:px-6">
         <Link className="outline-ring flex items-center gap-2 rounded-sm" to="/" aria-label={`${siteName} home`}>
@@ -51,6 +84,7 @@ export function AppicaAuthLayout({ children }) {
           {children}
         </section>
       </div>
+      <Toaster position="bottom-right" progress timeout={4200} />
     </main>
   );
 }
@@ -84,8 +118,26 @@ export function AppicaTextInput({ error, action, startSlot, ...props }) {
   return <Input {...props} aria-invalid={Boolean(error)} inputSize="lg" startSlot={startSlot} endSlot={action} />;
 }
 
-export function AppicaEmailInput(props) {
-  return <AppicaTextInput {...props} startSlot={<Mail />} />;
+export function AppicaEmailInput({ value, onValueChange, error, ...props }) {
+  const [open, setOpen] = useState(false);
+  const suggestions = getEmailSuggestions(value);
+  const handleValueChange = (nextValue, details) => {
+    onValueChange?.(nextValue, details);
+    setOpen(getEmailSuggestions(nextValue).length > 0);
+  };
+
+  return (
+    <Autocomplete items={suggestions} value={value} onValueChange={handleValueChange} open={open && suggestions.length > 0} onOpenChange={(nextOpen) => setOpen(nextOpen && suggestions.length > 0)} size="lg" limit={6} openOnInputClick>
+      <AutocompleteInput {...props} aria-invalid={Boolean(error)} startSlot={<Mail />} />
+      {suggestions.length > 0 && (
+        <AutocompleteContent>
+          <AutocompleteList>
+            {(suggestion) => <AutocompleteItem key={suggestion} value={suggestion}>{suggestion}</AutocompleteItem>}
+          </AutocompleteList>
+        </AutocompleteContent>
+      )}
+    </Autocomplete>
+  );
 }
 
 export function AppicaPasswordInput({ value, onChange, error, autoComplete = "current-password", placeholder }) {
@@ -118,9 +170,9 @@ export function AppicaAuthNotice({ children, tone = "info" }) {
   if (!children) return null;
   const error = tone === "error";
   return (
-    <Alert variant={error ? "error" : "info"} role={error ? "alert" : "status"}>
-      <AlertIcon>{error ? <AlertTriangle /> : <InfoCircle />}</AlertIcon>
-      <AlertDescription>{children}</AlertDescription>
+    <Alert className="items-center [grid-template-columns:auto_1fr] [grid-template-areas:'icon_description']" variant={error ? "error" : "info"} role={error ? "alert" : "status"}>
+      <AlertIcon className="self-center">{error ? <AlertTriangle /> : <InfoCircle />}</AlertIcon>
+      <AlertDescription className="mt-0">{children}</AlertDescription>
     </Alert>
   );
 }

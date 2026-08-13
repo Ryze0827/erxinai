@@ -52,6 +52,7 @@ export function RegisterPage() {
   const handleTurnstileToken = useCallback((token) => setTurnstileToken(token), []);
 
   const strength = [form.password.length >= 6, /[a-z]/i.test(form.password), /\d/.test(form.password), /[^a-z0-9]/i.test(form.password)].filter(Boolean).length;
+  const strengthColor = strength < 2 ? "var(--error-emphasis)" : strength < 4 ? "var(--warning-emphasis)" : "var(--success-emphasis)";
 
   const updateForm = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -137,12 +138,12 @@ export function RegisterPage() {
           <AppicaAuthNotice tone={settingsError || error || registrationClosed ? "error" : "info"}>{settingsError || error || (registrationClosed ? "Registration is currently closed." : "")}</AppicaAuthNotice>
           {settingsError && <Button className="w-fit" variant="ghost" size="sm" type="button" onClick={retry}>Retry loading settings</Button>}
           <AppicaAuthField label="Email address" error={errors.email}>
-            <AppicaEmailInput type="email" value={form.email} onChange={(event) => updateForm("email", event.target.value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
+            <AppicaEmailInput type="email" value={form.email} onValueChange={(value) => updateForm("email", value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
           </AppicaAuthField>
           <AppicaAuthField label="Password" error={errors.password}>
             <AppicaPasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder="Create a secure password" autoComplete="new-password" />
             <div className="flex items-center gap-3" aria-label={`Password strength ${strength} of 4`}>
-              <Progress className="flex-1" value={strength * 25} max={100} indicatorColor="var(--success-emphasis)" />
+              <Progress className="flex-1" value={strength * 25} max={100} indicatorColor={strengthColor} />
               <span className="text-foreground-muted text-xs">{strength < 2 ? "Keep going" : strength < 4 ? "Good password" : "Strong password"}</span>
             </div>
           </AppicaAuthField>

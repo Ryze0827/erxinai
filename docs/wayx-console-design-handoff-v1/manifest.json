@@ -1,0 +1,161 @@
+{
+  "package": "wayx-console-design-handoff",
+  "version": "1.0.0",
+  "createdAt": "2026-08-11",
+  "localeOfVisualMasters": "en",
+  "targetViewport": {
+    "designWidth": 1920,
+    "designHeight": 1080,
+    "fileWidth": 1672,
+    "fileHeight": 941,
+    "aspectRatio": "16:9"
+  },
+  "scope": {
+    "included": "Authenticated non-admin user console",
+    "excluded": [
+      "Public homepage",
+      "Login",
+      "Registration",
+      "Email verification",
+      "OAuth callbacks"
+    ]
+  },
+  "brand": {
+    "markMaster": "assets/brand/wayx-mark.png",
+    "mark512": "assets/brand/wayx-mark-512.png",
+    "mark128": "assets/brand/wayx-mark-128.png",
+    "mark64": "assets/brand/wayx-mark-64.png",
+    "lockupReference": "assets/brand/global-wayx-brand-lockup-reference-dark-v1.png",
+    "wordmark": "WayX",
+    "publicBrandOverrideRequired": true
+  },
+  "globalMasters": {
+    "darkShell": "assets/ui/dark/overview-approved-dark-v2.png",
+    "lightShell": "assets/ui/light/overview-approved-light-v3.png"
+  },
+  "screens": [
+    {
+      "id": "overview",
+      "route": "/admin/dashboard",
+      "component": "src/console/pages/DashboardPage.jsx",
+      "dark": "assets/ui/dark/overview-approved-dark-v2.png",
+      "light": "assets/ui/light/overview-approved-light-v3.png",
+      "apiModules": ["src/api/usage.js", "src/api/user.js"]
+    },
+    {
+      "id": "api-keys",
+      "route": "/keys",
+      "component": "src/console/pages/KeysPage.jsx",
+      "dark": "assets/ui/dark/api-keys-approved-dark-v1.png",
+      "light": "assets/ui/light/api-keys-approved-light-v1.png",
+      "apiModules": ["src/api/keys.js", "src/api/usage.js"]
+    },
+    {
+      "id": "usage",
+      "route": "/usage",
+      "component": "src/console/pages/UsagePage.jsx",
+      "dark": "assets/ui/dark/usage-approved-dark-v1.png",
+      "light": "assets/ui/light/usage-approved-light-v1.png",
+      "apiModules": ["src/api/usage.js", "src/api/keys.js"]
+    },
+    {
+      "id": "channel-status",
+      "route": "/monitor",
+      "component": "src/console/pages/MonitorPage.jsx",
+      "dark": "assets/ui/dark/channel-status-approved-dark-v1.png",
+      "light": "assets/ui/light/channel-status-approved-light-v1.png",
+      "apiModules": ["src/api/channels.js"]
+    },
+    {
+      "id": "add-credit",
+      "route": "/purchase",
+      "component": "src/console/pages/Payments.jsx#PurchasePage",
+      "dark": "assets/ui/dark/add-credit-approved-dark-v1.png",
+      "light": "assets/ui/light/add-credit-approved-light-v1.png",
+      "apiModules": ["src/api/billing.js", "src/api/usage.js"]
+    },
+    {
+      "id": "orders",
+      "route": "/orders",
+      "component": "src/console/pages/Payments.jsx#OrdersPage",
+      "dark": "assets/ui/dark/orders-approved-dark-v1.png",
+      "light": "assets/ui/light/orders-approved-light-v1.png",
+      "apiModules": ["src/api/billing.js"]
+    },
+    {
+      "id": "redeem",
+      "route": "/redeem",
+      "component": "src/console/pages/RedeemPage.jsx",
+      "dark": "assets/ui/dark/redeem-approved-dark-v1.png",
+      "light": "assets/ui/light/redeem-approved-light-v1.png",
+      "apiModules": ["src/api/billing.js"]
+    },
+    {
+      "id": "affiliate",
+      "route": "/affiliate",
+      "component": "src/console/pages/AffiliatePage.jsx",
+      "dark": "assets/ui/dark/affiliate-approved-dark-v1.png",
+      "light": "assets/ui/light/affiliate-approved-light-v1.png",
+      "apiModules": ["src/api/user.js"]
+    },
+    {
+      "id": "image-studio",
+      "route": "/image-studio",
+      "component": "src/console/pages/ImageStudioPage.jsx",
+      "dark": "assets/ui/dark/image-studio-approved-dark-v2.png",
+      "light": "assets/ui/light/image-studio-approved-light-v2.png",
+      "apiModules": ["src/api/images.js", "src/api/keys.js"]
+    },
+    {
+      "id": "image-api-docs",
+      "route": "/image-api-docs",
+      "component": "src/console/pages/ImageApiDocsPage.jsx",
+      "dark": "assets/ui/dark/image-api-docs-approved-dark-v2.png",
+      "light": "assets/ui/light/image-api-docs-approved-light-v2.png",
+      "apiModules": []
+    },
+    {
+      "id": "profile-security",
+      "route": "/profile",
+      "component": "src/console/pages/ProfilePage.jsx",
+      "dark": "assets/ui/dark/profile-security-approved-dark-v1.png",
+      "light": "assets/ui/light/profile-security-approved-light-v1.png",
+      "apiModules": ["src/api/user.js"]
+    },
+    {
+      "id": "subscriptions",
+      "route": "/subscriptions",
+      "component": "src/console/pages/SubscriptionsPage.jsx",
+      "dark": "assets/ui/dark/subscriptions-approved-dark-v3.png",
+      "light": "assets/ui/light/subscriptions-approved-light-v1.png",
+      "apiModules": ["src/api/billing.js"]
+    }
+  ],
+  "visualCoverageGaps": [
+    {
+      "id": "batch-images",
+      "route": "/batch-image",
+      "component": "src/console/pages/BatchImagesPage.jsx",
+      "policy": "Preserve all current behavior and apply the shared shell, tokens, controls, tables and responsive patterns; no claim of pixel-identical page reference."
+    },
+    {
+      "id": "available-channels",
+      "route": "/available-channels",
+      "component": "src/console/pages/ChannelsPage.jsx",
+      "policy": "Preserve all current behavior and apply the shared shell, tokens, controls, cards and responsive patterns; no claim of pixel-identical page reference."
+    }
+  ],
+  "backgrounds": [
+    "assets/backgrounds/hero-scene-fluted-20260711.jpg",
+    "assets/backgrounds/hero-scene-fluted-4k-20260711.jpg",
+    "assets/backgrounds/console-doodle-wallpaper.jpg"
+  ],
+  "illustrations": [
+    "assets/illustrations/purchase-wallet-stack.png",
+    "assets/illustrations/redeem-gift-dark.png",
+    "assets/illustrations/redeem-gift-light.png",
+    "assets/illustrations/redeem-wallet-dark.png",
+    "assets/illustrations/redeem-wallet-light.png",
+    "assets/illustrations/video-workflow-poster-wide.png"
+  ]
+}
