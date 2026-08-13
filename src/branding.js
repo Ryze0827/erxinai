@@ -1,6 +1,7 @@
 export const BRANDING_STORAGE_KEY = "sentence_public_branding";
 export const DEFAULT_SITE_NAME = "WayX";
-export const DEFAULT_SITE_LOGO = "/assets/img/wayx-mark-64.png";
+export const DEFAULT_STATIC_SITE_LOGO = "/assets/img/wayx-mark-05-64.png";
+export const DEFAULT_SITE_LOGO = "/assets/img/wayx-mark-05-windmill-96.gif";
 const LEGACY_SITE_NAMES = new Map([
   ["WayXStoreAI", "WayX AI"],
 ]);

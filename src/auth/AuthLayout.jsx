@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { Link } from "react-router";
+import { BrandLogo } from "../BrandLogo";
 import { useConsole } from "../console/ConsoleContext";
 import "../auth.css";
 
@@ -10,7 +11,7 @@ export function AuthLayout({ children, surface }) {
       <div className="auth-scene" aria-hidden="true" />
       <header className="auth-topbar">
         <Link className="auth-brand" to="/" aria-label="WayX home">
-          {brandingReady && <img key={branding.siteLogo} src={branding.siteLogo} alt="" width="32" height="32" />}
+          {brandingReady && <BrandLogo key={branding.siteLogo} src={branding.siteLogo} alt="" width="32" height="32" />}
           <span>WayX</span>
         </Link>
         <Link className="auth-home-link" to="/">Back to home</Link>

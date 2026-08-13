@@ -34,7 +34,7 @@ import {
   Lock,
   Mail,
 } from "@appica/icons-react";
-import { DEFAULT_SITE_LOGO } from "../branding";
+import { BrandLogo } from "../BrandLogo";
 import { useConsole } from "../console/ConsoleContext";
 
 const COMMON_EMAIL_DOMAINS = [
@@ -73,7 +73,7 @@ export function AppicaAuthLayout({ children }) {
       <BackgroundPattern className="pointer-events-none absolute inset-0 opacity-60" variant="dots" spotlight={{ persistent: true }} />
       <header className="relative z-1 mx-auto flex h-18 max-w-7xl items-center justify-between px-4 md:px-6">
         <Link className="outline-ring flex items-center gap-2 rounded-sm" to="/" aria-label={`${siteName} home`}>
-          <img className="size-8" src={DEFAULT_SITE_LOGO} alt="" width="32" height="32" />
+          <BrandLogo className="size-8" alt="" width="32" height="32" />
           <span className="text-foreground-intense text-lg font-semibold">{siteName}</span>
         </Link>
         <Link className={buttonVariants({ variant: "ghost", size: "sm" })} to="/"><ArrowLeft data-icon="start" />Back to home</Link>

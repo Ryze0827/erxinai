@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router";
 import { usageApi } from "../../api";
+import { BrandLogo } from "../../BrandLogo";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
@@ -86,7 +87,7 @@ function PublicShell({ children }) {
   const { settings, branding, brandingReady } = useConsole();
   const { locale, setLocale, t } = useLocale();
   const docs = safeExternalUrl(settings?.doc_url);
-  return <div className="console-public-shell console-key-usage-shell"><div className="console-scene" /><header><Link className={`console-key-usage-brand ${brandingReady ? "" : "is-pending"}`} to="/">{brandingReady && <img key={branding.siteLogo} src={branding.siteLogo} alt="" />}{brandingReady && <strong>{branding.siteName}</strong>}</Link><nav>{docs && <a href={docs} target="_blank" rel="noreferrer"><Icon name="book" size={18} />{t("nav.docs")}</a>}<Button variant="ghost" icon="globe" onClick={() => setLocale(locale === "en" ? "zh" : "en")}>{t("nav.language")}</Button><ThemeToggle /></nav></header><main>{children}</main><footer>© {new Date().getFullYear()} {brandingReady ? branding.siteName : ""}</footer></div>;
+  return <div className="console-public-shell console-key-usage-shell"><div className="console-scene" /><header><Link className={`console-key-usage-brand ${brandingReady ? "" : "is-pending"}`} to="/">{brandingReady && <BrandLogo key={branding.siteLogo} src={branding.siteLogo} alt="" />}{brandingReady && <strong>{branding.siteName}</strong>}</Link><nav>{docs && <a href={docs} target="_blank" rel="noreferrer"><Icon name="book" size={18} />{t("nav.docs")}</a>}<Button variant="ghost" icon="globe" onClick={() => setLocale(locale === "en" ? "zh" : "en")}>{t("nav.language")}</Button><ThemeToggle /></nav></header><main>{children}</main><footer>© {new Date().getFullYear()} {brandingReady ? branding.siteName : ""}</footer></div>;
 }
 
 function RangePicker({ range, setRange, custom, setCustom, locale, onApply }) {

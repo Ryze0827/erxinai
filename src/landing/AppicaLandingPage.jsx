@@ -110,7 +110,8 @@ import {
   Users,
   Wallet,
 } from "@appica/icons-react";
-import { DEFAULT_SITE_LOGO, DEFAULT_SITE_NAME } from "../branding";
+import { BrandLogo } from "../BrandLogo";
+import { DEFAULT_SITE_NAME } from "../branding";
 import { useConsole } from "../console/ConsoleContext";
 import { useLocale } from "../console/i18n";
 import "./AppicaLandingPage.css";
@@ -278,7 +279,7 @@ function LandingHeader({ theme, onThemeChange }) {
       <header className="bg-background/75 sticky top-0 z-30 grid h-18 grid-cols-[minmax(0,1fr)_auto] items-center p-4 backdrop-blur-lg md:px-6 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         <div className="flex items-center gap-1.5">
           <Button className="-ms-1 lg:hidden" type="button" variant="ghost" size="icon-md" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu2 /></Button>
-          <Link className="outline-ring flex w-fit shrink-0 items-center gap-2 rounded-sm" to="/" aria-label={`${DEFAULT_SITE_NAME} home`}><img className="size-8" src={DEFAULT_SITE_LOGO} alt="" width="32" height="32" /><span className="text-foreground-intense hidden text-lg font-semibold sm:inline">{DEFAULT_SITE_NAME}</span></Link>
+          <Link className="outline-ring flex w-fit shrink-0 items-center gap-2 rounded-sm" to="/" aria-label={`${DEFAULT_SITE_NAME} home`}><BrandLogo className="size-8" alt="" width="32" height="32" /><span className="text-foreground-intense hidden text-lg font-semibold sm:inline">{DEFAULT_SITE_NAME}</span></Link>
         </div>
         <Navigation className="hidden lg:block" variant="line" aria-label="Primary">
           <NavigationList>

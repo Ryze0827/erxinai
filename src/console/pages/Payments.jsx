@@ -7,6 +7,7 @@ import { Toggle as AppicaToggle } from "@appica/ui-react/toggle";
 import { ToggleGroup } from "@appica/ui-react/toggle-group";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { paymentApi, usageApi } from "../../api";
+import { BrandLogo } from "../../BrandLogo";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
@@ -512,7 +513,7 @@ export function OrdersPage() {
 
 function PaymentShell({ children }) {
   const { branding, brandingReady } = useConsole();
-  return <div className="console-public-shell"><div className="console-scene" /><Link className={`console-public-brand ${brandingReady ? "" : "is-pending"}`} to="/">{brandingReady && <img key={branding.siteLogo} src={branding.siteLogo} alt="" />}{brandingReady && <strong>{branding.siteName}</strong>}</Link><main>{children}</main></div>;
+  return <div className="console-public-shell"><div className="console-scene" /><Link className={`console-public-brand ${brandingReady ? "" : "is-pending"}`} to="/">{brandingReady && <BrandLogo key={branding.siteLogo} src={branding.siteLogo} alt="" />}{brandingReady && <strong>{branding.siteName}</strong>}</Link><main>{children}</main></div>;
 }
 
 function countdownText(seconds) {
