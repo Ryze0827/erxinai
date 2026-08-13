@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { authApi, getOAuthBindingUrl } from "../../api/auth";
 import { totpApi, userApi } from "../../api";
+import { isEmail } from "../../auth/authUtils";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
@@ -282,8 +283,10 @@ function IdentityCard() {
   const { user, settings, updateUser, refreshUser, notify } = useConsole();
   const [emailModal, setEmailModal] = useState(false);
   const [email, setEmail] = useState({ value: "", code: "", password: "", sent: false });
+  const [emailBusy, setEmailBusy] = useState("");
   const [unbind, setUnbind] = useState(null);
   const providers = useMemo(() => enabledProviders(settings), [settings]);
+  const hasBoundEmail = Boolean(user?.email);
   const beginBind = async (provider) => {
     try {
       await authApi.prepareOAuthBind();
@@ -296,15 +299,45 @@ function IdentityCard() {
     try { const next = await userApi.unbindIdentity(unbind); updateUser(next); setUnbind(null); notify("success", t("common.saved")); }
     catch (error) { notify("error", error.message); }
   };
-  const sendEmail = async () => { try { await userApi.sendEmailBindingCode(email.value); setEmail((current) => ({ ...current, sent: true })); } catch (error) { notify("error", error.message); } };
-  const bindEmail = async () => { try { const next = await userApi.bindEmail({ email: email.value, verify_code: email.code, password: email.password }); updateUser(next); setEmailModal(false); setEmail({ value: "", code: "", password: "", sent: false }); notify("success", t("common.saved")); } catch (error) { notify("error", error.message); } };
+  const validateEmail = () => {
+    if (!email.value.trim()) { notify("error", t("profile.emailRequired")); return false; }
+    if (!isEmail(email.value)) { notify("error", t("profile.invalidEmail")); return false; }
+    return true;
+  };
+  const sendEmail = async () => {
+    if (!validateEmail()) return;
+    const target = email.value.trim();
+    setEmailBusy("sending");
+    try {
+      await userApi.sendEmailBindingCode(target);
+      setEmail((current) => ({ ...current, value: target, sent: true }));
+      notify("success", t("profile.codeSentTo", { email: target }));
+    } catch (error) { notify("error", error.message); }
+    finally { setEmailBusy(""); }
+  };
+  const bindEmail = async () => {
+    if (!validateEmail()) return;
+    if (!email.code.trim()) { notify("error", t("profile.codeRequired")); return; }
+    if (!email.password) { notify("error", t("profile.passwordRequired")); return; }
+    if (!hasBoundEmail && email.password.length < 6) { notify("error", t("profile.passwordMinLength")); return; }
+    setEmailBusy("binding");
+    try {
+      const next = await userApi.bindEmail({ email: email.value.trim(), verify_code: email.code.trim(), password: email.password });
+      updateUser(next);
+      setEmailModal(false);
+      setEmail({ value: "", code: "", password: "", sent: false });
+      notify("success", t("common.saved"));
+    } catch (error) { notify("error", error.message); }
+    finally { setEmailBusy(""); }
+  };
+  const updateEmail = (value) => setEmail((current) => current.value === value ? current : { value, code: "", password: "", sent: false });
   const rows = [{ id: "email", label: "Email", enabled: true }, ...providers];
   return <Panel title={t("profile.identities")}><div className="console-panel-body console-identity-list">{rows.map((provider) => {
     const bound = provider.id === "email" ? Boolean(user?.email) : bindingStatus(user, provider.id);
     const details = bindingDetails(user, provider.id);
     const canUnbind = provider.id !== "email" && bound && details.can_unbind === true;
-    return <div className="console-identity-row" key={provider.id}><span className="console-identity-mark">{provider.label.slice(0, 1)}</span><div className="console-identity-content"><strong>{provider.label}</strong><small>{provider.id === "email" && bound ? user.email : bound ? (locale === "zh" ? "已绑定" : "Connected") : (locale === "zh" ? "未绑定" : "Not connected")}</small></div><div className="console-identity-status"><StatusBadge status={bound ? "active" : "inactive"} label={bound ? t("common.enabled") : t("common.disabled")} /></div><div className="console-identity-actions">{provider.id === "email" && <Button onClick={() => setEmailModal(true)}>{bound ? (locale === "zh" ? "管理" : "Manage") : t("profile.bind")}</Button>}{!bound && provider.id !== "email" && <Button onClick={() => beginBind(provider.id)}>{t("profile.bind")}</Button>}{canUnbind && <Button variant="danger" onClick={() => setUnbind(provider.id)}>{t("profile.unbind")}</Button>}</div></div>;
-  })}<Button className="console-identity-refresh" icon="refresh" onClick={refreshUser}>{t("common.refresh")}</Button></div><Modal open={emailModal} title={t("profile.bind")} onClose={() => setEmailModal(false)} size="small" footer={<><Button onClick={() => setEmailModal(false)}>{t("common.cancel")}</Button><Button variant="primary" onClick={email.sent ? bindEmail : sendEmail}>{email.sent ? t("profile.verify") : t("profile.sendCode")}</Button></>}><div className="console-form-grid"><Field label={t("profile.email")} className="is-full"><TextInput type="email" value={email.value} onChange={(event) => setEmail((current) => ({ ...current, value: event.target.value }))} /></Field>{email.sent && <><Field label={t("profile.code")}><TextInput value={email.code} onChange={(event) => setEmail((current) => ({ ...current, code: event.target.value }))} /></Field><Field label={t("profile.currentPassword")}><TextInput type="password" value={email.password} onChange={(event) => setEmail((current) => ({ ...current, password: event.target.value }))} /></Field></>}</div></Modal><ConfirmDialog open={Boolean(unbind)} title={t("profile.unbind")} description={locale === "zh" ? "解绑后将无法继续使用该方式登录。" : "You will no longer be able to sign in with this provider."} onClose={() => setUnbind(null)} onConfirm={remove} /></Panel>;
+    return <div className="console-identity-row" key={provider.id}><span className="console-identity-mark">{provider.label.slice(0, 1)}</span><div className="console-identity-content"><strong>{provider.label}</strong><small>{provider.id === "email" && bound ? user.email : bound ? (locale === "zh" ? "已绑定" : "Connected") : (locale === "zh" ? "未绑定" : "Not connected")}</small></div><div className="console-identity-status"><StatusBadge status={bound ? "active" : "inactive"} label={bound ? t("common.enabled") : t("common.disabled")} /></div><div className="console-identity-actions">{provider.id === "email" && <Button onClick={() => setEmailModal(true)}>{bound ? t("profile.changeEmail") : t("profile.bind")}</Button>}{!bound && provider.id !== "email" && <Button onClick={() => beginBind(provider.id)}>{t("profile.bind")}</Button>}{canUnbind && <Button variant="danger" onClick={() => setUnbind(provider.id)}>{t("profile.unbind")}</Button>}</div></div>;
+  })}<Button className="console-identity-refresh" icon="refresh" onClick={refreshUser}>{t("common.refresh")}</Button></div><Modal open={emailModal} title={hasBoundEmail ? t("profile.rebindEmail") : t("profile.bind")} onClose={() => setEmailModal(false)} size="small" footer={<><Button onClick={() => setEmailModal(false)} disabled={Boolean(emailBusy)}>{t("common.cancel")}</Button>{email.sent && <Button onClick={sendEmail} disabled={Boolean(emailBusy)}>{emailBusy === "sending" ? t("common.loading") : t("profile.resendCode")}</Button>}<Button variant="primary" onClick={email.sent ? bindEmail : sendEmail} disabled={Boolean(emailBusy)}>{emailBusy === "binding" || (!email.sent && emailBusy === "sending") ? t("common.loading") : email.sent ? t("profile.verify") : t("profile.sendCode")}</Button></>}><div className="console-form-grid"><Field label={t(hasBoundEmail ? "profile.newEmail" : "profile.email")} className="is-full"><TextInput type="email" value={email.value} onChange={(event) => updateEmail(event.target.value)} disabled={Boolean(emailBusy)} autoComplete="email" /></Field>{email.sent && <><Field label={t("profile.code")}><TextInput inputMode="numeric" maxLength="6" value={email.code} onChange={(event) => setEmail((current) => ({ ...current, code: event.target.value.replace(/\D/g, "").slice(0, 6) }))} disabled={Boolean(emailBusy)} autoComplete="one-time-code" /></Field><Field label={t("profile.currentPassword")}><TextInput type="password" value={email.password} onChange={(event) => setEmail((current) => ({ ...current, password: event.target.value }))} disabled={Boolean(emailBusy)} autoComplete={hasBoundEmail ? "current-password" : "new-password"} /></Field></>}</div></Modal><ConfirmDialog open={Boolean(unbind)} title={t("profile.unbind")} description={locale === "zh" ? "解绑后将无法继续使用该方式登录。" : "You will no longer be able to sign in with this provider."} onClose={() => setUnbind(null)} onConfirm={remove} /></Panel>;
 }
 
 function TotpSummary({ status, locale, t, onBegin }) {
