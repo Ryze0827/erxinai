@@ -5,7 +5,7 @@ import { pagesApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { CopyButton, EmptyState, ErrorState, Page, Panel, Spinner } from "../UI";
+import { CopyButton, EmptyState, ErrorState, Page, Panel, Skeleton } from "../UI";
 import { safeExternalUrl, safeImageUrl } from "../utils";
 
 const SAFE_HTML_TAGS = new Set([
@@ -233,6 +233,10 @@ function SafeWrapper({ attributes, children, tag }) {
   return <Tag {...props}>{children}</Tag>;
 }
 
+function CustomPageLoading({ title }) {
+  return <Page title={title} className="console-custom-page"><Panel className="console-markdown-shell"><div className="console-markdown-layout console-markdown-skeleton" aria-hidden="true"><aside><Skeleton />{Array.from({ length: 5 }, (_, index) => <Skeleton key={index} />)}</aside><article>{Array.from({ length: 7 }, (_, index) => <Skeleton className={index === 0 || index === 4 ? "is-heading" : ""} key={index} />)}</article></div></Panel></Page>;
+}
+
 export function CustomPage() {
   const { id } = useParams();
   const { settings } = useConsole();
@@ -255,7 +259,7 @@ export function CustomPage() {
     return { "safe-html": SafeHtml, "safe-wrapper": SafeWrapper, h1: heading(1), h2: heading(2), h3: heading(3), h4: heading(4), pre: MarkdownPre, img: ({ src, alt }) => { const safeSrc = relativeAsset(src) ? pageImageUrl(slug, src) : safeImageUrl(src); return safeSrc ? <img src={safeSrc} alt={alt || ""} loading="lazy" /> : null; }, a: ({ href, children }) => { const safeHref = allowedLinkUrl(href); return safeHref ? <a href={safeHref} target={isExternalLink(safeHref) ? "_blank" : undefined} rel={isExternalLink(safeHref) ? "noopener noreferrer" : undefined}>{children}</a> : <>{children}</>; } };
   }, [slug, toc]);
   if (!item) return <Page title={t("custom.notFound")}><Panel><EmptyState icon="link" title={t("custom.notFound")} /></Panel></Page>;
-  if (state.loading) return <Page title={item.label}><Panel><Spinner /></Panel></Page>;
+  if (state.loading) return <CustomPageLoading title={item.label} />;
   if (state.error) return <Page title={item.label}><Panel><ErrorState message={state.error} /></Panel></Page>;
   if (slug) return <Page title={item.label} className="console-custom-page"><Panel className="console-markdown-shell"><div className="console-markdown-layout">{toc.length > 0 && <aside><strong>{t("custom.contents")}</strong>{toc.map((entry) => <a style={{ paddingLeft: `${8 + (entry.level - 1) * 12}px` }} href={`#${entry.id}`} key={entry.id}>{entry.text}</a>)}</aside>}<article className="console-markdown"><ReactMarkdown remarkPlugins={remarkPlugins} components={components}>{state.markdown}</ReactMarkdown></article></div></Panel></Page>;
   return <Page title={item.label}><Panel><EmptyState icon="link" title={t("custom.notFound")} /></Panel></Page>;

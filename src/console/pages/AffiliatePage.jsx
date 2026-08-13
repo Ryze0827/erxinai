@@ -7,7 +7,7 @@ import affiliateInviteLight from "../../assets/console/affiliate-invite-light.pn
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, CopyButton, DataTable, EmptyState, ErrorState, Page, Panel, Spinner } from "../UI";
+import { Button, CopyButton, DataTable, EmptyState, ErrorState, Page, Panel, Skeleton, TableSkeleton } from "../UI";
 
 function AffiliateBalance({ detail, busy, transfer, locale, formatCurrency, formatNumber }) {
   const metrics = [
@@ -27,6 +27,13 @@ function AffiliateShare({ detail, inviteLink, locale, t }) {
   return <Panel className="console-affiliate-share"><div className="console-panel-body"><h2>{locale === "zh" ? "分享邀请" : "Share your invitation"}</h2><p>{locale === "zh" ? "邀请朋友，在他们消费时获得返利。" : "Invite people. Earn when they spend."}</p><div className="console-affiliate-links"><label><span>{t("affiliate.link")}</span><div><code>{inviteLink}</code><CopyButton value={inviteLink} label={locale === "zh" ? "复制链接" : "Copy link"} /></div></label><label><span>{t("affiliate.code")}</span><div><code>{detail.aff_code}</code><CopyButton value={detail.aff_code} label={locale === "zh" ? "复制邀请码" : "Copy code"} /></div></label></div><picture className="console-affiliate-invite-art"><img className="is-light" src={affiliateInviteLight} alt="" /><img className="is-dark" src={affiliateInviteDark} alt="" /></picture><div className="console-affiliate-steps">{steps.map(([icon, label, description], index) => <div key={label}><b>{index + 1}</b><i><Icon name={icon} size={24} /></i><span><strong>{label}</strong><small>{description}</small></span>{index < steps.length - 1 && <Icon className="console-affiliate-step-arrow" name="chevronRight" size={18} />}</div>)}</div></div></Panel>;
 }
 
+function AffiliateLoading({ title }) {
+  return <Page title={title} className="console-affiliate-page console-affiliate-loading"><div className="console-affiliate-layout" aria-hidden="true">
+    <Panel className="console-affiliate-balance"><div className="console-panel-body"><Skeleton className="console-affiliate-skeleton-heading" /><Skeleton className="console-affiliate-skeleton-kicker" /><Skeleton className="console-affiliate-skeleton-value" /><Skeleton className="console-affiliate-skeleton-copy" /><Skeleton className="console-affiliate-skeleton-button" /><Skeleton className="console-affiliate-skeleton-note" /><div className="console-affiliate-metrics">{Array.from({ length: 4 }, (_, index) => <div key={index}><Skeleton /><span><Skeleton /><Skeleton /></span><Skeleton /></div>)}</div><Skeleton className="console-affiliate-balance-art" /></div></Panel>
+    <div className="console-affiliate-main"><Panel className="console-affiliate-share"><div className="console-panel-body"><Skeleton className="console-affiliate-skeleton-heading" /><Skeleton className="console-affiliate-skeleton-copy" /><div className="console-affiliate-links">{Array.from({ length: 2 }, (_, index) => <label key={index}><Skeleton /><div><Skeleton /><Skeleton /></div></label>)}</div><Skeleton className="console-affiliate-invite-art" /><div className="console-affiliate-steps">{Array.from({ length: 3 }, (_, index) => <div key={index}><Skeleton /><Skeleton /><span><Skeleton /><Skeleton /></span></div>)}</div></div></Panel><Panel className="console-affiliate-invitees"><div className="console-panel-body"><div className="console-affiliate-invitees-head"><Skeleton className="console-affiliate-skeleton-heading" /><Skeleton className="console-affiliate-skeleton-copy" /></div><TableSkeleton columns={4} rows={3} pagination={false} /></div></Panel></div>
+  </div></Page>;
+}
+
 export function AffiliatePage() {
   const { t, locale, formatCurrency, formatDate, formatNumber } = useLocale();
   const { notify, refreshUser } = useConsole();
@@ -43,7 +50,7 @@ export function AffiliatePage() {
     try { const result = await userApi.transferAffiliate(); notify("success", locale === "zh" ? `已转入 ${formatCurrency(result.transferred_quota)}` : `${formatCurrency(result.transferred_quota)} transferred.`); await Promise.allSettled([load(true), refreshUser()]); }
     catch (error) { notify("error", error.message); } finally { setState((current) => ({ ...current, busy: false })); }
   };
-  if (state.loading) return <Page title={t("affiliate.title")}><Panel><Spinner /></Panel></Page>;
+  if (state.loading) return <AffiliateLoading title={t("affiliate.title")} />;
   if (state.error || !state.detail) return <Page title={t("affiliate.title")}><Panel><ErrorState message={state.error} onRetry={load} /></Panel></Page>;
   const detail = state.detail;
   const inviteLink = `${window.location.origin}/register?aff=${encodeURIComponent(detail.aff_code)}`;

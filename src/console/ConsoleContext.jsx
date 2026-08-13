@@ -17,8 +17,8 @@ export function resolveFeature(settings, key, mode = "opt-in") {
 function ConsoleProviderValue({ children }) {
   const { settings, loading: settingsLoading, error: settingsError, retry: retrySettings } = usePublicSettings();
   const { add: addToast, close: closeToast, toasts } = useToastManager();
-  const cachedBranding = useMemo(() => readCachedBranding(), []);
-  const branding = useMemo(() => settings ? resolveBranding(settings) : cachedBranding || (settingsError ? resolveBranding() : null), [cachedBranding, settings, settingsError]);
+  const cachedBranding = useMemo(() => readCachedBranding() || resolveBranding(), []);
+  const branding = useMemo(() => settings ? resolveBranding(settings) : cachedBranding, [cachedBranding, settings]);
   const [user, setUser] = useState(() => getStoredUser());
 
   const syncSession = useCallback(() => setUser(getStoredUser()), []);

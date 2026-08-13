@@ -62,20 +62,19 @@ function itemPing(item) {
   return item.primary_ping_latency_ms ?? item.primary_ping_ms ?? item.ping_latency_ms ?? item.ping_ms;
 }
 
-function monitorBarHeight(status) {
-  const heights = { operational: 100, degraded: 68, failed: 38, unknown: 52 };
-  return heights[monitorTone(status)] || heights.unknown;
-}
-
 function Sparkline({ timeline = [], days, locale, compact = false }) {
   const recent = timeline.slice(-48);
+  const counts = recent.reduce((result, point) => {
+    result[monitorTone(point.status)] += 1;
+    return result;
+  }, { operational: 0, degraded: 0, failed: 0, unknown: 0 });
+  const label = locale === "zh"
+    ? `${days} 天状态历史：正常 ${counts.operational}，警告 ${counts.degraded}，异常 ${counts.failed}，未知 ${counts.unknown}`
+    : `${days}-day status history: ${counts.operational} healthy, ${counts.degraded} warning, ${counts.failed} incident, ${counts.unknown} unknown`;
   return (
-    <div className={`console-monitor-timeline ${compact ? "is-compact" : ""}`}>
+    <div className={`console-monitor-timeline ${compact ? "is-compact" : ""}`} role="img" aria-label={label}>
       <div className="console-uptime-line" aria-hidden="true">
-        {recent.map((point, index) => {
-          const height = monitorBarHeight(point.status);
-          return <i key={`${point.checked_at}-${index}`} className={`is-${monitorTone(point.status)}`} style={{ height: `${height}%` }} />;
-        })}
+        {recent.map((point, index) => <i key={`${point.checked_at}-${index}`} className={`is-${monitorTone(point.status)}`} />)}
       </div>
       {!compact && <div><span>{locale === "zh" ? `${days} 天前` : `${days}d ago`}</span><span>{recent.length} {locale === "zh" ? "个数据点" : "data points"}</span><span>{locale === "zh" ? "现在" : "Now"}</span></div>}
     </div>

@@ -1,10 +1,24 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { Badge } from "@appica/ui-react/badge";
+import { Button } from "@appica/ui-react/button";
+import { Collapsible } from "@appica/ui-react/collapsible";
+import { CollapsibleContent } from "@appica/ui-react/collapsible";
+import { CollapsibleTrigger } from "@appica/ui-react/collapsible";
+import { Progress } from "@appica/ui-react/progress";
 import { authApi } from "../api/auth";
 import { persistAuthResponse } from "../api/session";
 import { AgreementPrompt, useAgreement } from "./AgreementPrompt";
-import { AuthCard, AuthLayout } from "./AuthLayout";
-import { AuthField, AuthNotice, PasswordInput, SubmitButton, TextInput } from "./AuthControls";
+import {
+  AppicaAuthCard,
+  AppicaAuthField,
+  AppicaAuthLayout,
+  AppicaAuthNotice,
+  AppicaEmailInput,
+  AppicaPasswordInput,
+  AppicaSubmitButton,
+  AppicaTextInput,
+} from "./AppicaAuth";
 import { getAffiliateCode, getErrorMessage, isEmail } from "./authUtils";
 import { OAuthButtons } from "./OAuthButtons";
 import { TurnstileWidget } from "./TurnstileWidget";
@@ -116,37 +130,37 @@ export function RegisterPage() {
   const registrationClosed = settings && (settings.registration_enabled === false || settings.backend_mode_enabled);
 
   return (
-    <AuthLayout surface="register">
-      <AuthCard interactive={false} kicker="Start building" title="Create your WayX account" description="One account for every key, model, and project." footer={<><span>Already have an account?</span> <Link to="/login">Log in</Link></>}>
-        <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          <AuthNotice>{settingsLoading ? "Loading registration options…" : ""}</AuthNotice>
-          <AuthNotice tone={settingsError || error || registrationClosed ? "error" : "info"}>{settingsError || error || (registrationClosed ? "Registration is currently closed." : "")}</AuthNotice>
-          {settingsError && <button className="auth-link-button" type="button" onClick={retry}>Retry loading settings</button>}
-          <AuthField label="Email address" error={errors.email}>
-            <TextInput type="email" value={form.email} onChange={(event) => updateForm("email", event.target.value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
-          </AuthField>
-          <AuthField label="Password" error={errors.password}>
-            <PasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder="Create a secure password" autoComplete="new-password" />
-            <div className="auth-strength" aria-label={`Password strength ${strength} of 4`}>
-              {[1, 2, 3, 4].map((step) => <i key={step} data-active={strength >= step} />)}
-              <span>{strength < 2 ? "Keep going" : strength < 4 ? "Good password" : "Strong password"}</span>
+    <AppicaAuthLayout>
+      <AppicaAuthCard kicker="Start building" title="Create your WayX account" description="One account for every key, model, and project." footer={<><span>Already have an account?</span> <Link to="/login">Log in</Link></>}>
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
+          <AppicaAuthNotice>{settingsLoading ? "Loading registration options…" : ""}</AppicaAuthNotice>
+          <AppicaAuthNotice tone={settingsError || error || registrationClosed ? "error" : "info"}>{settingsError || error || (registrationClosed ? "Registration is currently closed." : "")}</AppicaAuthNotice>
+          {settingsError && <Button className="w-fit" variant="ghost" size="sm" type="button" onClick={retry}>Retry loading settings</Button>}
+          <AppicaAuthField label="Email address" error={errors.email}>
+            <AppicaEmailInput type="email" value={form.email} onChange={(event) => updateForm("email", event.target.value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
+          </AppicaAuthField>
+          <AppicaAuthField label="Password" error={errors.password}>
+            <AppicaPasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder="Create a secure password" autoComplete="new-password" />
+            <div className="flex items-center gap-3" aria-label={`Password strength ${strength} of 4`}>
+              <Progress className="flex-1" value={strength * 25} max={100} indicatorColor="var(--success-emphasis)" />
+              <span className="text-foreground-muted text-xs">{strength < 2 ? "Keep going" : strength < 4 ? "Good password" : "Strong password"}</span>
             </div>
-          </AuthField>
+          </AppicaAuthField>
           {(settings?.invitation_code_enabled || settings?.promo_code_enabled) && (
-            <>
-              <button type="button" className="auth-extras-toggle" aria-expanded={showExtras} onClick={() => setShowExtras((value) => !value)}><span>Have an invite or promo code?</span><b>{showExtras ? "Hide" : "Add"}</b></button>
-              <div className="auth-extras" data-open={showExtras} aria-hidden={!showExtras}>
-                {settings?.invitation_code_enabled && <AuthField label="Invitation code" error={errors.invitation || (status.invitation === "invalid" ? "Invalid invitation code." : "")}><TextInput value={form.invitation} onChange={(event) => updateForm("invitation", event.target.value)} onBlur={() => validateCode("invitation")} disabled={!showExtras} placeholder="Required invitation code" action={status.invitation === "valid" ? <small>Valid</small> : null} /></AuthField>}
-                {settings?.promo_code_enabled && <AuthField label="Promo code" error={status.promo === "invalid" ? "Invalid promo code." : ""}><TextInput value={form.promo} onChange={(event) => updateForm("promo", event.target.value)} onBlur={() => validateCode("promo")} disabled={!showExtras} placeholder="Optional promo code" action={status.promo === "valid" ? <small>Valid</small> : null} /></AuthField>}
-              </div>
-            </>
+            <Collapsible className="flex flex-col gap-4" open={showExtras} onOpenChange={setShowExtras}>
+              <CollapsibleTrigger className="w-full justify-between" render={<Button type="button" variant="outline" />}><span>Have an invite or promo code?</span><strong>{showExtras ? "Hide" : "Add"}</strong></CollapsibleTrigger>
+              <CollapsibleContent className="flex flex-col gap-5">
+                {settings?.invitation_code_enabled && <AppicaAuthField label="Invitation code" error={errors.invitation || (status.invitation === "invalid" ? "Invalid invitation code." : "")}><AppicaTextInput value={form.invitation} onChange={(event) => updateForm("invitation", event.target.value)} onBlur={() => validateCode("invitation")} placeholder="Required invitation code" action={status.invitation === "valid" ? <Badge variant="success" size="sm">Valid</Badge> : null} /></AppicaAuthField>}
+                {settings?.promo_code_enabled && <AppicaAuthField label="Promo code" error={status.promo === "invalid" ? "Invalid promo code." : ""}><AppicaTextInput value={form.promo} onChange={(event) => updateForm("promo", event.target.value)} onBlur={() => validateCode("promo")} placeholder="Optional promo code" action={status.promo === "valid" ? <Badge variant="success" size="sm">Valid</Badge> : null} /></AppicaAuthField>}
+              </CollapsibleContent>
+            </Collapsible>
           )}
           <TurnstileWidget enabled={settings?.turnstile_enabled} siteKey={settings?.turnstile_site_key} onToken={handleTurnstileToken} resetKey={turnstileReset} />
           <AgreementPrompt agreement={agreement} />
-          <SubmitButton loading={loading} loadingLabel={settings?.email_verify_enabled ? "Sending code…" : "Creating account…"} disabled={settingsLoading || Boolean(settingsError) || registrationClosed || !agreement.accepted || (settings?.turnstile_enabled && !turnstileToken)}>{settings?.email_verify_enabled ? "Continue" : "Create account"}</SubmitButton>
+          <AppicaSubmitButton loading={loading} loadingLabel={settings?.email_verify_enabled ? "Sending code…" : "Creating account…"} disabled={settingsLoading || Boolean(settingsError) || registrationClosed || !agreement.accepted || (settings?.turnstile_enabled && !turnstileToken)}>{settings?.email_verify_enabled ? "Continue" : "Create account"}</AppicaSubmitButton>
           {!settings?.backend_mode_enabled && <OAuthButtons settings={settings} searchParams={searchParams} onError={setError} />}
         </form>
-      </AuthCard>
-    </AuthLayout>
+      </AppicaAuthCard>
+    </AppicaAuthLayout>
   );
 }

@@ -13,7 +13,7 @@ import { useConsole } from "../ConsoleContext";
 import { PlatformMark } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, EmptyState, ErrorState, Page, Panel, ProgressBar, Spinner, StatusBadge, buttonLinkClass } from "../UI";
+import { Button, EmptyState, ErrorState, Page, Panel, ProgressBar, Skeleton, StatusBadge, TableSkeleton, buttonLinkClass } from "../UI";
 import { statusLabel } from "../utils";
 
 function resetLabel(seconds, locale) {
@@ -54,6 +54,13 @@ function monthlyUsed(subscription, progress) {
   return Number(subscriptionProgress(subscription, progress, "monthly")?.used || 0);
 }
 
+function SubscriptionsLoading({ title }) {
+  return <Page title={title} className="console-subscriptions-page console-subscriptions-loading">
+    <Panel className="console-subscriptions-toolbar"><div className="console-panel-body"><p><Skeleton /><Skeleton /></p><div><Skeleton /><Skeleton /></div></div></Panel>
+    <Panel className="console-subscriptions-ledger"><div className="console-subscriptions-ledger-head"><Skeleton /></div><div className="console-subscriptions-table-wrap"><TableSkeleton columns={8} rows={3} pagination={false} /></div><footer><Skeleton /><div><Skeleton /><Skeleton /><Skeleton /></div></footer></Panel>
+  </Page>;
+}
+
 export function SubscriptionsPage() {
   const { t, locale, formatCurrency, formatDate } = useLocale();
   const { settings } = useConsole();
@@ -75,7 +82,7 @@ export function SubscriptionsPage() {
   }, []);
   useEffect(() => { mountedRef.current = true; load(); return () => { mountedRef.current = false; }; }, [load]);
 
-  if (state.loading) return <Page title={t("subscriptions.title")} className="console-subscriptions-page"><Panel className="console-subscriptions-loading"><Spinner /></Panel></Page>;
+  if (state.loading) return <SubscriptionsLoading title={t("subscriptions.title")} />;
   if (state.error && !state.items.length) return <Page title={t("subscriptions.title")} className="console-subscriptions-page"><Panel><ErrorState message={state.error} onRetry={load} /></Panel></Page>;
   const activeCount = state.items.filter((item) => String(item.status).toLowerCase() === "active").length;
   const monthlyUsage = state.items.reduce((total, item) => total + monthlyUsed(item, state.progress[item.id] || {}), 0);

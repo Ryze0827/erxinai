@@ -51,6 +51,10 @@ import {
   TableRow as AppicaTableRow,
 } from "@appica/ui-react/table";
 import { Textarea as AppicaTextarea } from "@appica/ui-react/textarea";
+import { Tooltip as AppicaTooltip } from "@appica/ui-react/tooltip";
+import { TooltipContent as AppicaTooltipContent } from "@appica/ui-react/tooltip";
+import { TooltipProvider as AppicaTooltipProvider } from "@appica/ui-react/tooltip";
+import { TooltipTrigger as AppicaTooltipTrigger } from "@appica/ui-react/tooltip";
 import { Toaster as AppicaToaster } from "@appica/ui-react/toast";
 import { Icon } from "./Icon";
 import { useConsole } from "./ConsoleContext";
@@ -75,7 +79,7 @@ export function Page({ title, actions, children, className = "" }) {
 
 export function Panel({ title, eyebrow, actions, children, className = "", ...props }) {
   return (
-    <AppicaCard frame="solid" inset={false} render={<section />} className={`console-panel ${className}`} {...props}>
+    <AppicaCard frame={false} inset={false} render={<section />} className={`console-panel ${className}`} {...props}>
       {(title || actions) && <AppicaCardHeader className="console-panel-head"><div>{eyebrow && <span>{eyebrow}</span>}{title && <AppicaCardTitle render={<h2 />}>{title}</AppicaCardTitle>}</div>{actions}</AppicaCardHeader>}
       {children}
     </AppicaCard>
@@ -162,6 +166,10 @@ export function Spinner({ label }) {
   const { t } = useLocale();
   const loadingLabel = label || t("common.loading");
   return <div className="console-loading" role="status"><AppicaSpinner className="console-appica-spinner" variant="dots" aria-label={loadingLabel} /><span>{loadingLabel}</span></div>;
+}
+
+export function Skeleton({ className = "", ...props }) {
+  return <AppicaSkeleton className={`console-skeleton ${className}`} {...props} />;
 }
 
 export function EmptyState({ icon = "info", title, description, action }) {
@@ -252,6 +260,12 @@ function rowHasInteractiveTarget(event) {
   return interactive && interactive !== event.currentTarget;
 }
 
+export function TruncatedText({ value, render = <span />, className = "", multiline = false }) {
+  const text = value === null || value === undefined || value === "" ? "—" : String(value);
+  const truncateClass = `console-table-truncate ${multiline ? "console-table-truncate--multiline" : ""} ${className}`.trim();
+  return <AppicaTooltipProvider><AppicaTooltip><AppicaTooltipTrigger render={render} className={truncateClass}>{text}</AppicaTooltipTrigger><AppicaTooltipContent arrow={false} className="console-table-value-tooltip">{text}</AppicaTooltipContent></AppicaTooltip></AppicaTooltipProvider>;
+}
+
 function ConsoleTableHeader({ column, sortKey, sortOrder, onSort }) {
   const sortable = Boolean(column.sortable && onSort);
   const active = sortable && sortKey === column.key;
@@ -264,7 +278,7 @@ function ConsoleTableRow({ row, index, rowKey, columns, onRowClick, onHover }) {
   const click = (event) => {
     if (!rowHasInteractiveTarget(event)) onRowClick?.(row);
   };
-  return <AppicaTableRow key={row[rowKey] ?? index} onPointerEnter={(event) => onHover(event.currentTarget)} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <AppicaTableCell key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : row[column.key] ?? "—"}</AppicaTableCell>)}</AppicaTableRow>;
+  return <AppicaTableRow key={row[rowKey] ?? index} onPointerEnter={(event) => onHover(event.currentTarget)} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <AppicaTableCell key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : <TruncatedText value={row[column.key]} />}</AppicaTableCell>)}</AppicaTableRow>;
 }
 
 export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "" }) {
@@ -293,6 +307,20 @@ export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sor
       <AppicaTable className="console-table" size="sm" borderStyle="none" ref={tableRef}><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} onHover={hoverRow} />)}</AppicaTableBody></AppicaTable>
     </div>
   );
+}
+
+export function TableSkeleton({ columns = 6, rows = 6, className = "", pagination = true }) {
+  const columnItems = Array.from({ length: columns }, (_, index) => index);
+  const rowItems = Array.from({ length: rows }, (_, index) => index);
+  return <div className={`console-table-skeleton ${className}`} aria-hidden="true">
+    <div className="console-table-wrap">
+      <AppicaTable className="console-table" size="sm" borderStyle="none">
+        <AppicaTableHeader><AppicaTableRow>{columnItems.map((column) => <AppicaTableHead key={column}><AppicaSkeleton /></AppicaTableHead>)}</AppicaTableRow></AppicaTableHeader>
+        <AppicaTableBody>{rowItems.map((row) => <AppicaTableRow key={row}>{columnItems.map((column) => <AppicaTableCell key={column}><AppicaSkeleton /></AppicaTableCell>)}</AppicaTableRow>)}</AppicaTableBody>
+      </AppicaTable>
+    </div>
+    {pagination && <div className="console-pagination console-table-skeleton-pagination"><AppicaSkeleton /><div><AppicaSkeleton /><AppicaSkeleton /></div></div>}
+  </div>;
 }
 
 const chartTop = 26;

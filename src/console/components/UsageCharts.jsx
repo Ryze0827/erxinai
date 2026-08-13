@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { EmptyState, Panel, Spinner } from "../UI";
+import { EmptyState, Panel, Skeleton } from "../UI";
 import { useLocale } from "../i18n";
 import { formatTokenMillions } from "../utils";
 import { CompactTabs } from "./ConsoleControls";
@@ -31,6 +31,10 @@ function chartValue(row, metric) {
   return Number(metric === "tokens" ? row.total_tokens : row.actual_cost) || 0;
 }
 
+function DistributionLoading() {
+  return <div className="console-distribution-body console-distribution-skeleton" aria-hidden="true"><Skeleton className="console-distribution-skeleton-chart" /><div className="console-distribution-table">{Array.from({ length: 6 }, (_, row) => <div className={row === 0 ? "is-head" : ""} key={row}>{Array.from({ length: 4 }, (_, column) => <span key={column}><Skeleton /></span>)}</div>)}</div></div>;
+}
+
 export function DistributionChart({ title, data = [], nameKey, loading, emptyLabel, limit = 8, showMetricTabs = true, actualOnly = false, itemLabel, tokenLabel = "Token (M)", className = "", centerValue, centerLabel }) {
   const { locale, formatNumber, formatCurrency } = useLocale();
   const [metric, setMetric] = useState("tokens");
@@ -39,7 +43,11 @@ export function DistributionChart({ title, data = [], nameKey, loading, emptyLab
   const valueLabels = rows.map((row) => metric === "tokens" ? formatTokenMillions(row.total_tokens) : formatCurrency(row.actual_cost));
   const resolvedCenterValue = centerValue || (metric === "tokens" ? formatTokenMillions(values.reduce((sum, value) => sum + value, 0)) : formatCurrency(values.reduce((sum, value) => sum + value, 0)));
   const resolvedCenterLabel = centerLabel || (metric === "tokens" ? (locale === "zh" ? "Token" : "Tokens") : (locale === "zh" ? "实际费用" : "Actual cost"));
-  return <Panel title={title} actions={showMetricTabs && <CompactTabs value={metric} onChange={setMetric} items={[{ value: "tokens", label: locale === "zh" ? "Token" : "Tokens" }, { value: "actual_cost", label: locale === "zh" ? "实际费用" : "Actual cost" }]} />} className={`console-distribution ${className}`.trim()}>{loading ? <Spinner /> : !rows.length ? <EmptyState description={emptyLabel} /> : <div className="console-distribution-body"><Donut values={values} labels={rows.map((row) => row[nameKey])} valueLabels={valueLabels} ariaLabel={title} centerValue={resolvedCenterValue} centerLabel={resolvedCenterLabel} /><div className="console-distribution-table" role="table" aria-label={title}><div className="is-head" role="row"><span role="columnheader">{itemLabel || (locale === "zh" ? "项目" : "Item")}</span><span role="columnheader">{locale === "zh" ? "请求" : "Requests"}</span><span role="columnheader">{tokenLabel}</span><span role="columnheader">{actualOnly ? (locale === "zh" ? "实际" : "Actual") : (locale === "zh" ? "实际 / 标准" : "Actual / standard")}</span></div>{rows.map((row, index) => <div role="row" key={`${row[nameKey]}-${index}`}><span role="cell"><i style={{ background: colors[index % colors.length] }} /><b title={row[nameKey]}>{row[nameKey] || "—"}</b></span><span role="cell">{formatNumber(row.requests)}</span><span role="cell">{formatTokenMillions(row.total_tokens)}</span><span role="cell"><b>{formatCurrency(row.actual_cost)}</b>{!actualOnly && <small>{formatCurrency(row.cost)}</small>}</span></div>)}</div></div>}</Panel>;
+  return <Panel title={title} actions={showMetricTabs && <CompactTabs value={metric} onChange={setMetric} items={[{ value: "tokens", label: locale === "zh" ? "Token" : "Tokens" }, { value: "actual_cost", label: locale === "zh" ? "实际费用" : "Actual cost" }]} />} className={`console-distribution ${className}`.trim()}>{loading ? <DistributionLoading /> : !rows.length ? <EmptyState description={emptyLabel} /> : <div className="console-distribution-body"><Donut values={values} labels={rows.map((row) => row[nameKey])} valueLabels={valueLabels} ariaLabel={title} centerValue={resolvedCenterValue} centerLabel={resolvedCenterLabel} /><div className="console-distribution-table" role="table" aria-label={title}><div className="is-head" role="row"><span role="columnheader">{itemLabel || (locale === "zh" ? "项目" : "Item")}</span><span role="columnheader">{locale === "zh" ? "请求" : "Requests"}</span><span role="columnheader">{tokenLabel}</span><span role="columnheader">{actualOnly ? (locale === "zh" ? "实际" : "Actual") : (locale === "zh" ? "实际 / 标准" : "Actual / standard")}</span></div>{rows.map((row, index) => <div role="row" key={`${row[nameKey]}-${index}`}><span role="cell"><i style={{ background: colors[index % colors.length] }} /><b title={row[nameKey]}>{row[nameKey] || "—"}</b></span><span role="cell">{formatNumber(row.requests)}</span><span role="cell">{formatTokenMillions(row.total_tokens)}</span><span role="cell"><b>{formatCurrency(row.actual_cost)}</b>{!actualOnly && <small>{formatCurrency(row.cost)}</small>}</span></div>)}</div></div>}</Panel>;
+}
+
+function TrendLoading() {
+  return <div className="console-trend-body console-trend-skeleton" aria-hidden="true"><div className="console-trend-plot"><Skeleton /></div><div className="console-trend-x-axis"><i /><div className="console-chart-labels">{Array.from({ length: 7 }, (_, index) => <Skeleton key={index} />)}</div></div><div className="console-chart-legend">{Array.from({ length: 5 }, (_, index) => <span key={index}><Skeleton /> <Skeleton /></span>)}</div></div>;
 }
 
 function linePoints(data, key, width, height, max) {
@@ -85,7 +93,7 @@ export function UsageTrendChart({ data = [], loading, actions, variant = "breakd
     const input = Number(row.input_tokens) || 0;
     return { ...row, cache_hit_rate: read + input ? read / (read + input) * 100 : 0 };
   }), [data]);
-  if (loading) return <Panel className="console-trend"><Spinner /></Panel>;
+  if (loading) return <Panel title={title} eyebrow={rangeLabel} actions={actions} className={`console-trend ${variant === "total" ? "console-trend--total" : ""}`}><TrendLoading /></Panel>;
   const points = variant === "total" ? linePoints(totalRows, "_total_tokens", 680, 196, maximum) : "";
   const path = variant === "total" ? smoothLinePath(totalRows, "_total_tokens", 680, 196, maximum) : "";
   const visibleLabelIndexes = data.length > 7

@@ -18,6 +18,7 @@ import {
   SelectInput,
   Spinner,
   StatusBadge,
+  TableSkeleton,
   TextArea,
   TextInput,
 } from "../UI";
@@ -595,10 +596,10 @@ function NoKeysNotice({ hasKeys, state }) {
 function JobsPanel({ state, tableProps, pagingProps, onRetry }) {
   const { t } = useLocale();
   let content;
-  if (state.loading) content = <Spinner />;
-  else if (state.error) content = <ErrorState message={state.error} onRetry={onRetry} />;
+  if (state.loading && !tableProps.rows.length) content = <TableSkeleton columns={9} rows={3} />;
+  else if (state.error && !tableProps.rows.length) content = <ErrorState message={state.error} onRetry={onRetry} />;
   else content = <><JobTable {...tableProps} /><CursorPagination {...pagingProps} /></>;
-  return <Panel title={t("batch.jobs")} className="console-batch-jobs">{content}</Panel>;
+  return <Panel title={t("batch.jobs")} className="console-batch-jobs" aria-busy={state.loading}>{content}</Panel>;
 }
 
 function CreateBatchModal({ open, form, setForm, keys, models, modelsLoading, working, onClose, onSubmit }) {

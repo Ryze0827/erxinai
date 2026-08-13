@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button } from "../UI";
+import { Button, TruncatedText } from "../UI";
 import { useLocale } from "../i18n";
 
 const cache = new Map();
@@ -24,10 +24,11 @@ export function IpGeoCell({ ip, enabled = false }) {
     return () => controller.abort();
   }, [enabled, ip, state.location]);
   if (!ip) return <span className="console-muted">—</span>;
-  return <div className="console-ip"><code>{ip}</code>{enabled && <small>{state.loading ? "…" : state.location || (state.error ? "Lookup failed" : "")}</small>}</div>;
+  const detail = state.loading ? "…" : state.location || (state.error ? "Lookup failed" : "");
+  return <div className="console-ip"><TruncatedText value={ip} render={<code />} />{enabled && detail && <TruncatedText value={detail} render={<small />} />}</div>;
 }
 
-export function IpGeoBatchToolbar({ enabled, onToggle, count }) {
+export function IpGeoBatchToolbar({ enabled, onToggle }) {
   const { locale } = useLocale();
-  return <div className="console-ip-toolbar"><span>{locale === "zh" ? `本页 ${count} 个 IP` : `${count} IPs on this page`}</span><Button icon="globe" onClick={onToggle}>{enabled ? (locale === "zh" ? "隐藏归属地" : "Hide locations") : (locale === "zh" ? "批量查询归属地" : "Look up locations")}</Button></div>;
+  return <div className="console-ip-toolbar"><Button icon="globe" onClick={onToggle}>{enabled ? (locale === "zh" ? "隐藏归属地" : "Hide locations") : (locale === "zh" ? "批量查询归属地" : "Look up locations")}</Button></div>;
 }

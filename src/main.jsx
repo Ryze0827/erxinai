@@ -5,7 +5,6 @@ import { ThemeProvider } from "@appica/ui-react/providers/theme-provider";
 import { App } from "./App.jsx";
 import "./appica.css";
 import "./cascade.css";
-import "./landing.css";
 import "./styles.css";
 import "./console/appica.css";
 

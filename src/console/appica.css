@@ -2,6 +2,7 @@
    hooks onto Appica's role tokens while business screens are migrated. */
 
 html[data-console-theme] {
+  --console-page-gutter: 2rem;
   --console-font-display: var(--wayx-font-sans);
   --console-font-body: var(--wayx-font-sans);
   --console-font-mono: var(--wayx-font-mono);
@@ -206,7 +207,6 @@ html[data-console-theme] .console-workspace > main {
 html[data-console-theme] .console-page {
   gap: 1rem;
   min-height: calc(100svh - 4.5rem);
-  padding: 1.5rem;
 }
 
 html[data-console-theme] .console-page-title {
@@ -229,7 +229,7 @@ html[data-console-theme] .console-page-head--actions-only {
 html[data-console-theme] [data-slot="card"].console-panel {
   --card-radius: var(--radius-xl);
   border: 0;
-  background: var(--background-subtle);
+  background: transparent;
   box-shadow: none;
 }
 
@@ -463,7 +463,6 @@ html[data-console-theme] .console-dashboard-metrics,
 html[data-console-theme] .console-purchase-overview,
 html[data-console-theme] .console-purchase-checkout,
 html[data-console-theme] .console-monitor-toolbar,
-html[data-console-theme] .console-monitor-overview,
 html[data-console-theme] .console-redeem-summary {
   border-color: var(--border-muted);
   border-radius: var(--radius-xl);
@@ -587,6 +586,10 @@ html[data-console-theme] [data-slot="tabs-list"].console-image-doc-section-switc
   color: var(--foreground-strong);
   background: transparent;
   box-shadow: none;
+}
+
+html[data-console-theme] [data-slot="tabs-list"].console-orders-status-tabs [data-slot="tabs-trigger"] {
+  padding-inline: 0.875rem;
 }
 
 html[data-console-theme] [data-slot="tabs-list"].console-orders-status-tabs [data-slot="tabs-trigger"][data-active],
@@ -864,26 +867,6 @@ html[data-console-theme] .console-image-workbench-recent [data-slot="button"] {
   padding: 0;
 }
 
-html[data-console-theme] .console-purchase-custom-input {
-  border-color: var(--border);
-  border-radius: var(--radius-md);
-  background: var(--background);
-}
-
-html[data-console-theme] .console-purchase-custom-input:focus-within {
-  border-color: var(--border-emphasis);
-  background: var(--background);
-  box-shadow: 0 0 0 var(--border-width) var(--ring-primary);
-}
-
-html[data-console-theme] .console-purchase-custom-input > [data-slot="input"].console-input {
-  min-height: 2.75rem;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
 html[data-console-theme] .console-tool-grid > label [data-slot="radio"] {
   justify-self: end;
 }
@@ -924,7 +907,7 @@ html[data-console-theme] .console-announcement-list > [data-slot="button"] {
   width: 100%;
   height: auto;
   min-height: 0;
-  padding: 0.75rem;
+  padding: 1rem;
   border-radius: var(--radius-md);
   text-align: left;
   white-space: normal;
@@ -932,7 +915,42 @@ html[data-console-theme] .console-announcement-list > [data-slot="button"] {
 
 html[data-console-theme] .console-announcement-list > [data-slot="button"] > span {
   display: block;
+  width: 100%;
   min-width: 0;
+  overflow: hidden;
+}
+
+html[data-console-theme] .console-announcement-list > [data-slot="button"] > span > strong,
+html[data-console-theme] .console-announcement-list > [data-slot="button"] > span > p,
+html[data-console-theme] .console-announcement-list > [data-slot="button"] > span > small {
+  display: block;
+  margin: 0;
+}
+
+html[data-console-theme] .console-announcement-list > [data-slot="button"] > span > strong {
+  color: var(--foreground-intense);
+  font-size: var(--text-base);
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+html[data-console-theme] .console-announcement-list > [data-slot="button"] > span > p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 0.375rem;
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+html[data-console-theme] .console-announcement-list > [data-slot="button"] > span > small {
+  margin-top: 0.5rem;
+  color: var(--foreground-subtle);
+  font-size: var(--text-xs);
 }
 
 html[data-console-theme] .console-announcement-list > [data-slot="button"]:not(.is-read) {
@@ -1125,7 +1143,7 @@ html[data-console-theme] .console-header {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding-inline: 2rem;
+  padding-inline: var(--console-page-gutter);
   border-bottom: var(--border-width) solid var(--border-muted);
 }
 
@@ -1248,12 +1266,19 @@ html[data-console-theme] .console-workspace > main {
 
 html[data-console-theme] .console-page {
   display: flex;
-  width: min(100%, 112rem);
+  width: 100%;
+  max-width: none;
   flex-direction: column;
+  align-items: stretch;
   min-height: auto;
-  margin-inline: auto;
-  padding: 1.75rem 2rem 3rem;
+  margin-inline: 0;
+  padding: 1.75rem var(--console-page-gutter) 3rem;
   gap: 1.25rem;
+}
+
+html[data-console-theme] .console-page > :not(.console-page-title) {
+  min-width: 0;
+  max-width: 100%;
 }
 
 html[data-console-theme] .console-page-head,
@@ -1425,7 +1450,44 @@ html[data-console-theme] .console-table th {
 }
 
 html[data-console-theme] .console-table td {
+  min-width: 0;
   line-height: 1.4;
+}
+
+html[data-console-theme] .console-table td > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+html[data-console-theme] .console-table-truncate {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-console-theme] .console-table-truncate.console-chip,
+html[data-console-theme] .console-table-truncate.console-type-badge {
+  display: inline-block;
+  width: auto;
+  vertical-align: middle;
+}
+
+html[data-console-theme] .console-table-truncate--multiline {
+  display: -webkit-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+html[data-console-theme] [data-slot="tooltip-content"].console-table-value-tooltip {
+  width: max-content;
+  max-width: min(30rem, calc(100vw - 2rem));
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 html[data-console-theme] .console-pagination {
@@ -1589,20 +1651,28 @@ html[data-console-theme] .console-popover-head {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   border-bottom: var(--border-width) solid var(--border-muted);
 }
 
+html[data-console-theme] .console-popover-head > strong {
+  color: var(--foreground-intense);
+  font-size: var(--text-lg);
+  font-weight: 650;
+}
+
 html[data-console-theme] .console-announcements {
-  width: min(24rem, calc(100vw - 2rem));
+  width: min(30rem, calc(100vw - 2rem));
   max-height: 32rem;
   overflow: hidden;
 }
 
 html[data-console-theme] .console-announcement-list {
+  display: grid;
   max-height: 27rem;
   overflow-y: auto;
-  padding: 0.5rem;
+  gap: 0.25rem;
+  padding: 0.75rem;
 }
 
 html[data-console-theme] .console-user-popover {
@@ -1711,7 +1781,7 @@ html[data-console-theme] .console-endpoint-popover > header > span {
 
 html[data-console-theme] .console-endpoint-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 36rem));
   gap: 0.75rem;
 }
 
@@ -1824,7 +1894,42 @@ html[data-console-theme] .console-keys-page .console-table th[data-column="statu
 html[data-console-theme] .console-keys-page .console-table th[data-column="last_used_at"] { width: 9rem; }
 html[data-console-theme] .console-keys-page .console-table th[data-column="last_used_ip"] { width: 8.5rem; }
 html[data-console-theme] .console-keys-page .console-table th[data-column="created_at"] { width: 11.5rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="actions"] { width: 14rem; }
+html[data-console-theme] .console-keys-page .console-table th[data-column="actions"] { width: 21rem; }
+
+@media (min-width: 64.0625rem) {
+  html[data-console-theme] .console-keys-page {
+    height: calc(100svh - 6.75rem);
+    overflow: hidden;
+  }
+
+  html[data-console-theme] .console-keys-page > .console-endpoint-panel {
+    flex: none;
+  }
+
+  html[data-console-theme] .console-keys-page > .console-keys-panel {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  html[data-console-theme] .console-keys-panel .console-table-page-toolbar,
+  html[data-console-theme] .console-keys-panel .console-pagination {
+    flex: none;
+  }
+
+  html[data-console-theme] .console-keys-panel .console-table-wrap {
+    min-height: 0;
+    overflow: auto;
+  }
+
+  html[data-console-theme] .console-keys-page .console-table thead {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+  }
+}
 
 html[data-console-theme] .console-keys-page .console-table td[data-column="name"],
 html[data-console-theme] .console-keys-page .console-table td[data-column="expires_at"],
@@ -2007,16 +2112,11 @@ html[data-console-theme] .console-key-actions > [data-slot="button"].console-key
   color: var(--foreground-intense);
 }
 
-html[data-console-theme] .console-key-actions > [data-slot="button"][title="CC Switch"] {
-  width: 2rem;
-  height: 2rem;
+html[data-console-theme] .console-key-actions > [data-slot="button"].console-key-cc-switch-action {
   min-height: 2rem;
-  padding: 0;
-  font-size: 0;
-}
-
-html[data-console-theme] .console-key-actions > [data-slot="button"][title="CC Switch"] svg {
-  margin: 0;
+  padding-inline: 0.625rem;
+  color: var(--foreground-intense);
+  white-space: nowrap;
 }
 
 html[data-console-theme] .console-key-setting {
@@ -2069,6 +2169,27 @@ html[data-console-theme] .console-channels-filters {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+html[data-console-theme] .console-orders-toolbar {
+  min-height: 4.5rem;
+  padding: 0.75rem 1.5rem;
+}
+
+html[data-console-theme] .console-orders-page {
+  font-family: var(--font-sans);
+}
+
+html[data-console-theme] .console-order-number,
+html[data-console-theme] .console-order-amount,
+html[data-console-theme] .console-orders-table .console-table td[data-column="created_at"] {
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-orders-table .console-table th,
+html[data-console-theme] .console-orders-table .console-table td,
+html[data-console-theme] .console-orders-panel > .console-pagination {
+  padding-inline: 1.5rem;
 }
 
 html[data-console-theme] .console-subscriptions-toolbar > [data-slot="card-content"] {
@@ -2204,7 +2325,11 @@ html[data-console-theme] .console-monitor-overview {
 }
 
 html[data-console-theme] .console-monitor-overview-item {
-  min-height: 7.5rem;
+  height: 7rem;
+  min-height: 7rem;
+  gap: 0.75rem;
+  padding: 1rem;
+  overflow: hidden;
 }
 
 html[data-console-theme] .console-monitor-overview-item > i {
@@ -2223,20 +2348,43 @@ html[data-console-theme] .console-monitor-overview-item > div {
   text-align: right;
 }
 
+html[data-console-theme] .console-monitor-overview-item > div > span {
+  line-height: 1.25;
+}
+
+html[data-console-theme] .console-monitor-overview-item strong {
+  margin-top: 0.25rem;
+  line-height: 1.15;
+}
+
 html[data-console-theme] .console-monitor-overview-item small {
   display: block;
-  margin-top: 0.25rem;
+  margin-top: 0.375rem;
   color: var(--foreground-muted);
   font-size: var(--text-xs);
+  line-height: 1.25;
 }
 
 html[data-console-theme] .console-monitor-master-detail {
+  height: 35.5rem;
+  min-height: 35.5rem;
   grid-template-columns: minmax(22rem, 0.34fr) minmax(0, 1fr);
+  align-items: stretch;
+}
+
+html[data-console-theme] .console-monitor-master,
+html[data-console-theme] .console-monitor-inspector {
+  height: 100%;
+  min-height: 0;
 }
 
 html[data-console-theme] .console-monitor-master > [data-slot="card-content"],
 html[data-console-theme] .console-monitor-inspector > [data-slot="card-content"] {
-  overflow: visible;
+  overflow: hidden;
+}
+
+html[data-console-theme] .console-monitor-inspector > [data-slot="card-content"] {
+  overflow-y: auto;
 }
 
 html[data-console-theme] .console-monitor-master > [data-slot="card-content"] > header,
@@ -2278,6 +2426,10 @@ html[data-console-theme] .console-monitor-master > [data-slot="card-content"] > 
 }
 
 html[data-console-theme] .console-monitor-master-list {
+  min-height: 0;
+  flex: 1;
+  align-content: start;
+  overflow-y: auto;
   padding: 0.625rem;
 }
 
@@ -2503,29 +2655,29 @@ html[data-console-theme] .console-monitor-availability small {
 
 html[data-console-theme] .console-uptime-line {
   display: flex;
-  height: 3rem;
-  align-items: end;
-  gap: 0.1875rem;
-  margin-top: 1rem;
+  height: 0.875rem;
+  align-items: stretch;
+  gap: 0.125rem;
+  margin-top: 1.25rem;
 }
 
 html[data-console-theme] .console-uptime-line > i {
-  min-width: 0.1875rem;
+  min-width: 0.25rem;
   flex: 1;
-  border-radius: var(--radius-full);
-  background: var(--foreground-muted);
+  border-radius: calc(var(--radius-3xs) / 3);
+  background: var(--background-strong);
 }
 
 html[data-console-theme] .console-uptime-line > i.is-operational {
-  background: var(--success);
+  background: var(--success-emphasis);
 }
 
 html[data-console-theme] .console-uptime-line > i.is-degraded {
-  background: var(--warning);
+  background: var(--warning-emphasis);
 }
 
 html[data-console-theme] .console-uptime-line > i.is-failed {
-  background: var(--error);
+  background: var(--error-emphasis);
 }
 
 html[data-console-theme] .console-monitor-timeline:not(.is-compact) > div:last-child {
@@ -3083,8 +3235,40 @@ html[data-console-theme] .console-divider {
 }
 
 html[data-console-theme] .console-usage-toolbar {
+  width: 100%;
+  max-width: 100%;
   flex-wrap: wrap;
   justify-content: flex-start;
+}
+
+html[data-console-theme] .console-usage-page {
+  width: 100%;
+  container: usage-page / inline-size;
+}
+
+html[data-console-theme] .console-usage-toolbar > *,
+html[data-console-theme] .console-usage-page > :not(.console-page-title),
+html[data-console-theme] .console-usage-workspace,
+html[data-console-theme] .console-usage-ledger,
+html[data-console-theme] .console-usage-chart-grid,
+html[data-console-theme] .console-usage-chart-grid > *,
+html[data-console-theme] .console-usage-filter-panel,
+html[data-console-theme] .console-usage-records-panel {
+  min-width: 0;
+  max-width: 100%;
+}
+
+html[data-console-theme] .console-usage-page > :not(.console-page-title) {
+  width: 100%;
+}
+
+html[data-console-theme] .console-usage-toolbar .console-date-picker {
+  flex: 1 1 28rem;
+}
+
+html[data-console-theme] .console-usage-toolbar .console-date-native {
+  width: auto;
+  flex: 1 1 16rem;
 }
 
 html[data-console-theme] .console-usage-toolbar > [data-slot="button"]:last-child {
@@ -3115,18 +3299,25 @@ html[data-console-theme] .console-usage-filter-panel .console-filter-action-layo
 
 html[data-console-theme] .console-usage-filters {
   display: grid;
-  flex: 1;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 56rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   gap: 0.75rem;
 }
 
 html[data-console-theme] .console-usage-reset {
   flex: none;
+  margin-inline-start: auto;
 }
 
 html[data-console-theme] .console-usage-records-panel > [data-slot="card-content"] {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   flex-direction: column;
+  overflow: hidden;
 }
 
 html[data-console-theme] .console-usage-record-tools {
@@ -3139,6 +3330,8 @@ html[data-console-theme] .console-usage-record-tools {
 }
 
 html[data-console-theme] .console-usage-records-panel .console-table-wrap {
+  width: 100%;
+  max-width: 100%;
   border: 0;
   border-radius: 0;
 }
@@ -3156,6 +3349,7 @@ html[data-console-theme] .console-purchase-balance {
 
 html[data-console-theme] .console-purchase-overview > [data-slot="card-content"] {
   display: grid;
+  width: min(100%, 61rem);
   grid-template-columns: minmax(16rem, 0.85fr) minmax(0, 1.4fr) 12rem;
   align-items: center;
   gap: 1.5rem;
@@ -3326,13 +3520,17 @@ html[data-console-theme] .console-purchase-minimum {
 
 html[data-console-theme] .console-purchase-amounts {
   display: grid;
+  width: 100%;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.5rem;
 }
 
 html[data-console-theme] .console-purchase-amounts [data-slot="toggle"] {
   position: relative;
+  width: 100%;
   min-height: 2.75rem;
+  justify-content: center;
+  padding-inline: 0.75rem;
   border: var(--border-width) solid var(--border-muted);
   border-radius: var(--radius-md);
   color: var(--foreground);
@@ -3359,15 +3557,21 @@ html[data-console-theme] .console-purchase-amounts [data-slot="toggle"].is-selec
   opacity: 1;
 }
 
-html[data-console-theme] .console-purchase-custom-input {
-  display: flex;
-  align-items: center;
-  padding-inline-start: 0.875rem;
+html[data-console-theme] [data-slot="number-field"].console-purchase-custom-input {
+  width: 100%;
+  min-height: 2.75rem;
+  border-color: var(--border-strong);
+  background: var(--background);
 }
 
-html[data-console-theme] .console-purchase-custom-input > span {
-  color: var(--foreground-muted);
+html[data-console-theme] [data-slot="number-field"].console-purchase-custom-input:hover {
+  border-color: var(--border-emphasis);
+}
+
+html[data-console-theme] .console-purchase-custom-input [data-slot="number-field-input"],
+html[data-console-theme] .console-purchase-custom-input [data-slot="number-field-overlay"] {
   font-family: var(--wayx-font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 html[data-console-theme] .console-purchase-checkout .console-payment-methods {
@@ -3453,15 +3657,6 @@ html[data-console-theme] .console-purchase-review dt {
 html[data-console-theme] .console-purchase-review dd {
   color: var(--foreground-intense);
   font-weight: 600;
-}
-
-html[data-console-theme] .console-purchase-security {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-  color: var(--foreground-muted);
-  font-size: var(--text-xs);
 }
 
 html[data-console-theme] .console-purchase-submit,
@@ -3557,7 +3752,6 @@ html[data-console-theme] .console-sidebar-overlay {
 @media (max-width: 80rem) {
   html[data-console-theme] .console-stat-grid,
   html[data-console-theme] .console-dashboard-metrics,
-  html[data-console-theme] .console-usage-stats,
   html[data-console-theme] .console-monitor-overview,
   html[data-console-theme] .console-redeem-summary-metrics,
   html[data-console-theme] .console-affiliate-metrics,
@@ -3568,8 +3762,7 @@ html[data-console-theme] .console-sidebar-overlay {
   html[data-console-theme] .console-table-page-toolbar,
   html[data-console-theme] .console-dashboard-quick-actions,
   html[data-console-theme] .console-orders-toolbar,
-  html[data-console-theme] .console-monitor-toolbar,
-  html[data-console-theme] .console-usage-toolbar {
+  html[data-console-theme] .console-monitor-toolbar {
     align-items: stretch;
     flex-direction: column;
   }
@@ -3685,6 +3878,18 @@ html[data-console-theme] .console-sidebar-overlay {
     grid-template-columns: 1fr;
   }
 
+  html[data-console-theme] .console-monitor-master-detail,
+  html[data-console-theme] .console-monitor-master,
+  html[data-console-theme] .console-monitor-inspector {
+    height: auto;
+    min-height: 0;
+  }
+
+  html[data-console-theme] .console-monitor-master > [data-slot="card-content"],
+  html[data-console-theme] .console-monitor-inspector > [data-slot="card-content"] {
+    overflow: visible;
+  }
+
   html[data-console-theme] .console-purchase-overview > [data-slot="card-content"],
   html[data-console-theme] .console-purchase-checkout > [data-slot="card-content"] {
     grid-template-columns: 1fr;
@@ -3696,9 +3901,13 @@ html[data-console-theme] .console-sidebar-overlay {
 }
 
 @media (max-width: 47.5rem) {
+  html[data-console-theme] {
+    --console-page-gutter: 1rem;
+  }
+
   html[data-console-theme] .console-header {
     gap: 0.5rem;
-    padding-inline: 1rem;
+    padding-inline: var(--console-page-gutter);
   }
 
   html[data-console-theme] .console-header-left {
@@ -3730,11 +3939,7 @@ html[data-console-theme] .console-sidebar-overlay {
   }
 
   html[data-console-theme] .console-page {
-    width: 100%;
-  }
-
-  html[data-console-theme] .console-page {
-    padding: 1rem;
+    padding: 1rem var(--console-page-gutter);
   }
 
   html[data-console-theme] [data-slot="card"].console-panel {
@@ -4585,7 +4790,11 @@ html[data-console-theme] .console-token-activity-months strong {
 }
 
 html[data-console-theme] .console-usage-stats .console-stat {
+  width: 100%;
+  max-width: 100%;
   min-height: 7.5rem;
+  padding: 1rem;
+  overflow: hidden;
 }
 
 html[data-console-theme] .console-usage-stats .console-stat > div {
@@ -4598,12 +4807,16 @@ html[data-console-theme] .console-usage-stats .console-stat > div > span {
   gap: 0.375rem;
 }
 
+html[data-console-theme] .console-usage-stats .console-stat strong {
+  margin-top: 0.5rem;
+}
+
 html[data-console-theme] .console-usage-token-summary {
   display: flex;
   min-width: 0;
   flex-wrap: wrap;
   gap: 0.375rem 0.75rem;
-  margin-top: 0.625rem;
+  margin-top: 0.5rem;
 }
 
 html[data-console-theme] .console-usage-token-summary span {
@@ -4622,11 +4835,21 @@ html[data-console-theme] .console-usage-token-summary b {
 }
 
 html[data-console-theme] .console-usage-chart-grid > [data-slot="card"] > [data-slot="card-content"] {
+  min-width: 0;
+  max-width: 100%;
   min-height: 19rem;
+}
+
+html[data-console-theme] .console-usage-chart-grid > [data-slot="card"] {
+  container: usage-chart-card / inline-size;
 }
 
 html[data-console-theme] .console-usage-chart-grid .console-distribution-body {
   grid-template-columns: 10rem minmax(0, 1fr);
+}
+
+html[data-console-theme] .console-usage-chart-grid .console-distribution-table > div {
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.7fr) minmax(0, 0.8fr) minmax(4.75rem, 0.9fr);
 }
 
 html[data-console-theme] .console-group-distribution-list {
@@ -4686,6 +4909,8 @@ html[data-console-theme] .console-group-distribution-list > div > i > b {
 
 html[data-console-theme] .console-usage-filter-panel .console-filter-action-layout {
   min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
 }
 
 html[data-console-theme] .console-usage-records-panel .console-table {
@@ -4700,6 +4925,10 @@ html[data-console-theme] .console-usage-records-panel .console-table td {
 
 html[data-console-theme] .console-usage-records-panel .console-table td {
   height: 5.5rem;
+}
+
+html[data-console-theme] .console-usage-records-panel .console-table td:not(:has(button, a, input, select, textarea, [role="button"])) {
+  overflow: hidden;
 }
 
 html[data-console-theme] .console-usage-records-panel [data-column="created_at"] {
@@ -4742,9 +4971,13 @@ html[data-console-theme] .console-usage-time,
 html[data-console-theme] .console-usage-key-endpoint,
 html[data-console-theme] .console-usage-model-group,
 html[data-console-theme] .console-usage-type-billing,
+html[data-console-theme] .console-key-name,
+html[data-console-theme] .console-model-chain,
+html[data-console-theme] .console-ip,
 html[data-console-theme] .console-token-cell {
   display: flex;
   min-width: 0;
+  max-width: 100%;
   flex-direction: column;
   gap: 0.375rem;
 }
@@ -4785,10 +5018,6 @@ html[data-console-theme] .console-usage-key-endpoint code {
   font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-html[data-console-theme] .console-usage-key-endpoint .console-copy {
-  flex: none;
 }
 
 html[data-console-theme] .console-usage-model-group [data-slot="badge"] {
@@ -4840,9 +5069,59 @@ html[data-console-theme] .console-latency {
   font-variant-numeric: tabular-nums;
 }
 
+html[data-console-theme] .console-latency {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+
+html[data-console-theme] .console-latency-divider {
+  color: var(--foreground-subtle);
+}
+
 html[data-console-theme] .console-cost-cell strong,
 html[data-console-theme] .console-latency strong {
   color: var(--foreground-intense);
+}
+
+@container usage-chart-card (max-width: 32rem) {
+  html[data-console-theme] .console-usage-chart-grid .console-distribution-body {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-console-theme] .console-usage-chart-grid .console-donut-wrap {
+    width: 10rem;
+  }
+}
+
+@container usage-page (max-width: 72rem) {
+  html[data-console-theme] .console-usage-chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@container usage-page (max-width: 64rem) {
+  html[data-console-theme] .console-usage-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container usage-page (max-width: 42rem) {
+  html[data-console-theme] .console-usage-stats {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-console-theme] .console-usage-toolbar .console-date-picker {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+
+  html[data-console-theme] .console-usage-toolbar > [data-slot="button"] {
+    flex: 1 1 8rem;
+    margin-inline-start: 0;
+  }
 }
 
 @media (max-width: 80rem) {
@@ -4967,22 +5246,16 @@ html[data-console-theme] .console-latency strong {
 
 /* Account benefit pages */
 
-html[data-console-theme] .console-redeem-wallet .is-dark,
-html[data-console-theme] .console-redeem-gift .is-dark,
 html[data-console-theme] .console-affiliate-balance-art .is-dark,
 html[data-console-theme] .console-affiliate-invite-art .is-dark {
   display: none;
 }
 
-html[data-console-theme="dark"] .console-redeem-wallet .is-light,
-html[data-console-theme="dark"] .console-redeem-gift .is-light,
 html[data-console-theme="dark"] .console-affiliate-balance-art .is-light,
 html[data-console-theme="dark"] .console-affiliate-invite-art .is-light {
   display: none;
 }
 
-html[data-console-theme="dark"] .console-redeem-wallet .is-dark,
-html[data-console-theme="dark"] .console-redeem-gift .is-dark,
 html[data-console-theme="dark"] .console-affiliate-balance-art .is-dark,
 html[data-console-theme="dark"] .console-affiliate-invite-art .is-dark {
   display: block;
@@ -5006,7 +5279,7 @@ html[data-console-theme] .console-redeem-summary-metrics {
   min-height: 9rem;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: stretch;
-  padding: 1rem 13rem 1rem 0.75rem;
+  padding: 1rem 0.75rem;
 }
 
 html[data-console-theme] .console-redeem-summary-metrics > div {
@@ -5049,28 +5322,6 @@ html[data-console-theme] .console-redeem-summary-metrics strong {
 html[data-console-theme] .console-redeem-summary-metrics > div > span {
   color: var(--foreground-subtle);
   font-size: var(--text-xs);
-}
-
-html[data-console-theme] .console-redeem-wallet {
-  position: absolute;
-  z-index: 0;
-  top: 0;
-  right: 0;
-  display: block;
-  width: 13rem;
-  height: 100%;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-html[data-console-theme] .console-redeem-wallet img {
-  position: absolute;
-  top: 50%;
-  right: 0.5rem;
-  width: 12rem;
-  height: 8rem;
-  transform: translateY(-50%);
-  object-fit: contain;
 }
 
 html[data-console-theme] .console-redeem-grid {
@@ -5231,29 +5482,23 @@ html[data-console-theme] .console-redeem-info-list small {
   line-height: 1.4;
 }
 
-html[data-console-theme] .console-redeem-gift {
-  display: block;
-  width: 10rem;
-  height: 7rem;
-  margin: 1rem auto 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-html[data-console-theme] .console-redeem-gift img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
 html[data-console-theme] .console-redeem-support {
   display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  margin-top: 0.75rem;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: var(--border-width) solid var(--border-muted);
   color: var(--foreground-muted);
   font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-redeem-support > :last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 html[data-console-theme] .console-redeem-support a {
@@ -5353,6 +5598,57 @@ html[data-console-theme] .console-redeem-history-list > div > b {
   font-weight: 650;
   text-align: right;
   white-space: nowrap;
+}
+
+@media (min-width: 64.0625rem) {
+  html[data-console-theme] .console-workspace > main:has(> .console-redeem-page) {
+    height: calc(100svh - 6.9375rem);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html[data-console-theme] .console-redeem-page {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  html[data-console-theme] .console-redeem-page > .console-redeem-summary {
+    flex: none;
+  }
+
+  html[data-console-theme] .console-redeem-page > .console-redeem-grid {
+    min-height: 0;
+    flex: 1;
+  }
+
+  html[data-console-theme] .console-redeem-history {
+    height: 100%;
+    min-height: 0;
+  }
+
+  html[data-console-theme] .console-redeem-history > [data-slot="card-content"],
+  html[data-console-theme] .console-redeem-history .console-panel-body {
+    height: 100%;
+    min-height: 0;
+  }
+
+  html[data-console-theme] .console-redeem-history .console-panel-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  html[data-console-theme] .console-redeem-history-head {
+    flex: none;
+  }
+
+  html[data-console-theme] .console-redeem-history-list {
+    min-height: 0;
+    flex: 1;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
 }
 
 html[data-console-theme] .console-affiliate-layout {
@@ -5667,7 +5963,6 @@ html[data-console-theme] .console-monitor-overview.is-loading .console-monitor-o
 @media (max-width: 80rem) {
   html[data-console-theme] .console-redeem-summary-metrics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    padding-right: 11rem;
   }
 
   html[data-console-theme] .console-redeem-summary-metrics > div:nth-child(4) {
@@ -5677,14 +5972,6 @@ html[data-console-theme] .console-monitor-overview.is-loading .console-monitor-o
   html[data-console-theme] .console-redeem-summary-metrics > div:nth-child(n + 4) {
     padding-top: 0.75rem;
     border-top: var(--border-width) solid var(--border-muted);
-  }
-
-  html[data-console-theme] .console-redeem-wallet {
-    width: 11rem;
-  }
-
-  html[data-console-theme] .console-redeem-wallet img {
-    width: 10rem;
   }
 
   html[data-console-theme] .console-affiliate-layout {
@@ -5706,6 +5993,10 @@ html[data-console-theme] .console-monitor-overview.is-loading .console-monitor-o
     border-inline-start: 0;
   }
 
+  html[data-console-theme] .console-redeem-summary-metrics > div:nth-child(even) {
+    border-inline-start: var(--border-width) solid var(--border-muted);
+  }
+
   html[data-console-theme] .console-redeem-summary-metrics > div:nth-child(n + 3) {
     padding-top: 0.75rem;
     border-top: var(--border-width) solid var(--border-muted);
@@ -5715,7 +6006,6 @@ html[data-console-theme] .console-monitor-overview.is-loading .console-monitor-o
 @media (max-width: 47.5rem) {
   html[data-console-theme] .console-redeem-summary-metrics {
     grid-template-columns: 1fr;
-    padding-right: 0.75rem;
   }
 
   html[data-console-theme] .console-redeem-summary-metrics > div:nth-child(n) {
@@ -5726,10 +6016,6 @@ html[data-console-theme] .console-monitor-overview.is-loading .console-monitor-o
 
   html[data-console-theme] .console-redeem-summary-metrics > div:first-child {
     border-top: 0;
-  }
-
-  html[data-console-theme] .console-redeem-wallet {
-    display: none;
   }
 
   html[data-console-theme] .console-affiliate-share .console-panel-body {
@@ -6194,16 +6480,6 @@ html[data-console-theme] .console-subscriptions-page > [data-slot="card"] > [dat
     grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   }
 
-  html[data-console-theme] .console-usage-toolbar {
-    display: grid;
-    grid-template-columns: minmax(12rem, 1fr) repeat(3, auto);
-    align-items: center;
-  }
-
-  html[data-console-theme] .console-usage-toolbar > [data-slot="button"]:last-child {
-    margin-inline-start: 0;
-  }
-
   html[data-console-theme] .console-profile-layout {
     grid-template-columns: 1fr;
   }
@@ -6228,17 +6504,8 @@ html[data-console-theme] .console-subscriptions-page > [data-slot="card"] > [dat
     grid-template-columns: 1fr;
   }
 
-  html[data-console-theme] .console-dashboard-quick-actions,
-  html[data-console-theme] .console-usage-toolbar {
+  html[data-console-theme] .console-dashboard-quick-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  html[data-console-theme] .console-usage-toolbar > :first-child {
-    grid-column: 1 / -1;
-  }
-
-  html[data-console-theme] .console-usage-toolbar > [data-slot="button"]:last-child {
-    grid-column: 1 / -1;
   }
 
   html[data-console-theme] .console-profile-protection .console-security-card {
@@ -6857,5 +7124,545 @@ html[data-console-theme] .console-config-file footer {
     width: 2.5rem;
     padding-inline: 0;
     justify-content: center;
+  }
+}
+
+/* Stable loading geometry */
+
+html[data-console-theme] .console-skeleton {
+  display: block;
+  max-width: 100%;
+}
+
+html[data-console-theme] .console-table-skeleton {
+  min-width: 0;
+}
+
+html[data-console-theme] .console-table-skeleton [data-slot="table-head"] [data-slot="skeleton"] {
+  width: 58%;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-table-skeleton [data-slot="table-cell"] [data-slot="skeleton"] {
+  width: 76%;
+  height: 0.875rem;
+}
+
+html[data-console-theme] .console-table-skeleton [data-slot="table-cell"]:nth-child(3n) [data-slot="skeleton"] {
+  width: 52%;
+}
+
+html[data-console-theme] .console-table-skeleton-pagination {
+  border-top: var(--border-width) solid var(--border-muted);
+}
+
+html[data-console-theme] .console-table-skeleton-pagination > [data-slot="skeleton"] {
+  width: 8rem;
+  height: 0.875rem;
+}
+
+html[data-console-theme] .console-table-skeleton-pagination > div > [data-slot="skeleton"] {
+  width: 6.5rem;
+  height: 2.5rem;
+}
+
+html[data-console-theme] .console-purchase-overview {
+  width: 100%;
+  min-height: 10.5rem;
+}
+
+html[data-console-theme] .console-purchase-overview-art {
+  display: block;
+  height: 8rem;
+  object-fit: contain;
+}
+
+html[data-console-theme] .console-purchase-tabs-skeleton {
+  width: 8rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-purchase-overview-skeleton .console-purchase-overview-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.375rem;
+}
+
+html[data-console-theme] .console-purchase-overview-skeleton .console-purchase-overview-copy > [data-slot="skeleton"]:nth-child(1) {
+  width: 5rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-purchase-overview-skeleton .console-purchase-overview-copy > [data-slot="skeleton"]:nth-child(2) {
+  width: 8rem;
+  height: 1.75rem;
+}
+
+html[data-console-theme] .console-purchase-overview-skeleton .console-purchase-overview-copy > [data-slot="skeleton"]:nth-child(3) {
+  width: 11rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-purchase-overview-skeleton .console-purchase-overview-metric > [data-slot="skeleton"]:first-child {
+  width: 4.5rem;
+  height: 0.625rem;
+}
+
+html[data-console-theme] .console-purchase-overview-skeleton .console-purchase-overview-metric > [data-slot="skeleton"]:last-child {
+  width: 6rem;
+  height: 1.25rem;
+}
+
+html[data-console-theme] .console-purchase-overview-skeleton [data-slot="skeleton"].console-purchase-overview-art {
+  width: 12rem;
+  height: 8rem;
+  border-radius: var(--radius-lg);
+}
+
+html[data-console-theme] .console-purchase-step-skeleton {
+  display: grid;
+  min-height: 15rem;
+  align-content: start;
+  gap: 0.75rem;
+}
+
+html[data-console-theme] .console-purchase-step-skeleton .console-purchase-step-title > [data-slot="skeleton"]:first-child {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+}
+
+html[data-console-theme] .console-purchase-step-skeleton .console-purchase-step-title > [data-slot="skeleton"]:last-child {
+  width: 5rem;
+  height: 0.875rem;
+}
+
+html[data-console-theme] .console-purchase-step-skeleton > [data-slot="skeleton"] {
+  width: 100%;
+  height: 0.875rem;
+}
+
+html[data-console-theme] .console-purchase-step-skeleton > [data-slot="skeleton"]:nth-child(3n) {
+  width: 72%;
+}
+
+html[data-console-theme] .console-purchase-loading [data-slot="skeleton"].console-purchase-submit {
+  width: 100%;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-purchase-loading [data-slot="skeleton"].console-purchase-history {
+  width: 7rem;
+  height: 0.75rem;
+  justify-self: center;
+}
+
+html[data-console-theme] .console-key-usage-skeleton .console-detail-summary [data-slot="skeleton"]:first-child {
+  width: 6rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-key-usage-skeleton .console-detail-summary [data-slot="skeleton"]:last-child {
+  width: 8rem;
+  height: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+html[data-console-theme] .console-key-usage-skeleton > [data-slot="skeleton"] {
+  width: 100%;
+  height: 14rem;
+}
+
+html[data-console-theme] .console-key-usage-results-skeleton .console-key-status > [data-slot="skeleton"]:first-child {
+  width: 5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+}
+
+html[data-console-theme] .console-key-usage-results-skeleton .console-key-status > [data-slot="skeleton"]:last-child,
+html[data-console-theme] .console-key-usage-results-skeleton .console-public-quota > [data-slot="skeleton"]:first-child,
+html[data-console-theme] .console-key-usage-results-skeleton .console-key-query-summary > [data-slot="skeleton"]:first-child {
+  width: 7rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-key-usage-results-skeleton .console-public-quota > [data-slot="skeleton"]:nth-child(2),
+html[data-console-theme] .console-key-usage-results-skeleton .console-key-query-summary > [data-slot="skeleton"]:nth-child(2) {
+  width: 10rem;
+  height: 1.5rem;
+}
+
+html[data-console-theme] .console-key-usage-results-skeleton .console-public-quota > [data-slot="skeleton"]:last-child,
+html[data-console-theme] .console-key-usage-results-skeleton .console-key-query-summary > [data-slot="skeleton"]:last-child {
+  width: 80%;
+  height: 0.625rem;
+}
+
+html[data-console-theme] [data-slot="skeleton"].console-key-usage-chart-skeleton {
+  width: 100%;
+  height: 14rem;
+}
+
+html[data-console-theme] .console-redeem-history-skeleton > div > [data-slot="skeleton"]:first-child {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-redeem-history-skeleton > div > [data-slot="skeleton"] {
+  width: 78%;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-redeem-history-skeleton > div > [data-slot="skeleton"]:last-child {
+  justify-self: end;
+}
+
+html[data-console-theme] .console-redeem-history-skeleton > div > span > [data-slot="skeleton"] {
+  width: 72%;
+  height: 0.875rem;
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-channel-head {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) 5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-channel-head > [data-slot="skeleton"]:first-child {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-lg);
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-channel-head > [data-slot="skeleton"]:last-child {
+  width: 5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-channel-head > div,
+html[data-console-theme] .console-channel-card-skeleton .console-pricing-list > span {
+  display: grid;
+  gap: 0.375rem;
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-channel-head > div [data-slot="skeleton"]:first-child {
+  width: 10rem;
+  height: 1rem;
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-channel-head > div [data-slot="skeleton"]:last-child {
+  width: 14rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-channel-groups {
+  margin-block: 1rem;
+  padding-block: 1rem;
+  border-block: var(--border-width) solid var(--border-muted);
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-channel-groups > [data-slot="skeleton"] {
+  width: 5rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-chip-list > [data-slot="skeleton"] {
+  width: 7rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-model-cards > div {
+  display: grid;
+  min-height: 5rem;
+  grid-template-columns: minmax(8rem, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem;
+  border: var(--border-width) solid var(--border-muted);
+  border-radius: var(--radius-lg);
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-model-cards > div > div:first-child,
+html[data-console-theme] .console-channel-card-skeleton .console-pricing-list {
+  display: grid;
+  gap: 0.375rem;
+}
+
+html[data-console-theme] .console-channel-card-skeleton .console-model-cards [data-slot="skeleton"] {
+  width: 6rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-skeleton-heading {
+  width: 9rem;
+  height: 1.25rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-skeleton-kicker,
+html[data-console-theme] .console-affiliate-loading .console-affiliate-skeleton-note {
+  width: 7rem;
+  height: 0.625rem;
+  margin-top: 1.25rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-skeleton-value {
+  width: 10rem;
+  height: 2.5rem;
+  margin-top: 0.5rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-skeleton-copy {
+  width: min(100%, 18rem);
+  height: 0.75rem;
+  margin-top: 1rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-skeleton-button {
+  width: 100%;
+  height: 2.5rem;
+  margin-top: 1.25rem;
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-metrics [data-slot="skeleton"] {
+  width: 2rem;
+  height: 2rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-metrics span [data-slot="skeleton"] {
+  width: 8rem;
+  height: 0.625rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-metrics span [data-slot="skeleton"] + [data-slot="skeleton"] {
+  width: 5rem;
+  margin-top: 0.25rem;
+}
+
+html[data-console-theme] .console-affiliate-loading [data-slot="skeleton"].console-affiliate-balance-art,
+html[data-console-theme] .console-affiliate-loading [data-slot="skeleton"].console-affiliate-invite-art {
+  border-radius: var(--radius-xl);
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-links > label > [data-slot="skeleton"] {
+  width: 5rem;
+  height: 0.625rem;
+  margin-bottom: 0.375rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-links > label > div > [data-slot="skeleton"]:first-child {
+  width: 100%;
+  height: 2.5rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-links > label > div > [data-slot="skeleton"]:last-child {
+  width: 4rem;
+  height: 2.5rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-steps [data-slot="skeleton"] {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-steps span [data-slot="skeleton"] {
+  width: 7rem;
+  height: 0.625rem;
+}
+
+html[data-console-theme] .console-affiliate-loading .console-affiliate-steps span [data-slot="skeleton"] + [data-slot="skeleton"] {
+  width: 9rem;
+  margin-top: 0.375rem;
+}
+
+html[data-console-theme] .console-subscriptions-loading .console-subscriptions-toolbar p > [data-slot="skeleton"] {
+  width: 8rem;
+  height: 0.875rem;
+}
+
+html[data-console-theme] .console-subscriptions-loading .console-subscriptions-toolbar .console-panel-body > div > [data-slot="skeleton"] {
+  width: 7rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-subscriptions-loading .console-subscriptions-ledger-head > [data-slot="skeleton"] {
+  width: 9rem;
+  height: 1rem;
+}
+
+html[data-console-theme] .console-subscriptions-loading .console-subscriptions-table-wrap .console-table {
+  min-width: 68rem;
+}
+
+html[data-console-theme] .console-subscriptions-loading .console-subscriptions-ledger > [data-slot="card-content"] > footer > [data-slot="skeleton"] {
+  width: 20rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-subscriptions-loading .console-subscriptions-ledger > [data-slot="card-content"] > footer > div [data-slot="skeleton"] {
+  width: 4rem;
+  height: 1.25rem;
+  border-radius: var(--radius-full);
+}
+
+html[data-console-theme] .console-image-controls-skeleton {
+  display: grid;
+  gap: 1rem;
+}
+
+html[data-console-theme] .console-image-controls-skeleton > section > div,
+html[data-console-theme] .console-image-controls-skeleton .console-image-parameter-grid > div {
+  display: grid;
+  gap: 0.375rem;
+}
+
+html[data-console-theme] .console-image-controls-skeleton > section > div > [data-slot="skeleton"]:first-child,
+html[data-console-theme] .console-image-controls-skeleton .console-image-parameter-grid > div > [data-slot="skeleton"]:first-child {
+  width: 5rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-image-controls-skeleton > section > div > [data-slot="skeleton"]:last-child,
+html[data-console-theme] .console-image-controls-skeleton .console-image-parameter-grid > div > [data-slot="skeleton"]:last-child {
+  width: 100%;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-image-controls-skeleton [data-slot="skeleton"].console-image-reset {
+  width: 6rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-markdown-skeleton {
+  min-height: 28rem;
+  padding: 1.25rem;
+}
+
+html[data-console-theme] .console-markdown-skeleton aside,
+html[data-console-theme] .console-markdown-skeleton article {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+html[data-console-theme] .console-markdown-skeleton aside [data-slot="skeleton"] {
+  width: 70%;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-markdown-skeleton article [data-slot="skeleton"] {
+  width: 100%;
+  height: 0.875rem;
+}
+
+html[data-console-theme] .console-markdown-skeleton article [data-slot="skeleton"]:nth-child(3n) {
+  width: 82%;
+}
+
+html[data-console-theme] .console-markdown-skeleton article [data-slot="skeleton"].is-heading {
+  width: 45%;
+  height: 1.5rem;
+  margin-top: 0.75rem;
+}
+
+html[data-console-theme] .console-distribution-skeleton-chart {
+  width: min(100%, 12rem);
+  aspect-ratio: 1;
+  justify-self: center;
+  border-radius: var(--radius-full);
+}
+
+html[data-console-theme] .console-distribution-skeleton .console-distribution-table [data-slot="skeleton"] {
+  width: 72%;
+  height: 0.625rem;
+  margin-inline-start: auto;
+}
+
+html[data-console-theme] .console-distribution-skeleton .console-distribution-table span:first-child [data-slot="skeleton"] {
+  width: 84%;
+  margin-inline: 0;
+}
+
+html[data-console-theme] .console-trend-skeleton .console-trend-plot {
+  display: block;
+}
+
+html[data-console-theme] .console-trend-skeleton .console-trend-plot > [data-slot="skeleton"] {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-lg);
+}
+
+html[data-console-theme] .console-trend-skeleton .console-chart-labels [data-slot="skeleton"] {
+  width: 2.5rem;
+  height: 0.625rem;
+  margin-inline: auto;
+}
+
+html[data-console-theme] .console-trend-skeleton .console-chart-legend [data-slot="skeleton"]:first-child {
+  width: 1rem;
+  height: calc(var(--border-width) * 2);
+}
+
+html[data-console-theme] .console-trend-skeleton .console-chart-legend [data-slot="skeleton"]:last-child {
+  width: 4rem;
+  height: 0.625rem;
+}
+
+html[data-console-theme] .console-group-distribution-skeleton > div > span [data-slot="skeleton"] {
+  width: 7rem;
+  height: 0.75rem;
+}
+
+html[data-console-theme] .console-group-distribution-skeleton > div > span [data-slot="skeleton"]:last-child {
+  width: 5rem;
+}
+
+html[data-console-theme] .console-group-distribution-skeleton > div > [data-slot="skeleton"] {
+  width: 100%;
+  height: 0.375rem;
+  border-radius: var(--radius-full);
+}
+
+@media (max-width: 64rem) {
+  html[data-console-theme] .console-channel-card-skeleton .console-model-cards > div {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-console-theme] .console-markdown-skeleton {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 47.5rem) {
+  html[data-console-theme] .console-purchase-overview {
+    min-height: 0;
+  }
+
+  html[data-console-theme] .console-purchase-overview-skeleton [data-slot="skeleton"].console-purchase-overview-art {
+    width: min(100%, 12rem);
+  }
+
+  html[data-console-theme] .console-channel-card-skeleton .console-channel-head {
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+  }
+
+  html[data-console-theme] .console-channel-card-skeleton .console-channel-head > [data-slot="skeleton"]:last-child {
+    grid-column: 1 / -1;
   }
 }

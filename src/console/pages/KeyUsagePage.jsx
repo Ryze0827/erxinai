@@ -4,7 +4,7 @@ import { usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, DataTable, EmptyState, ErrorState, Field, IconButton, LineChart, Panel, ProgressBar, Spinner, StatusBadge, TextInput, ThemeToggle } from "../UI";
+import { Button, DataTable, EmptyState, ErrorState, Field, IconButton, LineChart, Panel, ProgressBar, Skeleton, StatusBadge, TableSkeleton, TextInput, ThemeToggle } from "../UI";
 import { CompactTabs } from "../components/ConsoleControls";
 import { dateInput, formatDuration, formatTokenMillions, formatTokenMillionsFixed, safeExternalUrl, statusLabel } from "../utils";
 
@@ -132,7 +132,7 @@ function KeyUsageResults({ data, range, dailyDays, setDailyDays, dailyColumns, m
 }
 
 function KeyUsageState({ state, onRetry, resultProps }) {
-  if (state.loading) return <Panel><Spinner /></Panel>;
+  if (state.loading) return <div className="console-key-usage-results console-key-usage-results-skeleton" aria-hidden="true"><div className="console-key-status"><Skeleton /><Skeleton /></div><div className="console-grid console-grid--3">{Array.from({ length: 3 }, (_, index) => <Panel key={index}><div className="console-panel-body console-public-quota"><Skeleton /><Skeleton /><Skeleton /></div></Panel>)}</div><div className="console-grid console-grid--sidebar"><Panel><Skeleton className="console-key-usage-chart-skeleton" /></Panel><Panel><div className="console-panel-body console-key-query-summary"><Skeleton /><Skeleton /><Skeleton /></div></Panel></div><Panel><TableSkeleton columns={7} rows={3} pagination={false} /></Panel></div>;
   if (state.error) return <Panel><ErrorState message={state.error} onRetry={onRetry} /></Panel>;
   if (!state.data) return null;
   return <KeyUsageResults data={state.data} {...resultProps} />;

@@ -1,10 +1,19 @@
 import { useCallback, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { Button } from "@appica/ui-react/button";
 import { authApi } from "../api/auth";
 import { persistAuthResponse } from "../api/session";
 import { AgreementPrompt, useAgreement } from "./AgreementPrompt";
-import { AuthCard, AuthLayout } from "./AuthLayout";
-import { AuthField, AuthNotice, PasswordInput, SubmitButton, TextInput, TotpForm } from "./AuthControls";
+import {
+  AppicaAuthCard,
+  AppicaAuthField,
+  AppicaAuthLayout,
+  AppicaAuthNotice,
+  AppicaEmailInput,
+  AppicaPasswordInput,
+  AppicaSubmitButton,
+  AppicaTotpForm,
+} from "./AppicaAuth";
 import { getErrorMessage, isEmail, safeAuthRedirect } from "./authUtils";
 import { OAuthButtons } from "./OAuthButtons";
 import { TurnstileWidget } from "./TurnstileWidget";
@@ -85,30 +94,30 @@ export function LoginPage() {
   const footer = settings?.backend_mode_enabled ? null : <><span>New to WayX?</span> <Link to="/register">Create an account</Link></>;
 
   return (
-    <AuthLayout>
-      <AuthCard kicker="Welcome back" title="Log in to WayX" description="Pick up exactly where your last request left off." footer={footer}>
+    <AppicaAuthLayout>
+      <AppicaAuthCard kicker="Welcome back" title="Log in to WayX" description="Pick up exactly where your last request left off." footer={footer}>
         {totp ? (
-          <TotpForm loading={loading} error={error} email={totp.user_email_masked} onSubmit={handleTotp} onCancel={() => { setTotp(null); setError(""); }} />
+          <AppicaTotpForm loading={loading} error={error} email={totp.user_email_masked} onSubmit={handleTotp} onCancel={() => { setTotp(null); setError(""); }} />
         ) : (
-          <form className="auth-form" onSubmit={handleSubmit} noValidate>
-            <AuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error}</AuthNotice>
-            {settingsError && <button className="auth-link-button" type="button" onClick={retry}>Retry loading settings</button>}
-            <AuthField label="Email address" error={errors.email}>
-              <TextInput type="email" value={form.email} onChange={(event) => updateForm("email", event.target.value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
-            </AuthField>
-            <AuthField label="Password" error={errors.password}>
-              <PasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder="Enter your password" />
-            </AuthField>
-            <div className="auth-form-row auth-form-row--end">
-              {settings?.password_reset_enabled && <Link className="auth-text-link" to="/forgot-password">Forgot password?</Link>}
+          <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
+            <AppicaAuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error}</AppicaAuthNotice>
+            {settingsError && <Button className="w-fit" variant="ghost" size="sm" type="button" onClick={retry}>Retry loading settings</Button>}
+            <AppicaAuthField label="Email address" error={errors.email}>
+              <AppicaEmailInput type="email" value={form.email} onChange={(event) => updateForm("email", event.target.value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
+            </AppicaAuthField>
+            <AppicaAuthField label="Password" error={errors.password}>
+              <AppicaPasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder="Enter your password" />
+            </AppicaAuthField>
+            <div className="flex justify-end">
+              {settings?.password_reset_enabled && <Link className="outline-ring text-foreground-intense rounded-xs text-sm underline-offset-4 hover:underline" to="/forgot-password">Forgot password?</Link>}
             </div>
             <TurnstileWidget enabled={settings?.turnstile_enabled} siteKey={settings?.turnstile_site_key} onToken={handleTurnstileToken} resetKey={turnstileReset} />
             <AgreementPrompt agreement={agreement} />
-            <SubmitButton loading={loading} loadingLabel="Signing in…" disabled={settingsLoading || Boolean(settingsError) || !agreement.accepted || (settings?.turnstile_enabled && !turnstileToken)}>Log in</SubmitButton>
+            <AppicaSubmitButton loading={loading} loadingLabel="Signing in…" disabled={settingsLoading || Boolean(settingsError) || !agreement.accepted || (settings?.turnstile_enabled && !turnstileToken)}>Log in</AppicaSubmitButton>
             {!settings?.backend_mode_enabled && <OAuthButtons settings={settings} searchParams={searchParams} onError={setError} />}
           </form>
         )}
-      </AuthCard>
-    </AuthLayout>
+      </AppicaAuthCard>
+    </AppicaAuthLayout>
   );
 }

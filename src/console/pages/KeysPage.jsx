@@ -6,7 +6,7 @@ import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, ConfirmDialog, CopyButton, DataTable, EmptyState, ErrorState, Field, IconButton, InlineButton, LineChart, Modal, Page, Pagination, Panel, ProgressBar, SelectInput, Spinner, StatusBadge, TextArea, TextInput, Toggle } from "../UI";
+import { Button, ConfirmDialog, CopyButton, DataTable, EmptyState, ErrorState, Field, IconButton, InlineButton, LineChart, Modal, Page, Pagination, Panel, ProgressBar, SelectInput, StatusBadge, TableSkeleton, TextArea, TextInput, Toggle } from "../UI";
 import { formatTokenMillions, maskKey, statusLabel } from "../utils";
 import { ColumnPicker, useHiddenColumns } from "../components/ConsoleControls";
 import { GroupSelect } from "../components/GroupSelect";
@@ -142,7 +142,7 @@ function QuotaSetting({ form, toggle, set, editing, selectedKey, onResetQuota, f
 }
 
 function RateLimitSetting({ form, toggle, set, editing, selectedKey, onResetRate, formatCurrency, locale, t }) {
-  return <SettingBlock title={keyText(locale, "周期限流", "Rolling spend limits")} enabled={form.enable_rate_limit} onToggle={toggle("enable_rate_limit")}><div className="console-form-grid console-form-grid--3"><Field label={t("keys.formRate5h")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_5h} onChange={set("rate_limit_5h")} /></Field><Field label={t("keys.formRate1d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_1d} onChange={set("rate_limit_1d")} /></Field><Field label={t("keys.formRate7d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_7d} onChange={set("rate_limit_7d")} /></Field></div>{editing && <div className="console-edit-rate-preview"><RateLimitCell row={selectedKey} onReset={onResetRate} formatCurrency={formatCurrency} locale={locale} /></div>}</SettingBlock>;
+  return <SettingBlock title={keyText(locale, "周期限额", "Rolling spend limits")} enabled={form.enable_rate_limit} onToggle={toggle("enable_rate_limit")}><div className="console-form-grid console-form-grid--3"><Field label={t("keys.formRate5h")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_5h} onChange={set("rate_limit_5h")} /></Field><Field label={t("keys.formRate1d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_1d} onChange={set("rate_limit_1d")} /></Field><Field label={t("keys.formRate7d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_7d} onChange={set("rate_limit_7d")} /></Field></div>{editing && <div className="console-edit-rate-preview"><RateLimitCell row={selectedKey} onReset={onResetRate} formatCurrency={formatCurrency} locale={locale} /></div>}</SettingBlock>;
 }
 
 function ExpirationSetting({ form, setForm, toggle, pickExpiry, locale, t }) {
@@ -162,7 +162,7 @@ function UsageDetail({ apiKey }) {
   const { locale, formatCurrency, formatNumber } = useLocale();
   const [state, setState] = useState({ loading: true, error: "", items: [] });
   useEffect(() => { let active = true; keysApi.getDailyUsage(apiKey.id, 30).then((result) => active && setState({ loading: false, error: "", items: result.items || [] })).catch((error) => active && setState({ loading: false, error: error.message, items: [] })); return () => { active = false; }; }, [apiKey.id]);
-  if (state.loading) return <Spinner />;
+  if (state.loading) return <div className="console-detail-stack console-key-usage-skeleton" aria-hidden="true"><div className="console-detail-summary">{Array.from({ length: 2 }, (_, index) => <div key={index}><Skeleton /><Skeleton /></div>)}</div><Skeleton /></div>;
   if (state.error) return <ErrorState message={state.error} />;
   return <div className="console-detail-stack"><div className="console-detail-summary"><div><span>{locale === "zh" ? "累计消费" : "Total spend"}</span><strong>{formatCurrency(state.items.reduce((sum, item) => sum + Number(item.actual_cost || 0), 0))}</strong></div><div><span>Token</span><strong>{formatTokenMillions(state.items.reduce((sum, item) => sum + Number(item.total_tokens || 0), 0))}</strong></div></div><LineChart data={state.items} valueKey="total_tokens" /></div>;
 }
@@ -198,8 +198,8 @@ async function persistKey(editor, payload) {
 }
 
 function KeysTableContent({ state, columns, result, sort, setSort, paging, setPaging, load, openCreate, locale, t }) {
-  if (state.loading) return <Spinner />;
-  if (state.error) return <ErrorState message={state.error} onRetry={load} />;
+  if (state.loading && !result.items.length) return <TableSkeleton columns={columns.length} className="console-keys-table-skeleton" />;
+  if (state.error && !result.items.length) return <ErrorState message={state.error} onRetry={load} />;
   const empty = <EmptyState icon="key" title={keyText(locale, "还没有 API 密钥", "No API keys yet")} action={<Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button>} />;
   return <><DataTable className="console-keys-table" columns={columns} rows={result.items} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} empty={empty} /><Pagination page={paging.page} pageSize={paging.pageSize} total={result.total} pages={result.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 }
@@ -298,7 +298,7 @@ export function KeysPage() {
     { key: "last_used_at", label: t("keys.lastUsed"), sortable: true, render: (row) => row.last_used_at ? formatDate(row.last_used_at) : "—" },
     { key: "last_used_ip", label: locale === "zh" ? "最近 IP" : "Last used IP", render: (row) => row.last_used_ip || "—" },
     { key: "created_at", label: locale === "zh" ? "创建时间" : "Created", sortable: true, render: (row) => <span>{formatDate(row.created_at)}</span> },
-    { key: "actions", label: t("common.actions"), align: "right", render: (row) => <div className="console-key-actions"><InlineButton className="console-key-use-action" variant="soft" icon="terminal" data-walkthrough="use-key" aria-label={locale === "zh" ? "使用密钥" : "Use key"} title={locale === "zh" ? "使用密钥" : "Use key"} onClick={() => setDialog({ type: "use", item: row })}>{locale === "zh" ? "使用密钥" : "Use key"}</InlineButton>{settings?.hide_ccs_import_button !== true && <InlineButton icon="upload" aria-label="CC Switch" title="CC Switch" onClick={() => row.group?.platform === "antigravity" ? setDialog({ type: "ccs", item: row }) : importCcs(row)}>CC Switch</InlineButton>}<IconButton icon="edit" label={t("common.edit")} onClick={() => openEdit(row)} /><IconButton icon={row.status === "active" ? "pause" : "play"} label={t("keys.toggle")} onClick={() => updateKey(row, { status: row.status === "active" ? "inactive" : "active" })} /><IconButton icon="trash" label={t("common.delete")} onClick={() => setDialog({ type: "delete", item: row })} /></div> },
+    { key: "actions", label: t("common.actions"), align: "right", render: (row) => <div className="console-key-actions"><InlineButton className="console-key-use-action" variant="soft" icon="terminal" data-walkthrough="use-key" aria-label={locale === "zh" ? "使用密钥" : "Use key"} title={locale === "zh" ? "使用密钥" : "Use key"} onClick={() => setDialog({ type: "use", item: row })}>{locale === "zh" ? "使用密钥" : "Use key"}</InlineButton>{settings?.hide_ccs_import_button !== true && <InlineButton className="console-key-cc-switch-action" icon="upload" aria-label="CC Switch" title="CC Switch" onClick={() => row.group?.platform === "antigravity" ? setDialog({ type: "ccs", item: row }) : importCcs(row)}>CC Switch</InlineButton>}<IconButton icon="edit" label={t("common.edit")} onClick={() => openEdit(row)} /><IconButton icon={row.status === "active" ? "pause" : "play"} label={t("keys.toggle")} onClick={() => updateKey(row, { status: row.status === "active" ? "inactive" : "active" })} /><IconButton icon="trash" label={t("common.delete")} onClick={() => setDialog({ type: "delete", item: row })} /></div> },
   ], [formatCurrency, formatDate, groups, locale, rates, settings, t, usageStats]);
   const columns = allColumns.filter((column) => ["name", "actions"].includes(column.key) || !hidden.has(column.key));
 

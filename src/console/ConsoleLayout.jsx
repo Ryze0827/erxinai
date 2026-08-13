@@ -16,7 +16,7 @@ import { Navigation, NavigationItem, NavigationLink, NavigationList } from "@app
 import { Popover, PopoverContent, PopoverTrigger } from "@appica/ui-react/popover";
 import { announcementsApi, keysApi, subscriptionsApi } from "../api";
 import { getAccessToken } from "../api/session";
-import { applyFavicon, DEFAULT_SITE_LOGO, DEFAULT_SITE_NAME } from "../branding";
+import { DEFAULT_SITE_LOGO, DEFAULT_SITE_NAME } from "../branding";
 import { useConsole, resolveFeature } from "./ConsoleContext";
 import { Icon } from "./Icon";
 import { useLocale } from "./i18n";
@@ -315,7 +315,7 @@ function Walkthrough({ setMobileOpen }) {
   const description = step === 3 && target?.fallback ? t("walkthrough.useKeyFallback") : t(current.description);
   const layer = open && targetReady ? createPortal(<div className="console-tour-layer"><div className="console-tour-capture" aria-hidden="true" /><div className="console-tour-spotlight" style={{ top: target.top, left: target.left, width: target.width, height: target.height }} aria-hidden="true" /><section ref={cardRef} className="console-tour-card" style={position} role="dialog" aria-modal="true" aria-label={t("walkthrough.title")} tabIndex="-1"><header><span>{t("walkthrough.step", { current: step + 1, total: walkthroughSteps.length })}</span><IconButton icon="close" label={t("common.close")} onClick={close} /></header><div className="console-tour-progress" aria-hidden="true">{walkthroughSteps.map((item, index) => <i className={`${index === step ? "is-active" : ""} ${index < step ? "is-complete" : ""}`} key={item.title} />)}</div><div className="console-tour-content"><i><Icon name={current.icon} size={23} /></i><div><h2>{t(current.title)}</h2><p>{description}</p></div></div><footer>{step > 0 ? <Button icon="chevronsLeft" onClick={() => showStep(step - 1)}>{t("walkthrough.previous")}</Button> : <Button onClick={close}>{t("walkthrough.skip")}</Button>}{step < walkthroughSteps.length - 1 ? <Button variant="primary" icon="chevronRight" onClick={() => showStep(step + 1)}>{t("walkthrough.next")}</Button> : <Button variant="primary" icon="check" onClick={close}>{t("walkthrough.finish")}</Button>}</footer></section></div>, document.body) : null;
 
-  return <><InlineButton className="console-header-link console-walkthrough-trigger" icon="external" onClick={() => showStep(0)} aria-haspopup="dialog" aria-expanded={open} title={t("walkthrough.trigger")}>{t("walkthrough.trigger")}</InlineButton>{layer}</>;
+  return <><InlineButton className="console-header-link console-walkthrough-trigger" icon="walkthrough" onClick={() => showStep(0)} aria-haspopup="dialog" aria-expanded={open} title={t("walkthrough.trigger")}>{t("walkthrough.trigger")}</InlineButton>{layer}</>;
 }
 
 function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
@@ -368,10 +368,9 @@ export function ConsoleLayout({ children }) {
   useEffect(() => {
     if (!brandingReady) return;
     document.title = `${title} — ${siteName}`;
-    applyFavicon(logo);
     setMobileOpen(false);
     window.scrollTo({ top: 0, behavior: "auto" });
-  }, [brandingReady, location.pathname, logo, siteName, title]);
+  }, [brandingReady, location.pathname, siteName, title]);
   useEffect(() => {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
@@ -411,7 +410,7 @@ export function ConsoleLayout({ children }) {
     workspaceMotionRef.current?.cancel();
     setSidebarCollapsed((value) => !value);
   };
-  return <BackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <img key={logo} src={logo} alt="" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></BackgroundPattern>;
+  return <BackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <img key={logo} src={logo} alt="" width="31" height="31" decoding="sync" fetchPriority="high" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></BackgroundPattern>;
 }
 
 export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false }) {
@@ -421,8 +420,8 @@ export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnl
   if (!authenticated) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   if (settings?.backend_mode_enabled && user?.role !== "admin") return <Navigate to="/login" replace />;
   if (standardOnly && user?.run_mode === "simple") return <Navigate to="/admin/dashboard" replace />;
-  if (feature && settingsLoading) return <div className="console-standalone"><Spinner /></div>;
-  if (feature && !settingsError && !resolveFeature(settings, feature, mode)) return <Navigate to="/admin/dashboard" replace />;
+  if (feature && settingsLoading && mode === "opt-in") return <div className="console-standalone"><Spinner /></div>;
+  if (feature && !settingsLoading && !settingsError && !resolveFeature(settings, feature, mode)) return <Navigate to="/admin/dashboard" replace />;
   return children;
 }
 

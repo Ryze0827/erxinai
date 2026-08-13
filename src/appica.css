@@ -13,6 +13,15 @@
 }
 
 @font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial");
+  ascent-override: 95.94%;
+  descent-override: 28.16%;
+  line-gap-override: 0%;
+  size-adjust: 104.76%;
+}
+
+@font-face {
   font-family: "Geist Mono";
   font-style: normal;
   font-weight: 100 900;
@@ -27,7 +36,7 @@
 
 :root,
 .light {
-  --wayx-font-sans: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --wayx-font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --wayx-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-sans: var(--wayx-font-sans);
   --font-mono: var(--wayx-font-mono);

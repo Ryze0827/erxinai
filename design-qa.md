@@ -1,520 +1,136 @@
-# Design QA — Black / white glass console
+# Design QA — Appica UI 首页与认证页
 
-## Comparison target
+日期：2026-08-13
 
-- Source visual truth: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-a3999dd1-d934-4e2d-b817-fe7c2b34f468.png`
-- Light implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/console-light-final.png`
-- Dark implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/console-dark-final.png`
-- Scroll-performance implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/console-light-scroll-performance-fixed.png`
-- Focused material comparison: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/glass-material-comparison-final.jpg`
-- State: authenticated desktop dashboard with representative local fixture data
-- Viewport: 1440 × 1000 CSS px
-- Source pixels: 205 × 216
-- Implementation pixels: 1440 × 1000 at 1× density
-- Focus crops: 173 × 174, contained at up to 205 × 216 in the combined comparison
+参考页面：https://appica.dev/ui
 
-## Full-view comparison evidence
+本地页面：http://localhost:5173/
 
-- Light mode retains the homepage fluted landscape as the visible substrate. Top-level glass surfaces refract that image through low-opacity white-green fills, 20px blur, saturation, white specular edges, and a restrained shadow. Nested elements retain the same material anatomy through translucent fills and highlights without stacking additional blur filters. Text remains dark enough to read over both the blue sky and green field.
-- Dark mode uses the same scene as a dimmed monochrome substrate. Smoke-grey panels, silver hairlines, upper-right glare, inset highlights, and softened background transmission reproduce the reference material without copying its content layout.
-- The 1440px dashboard has no horizontal overflow. All six metric cards, header controls, sidebar, charts, and quick actions remain within the viewport.
+## 验收结果
 
-## Focused region comparison evidence
+最终结果：通过。
 
-The combined reference/dark/light card comparison verifies the material at readable scale. The final dark metric card matches the reference's compact radius, smoky charcoal translucency, bright perimeter, pale top/right reflection, light foreground typography, and visible-but-softened substrate. The light variant preserves the same material anatomy while using a translucent white fill and dark foreground for contrast.
+- 首页在 1440 × 900 浅色状态下与参考站保持相同的区块位置和页面高度：页面高度均为 4152 CSS px；Hero 标题、功能区标题、组件区标题和页脚起点完全一致。
+- 390 × 844 移动端保持参考站的标题折行、按钮宽度、点阵背景、横向卡片顺序和首屏尺寸；没有横向溢出。
+- 右上角按产品要求替换为国际化、明暗主题和登录/控制台入口，因此该区域是相对参考站唯一的有意差异。
+- 登录和注册页已使用 Appica UI 的 Card、Field、Input、Button、Badge、Alert、Progress、BackgroundPattern 等组件；桌面和移动端均无横向溢出。
+- 默认主题为 light；浅色/深色切换可用，切换后首页尺寸保持稳定。
+- 内部控制台菜单和路由未纳入本次改动范围。
 
-## Required fidelity surfaces
+## 最终对比证据
 
-- Fonts and typography: console interface copy, headings, and ordinary figures follow the same native UI sans stack as `sub2api`; code-like content follows its native UI monospace stack. Metric weight, large-number hierarchy, compact labels, line height, and tabular figures remain legible in both themes.
-- Spacing and layout rhythm: existing console information architecture is preserved. Glass cards use compact 18px radii and consistent 14–24px gaps; no desktop overflow or unintended wrapping was observed.
-- Colors and visual tokens: both themes now share explicit glass highlight, shade, blur, saturation, border, and elevation tokens. Fluorescent green remains the action/status accent.
-- Image quality and asset fidelity: the existing full-resolution homepage scene is reused directly; no placeholder or recreated background asset is present. The background remains sharp outside surfaces and is optically softened beneath glass.
-- Copy and content: dashboard labels, navigation, values, and hierarchy are unchanged.
+- 桌面浅色并排对比（左侧参考站，右侧本地实现）：`artifacts/design-qa/landing-auth/final-desktop-light-comparison.jpg`
+- 移动浅色并排对比（左侧参考站，右侧本地实现）：`artifacts/design-qa/landing-auth/final-mobile-light-comparison.jpg`
+- 本地桌面深色：首页 `artifacts/design-qa/landing-auth/local-final-desktop-dark-top.jpg`
+- 本地登录页：`artifacts/design-qa/landing-auth/local-final-login-desktop-light.jpg`、`artifacts/design-qa/landing-auth/local-final-login-mobile-light.jpg`
+- 本地注册页：`artifacts/design-qa/landing-auth/local-final-register-desktop-light.jpg`、`artifacts/design-qa/landing-auth/local-final-register-mobile-light.jpg`
 
-## Comparison history
+## 结构测量
 
-1. Initial P2: dark surfaces were too opaque and flat, while a near-solid canvas left too little information for backdrop blur to refract.
-   - Fix: lowered surface opacity, restored the scene beneath the dark theme, added 32–34px backdrop blur, saturation, metallic borders, inset highlights, and layered specular glare.
-   - Evidence: `console-dark-v1.png` and `glass-material-comparison-v1.jpg`.
-2. Second P2: the first dark pass was still darker and less reflective than the supplied card reference.
-   - Fix: increased smoke-glass body density, silver edge contrast, scene visibility, and white highlight strength.
-   - Post-fix evidence: `console-dark-final.png` and `glass-material-comparison-final.jpg`.
-3. Runtime P1: opening and immediately scrolling a high-density dashboard could temporarily show empty translucent rectangles and feel unresponsive.
-   - Cause: 39 simultaneous backdrop-filter layers were composited over a fixed image with a viewport-wide CSS filter.
-   - Fix: removed the full-screen filter and fixed background attachment, kept 18–20px live blur on the nine top-level surfaces, and rendered nested materials with fills, borders, gradients, and highlights.
-   - Post-fix evidence: `console-light-scroll-performance-fixed.png`.
+| 检查项 | 参考站 | 本地实现 | 结果 |
+| --- | ---: | ---: | --- |
+| 桌面页面高度 | 4152 | 4152 | 一致 |
+| Hero 标题位置/尺寸 | 320, 192 / 800 × 120 | 320, 192 / 800 × 120 | 一致 |
+| 功能区标题 Y | 1568 | 1568 | 一致 |
+| 组件区标题位置/尺寸 | 60, 2467.5 / 522 × 92 | 60, 2467.5 / 522 × 92 | 一致 |
+| 页脚起点 | 3323 | 3323 | 一致 |
+| 页脚高度 | 828.55 | 828.56 | 一致 |
+| 移动端横向溢出 | 0 | 0 | 一致 |
+| 登录页横向溢出 | — | 0 | 通过 |
+| 注册页横向溢出 | — | 0 | 通过 |
 
-## Interaction and runtime checks
+## 交互检查
 
-- Theme control: light → dark → system → light.
-- Sidebar: collapse and expand both update the layout correctly.
-- Browser console: no errors on the final dashboard.
-- Horizontal layout: `scrollWidth` equals the 1440px viewport width.
-- Scroll stress: repeated down/up/down scrolling preserved panel content and geometry in light and dark themes.
-- Compositing: active backdrop-filter layers reduced from 39 to 9; screenshot capture fell from about 88 seconds before the fix to 0.04–0.16 seconds after it in the same browser session.
-- Mobile was intentionally not evaluated for this pass, per request.
-- No unit test or production build was run.
+- 首页移动抽屉可打开和关闭。
+- 搜索按钮可打开 Appica Dialog，搜索输入框和文档入口可访问。
+- 国际化按钮可在中文/英文之间切换，并同步更新登录/控制台文案。
+- 主题按钮可在 light/dark 之间切换；移除已存主题后仍以 light 渲染。
+- 登录状态由现有 `useConsole()` 鉴权状态驱动：未登录显示登录，已登录显示控制台并跳转现有控制台入口。
+- 首页展示卡片中的尺码、收藏、数量、Tab、Slider、Switch 等使用 Appica 组件和可操作状态。
+- 登录和注册页保留现有认证、OAuth、协议、验证码与注册选项逻辑。
 
-## Usage summary skeleton QA
+## 视觉判断
 
-- Source visual truth: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-9232d539-0838-425e-9a0e-2d48b28389cd.png`
-- Reported incorrect state: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-6a2a02c6-3a72-4561-a731-1c49309754c4.png`
-- Loading implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-stats-loading-fixed.png`
-- Loaded implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-stats-loaded.png`
-- Focused comparison: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-stats-reference-vs-loading.jpg`
-- Source pixels: 2560 × 1352. Implementation viewport: 1217 × 1232 CSS px at 1× density. The focused card rows were normalized to 885 × 148 for structural comparison.
-- State: authenticated desktop Usage page, light theme, with a controlled 1.8-second API delay for the loading capture.
-- Full-view evidence: loading and loaded states both render four equal 210.75px columns across the 885px content width. Every card remains 148px high at the same x/y coordinates, with no horizontal overflow or layout expansion.
-- Focused evidence: the combined comparison shows the skeleton preserving the final card's label, main value, supporting text, and top-right circular icon zones. Typography is represented by neutral bars during loading; spacing, radius, glass tokens, background image quality, and card hierarchy remain consistent. App copy is unchanged once data resolves.
-- Comparison history: P1 grid mismatch caused the four loading cards to inherit the six-column theme grid and occupy only part of the available row; blank skeleton bodies also failed to communicate final content placement. The fix reuses the loaded Usage grid class, restores the four-column modifier after theme overrides, and introduces a shared statistic-card skeleton matching the final anatomy. Post-fix browser evidence confirms identical loading/loaded geometry. The Affiliate four-card grid was also checked and now fills the same 885px width.
+未发现需要继续整改的 P0、P1 或 P2 视觉问题。动态轮播标题会因截图时刻不同显示不同短语；这与参考站行为一致，不属于偏差。
 
-## Findings
+## 本轮组件墙复刻复验
 
-- No actionable P0, P1, or P2 differences remain in the requested desktop glass-material scope.
-- P3 follow-up: additional pages can receive route-specific screenshot tuning if their real production data creates unusually dense tables or dialogs.
+- 2048 × 888 浅色状态下，卡片顺序已恢复为 Assistant / Product / Audio / Revenue / Transactions；第二行依次为 Model settings / Command / Order / Team / Rating。
+- 10 张卡片的宽度、高度、列位置及列内 Y 偏移逐项测量，与参考站完全一致；五列卡片宽度为 387.19–387.20 CSS px，列间距为 16 CSS px。
+- 1440 × 900 状态与参考站一致使用四列、每列 336 CSS px，并隐藏 Assistant / Model settings 列；无横向滚动。
+- 52 个关键文本节点的卡片内 X / Y / 宽度 / 高度逐项比对，无剩余差值；Geist 字体及 `Geist Fallback` 指标与参考站一致。
+- Assistant 卡片已恢复相同的头像状态点、三段气泡、Sparkle Spinner、快捷 Chip、Toolbar 输入及三个操作按钮。
+- Model settings 已恢复相同的模型 Select、Temperature / Context window Slider，以及两个 Switch；模型选项与参考站一致。
+- 商品收藏、尺码选择、播放器按钮、订单状态、成员头像和 Owner Badge、交易图标与筛选、评分星标均已按参考站的组件、状态和交互复验。
+- 全新页面加载为 light，未出现 Vite 错误覆盖层或浏览器 error 日志。
+- 最终组件墙并排对比（左侧参考站，右侧本地实现）：`artifacts/design-qa/landing-auth/final-showcase-comparison-2048.jpg`
 
-## `sub2api` typography QA
+## 本轮背景交互与圆角隔离复验
 
-- Selected direction: match `/Users/liwei/WebstormProjects/sub2api/frontend/tailwind.config.js` — native UI sans for Simplified Chinese, Latin, and ordinary numeric content; native UI monospace for code, endpoints, keys, and explicitly monospaced values.
-- Final implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/console-sub2api-fonts-usage-final.png`
-- State: authenticated desktop Usage page, light theme, Chinese locale, 1217 × 1232 CSS px.
-- Source: the `sub2api` Tailwind `fontFamily.sans` and `fontFamily.mono` declarations. No remote font stylesheet or additional font payload is required.
-- Browser evidence: the console root, page heading, statistic figures, panels, and table cells resolve to the `sub2api` native UI sans stack; table code cells resolve to its native UI monospace stack. No browser errors were logged.
-- Layout evidence: the typography change preserves the four-column statistic row and two-column panel grid. The 1217px viewport remains free of horizontal overflow (`scrollWidth = innerWidth = 1217`).
-- Scope: public landing and authentication typography remains unchanged, matching the existing decision to keep the console visual system isolated.
-
-## Date popover and API-key capsule QA
-
-- Reported date-popover state: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-06adf57b-fffb-4fc4-8a92-8b18a1d202e2.png`
-- Reported API-key capsule state: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-0d4d0922-cb0a-49c1-a416-6f233d8353dd.png`
-- Final date-popover implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/date-range-popover-contrast-final.png`
-- Date popover: the light surface now uses a 98.5% opaque warm glass base, 94% opaque input surfaces, higher-contrast borders, and a restored solid primary action. Its containing panel is elevated above later backdrop-filter panels so the calendar can no longer be composited behind the chart grid.
-- API-key capsules: table keys now use translucent pale-yellow glass with dark warm text and a matching translucent copy control in light mode. Dark mode uses a subdued amber-smoke equivalent instead of the previous black block.
-- Browser evidence: every preset, label, date value, calendar icon, and action is visible in the open popover. The 1217px desktop viewport remains free of horizontal overflow, and the browser logged no errors or warnings.
-
-## API Keys desktop workspace density QA
-
-- Reported layout: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-3fc488b0-6c23-4b7c-a5a4-5d4e30a5dc4f.png`
-- Final implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/keys-core-layout-expanded-final.png`
-- Scope: desktop API Keys core content only; the header, sidebar, and existing top offset remain unchanged.
-- Before: the shared desktop main container used 24px side padding, 42px bottom padding, and a 1720px maximum width that introduced additional centering space on wider displays.
-- After: the shared desktop content uses the full workspace width with 12px side padding and 20px bottom padding. The API Keys page has a viewport-relative minimum height and its primary panel flexes to the lower boundary.
-- Browser evidence at 1217 × 1232 CSS px: left gutter 12px, right gutter 12px, bottom gutter 20px; computed maximum width is `none`, and the primary panel ends exactly at the requested lower gutter.
-- Mobile rules were left unchanged.
-
-## Channel Status operational-board QA
-
-- Source visual truth: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-b8d383d8-d651-48b7-9f0f-ba510c92e237.png`
-- Light implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/monitor-light-final.png`
-- Dark implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/monitor-dark-final.png`
-- Full-view comparison: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/monitor-reference-vs-themes-final.png`
-- Focused card comparison: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/monitor-card-detail-comparison-final.png`
-- Viewport and density: source 1415 × 850 pixels; both implementations captured at 1415 × 850 CSS px with 1× density. The side-by-side comparison keeps every source and implementation frame at exactly 1415 × 850 pixels.
-- State: authenticated Chinese desktop console, five representative channels, 7-day range, all-status filter, 30-second automatic refresh, detail dialog closed.
-- Full-view evidence: the implementation preserves the current WayX sidebar and sticky console header while adopting the reference hierarchy inside the route content: title/subtitle, one full-width time/status/refresh toolbar, five evenly divided overview metrics, and vertically stacked full-width channel rows. Dark mode uses smoke-black glass and the dimmed monochrome landscape; light mode exposes the original landscape beneath higher-contrast white glass.
-- Focused evidence: the status rail, provider/model header, last-check status, latency, ping, large availability value, multicolor uptime bars, axis labels, and detail button all remain visible at the same hierarchy as the reference. Green, amber, and red tones consistently connect each card's border, status icon, label, availability value, and timeline failures.
-- Fonts and typography: the existing `sub2api` native UI stacks remain intact. Tabular figures use the same compact numeric hierarchy across both themes, with no clipping or unintended wrapping at the target viewport.
-- Spacing and layout rhythm: toolbar height is 68px, overview height is 132px, and each channel card is 168px. The 1107px route content width has no document-level horizontal overflow; `scrollWidth` and `clientWidth` both equal 1415px.
-- Colors and visual tokens: the page uses the established console glass, line, highlight, shadow, success, warning, and danger tokens. The reference's dark operational palette is reproduced in dark mode; light mode maps the same semantic colors onto landscape-backed translucent surfaces with readable dark foregrounds.
-- Image quality and assets: the full-resolution existing landscape remains the only raster substrate. The source contains no custom illustrations or product imagery requiring generation; all UI symbols use the project's existing icon library.
-- Copy and content: the page remains bilingual. The Chinese reference terminology is used for `正常`, `警告`, `异常`, `X 天前`, and `现在`, while route/model/provider values continue to come from API data.
-- Primary interactions tested: 7/15/30/90-day controls, status filtering (`警告` reduced five rows to one), automatic-refresh interval selector, detail-dialog open/close, and restoration to the default 7-day/all-channel state. The 90-day control resolved the selected channel's 90-day availability.
-- Browser console: no errors or warnings.
-- Comparison history:
-  1. Initial P1: the old implementation used two-column compact cards and scattered header actions, so it lacked the reference's operational hierarchy and scanability.
-     - Fix: rebuilt the route around a unified toolbar, five-metric overview, and full-width status rows with status-linked borders and timelines.
-  2. First visual pass P2: card statuses still used generic `降级/失败` labels and the timeline axis mixed English into the Chinese screen.
-     - Fix: changed the monitor vocabulary to `警告/异常` and localized the timeline to `X 天前/现在`.
-     - Post-fix evidence: `monitor-dark-final.png`, `monitor-light-final.png`, and the two side-by-side comparison files above.
-- Remaining differences: the implementation intentionally retains the product's global sidebar, header, dynamic API values, and landscape substrate; these are established product constraints rather than reference drift. No actionable P0, P1, or P2 differences remain.
-
-## Console page-title de-duplication QA
-
-- Reported duplicate-title state: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-c34d9840-18fe-43e3-a53c-9596f6519ad1.png`
-- Final implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/console-page-titles-removed-final.png`
-- Scope: all routes rendered through the shared console `Page` component. The sticky console header is now the only visible page title; page subtitles and actions remain in a compact introduction row.
-- Accessibility: each route keeps one semantic level-one heading in the document while visually clipping it, so the visual duplication is removed without discarding page structure for assistive technology.
-- Browser coverage: Dashboard, API Keys, Batch Images, Usage, Redeem, Affiliate, Available Channels, Channel Status, Profile, Subscriptions, Purchase, and Orders were checked individually. Every route reported zero visible content-level `h1` elements.
-- Layout evidence: compact introduction rows measure 23.25–40px depending on subtitle wrapping, all checked routes remain free of horizontal overflow, and no empty title-height spacer remains. The browser console logged no runtime errors.
-
-## Purchase reference reconstruction QA
-
-- Source visual truth: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-03355fef-ea8c-439f-a846-37b89ce52512.png`
-- Light implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-reference-light-final.png`
-- Dark implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-reference-dark-final.png`
-- Native-pixel comparison inputs:
-  - `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-reference-vs-dark-final.png`
-  - `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-reference-vs-light-final.png`
-- Viewport and normalization: the source is 1401 × 848 pixels. The implementation was rendered in the in-app desktop browser at 1280 × 720 CSS px and captured as a 1280 × 960 full-page image at 1× density so the payment method rows and confirmation action were not cropped. The comparison inputs retain source and implementation at native pixel density side by side without resampling. The retained WayX sidebar/header account for the viewport difference and are an established product constraint.
-- State: authenticated Chinese console, `$10` selected, Alipay selected, payment multiplier `0.14`, no fee, light and dark themes, confirmation amount `¥71.43`.
-- Full-view evidence: the implementation follows the reference hierarchy in the same order—recharge/subscription switcher, balance overview, 4×2 quick amounts, custom credit input, vertically stacked payment methods, encrypted-payment note, and one full-width confirmation action. The balance overview now includes cumulative recharge, cumulative consumption, and latest recharge following the subsequent reference-correction request.
-- Focused evidence: a separate crop was unnecessary because the native-pixel comparison keeps the amount cards, custom input, provider marks, method descriptions, selected checks, security copy, and final button text legible. Both provider rows reuse the existing recognizable Alipay and WeChat assets rather than placeholders.
-- Fonts and typography: the established `sub2api` native UI sans stack remains intact. Amount figures use compact semibold tabular typography; labels, helper text, and provider descriptions retain the reference hierarchy without clipping or unintended wrapping.
-- Spacing and layout rhythm: desktop quick amounts form two exact rows of four 234 × 78px cards with 12px horizontal and vertical gaps. The checkout content is 972px wide in the verified viewport, selected/unselected radii and strokes follow the reference, and the document has no horizontal overflow.
-- Colors and visual tokens: dark mode maps the reference to smoke-black glass, subdued metallic borders, fluorescent-green selection states, and a green confirmation bar with white text. Light mode preserves the homepage landscape under readable white glass while keeping the same semantic green hierarchy.
-- Image quality and assets: the full-resolution existing landscape remains the only page substrate. The reference contains no additional required photography or illustrations; the payment provider marks and console icons come from the existing product asset system.
-- Copy and content: discount badges, bonus percentages, card-level CNY estimates, and a separate order summary are intentionally absent. Quick cards and the custom field show only USD credit values; only the confirmation action shows the final payable RMB amount. The balance overview statistics are sourced from existing order and usage APIs and use a dash when a source is unavailable.
-- Primary interactions tested:
-  - `$200` selection updated the action to `确认支付 ¥1,428.57`.
-  - Custom `$35` input cleared the preset state and updated the action to `确认支付 ¥250.00`.
-  - Alipay and WeChat selection states switched correctly.
-  - Recharge and subscription tabs both changed their content and restored the recharge grid.
-- Browser evidence: latest-page reload reported zero new runtime errors, zero horizontal overflow, eight equal quick-amount cards, two available payment-method rows, and zero visible duplicate content headings.
-- Comparison history:
-  1. Initial P2: the dark-theme confirmation action inherited a dark foreground, while the reference uses white text and iconography on green.
-     - Fix: scoped the Purchase confirmation action to a white foreground in both themes.
-     - Post-fix evidence: `purchase-reference-vs-dark-final.png` and `purchase-reference-vs-light-final.png`.
-- Remaining differences: the implementation intentionally retains the WayX global sidebar/header, real account balance, product background image, and data supplied by the payment and usage APIs. Discounts, bonuses, and intermediate CNY conversions remain excluded by request. No actionable P0, P1, or P2 differences remain.
-
-## Purchase centering and balance-overview correction QA
-
-- Follow-up evidence: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-3ae5f336-ff0c-4046-a1a3-35ecaa86c62d.png` and `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-724e027d-f08a-4d49-8159-df0a983621f2.png`.
-- Source visual truth: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-03355fef-ea8c-439f-a846-37b89ce52512.png`.
-- Final light implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-overview-centered-light-final.png`.
-- Final dark implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-overview-centered-dark-final.png`.
-- Side-by-side visual checks:
-  - `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-overview-reference-vs-light-final.png`
-  - `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-overview-reference-vs-dark-final.png`
-- Centering: the Purchase page now uses automatic inline margins instead of the ineffective cross-axis alignment rule. At the 1280px desktop verification viewport, the page has exact 12px left and right workspace gutters with a 0px centering delta. With the sidebar collapsed, the page remains centered with the same 0px delta and expands from 972px to 1152px.
-- Balance-overview anatomy: the 124px overview is split into a wallet/current-balance block and three equal 169.03px statistic columns. Vertical separators, tabular figures, a higher-fidelity wallet mark, account line, cumulative recharge, cumulative consumption, and latest recharge match the reference hierarchy.
-- Data behavior: cumulative recharge aggregates successful balance orders across available pagination, cumulative consumption uses the existing all-time dashboard usage total, and latest recharge uses the newest completed/paid order timestamp. Failed sources render a visible dash; production values are never fabricated.
-- Readability: the latest date uses the compact reference format `YYYY-MM-DD`, preventing the clipping seen with a localized long Chinese date. Light mode retains the landscape substrate and white glass; dark mode retains the monochrome smoke-glass mapping.
-- Interaction and runtime checks: selecting `$200` updated the confirmation action to `确认支付 ¥1,428.57`, restoring `$10` returned it to `确认支付 ¥71.43`, the document has zero horizontal overflow, and the browser logged no errors or warnings.
-
-## Purchase balance-format correction QA
-
-- Requested correction: Purchase and persistent header balances must use `$` instead of `US$` and show exactly two decimal places.
-- Light implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-balance-format-light-final.png`.
-- Dark implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-balance-format-dark-final.png`.
-- Reference comparison: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-balance-format-reference-vs-light-final.png`.
-- Browser evidence: the Purchase balance and top-right header both render `$855.18`; cumulative recharge and consumption render `$1,843.45` and `$1,568.26`. Light and dark themes have zero horizontal overflow and no browser errors or warnings.
-- Scope control: high-precision usage and billing-cost displays continue to use the existing four-decimal formatter, so the balance correction does not discard cost precision elsewhere.
-
-## Purchase custom-amount focus correction QA
-
-- Reported state: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-11b1dd06-0796-4298-b0a1-2f97c1f39687.png`.
-- Final focused state: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/purchase-custom-amount-focus-final.png`.
-- Cause: the console-wide `:focus-visible` rule added its purple/blue focus shadow directly to the nested number input, while the Purchase wrapper already supplied the intended green focus treatment.
-- Correction: the nested input now suppresses only that global shadow and outline. The outer glass field keeps its green border and soft three-pixel focus halo for keyboard visibility.
-- Browser evidence: focused input shadow is `none`, focused input outline is `none`, the wrapper border resolves to the theme accent in both light and dark themes, horizontal overflow is zero, and no browser errors or warnings were logged.
-
-## Channel Status timeline hierarchy correction QA
-
-- Reported state: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-fed9d501-ff27-45df-b9ba-7de7ade30777.png`.
-- Final light implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/channel-status-bar-hierarchy-wide.png`.
-- Final dark implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/channel-status-bar-hierarchy-dark-final.png`.
-- Same-size visual comparison: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/channel-status-bar-reference-vs-final.png`.
-- Semantic correction: timeline height is now determined by health state instead of latency. Healthy/green renders at 100%, warning/orange at 68%, incident/red at 38%, and unknown at 52%.
-- Browser evidence in light mode: healthy bars measure 36px with `rgb(10, 147, 82)`, warning bars measure 24px with `rgb(168, 109, 9)`, and incident bars measure 14px with `rgb(201, 53, 75)`.
-- Browser evidence in dark mode: the same 36/24/14px hierarchy resolves to the brighter theme colors `rgb(43, 229, 138)`, `rgb(241, 189, 89)`, and `rgb(255, 82, 104)`.
-- Runtime check: the authenticated Chinese desktop route loaded representative mixed-status history with no browser errors or warnings.
-
-## Channel Status endpoint and global USD-symbol correction QA
-
-- Reported timeline state: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-645e512c-e761-4f64-8f88-007a9eda30ac.png`.
-- Reported currency state: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-7eef0218-0af1-41ad-9fa0-eb86315dcf15.png`.
-- Final focused timeline: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/channel-status-now-alignment-focused-final.png`.
-- Final Dashboard: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/global-dollar-symbol-final.png`.
-- Same-size comparisons:
-  - `/Users/liwei/WebstormProjects/erxinai/output/design-qa/channel-status-now-reference-vs-final.png`
-  - `/Users/liwei/WebstormProjects/erxinai/output/design-qa/global-dollar-symbol-reference-vs-final.png`
-- Endpoint alignment: the timeline container now sizes itself from the rendered bar group instead of consuming the entire grid column. At the 2048px verification viewport, the bar group is 477px wide and both the final bar and the `现在` label end at x=1642px; the details button begins independently at x=1901px.
-- Responsive desktop behavior: bars retain their 7px reference width when space permits and shrink within the chart area at narrower desktop widths, while both endpoint labels remain anchored to the rendered group.
-- Currency behavior: every shared and route-local `Intl.NumberFormat` USD renderer now requests `currencyDisplay: "narrowSymbol"`. The Dashboard showed `$855.18`, `$0.0209`, `$204.8162`, `$2,162.7205`, `$178.9415`, and `$25.8747`, with zero `US$` matches in the rendered page.
-- Browser console: no errors or warnings on the final Dashboard and Channel Status states.
-
-## Dashboard usage-chart Y-axis QA
-
-- Source visual truth: `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-1eaca066-55f8-463f-a33f-140871ad77d9.png`.
-- Final light implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/dashboard-y-axis-light-viewport-final-normalized.png`.
-- Final dark implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/dashboard-y-axis-dark-viewport-final.jpg`.
-- Same-size comparison: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/dashboard-y-axis-reference-vs-final.png`.
-- Viewport and normalization: source 2560 × 1352 pixels; implementation 2048 × 1080 CSS pixels at 1× density. The source was normalized to 2048 × 1080 for the side-by-side comparison.
-- State: authenticated Chinese desktop Dashboard with representative seven-day token data, light and dark themes, no interaction overlay.
-- Full-view evidence: the chart retains the existing panel size, line geometry, date labels, green accent, and glass substrate while adding a dedicated 54px Y-axis gutter. No neighboring card, quick action, or page gutter moved outside its existing desktop grid.
-- Focused evidence: the left side of the chart visibly shows the `Token` unit and five aligned numeric levels. The verified fixture rendered `1000`, `750`, `500`, `250`, and `0`, with each label aligned to its horizontal grid line.
-- Scale behavior: the upper bound is rounded to a readable 1/2/2.5/5/10 magnitude step, and tick text uses locale-aware compact notation so large production totals remain legible.
-- Required fidelity surfaces: typography reuses the console monospace data stack and muted/body tokens; the 10px labels follow the existing compact chart hierarchy; grid lines reuse the theme line token; no raster asset was introduced; the visible copy is limited to the data unit and generated numeric values.
-- Responsive/runtime evidence: document horizontal overflow remains zero at the 2048px desktop viewport. Light and dark themes both preserve readable contrast, and the browser console reported zero errors or warnings.
-- Comparison history: the reported P1 omission left the line without any Y-axis unit or numeric scale. The correction added the unit, five magnitude-aware ticks, matching grid lines, and aligned the X-axis dates with the plot area. The final side-by-side comparison shows the complete axis without changing the surrounding information hierarchy.
-- Findings: no actionable P0, P1, or P2 differences remain in the requested Y-axis scope.
+- 参考真值：`https://appica.dev/ui`；实现目标：`http://localhost:5173/`；复验状态为 light、页面纵向滚动 520 CSS px、指针位于组件墙区域。
+- 首轮定位到两项 P1：本地组件墙缺少源站 `BackgroundPattern` 的 spotlight/window tracking；全局 `cascade.css` 覆盖了 Appica 的 radius 变量，导致卡片、按钮、输入框和 Tabs 被其他页面样式污染。
+- 首页根节点现在独立恢复 Appica 的完整 radius 比例；计算样式复验中，卡片 `rounded-xl`、常规按钮 `rounded-sm`、输入框 `rounded-md`、圆形播放器按钮及 Tabs indicator 均与源站一致，且作用域不会修改登录、注册或内部控制台。
+- 背景跟随实测：指针移动至 `(700, 300)` 后，highlight 更新为 `--pattern-x: 700px`、`--pattern-y: 167px`，可见态 opacity 为 `0.866089`，静止 1.35 秒后 opacity 回到 `0`，与源站的跟随和淡出模型一致。
+- 组件结构继续收敛：Command Navigation 恢复默认尺寸和选中态；播放器主按钮恢复圆形；订单进度恢复 75%；Team header 对齐；Model Switch 使用 `sm`；Rating 文本和 Meter 继承关系与源站一致。
+- 1280 × 720、deviceScaleFactor 1 的同状态并排对比（左侧参考站，右侧本地实现）：`artifacts/design-qa/landing-auth/gallery-refinement-comparison-1280x720.jpg`。两张输入图均为 1280 × 720 像素，无密度缩放。
+- 交互复验通过：商品收藏可开/关；交易 Tabs 的 Income 状态只显示 Payroll 与 Stripe payout，恢复 All 后回到完整列表；浏览器 error 日志为 0。
+- 最终判断：未发现需要继续整改的 P0、P1 或 P2 问题。右上角国际化、主题和登录入口为用户要求的有意差异。
 
 final result: passed
 
----
+## 2026-08-13 Hero 标题动效与模型入口复验
 
-# Video Workflow Landscape Poster Design QA
-
-- Source visual truth: `/var/folders/gk/q08f7_l552l_n3fyzsc25v_m0000gn/T/codex-clipboard-76d50c9b-1b40-4707-847e-38dbcb5a631a.png`
-- Generated landscape poster: `/Users/liwei/WebstormProjects/erxinai/src/assets/console/video-workflow-poster-wide.png`
-- Implementation screenshot: `/private/tmp/video-workflow-wide-implementation.png`
-- Combined comparison input: `/private/tmp/video-workflow-qa-comparison.png`
-- Viewport and density: source 1920 × 928 pixels; implementation 1920 × 936 CSS px at device pixel ratio 2. Both sides were normalized to 1920 × 936 before horizontal comparison.
-- State: authenticated desktop console, light theme, expanded sidebar, Video workflow route.
-
-## Full-view comparison evidence
-
-The supplied red-frame reference and the final route screenshot were inspected together in one 3840 × 936 comparison image. The previous centered portrait poster has been replaced by a native 1829 × 860 landscape composition. It fills the requested wide content panel from left to right, preserves every workflow step, keeps the complete coming-soon and capability sections visible, and removes the source poster's site identity and advertisement area.
-
-## Focused-region comparison evidence
-
-A separate crop was unnecessary because the poster itself occupies 1594 × 750 CSS px—most of the implementation viewport—and all outer edges, glass-frame padding, workflow cards, and footer features remain legible in the full-size comparison. Browser measurements confirm the rendered poster and frame share the intended 2.13:1 geometry without portrait scaling, content cropping, or uncovered side gutters.
-
-## Required fidelity surfaces
-
-- Fonts and typography: the landscape asset preserves the source's bold Chinese title, compact supporting copy, numbered workflow hierarchy, and bilingual coming-soon chip.
-- Spacing and layout rhythm: the input references, generation stages, two output stages, launch notice, four capabilities, and footer benefits were recomposed horizontally to use the complete panel width.
-- Colors and visual tokens: the blue-green landscape, cyan glow, emerald process icons, and translucent white cards remain visually aligned with the supplied poster and the WayX console substrate.
-- Image quality and asset fidelity: the route uses the native 1829 × 860 PNG directly. It is neither stretched from the portrait source nor blurred into a background fill.
-- Glass material: the image stays inside the shared `Panel` component, so its perimeter, border, highlight, and surface alpha continue to respond to the global console glass-transparency variables.
-- Runtime fit: document and body `scrollHeight` both equal the 936px viewport height. The 1612 × 758 frame and 1594 × 750 poster fit without page scrolling.
-
-## Comparison history
-
-1. P1: the portrait poster was centered inside the desktop route, leaving most of the red-frame target area unused.
-   - Fix: generated and integrated a true 2.13:1 landscape composition using the supplied poster as the authoritative content and style source.
-2. P1: an intermediate blurred full-bleed portrait backdrop visually filled the panel but still read as a small portrait poster and did not meet the requested layout.
-   - Fix: removed the backdrop treatment and rendered only the purpose-built landscape poster inside the live glass frame.
-3. Final pass: combined visual comparison and browser geometry checks found no remaining P0, P1, or P2 mismatch in the requested desktop scope.
-
-## Findings
-
-- P0: none.
-- P1: none.
-- P2: none.
-- The existing console sidebar and sticky header are intentionally retained as product-level chrome.
-
-final result: passed
----
-
-# Design QA — Usage 费用明细（2026-08-02）
-
-## Comparison target
-
-- Source visual truth: `/var/folders/gk/q08f7_l552l_n3fyzsc25v_m0000gn/T/codex-clipboard-e799ca4b-4e0c-465a-9a68-196bf09d7abe.png`
-- Browser-rendered dark implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-tooltip-dark.png`
-- Browser-rendered light implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-tooltip-light.png`
-- Browser-rendered narrow implementation: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-tooltip-mobile.png`
-- Full-view comparison evidence: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-reference-vs-dark.png`
-- Focused region comparison evidence: `/Users/liwei/WebstormProjects/erxinai/output/design-qa/usage-cost-focused-comparison.png`
-- Source pixels: `361 × 280` at the supplied image density.
-- Desktop implementation viewport: `960 × 640` CSS px at `1×`; clipped evidence is `756 × 279` px.
-- Narrow implementation viewport: `390 × 844` CSS px at `1×`; screenshot is `390 × 844` px.
-- Normalization: the full comparison uses equal `361 × 280` panels. The focused comparison places the shared user-visible tooltip region in equal `240 × 244` panels without rescaling typography.
-- State: Chinese user Usage cost cell with representative token-billing data, information control focused, tooltip open. The actual `CostCell` component is mounted in the local browser QA entry because the protected `/usage` route redirects an unauthenticated preview session to login.
-
-## Full-view comparison evidence
-
-- The implementation preserves the source hierarchy: green user charge, circular information affordance, dark compact tooltip, top cost-breakdown section, separator, service tier, rate, original cost, and green user-billed total.
-- Input/output/cache costs use six decimals; derived input/output prices use four decimals per one million Token; the resulting values match the supplied example exactly.
-- The reference includes administrator-only account rate and account billing rows. They are intentionally omitted from the WayX user console, which follows the non-admin `sub2api` view and does not expose administrator billing data.
-
-## Focused region comparison evidence
-
-- The normalized focused comparison confirms the tooltip width, 8px radius, border weight, smoke-black surface, 12px UI typography, row alignment, divider, and cyan/violet/blue/green semantic accents.
-- The implementation tooltip is `204 × 227` px for the shared user-visible content. The source is taller only because it continues with two administrator-only rows.
-
-## Required fidelity surfaces
-
-- Fonts and typography: native UI sans, 12px detail copy, compact line height, medium numeric weights, and tabular currency figures match the `sub2api` density. Long price strings remain on one line.
-- Spacing and layout rhythm: the 204px tooltip width, 12px horizontal padding, 10px vertical padding, 14px label/value gap, 8px radius, and section separator follow the reference. The portal chooses the available side and clamps vertically to the viewport.
-- Colors and visual tokens: the tooltip retains the reference's smoke-black fill and grey border while mapping billed cost, service tier, token prices, and rate to WayX's semantic green/cyan/violet/blue accents.
-- Image quality and asset fidelity: this component contains no raster imagery, logos, or decorative assets. The information mark uses the console's existing icon library.
-- Copy and content: Chinese and English labels cover input/output/image/cache costs, derived unit prices, image billing metadata, service tier, rate, original cost, and user charge. No administrator-only field is fabricated.
-
-## Findings
-
-- P0: none.
-- P1: none.
-- P2: none.
-- P3: the first browser-only tuning pass measured a 218px tooltip; it was tightened to the source's 204px width and slightly relaxed vertically before the normalized comparison.
-
-## Comparison history
-
-- The first normalized full and focused comparisons found no actionable P0/P1/P2 differences.
-- No blocking iteration was required. The final dark, light, and 390px-wide captures all use the same production component and CSS.
-
-## Primary interactions tested
-
-- Click/focus activation of the information control, Escape dismissal, and same-control click reopening while focus remains.
-- Light and dark console themes; the detail surface remains readable in both.
-- `390 × 844` narrow viewport; the `204 × 227` tooltip remains fully inside the viewport with at least 8px edge clearance.
-- Browser console on `localhost:5174`: no warning or error entries for the preview.
-- Production Vite build completed successfully.
+- 源真值：`https://appica.dev/ui` 的实时 Hero 标题动效，以及用户提供的旧首页模型图标参考图。
+- 实现目标：`http://127.0.0.1:5173/`；视口 1280 × 720 CSS px、deviceScaleFactor 1、light 状态。
+- 对比证据：并排图 `artifacts/design-qa/2026-08-13-hero-motion-models/hero-source-local-comparison.jpg`（左侧源站、右侧本地），以及同目录的 `appica-hero-source.jpg`、`local-hero-before.jpg`、`local-hero-after.jpg`。
+- 标题动态短语已改用 Appica `TextAnimate` 的 `highlight` 预设并按字符渲染；抽样中 13 个字符的 opacity 从 `0.18` 依次过渡至 `1`，所有字符的 transform 均为 `none`，不再出现逐词上升。
+- 动态短语继续占用所有候选文案的最大固定宽度，切换过程中标题和顶部组件不会水平跳动；浏览器横向溢出为 0。
+- `Available for` 已单独水平居中，React 徽标已移除；其下恢复 main 分支原有 Claude、Codex、Cursor、Grok、Hermes、OpenCode、Antigravity 七个资源，未切换分支。
+- 七个入口均使用 Appica `Thumbnail` 的 image / rounded 外观及背景分隔 ring；单个尺寸为 56 CSS px，组合中心点与 `Available for` 中心点同为 640 CSS px，全部图片加载完成。
+- 本地 Vite 页面无 error 日志；复验后未发现 P0、P1 或 P2 问题。
 
 final result: passed
 
----
+## 2026-08-13 首页顶部导航复验
 
-# Design QA — 余额、今日消费、公告换行与 API 端点（2026-07-28）
-
-## 对照信息
-
-- Source visual truth:
-  - `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-9b727b74-96ca-4319-a02c-18f82db61452.png`
-  - `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-70343a04-767c-4da6-a450-b217808e3c65.png`
-  - `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-9ca3cf32-fd6a-4499-8884-f24304e9bdbc.png`
-- Implementation screenshots:
-  - `/private/tmp/erxinai-dashboard-light-final.png`
-  - `/private/tmp/erxinai-dashboard-dark-final.png`
-  - `/private/tmp/erxinai-keys-light-final.png`
-  - `/private/tmp/erxinai-keys-dark-final.png`
-- Same-size comparisons:
-  - `/private/tmp/erxinai-dashboard-reference-compare.png`
-  - `/private/tmp/erxinai-keys-reference-compare.png`
-- Viewport: `2048 × 1080` CSS px, device scale factor `1`.
-- State: authenticated Chinese desktop console with representative local fixture data, verified in light and dark themes.
-
-## Findings
-
-- P0：无。
-- P1：无。
-- P2：无。
-- P3：无。
-
-## Fidelity and data checks
-
-- Dashboard balance: the primary `$855.18` value now resolves to the theme success green in both light and dark themes; header balance behavior remains unchanged.
-- Today spend: the former cumulative actual-spend card now reads `今日消费`, displays `today_actual_cost`, and compares against the backend contract's `today_cost`. When an older fixture omits `today_cost`, the comparison safely retains the available current-day actual value instead of showing a misleading zero.
-- Field contract: verified against `sub2api/frontend/src/api/usage.ts` and `backend/internal/pkg/usagestats/usage_log_types.go`, where `today_actual_cost` is today's actual deduction and `today_cost` is today's standard charge.
-- Announcement line breaks: content normalizes real and escaped CR/LF sequences, list previews use `pre-line`, and the modal body uses `pre-wrap` plus safe long-line wrapping. The local fixture returned an empty announcement list, so the final verification used the rendered empty state plus source-level content/CSS inspection rather than fabricating persistent announcement data.
-- API endpoint: endpoint label/icon, capsule, endpoint text, copy control, and latency-test control were enlarged as one unit. The light and dark screenshots show the toolbar remaining aligned with filters and actions without overflow.
-- Browser runtime: Vite HMR completed successfully; browser logs contain no error or warning entries.
+- 源真值：`https://appica.dev/ui` 的实时首页导航，以及用户提供的交互态截图 `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-0e7bab89-8876-4c97-af28-2c2ed9c7d660.png`（666 × 94）。
+- 实现目标：`http://127.0.0.1:5173/`；视口 1280 × 720 CSS px、deviceScaleFactor 1、light 状态。
+- 全页顶部证据：源站 `artifacts/design-qa/2026-08-13-header-nav/appica-header-source.jpg`（1280 × 96）；本地 `artifacts/design-qa/2026-08-13-header-nav/local-header-final.jpg`（1280 × 96）。WayX 品牌、国际化、主题和登录入口是需求规定的有意差异。
+- 聚焦静止态对比：`artifacts/design-qa/2026-08-13-header-nav/navigation-idle-comparison.png`。源站和实现均裁切为 428 × 56，无密度缩放；字体大小、字重、行高、各项宽度、28 CSS px 间距与 Figma 图标尺寸一致。
+- 聚焦交互态对比：`artifacts/design-qa/2026-08-13-header-nav/navigation-active-comparison.png`。用户截图中的导航区域从 548 × 70 归一化为 428 × 55；本地 Appica active 状态为 428 × 56。该状态与 hover/focus-visible 使用同一组 Appica `line` 变体规则。
+- 字体与排版：本地改为 Appica `NavigationLink`，计算样式与源站一致为 `Geist, Geist Fallback`、14 CSS px、500、20 CSS px，水平项上下内边距均为 10 CSS px。
+- 间距与交互：导航项高度统一为 40 CSS px；下划线高度 2 CSS px、距底部 6 CSS px，并沿用 Appica 的 300ms background-size 动画和圆头处理。
+- 色彩与视觉 token：文字、悬浮文字和下划线均继承 Appica `foreground-strong` / `foreground-intense` 角色色，无自定义色值。
+- 图像与图标：该区域无位图；Figma 外链箭头继续使用与源站相同的 Appica 图标组件，未使用自绘图形。
+- 文案：Docs、Components、Icons、Country Flags、Figma 与源站一致。
+- 国际化复验：中英文切换前后导航 X、右边界和右侧控件组 X 位移均为 0；页面横向溢出为 0。
+- 比较历史：首轮发现 P2——本地使用普通链接，字重为 400、可点击区域高度仅 18 CSS px，且完全缺少参考图中的下划线状态。现已替换为 Appica `Navigation` 的 `line` 变体；复验后未发现 P0、P1 或 P2 问题。
 
 final result: passed
 
----
+## 2026-08-13 用量、渠道状态、品牌与认证页复验
 
-# Design QA — 余额、费用与 RPM / TPM 两位小数（2026-07-28）
-
-## 对照信息
-
-- Source visual truth:
-  - `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-769ecb29-d831-4fbb-9b19-962304d37b1a.png`
-  - `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-c592f991-a4b7-41a4-9e44-bb71f89c05a3.png`
-- Implementation screenshots:
-  - `/private/tmp/erxinai-number-format-dashboard.png`
-  - `/private/tmp/erxinai-number-format-redeem.png`
-- Full-view comparison: `/private/tmp/erxinai-number-format-comparison.jpg`
-- Focused comparison: `/private/tmp/erxinai-number-format-focused-comparison.jpg`
-- Viewport: `2048 × 1080` CSS px, device scale factor `1`.
-- Source pixels: dashboard reference `2560 × 1352`; normalized to `2048 × 1080` for comparison.
-- Implementation pixels: `2048 × 1080`.
-- State: authenticated Chinese desktop console, light theme, representative local fixture data.
-
-## Findings
-
-- P0：无。
-- P1：无。
-- P2：无。
-- P3：无。
-
-## Fidelity surfaces
-
-- Fonts and typography：数字沿用现有控制台字体、字号和字重；固定两位小数后没有换行、截断或卡片溢出。
-- Spacing and layout rhythm：格式变短后，余额、实际消费和 RPM / TPM 仍保持原有卡片对齐和留白。
-- Colors and visual tokens：未改变亮暗主题、玻璃透明度或语义颜色。
-- Image quality and asset fidelity：本次改动不涉及图片资源；兑换码钱包素材仍保持原有清晰度和主题适配。
-- Copy and content：顶部余额、仪表盘余额、实际消费、标准费用、今日费用和兑换码余额均固定两位；RPM 显示两位，TPM 显示两位并保留 `M`。
-
-## Comparison history
-
-- 初始证据：参考图中余额为 `$855.1832`、实际消费为 `$204.8168`、RPM / TPM 为 `0 / 0.000035M`，均不符合本轮目标。
-- 修复：货币格式化器统一为 `minimumFractionDigits: 2` 与 `maximumFractionDigits: 2`；RPM 使用固定两位数字格式；TPM 使用固定两位的百万单位格式。
-- 修复后证据：仪表盘显示 `$855.18`、`$204.82` 和 `0.00 / 0.00M`；顶部与兑换码余额均显示 `$855.18`。
-- 浏览器控制台：仅有 Vite 连接与 React DevTools 信息，无 error 或 warning。
-
-## Primary interactions tested
-
-- 从仪表盘切换到兑换码页面。
-- 切换到与参考图一致的亮色主题。
-- 检查顶部余额、仪表盘统计卡和兑换码余额的一致格式。
+- 源真值：用户提供的状态时间线参考图（1131 × 140）、状态配色参考图，以及 Appica 卡片/输入交互参考图（529 × 589）。
+- 实现目标：`http://127.0.0.1:5173/monitor`、`/usage`、`/login`、`/register` 与首页导航；复验状态为 light、deviceScaleFactor 1。
+- 全页证据：`artifacts/design-qa/2026-08-13-ui-polish/status-timeline-and-ip-toolbar-light.png`、`login-centered-light-full.png`、`login-centered-mobile-light.png`、`register-centered-light.png`、`landing-header-light.png`。
+- 聚焦对比：状态参考/实现纵向合成图 `artifacts/design-qa/2026-08-13-ui-polish/status-reference-comparison.png`；Appica 卡片参考/登录实现横向合成图 `artifacts/design-qa/2026-08-13-ui-polish/auth-card-reference-comparison.png`。
+- 状态时间线的 36 个数据段均为 14 CSS px 高、2 CSS px 圆角和等间距布局；正常、警告、异常、未知分别使用 success、warning、error、neutral 角色色，不再以高度表达状态。浏览器确认所有数据段等高，且无横向溢出。
+- 用量记录工具栏已不再渲染本页 IP 数量，只保留批量查询/隐藏归属地按钮。
+- 首页及认证页均只使用本地 WayX 标识 `/assets/img/wayx-mark-64.png`；未发现旧 Appica 内联标识或 `sentence-ai-icon.png` 引用。
+- 登录/注册页移除左侧说明区，桌面卡片宽 512 CSS px 且水平居中；移动端 390 CSS px 视口下左右各保留 16 CSS px，横向溢出为 0。卡片使用 Appica solid frame，输入框的 focus ring、边框与圆角均由 Appica 组件及角色 token 提供。
+- 交互复验：邮箱输入框自动聚焦并显示 3 CSS px focus ring；认证页切换入口保持单行居中；干净页面浏览器 error 日志为 0。
+- 首轮 P2：状态段圆角过于胶囊化，已收敛为 2 CSS px；移动登录页底部切换入口被 Appica CardFooter 默认方向拆成两行，已改为单行居中。复验后未发现 P0、P1 或 P2 视觉问题。
 
 final result: passed
 
----
+## 2026-08-13 首页模型图标悬浮态复验
 
-# Design QA — Token 单位、时间筛选、兑换码、订单与个人资料（2026-07-28）
-
-## 对照范围
-
-- 仪表盘与时间范围筛选：用户提供的图 1、图 2。
-- 兑换码页面：用户提供的图 3。
-- 订单状态筛选：用户提供的图 4，并对照 `sub2api` 的用户侧状态语义。
-- 个人资料：用户提供的图 5。
-- 兑换码视觉对照图：`/private/tmp/redeem-design-comparison.jpg`。
-
-## 验证结果
-
-- 仪表盘：Token 汇总、趋势、构成、模型与明细统一使用 `M`（百万）单位；折线图纵轴明确标注 `Token (M)`。
-- 时间范围：筛选器位于刷新按钮左侧，支持今天、昨天、最近 24 小时、最近 7 天、最近 14 天、最近 30 天、本月、上月与自定义起止日期；预设切换及应用状态正常。
-- 兑换码：亮暗主题均复现余额总览、三项统计、钱包主题图、兑换表单、使用说明、礼物主题图及最近活动层级；玻璃对比度与主题素材显示正常。
-- 订单：状态选项收敛为全部、待处理、已完成、失败、已退款，显示值正常；下拉宽度缩短为紧凑尺寸。
-- 个人资料：账户头像、状态徽标、登录方式、余额通知和表单操作已恢复独立布局，无重叠、溢出或异常放大。
-- 交互：时间预设更新、兑换码输入与清除、主题切换、订单筛选均通过浏览器实际操作检查。
-- 稳定性：在全新页面会话中检查，控制台无 error 或 warning。
-
-## 可接受差异
-
-- 工程现有侧栏、顶栏与品牌信息继续保留。
-- 当前测试数据没有兑换活动时，最近活动按设计显示空状态；后端返回数据后复用同一行结构。
-
-## 缺陷分级
-
-- P0：无。
-- P1：无。
-- P2：无。
-- P3：无阻塞项。
-
-final result: passed
-
----
-
-# Image Studio Thinking Animation Design QA
-
-- Source visual truth: `/var/folders/gk/q08f7_l552l_n3fyzsc25v_m0000gn/T/codex-clipboard-2d17df78-fc06-439f-888e-897729704f3a.png`
-- Implementation screenshots:
-  - `/tmp/wayx-thinking-orbit-top-left.png`
-  - `/tmp/wayx-thinking-orbit-top-right.png`
-  - `/tmp/wayx-thinking-orbit-bottom-right.png`
-  - `/tmp/wayx-thinking-orbit-bottom-left.png`
-- Viewport: 1231 × 721 CSS px, device pixel ratio 1
-- Source pixels: 1231 × 721; every implementation screenshot is 1231 × 721. No density normalization was required.
-- State: Image Studio, light theme, pending image generation across the four requested cluster phases.
-
-## Full-view comparison evidence
-
-The reported screenshot and all four implementation phases were opened together in one comparison input. The point matrix is now centered horizontally and vertically inside the 480 × 480 square stage. The animation no longer treats the top edge as its permanent active region and the existing WayX pending-card hierarchy remains unchanged.
-
-## Focused-region comparison evidence
-
-The 330 × 234 matrix and 480 × 480 stage share the exact browser-measured center `(492, 389)`. Deterministic phase captures measured the dominant corner opacity as `0.82`, while the other corners remained near `0.08`, in this order: top-left, top-right, bottom-right, bottom-left. A live 6.4-second cycle independently reproduced `topLeft → topRight → bottomRight → bottomLeft → topLeft`, with no browser console errors.
-
-## Required fidelity surfaces
-
-- Fonts and typography: unchanged from the established WayX pending state; title, supporting copy, and elapsed time keep their existing hierarchy.
-- Spacing and layout rhythm: the matrix is geometrically centered in both axes; the square stage, card spacing, radii, and elapsed-time placement remain stable.
-- Colors and visual tokens: inactive points remain subtle while the active cluster uses the WayX green status tint with sufficient phase contrast.
-- Image quality and asset fidelity: no raster or illustrative asset is present; the functional point animation is rendered at native CSS resolution without scaling artifacts.
-- Copy and content: pending title, description, role label, and elapsed-time copy are unchanged.
-
-## Findings
-
-- No actionable P0, P1, or P2 differences remain within the requested animation behavior and alignment scope.
-- Reduced-motion mode intentionally shows a centered static matrix without the orbit animation.
-
-## Comparison history
-
-- Pass 1: The matrix was top-aligned and its distance-based delays radiated from the center, matching the reported P1 regression.
-- Pass 2: The matrix was centered and the timing model was replaced with a 16-anchor clockwise perimeter path. Four deterministic captures confirmed each requested corner phase.
-- Pass 3: A live full cycle confirmed the actual runtime order returns to top-left after bottom-left; no further P0/P1/P2 issues were found.
-
-## Implementation checklist
-
-- [x] Center the complete matrix horizontally and vertically.
-- [x] Remove center-distance delay timing.
-- [x] Move one compact cluster clockwise around 16 perimeter anchors.
-- [x] Verify top-left, top-right, bottom-right, bottom-left, and loop-back phases.
-- [x] Preserve responsive sizing, themes, and reduced-motion behavior.
+- 源真值：当前仓库 `main` 分支的 `src/landing-page.html` 与 `src/styles.css` 图标实现；实现目标：`http://127.0.0.1:5173/`，1280 × 720 CSS px、deviceScaleFactor 1、light 状态。
+- 全页实现证据：`artifacts/design-qa/2026-08-13-model-hover/main-style-local-hover.jpg`。
+- 当前首页直接复用 main 的 `hero-works`、`hero-supports`、`hero-agents-strip` 和 `hero-mark` 结构及样式；图标恢复为原始 `<img>`，不再经过 Appica Thumbnail 包装或自定义 ring。
+- 桌面图标为 72 × 72 CSS px，相邻图标左边距为 -22 CSS px，组合宽度为 372 CSS px；悬浮终态为 `translateY(-6px) scale(1.1)`、z-index 1、`drop-shadow(0 8px 14px rgb(0 0 0 / 35%))`。
+- transition 与 main 一致为 transform / filter 180 ms ease；main 原有的 hover none / pointer coarse 降级规则保持生效。
+- 悬浮前后图标组布局边界不变，页面横向溢出为 0，浏览器 error 日志为 0。
+- 复验未发现 P0、P1 或 P2 问题。
 
 final result: passed
