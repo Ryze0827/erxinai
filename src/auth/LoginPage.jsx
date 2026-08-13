@@ -134,7 +134,7 @@ export function LoginPage() {
   const footer = settings?.backend_mode_enabled ? null : <><span>{t("auth.login.newUser")}</span> <Link to="/register">{t("auth.login.createAccount")}</Link></>;
 
   return (
-    <AppicaAuthLayout>
+    <AppicaAuthLayout animatedLogo>
       <AppicaAuthCard kicker={t("auth.login.kicker")} title={t("auth.login.title")} description={t("auth.login.description")} footer={footer}>
         {totp ? (
           <AppicaTotpForm loading={loading} error={error} email={totp.user_email_masked} onSubmit={handleTotp} onCancel={() => { setTotp(null); setError(""); }} />

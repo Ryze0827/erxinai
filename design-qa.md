@@ -149,3 +149,16 @@ final result: passed
 - 对照修复后未发现仍需处理的 P0、P1 或 P2 问题。
 
 final result: passed
+
+## 2026-08-14 控制台概览纵向密度复验
+
+- 源真值：用户提供的控制台截图 `/var/folders/gk/q08f7_l552l_n3fyzsc25v_m0000gn/T/codex-clipboard-820a4c18-c4b5-4ff6-858b-0756964e9de0.png`；源图为 1920 × 992 px，实现使用 1920 × 1024 CSS px 浅色视口，浏览器 DPR 为 2，截图归一化输出为 1920 × 1024 px。
+- 首轮全视图证据：`artifacts/design-qa/2026-08-14-dashboard-density/dashboard-final-1920x1024.jpg`；首轮目标区块证据：`artifacts/design-qa/2026-08-14-dashboard-density/dashboard-focus-1920x1024.jpg`。
+- 首轮把快捷操作入口从 48 CSS px 收紧为 40 CSS px、顶部留白从 16 CSS px 收紧为 12 CSS px；实测快捷操作区域高 53 CSS px、外层概览区高 177 CSS px。
+- 用户要求再次收紧后，入口高度调整为 36 CSS px、顶部留白调整为 8 CSS px；最终实测快捷操作区域高 45 CSS px、外层概览区高 169 CSS px。
+- 最终全视图证据：`artifacts/design-qa/2026-08-14-dashboard-density/dashboard-final-tightened-1920x1024.jpg`；同一内容区域的 1640 × 360 px 并排对照（左侧源图、右侧实现）：`artifacts/design-qa/2026-08-14-dashboard-density/dashboard-tightened-comparison.jpg`，两侧均从 x=270、y=125 原尺寸裁切，无缩放。
+- 指标概览的上下内边距由 16 CSS px 收紧为 12 CSS px，单项最小高度由 112 CSS px 收紧为 104 CSS px；实测整个指标栏高 130 CSS px。
+- 五个快捷入口仍等分排列，七个指标仍保持同宽、分隔线完整、图标和文案垂直对齐；字体与排版、颜色与角色 token、图片质量、文案内容、圆角和响应式列规则均未改变。
+- 验证使用与正式页面相同的 DOM 结构和生产样式；临时 QA 路由已在复验后移除。对照后未发现 P0、P1 或 P2 问题。
+
+final result: passed

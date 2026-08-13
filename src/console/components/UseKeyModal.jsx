@@ -3,6 +3,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@a
 import { Alert, AlertDescription, AlertIcon, AlertTitle } from "@appica/ui-react/alert";
 import { Radio } from "@appica/ui-react/radio";
 import { RadioGroup } from "@appica/ui-react/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@appica/ui-react/tabs";
 import { Icon } from "../Icon";
 import { Button, CopyButton, Modal, Panel } from "../UI";
 import { useLocale } from "../i18n";
@@ -96,11 +97,12 @@ function fileMeta(file, locale) {
   };
 }
 
-function StepCard({ number, title, description, children }) {
-  return <Panel className="console-use-step">
-    <header><span className="console-step-badge">{number}</span><div><strong>{title}</strong>{description && <p>{description}</p>}</div></header>
+function StepCard({ title, description, className = "", children }) {
+  return <section className={`console-purchase-step console-use-step ${className}`}>
+    <header className="console-purchase-step-title console-use-step-title"><strong>{title}</strong></header>
+    {description && <p className="console-use-step-description">{description}</p>}
     {children && <div className="console-use-step-body">{children}</div>}
-  </Panel>;
+  </section>;
 }
 
 function ConfigFile({ file }) {
@@ -128,7 +130,7 @@ function MissingGroup({ locale }) {
 
 function ToolPicker({ tabs, client, setClient, platform, locale }) {
   const description = localText(locale, `这把密钥属于 ${platform} 分组,可以在下面这些客户端中使用。`, `This key belongs to the ${platform} group and works with these clients.`);
-  return <StepCard number={1} title={localText(locale, "选择你的工具", "Choose your tool")} description={description}><><RadioGroup value={client} onValueChange={setClient} className="console-tool-grid" aria-label={localText(locale, "客户端工具", "Client tool")}>{tabs.map((tab) => {
+  return <StepCard className="is-tool" title={localText(locale, "选择你的工具", "Choose your tool")} description={description}><><RadioGroup value={client} onValueChange={setClient} className="console-tool-grid" aria-label={localText(locale, "客户端工具", "Client tool")}>{tabs.map((tab) => {
     const meta = clientMeta[tab.value] || {};
     const selected = client === tab.value;
     return <label key={tab.value} className={selected ? "is-active" : ""}><Icon name="terminal" size={17} /><span><strong>{tab.label}</strong><small>{locale === "zh" ? meta.zh : meta.en}</small></span><Radio value={tab.value} aria-label={tab.label} /></label>;
@@ -137,26 +139,27 @@ function ToolPicker({ tabs, client, setClient, platform, locale }) {
 
 function ShellStep({ visible, tabs, shell, setShell, locale }) {
   if (!visible) return null;
-  return <StepCard number={2} title={localText(locale, "选择你的操作系统", "Pick your operating system")} description={localText(locale, "不同系统写入配置的方式略有差别。", "The way you apply the config differs slightly per system.")}><CompactTabs label="Operating system" items={tabs} value={shell} onChange={setShell} /></StepCard>;
+  return <StepCard className="is-system" title={localText(locale, "选择操作系统", "Pick your operating system")} description={localText(locale, "不同系统写入配置的方式略有差别。", "The way you apply the config differs slightly per system.")}><CompactTabs label="Operating system" items={tabs} value={shell} onChange={setShell} /></StepCard>;
 }
 
-function ConfigStep({ number, files, locale }) {
+function ConfigStep({ files, locale }) {
   const hasAuthFile = files.some((file) => file.path.endsWith("auth.json"));
   const notice = hasAuthFile
     ? localText(locale, "两个文件都打开全部覆盖进去，auth.json如果不存在，请手动创建。", "Open both files and replace their entire contents. If auth.json does not exist, create it manually.")
     : files.length > 1
       ? localText(locale, "请分别按照下面的说明应用两处配置。", "Apply both configurations using the instructions below.")
       : "";
-  return <StepCard number={number} title={localText(locale, "应用下面的配置", "Apply the configuration")}><>{notice && <Alert variant="warning" layout="inline" className="console-config-notice"><AlertIcon><Icon name="info" size={17} /></AlertIcon><AlertDescription>{notice}</AlertDescription></Alert>}<div className="console-config-stack">{files.map((file) => <ConfigFile file={file} key={file.path} />)}</div></></StepCard>;
+  return <StepCard className="is-config" title={localText(locale, "复制并应用配置", "Copy and apply the configuration")}><>{notice && <Alert variant="warning" layout="inline" className="console-config-notice"><AlertIcon><Icon name="info" size={17} /></AlertIcon><AlertDescription>{notice}</AlertDescription></Alert>}<div className="console-config-stack">{files.map((file) => <ConfigFile file={file} key={file.path} />)}</div></></StepCard>;
 }
 
-function RestartStep({ number, clientLabel, locale }) {
+function RestartStep({ clientLabel, locale }) {
   const description = localText(locale, `完全退出并重新打开 ${clientLabel},随便发一条消息。收到回复,就说明接入成功了。`, `Fully quit and reopen ${clientLabel}, then send any message. If you get a reply, you're connected.`);
-  return <StepCard number={number} title={localText(locale, "重启,然后试一试", "Restart, then try it")} description={description}><Accordion variant="flush" className="console-use-faq"><AccordionItem value="troubleshooting"><AccordionTrigger><Icon name="chat" size={16} />{localText(locale, "没有生效?看看这几点", "Not working? Check these")}</AccordionTrigger><AccordionContent><ul><li>{localText(locale, "确认已经完全退出客户端后再重新打开(终端环境变量只在当前窗口生效)。", "Make sure the client was fully restarted — terminal env vars only apply to the current window.")}</li><li>{localText(locale, "检查配置有没有被完整粘贴,地址和密钥前后不能有多余空格。", "Check the snippet was pasted in full, with no stray spaces around the URL or key.")}</li><li>{localText(locale, "回到「API 密钥」页面确认密钥状态是启用,并且没有超出额度。", "Confirm on the API keys page that this key is active and hasn't exhausted its quota.")}</li><li>{localText(locale, "仍有问题?到「用量记录」的错误标签页查看具体报错。", "Still stuck? The Errors tab under Usage shows the exact failure.")}</li></ul></AccordionContent></AccordionItem></Accordion><Alert variant="info" layout="inline" className="console-callout"><AlertIcon><Icon name="shield" size={18} /></AlertIcon><AlertDescription>{localText(locale, "密钥等同于账户凭证:不要发给别人,也不要提交到代码仓库。泄露时回到密钥页删除或停用即可。", "Treat the key like a password: don't share it or commit it to a repo. If it leaks, disable or delete it from the keys page.")}</AlertDescription></Alert></StepCard>;
+  return <StepCard className="is-verify" title={localText(locale, "重启并验证", "Restart and verify")} description={description}><Accordion variant="flush" className="console-use-faq"><AccordionItem value="troubleshooting"><AccordionTrigger><Icon name="chat" size={16} />{localText(locale, "没有生效?看看这几点", "Not working? Check these")}</AccordionTrigger><AccordionContent><ul><li>{localText(locale, "确认已经完全退出客户端后再重新打开(终端环境变量只在当前窗口生效)。", "Make sure the client was fully restarted — terminal env vars only apply to the current window.")}</li><li>{localText(locale, "检查配置有没有被完整粘贴,地址和密钥前后不能有多余空格。", "Check the snippet was pasted in full, with no stray spaces around the URL or key.")}</li><li>{localText(locale, "回到「API 密钥」页面确认密钥状态是启用,并且没有超出额度。", "Confirm on the API keys page that this key is active and hasn't exhausted its quota.")}</li><li>{localText(locale, "仍有问题?到「用量记录」的错误标签页查看具体报错。", "Still stuck? The Errors tab under Usage shows the exact failure.")}</li></ul></AccordionContent></AccordionItem></Accordion><Alert variant="info" layout="inline" className="console-callout"><AlertIcon><Icon name="shield" size={18} /></AlertIcon><AlertDescription>{localText(locale, "密钥等同于账户凭证:不要发给别人,也不要提交到代码仓库。泄露时回到密钥页删除或停用即可。", "Treat the key like a password: don't share it or commit it to a repo. If it leaks, disable or delete it from the keys page.")}</AlertDescription></Alert></StepCard>;
 }
 
-function UseKeyContent({ tabs, client, setClient, platform, locale, hasShellStep, shellTabs, shell, setShell, copyStep, files, clientLabel }) {
-  return <div className="console-use-key"><Alert variant="info" layout="inline" className="console-use-intro"><AlertIcon><Icon name="info" size={18} /></AlertIcon><AlertDescription>{localText(locale, "原理很简单:让工具把请求发到我们的网关地址,并用这把密钥做身份验证。下面的配置已经帮你填好了地址和密钥,复制即可。", "The idea is simple: point your tool at our gateway URL and authenticate with this key. The snippets below already include both — just copy them.")}</AlertDescription></Alert><ToolPicker tabs={tabs} client={client} setClient={setClient} platform={platform} locale={locale} /><ShellStep visible={hasShellStep} tabs={shellTabs} shell={shell} setShell={setShell} locale={locale} /><ConfigStep number={copyStep} files={files} locale={locale} /><RestartStep number={copyStep + 1} clientLabel={clientLabel} locale={locale} /></div>;
+function UseKeyContent({ steps, activeStep, setActiveStep, tabs, client, setClient, platform, locale, hasShellStep, shellTabs, shell, setShell, files, clientLabel }) {
+  const activeIndex = steps.findIndex((step) => step.value === activeStep);
+  return <Panel className="console-use-workflow"><Tabs value={activeStep} onValueChange={setActiveStep} variant="line" className="console-use-tabs"><TabsList className={`console-use-step-list console-use-step-list--${steps.length}`} aria-label={localText(locale, "使用密钥步骤", "API key setup steps")}>{steps.map((step, index) => <TabsTrigger value={step.value} className={index < activeIndex ? "is-complete" : ""} key={step.value}><span className="console-use-nav-number">{String(index + 1).padStart(2, "0")}</span><span className="console-use-nav-label">{step.label}</span></TabsTrigger>)}</TabsList><TabsContent value="tool"><ToolPicker tabs={tabs} client={client} setClient={setClient} platform={platform} locale={locale} /></TabsContent>{hasShellStep && <TabsContent value="system"><ShellStep visible tabs={shellTabs} shell={shell} setShell={setShell} locale={locale} /></TabsContent>}<TabsContent value="config"><ConfigStep files={files} locale={locale} /></TabsContent><TabsContent value="verify"><RestartStep clientLabel={clientLabel} locale={locale} /></TabsContent></Tabs></Panel>;
 }
 
 export function UseKeyModal({ open, apiKey, baseUrl, platform, allowMessagesDispatch, onClose }) {
@@ -164,7 +167,8 @@ export function UseKeyModal({ open, apiKey, baseUrl, platform, allowMessagesDisp
   const tabs = useMemo(() => clientTabs(platform, allowMessagesDispatch), [allowMessagesDispatch, platform]);
   const [client, setClient] = useState(defaultClient(platform));
   const [shell, setShell] = useState("unix");
-  useEffect(() => { setClient(defaultClient(platform)); setShell("unix"); }, [platform, open]);
+  const [activeStep, setActiveStep] = useState("tool");
+  useEffect(() => { setClient(defaultClient(platform)); setShell("unix"); setActiveStep("tool"); }, [platform, open]);
   useEffect(() => setShell("unix"), [client]);
   const shellTabs = client === "codex" || client === "codex-ws" || client === "grok"
     ? [{ value: "unix", label: "macOS / Linux" }, { value: "windows", label: "Windows" }]
@@ -172,8 +176,18 @@ export function UseKeyModal({ open, apiKey, baseUrl, platform, allowMessagesDisp
   const files = filesFor(client, shell, platform, baseUrl, apiKey);
   const clientLabel = tabs.find((tab) => tab.value === client)?.label || client;
   const hasShellStep = client !== "opencode";
-  const copyStep = hasShellStep ? 3 : 2;
+  const steps = [
+    { value: "tool", label: localText(locale, "选择工具", "Tool") },
+    ...(hasShellStep ? [{ value: "system", label: localText(locale, "操作系统", "System") }] : []),
+    { value: "config", label: localText(locale, "应用配置", "Configure") },
+    { value: "verify", label: localText(locale, "验证接入", "Verify") },
+  ];
+  const activeIndex = Math.max(0, steps.findIndex((step) => step.value === activeStep));
+  const lastStep = activeIndex === steps.length - 1;
+  const previousStep = () => setActiveStep(steps[Math.max(0, activeIndex - 1)].value);
+  const nextStep = () => setActiveStep(steps[Math.min(steps.length - 1, activeIndex + 1)].value);
 
-  const content = platform ? <UseKeyContent tabs={tabs} client={client} setClient={setClient} platform={platform} locale={locale} hasShellStep={hasShellStep} shellTabs={shellTabs} shell={shell} setShell={setShell} copyStep={copyStep} files={files} clientLabel={clientLabel} /> : <MissingGroup locale={locale} />;
-  return <Modal open={open} title={localText(locale, "使用 API 密钥", "Use your API key")} description={localText(locale, "跟着下面几步,几分钟内就能在你的工具里用上这把密钥。", "Follow the steps below — you'll be up and running in a few minutes.")} onClose={onClose} size="large" footer={<Button onClick={onClose}>{localText(locale, "完成", "Done")}</Button>}>{content}</Modal>;
+  const content = platform ? <UseKeyContent steps={steps} activeStep={activeStep} setActiveStep={setActiveStep} tabs={tabs} client={client} setClient={setClient} platform={platform} locale={locale} hasShellStep={hasShellStep} shellTabs={shellTabs} shell={shell} setShell={setShell} files={files} clientLabel={clientLabel} /> : <MissingGroup locale={locale} />;
+  const footer = platform ? <>{activeIndex > 0 && <Button onClick={previousStep}>{localText(locale, "上一步", "Back")}</Button>}<Button variant="primary" onClick={lastStep ? onClose : nextStep}>{lastStep ? localText(locale, "完成", "Done") : localText(locale, "下一步", "Next")}</Button></> : <Button onClick={onClose}>{localText(locale, "完成", "Done")}</Button>;
+  return <Modal open={open} title={localText(locale, "使用 API 密钥", "Use your API key")} description={localText(locale, "跟着下面几步,几分钟内就能在你的工具里用上这把密钥。", "Follow the steps below — you'll be up and running in a few minutes.")} onClose={onClose} size="large" footer={footer}>{content}</Modal>;
 }

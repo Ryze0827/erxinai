@@ -94,7 +94,6 @@ import {
   PlayerPlayFilled,
   PlayerSkipBackFilled,
   PlayerSkipForwardFilled,
-  Plus,
   Repeat,
   Route,
   Rocket,
@@ -111,6 +110,7 @@ import {
   Wallet,
 } from "@appica/icons-react";
 import { BrandLogo } from "../BrandLogo";
+import { TeamMembersCard } from "../TeamMembersCard";
 import { DEFAULT_SITE_NAME } from "../branding";
 import { useConsole } from "../console/ConsoleContext";
 import { useLocale } from "../console/i18n";
@@ -279,7 +279,7 @@ function LandingHeader({ theme, onThemeChange }) {
       <header className="bg-background/75 sticky top-0 z-30 grid h-18 grid-cols-[minmax(0,1fr)_auto] items-center p-4 backdrop-blur-lg md:px-6 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
         <div className="flex items-center gap-1.5">
           <Button className="-ms-1 lg:hidden" type="button" variant="ghost" size="icon-md" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu2 /></Button>
-          <Link className="outline-ring flex w-fit shrink-0 items-center gap-2 rounded-sm" to="/" aria-label={`${DEFAULT_SITE_NAME} home`}><BrandLogo className="size-8" alt="" width="32" height="32" /><span className="text-foreground-intense hidden text-lg font-semibold sm:inline">{DEFAULT_SITE_NAME}</span></Link>
+          <Link className="outline-ring flex w-fit shrink-0 items-center gap-2 rounded-sm" to="/" aria-label={`${DEFAULT_SITE_NAME} home`}><BrandLogo animated className="size-8" alt="" width="32" height="32" /><span className="text-foreground-intense hidden text-lg font-semibold sm:inline">{DEFAULT_SITE_NAME}</span></Link>
         </div>
         <Navigation className="hidden lg:block" variant="line" aria-label="Primary">
           <NavigationList>
@@ -465,27 +465,6 @@ function RevenueCard() {
   );
 }
 
-function TeamCard() {
-  const teamMembers = [
-    ["01", "Sarah Jenkins", "sarah@appica.dev", "Owner"],
-    ["03", "Mateo Rossi", "mateo@appica.dev", "Editor"],
-    ["06", "Lucas Müller", "lucas@appica.dev", "Viewer"],
-    ["07", "Emily Carter", "emily@appica.dev", "Editor"],
-  ];
-  return (
-    <ShowcaseCard className="order-7 min-[85rem]:flex-1" contentClassName="flex flex-col">
-      <div className="flex items-center justify-between gap-2"><div><h3 className="text-foreground-intense text-sm font-semibold">Team members</h3><p className="text-foreground-muted text-xs">4 of 5 seats used</p></div><Button variant="outline" size="sm"><Plus data-icon="start" />Invite</Button></div>
-      <div className="mt-4 flex flex-1 flex-col gap-4">
-        {teamMembers.map(([avatar, name, email, role]) => (
-          <div className="flex items-center gap-3" key={email}><Avatar size="sm"><AvatarImage src={`/assets/appica/avatars/${avatar}.jpg`} alt={name} /><AvatarFallback>{name.split(" ").map((part) => part[0]).join("")}</AvatarFallback><AvatarBadge /></Avatar><div className="min-w-0 flex-1"><div className="text-foreground-intense truncate text-sm font-medium">{name}</div><div className="text-foreground-muted truncate text-xs">{email}</div></div><Badge variant={role === "Owner" ? "primary-outline" : "soft"} size="sm">{role}</Badge></div>
-        ))}
-      </div>
-      <Separator className="my-4" />
-      <Input variant="soft" placeholder="teammate@appica.dev" aria-label="Invite teammate by email" endSlot={<Button className="-me-1.5" variant="outline" size="icon-sm" aria-label="Send invitation"><Plus /></Button>} />
-    </ShowcaseCard>
-  );
-}
-
 const transactions = [
   [Wallet, "Payroll · Appica Inc.", "Income · Jul 1", "+$4,150.00", "income"],
   [Repeat, "Spotify Premium", "Subscription · Jul 2", "-$11.99", "spending"],
@@ -593,7 +572,7 @@ function ShowcaseGallery() {
         <div className="appica-showcase-column appica-showcase-column-extra"><AssistantCard /><ModelSettingsCard /></div>
         <div className="appica-showcase-column"><ProductCard /><CommandCard /></div>
         <div className="appica-showcase-column"><AudioCard /><OrderCard /></div>
-        <div className="appica-showcase-column"><RevenueCard /><TeamCard /></div>
+        <div className="appica-showcase-column"><RevenueCard /><TeamMembersCard className="order-7 min-[85rem]:flex-1" /></div>
         <div className="appica-showcase-column"><TransactionsCard /><RatingCard /></div>
       </div>
     </div>

@@ -66,7 +66,7 @@ function getEmailSuggestions(value) {
     .filter((suggestion) => suggestion.toLowerCase() !== value.toLowerCase());
 }
 
-export function AppicaAuthLayout({ children }) {
+export function AppicaAuthLayout({ children, animatedLogo = false }) {
   const { branding } = useConsole();
   const { locale, setLocale, t } = useLocale();
   const siteName = branding?.siteName || "WayX";
@@ -76,7 +76,7 @@ export function AppicaAuthLayout({ children }) {
       <BackgroundPattern className="pointer-events-none absolute inset-0 opacity-60" variant="dots" spotlight={{ persistent: true }} />
       <header className="relative z-1 mx-auto flex h-18 max-w-7xl items-center justify-between px-4 md:px-6">
         <Link className="outline-ring flex items-center gap-2 rounded-sm" to="/" aria-label={t("auth.common.siteHome", { siteName })}>
-          <BrandLogo className="size-8" alt="" width="32" height="32" />
+          <BrandLogo animated={animatedLogo} className="size-8" alt="" width="32" height="32" />
           <span className="text-foreground-intense text-lg font-semibold">{siteName}</span>
         </Link>
         <div className="flex items-center gap-1">

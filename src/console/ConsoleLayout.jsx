@@ -4,6 +4,9 @@ import { Link, Navigate, NavLink, useLocation, useNavigate } from "react-router"
 import { Avatar, AvatarFallback, AvatarImage } from "@appica/ui-react/avatar";
 import { Alert, AlertIcon, AlertTitle } from "@appica/ui-react/alert";
 import { BackgroundPattern } from "@appica/ui-react/background-pattern";
+import { Dialog } from "@appica/ui-react/dialog";
+import { DialogContent } from "@appica/ui-react/dialog";
+import { DialogTitle } from "@appica/ui-react/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +21,7 @@ import { announcementsApi, keysApi, subscriptionsApi } from "../api";
 import { getAccessToken } from "../api/session";
 import { BrandLogo } from "../BrandLogo";
 import { DEFAULT_SITE_LOGO, DEFAULT_SITE_NAME } from "../branding";
+import { TeamMembersCard } from "../TeamMembersCard";
 import { useConsole, resolveFeature } from "./ConsoleContext";
 import { Icon } from "./Icon";
 import { useLocale } from "./i18n";
@@ -113,6 +117,8 @@ function SidebarUserMenu({ collapsed, onNavigate }) {
   const { t } = useLocale();
   const { user, logout, settings } = useConsole();
   const navigate = useNavigate();
+  const [teamMembersOpen, setTeamMembersOpen] = useState(false);
+  const teamMembersCardRef = useRef(null);
   const displayName = user?.username || user?.email?.split("@")[0] || "User";
   const initial = displayName.trim().split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   const avatar = safeImageUrl(user?.avatar_url);
@@ -123,11 +129,13 @@ function SidebarUserMenu({ collapsed, onNavigate }) {
     navigate("/login", { replace: true });
   };
 
-  return <DropdownMenu size="md"><DropdownMenuTrigger className="console-sidebar-user" title={collapsed ? t("nav.accountMenu") : undefined} aria-label={collapsed ? t("nav.accountMenu") : undefined}><Avatar size={42} shape="rounded" className="console-sidebar-avatar">{avatar && <AvatarImage src={avatar} alt="" />}<AvatarFallback>{initial}</AvatarFallback></Avatar><div><strong>{displayName}</strong><small>{t("nav.workspaceOwner")}</small></div><Icon name="chevronDown" size={15} data-icon="end" /></DropdownMenuTrigger><DropdownMenuContent side="top" align="start" className="console-user-popover"><div className="console-user-summary"><Avatar size={40} shape="rounded" className="console-user-summary-avatar">{avatar && <AvatarImage src={avatar} alt="" />}<AvatarFallback>{initial}</AvatarFallback></Avatar><div><strong>{displayName}</strong>{user?.email && <small>{user.email}</small>}</div></div><DropdownMenuSeparator /><DropdownMenuLinkItem render={<Link to="/profile" />} onClick={onNavigate}><Icon name="user" size={17} data-icon="start" />{t("nav.profile")}</DropdownMenuLinkItem><DropdownMenuLinkItem render={<Link to="/keys" />} onClick={onNavigate}><Icon name="apiKey" size={17} data-icon="start" />{t("nav.keys")}</DropdownMenuLinkItem>{settings?.contact_info && <div className="console-user-contact"><Icon name="chat" size={17} /><div><span>{t("common.contactSupport")}</span><p>{settings.contact_info}</p></div></div>}<DropdownMenuSeparator /><DropdownMenuItem className="console-user-logout" onClick={handleLogout}><Icon name="logout" size={17} data-icon="start" />{t("nav.logout")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>;
+  return <><DropdownMenu size="md"><DropdownMenuTrigger className="console-sidebar-user" title={collapsed ? t("nav.accountMenu") : undefined} aria-label={collapsed ? t("nav.accountMenu") : undefined}><Avatar size={42} shape="rounded" className="console-sidebar-avatar">{avatar && <AvatarImage src={avatar} alt="" />}<AvatarFallback>{initial}</AvatarFallback></Avatar><div><strong>{displayName}</strong><small>{t("nav.workspaceOwner")}</small></div><Icon name="chevronDown" size={15} data-icon="end" /></DropdownMenuTrigger><DropdownMenuContent side="top" align="start" className="console-user-popover"><div className="console-user-summary"><Avatar size={40} shape="rounded" className="console-user-summary-avatar">{avatar && <AvatarImage src={avatar} alt="" />}<AvatarFallback>{initial}</AvatarFallback></Avatar><div><strong>{displayName}</strong>{user?.email && <small>{user.email}</small>}</div></div><DropdownMenuSeparator /><DropdownMenuLinkItem render={<Link to="/profile" />} onClick={onNavigate}><Icon name="user" size={17} data-icon="start" />{t("nav.profile")}</DropdownMenuLinkItem><DropdownMenuLinkItem render={<Link to="/keys" />} onClick={onNavigate}><Icon name="apiKey" size={17} data-icon="start" />{t("nav.keys")}</DropdownMenuLinkItem><DropdownMenuItem onClick={() => setTeamMembersOpen(true)}><Icon name="users" size={17} data-icon="start" />{t("nav.inviteMembers")}</DropdownMenuItem>{settings?.contact_info && <div className="console-user-contact"><Icon name="chat" size={17} /><div><span>{t("common.contactSupport")}</span><p>{settings.contact_info}</p></div></div>}<DropdownMenuSeparator /><DropdownMenuItem className="console-user-logout" onClick={handleLogout}><Icon name="logout" size={17} data-icon="start" />{t("nav.logout")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu><Dialog open={teamMembersOpen} onOpenChange={setTeamMembersOpen}><DialogContent frame={false} closeButton={false} initialFocus={teamMembersCardRef} className="console-team-members-dialog"><DialogTitle className="sr-only">{t("nav.inviteMembers")}</DialogTitle><TeamMembersCard ref={teamMembersCardRef} className="console-team-members-floating-card" ownerName={displayName} ownerEmail={user?.email || "—"} ownerLabel={t("teamMembers.you")} footer={<p className="bg-background-muted text-foreground-muted rounded-lg px-3 py-2 text-center text-xs">{t("teamMembers.comingSoon")}</p>} /></DialogContent></Dialog></>;
 }
 
 function announcementContent(item) {
-  return String(item?.content || item?.message || "").replace(/\\r\\n|\\n|\\r/g, "\n");
+  return String(item?.content ?? item?.message ?? "")
+    .replace(/\r\n?|\u2028|\u2029/g, "\n")
+    .replace(/\\r\\n|\\n|\\r/g, "\n");
 }
 
 function SiteAnnouncementBar() {

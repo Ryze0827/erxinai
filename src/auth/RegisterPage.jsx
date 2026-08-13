@@ -138,7 +138,7 @@ export function RegisterPage() {
   const registrationClosed = settings && (settings.registration_enabled === false || settings.backend_mode_enabled);
 
   return (
-    <AppicaAuthLayout>
+    <AppicaAuthLayout animatedLogo>
       <AppicaAuthCard kicker={t("auth.register.kicker")} title={t("auth.register.title")} description={t("auth.register.description")} footer={<><span>{t("auth.register.existingUser")}</span> <Link to="/login">{t("auth.register.login")}</Link></>}>
         <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
           <AppicaAuthNotice>{settingsLoading ? t("auth.register.loadingOptions") : ""}</AppicaAuthNotice>
