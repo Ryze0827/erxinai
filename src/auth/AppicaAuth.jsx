@@ -31,11 +31,13 @@ import {
   EyeOff,
   InfoCircle,
   Key,
+  Language,
   Lock,
   Mail,
 } from "@appica/icons-react";
 import { BrandLogo } from "../BrandLogo";
 import { useConsole } from "../console/ConsoleContext";
+import { useLocale } from "../console/i18n";
 
 const COMMON_EMAIL_DOMAINS = [
   "gmail.com",
@@ -66,21 +68,25 @@ function getEmailSuggestions(value) {
 
 export function AppicaAuthLayout({ children }) {
   const { branding } = useConsole();
+  const { locale, setLocale, t } = useLocale();
   const siteName = branding?.siteName || "WayX";
 
   return (
     <main className="appica-auth bg-background text-foreground relative min-h-svh overflow-hidden">
       <BackgroundPattern className="pointer-events-none absolute inset-0 opacity-60" variant="dots" spotlight={{ persistent: true }} />
       <header className="relative z-1 mx-auto flex h-18 max-w-7xl items-center justify-between px-4 md:px-6">
-        <Link className="outline-ring flex items-center gap-2 rounded-sm" to="/" aria-label={`${siteName} home`}>
+        <Link className="outline-ring flex items-center gap-2 rounded-sm" to="/" aria-label={t("auth.common.siteHome", { siteName })}>
           <BrandLogo className="size-8" alt="" width="32" height="32" />
           <span className="text-foreground-intense text-lg font-semibold">{siteName}</span>
         </Link>
-        <Link className={buttonVariants({ variant: "ghost", size: "sm" })} to="/"><ArrowLeft data-icon="start" />Back to home</Link>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" type="button" aria-label={t("nav.switchLanguage")} title={t("nav.switchLanguage")} onClick={() => setLocale(locale === "en" ? "zh" : "en")}><Language /><span>{t("nav.language")}</span></Button>
+          <Link className={buttonVariants({ variant: "ghost", size: "sm" })} to="/"><ArrowLeft data-icon="start" />{t("auth.common.backHome")}</Link>
+        </div>
       </header>
 
       <div className="relative z-1 mx-auto flex min-h-[calc(100svh-4.5rem)] max-w-7xl items-center justify-center px-4 py-10 md:px-6 lg:py-16">
-        <section className="w-full max-w-lg" aria-label="Account access">
+        <section className="w-full max-w-lg" aria-label={t("auth.common.accountAccess")}>
           {children}
         </section>
       </div>
@@ -142,7 +148,8 @@ export function AppicaEmailInput({ value, onValueChange, error, ...props }) {
 
 export function AppicaPasswordInput({ value, onChange, error, autoComplete = "current-password", placeholder }) {
   const [visible, setVisible] = useState(false);
-  const label = visible ? "Hide password" : "Show password";
+  const { t } = useLocale();
+  const label = t(visible ? "auth.common.hidePassword" : "auth.common.showPassword");
   return (
     <AppicaTextInput
       type={visible ? "text" : "password"}
@@ -157,11 +164,12 @@ export function AppicaPasswordInput({ value, onChange, error, autoComplete = "cu
   );
 }
 
-export function AppicaSubmitButton({ loading, children, loadingLabel = "Working…", disabled }) {
+export function AppicaSubmitButton({ loading, children, loadingLabel, disabled }) {
+  const { t } = useLocale();
   return (
     <Button className="w-full" type="submit" size="lg" variant="primary" disabled={loading || disabled}>
-      {loading && <Spinner currentColor aria-label="Loading" />}
-      {loading ? loadingLabel : children}
+      {loading && <Spinner currentColor aria-label={t("auth.common.loading")} />}
+      {loading ? loadingLabel || t("auth.common.working") : children}
     </Button>
   );
 }
@@ -178,6 +186,7 @@ export function AppicaAuthNotice({ children, tone = "info" }) {
 }
 
 export function AppicaTotpForm({ loading, error, email, onSubmit, onCancel }) {
+  const { t } = useLocale();
   const [code, setCode] = useState("");
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -185,12 +194,12 @@ export function AppicaTotpForm({ loading, error, email, onSubmit, onCancel }) {
   };
   return (
     <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-      <AppicaAuthNotice>Enter the six-digit code from your authenticator{email ? ` for ${email}` : ""}.</AppicaAuthNotice>
-      <AppicaAuthField label="Authentication code" error={error}>
+      <AppicaAuthNotice>{email ? t("auth.totp.descriptionForEmail", { email }) : t("auth.totp.description")}</AppicaAuthNotice>
+      <AppicaAuthField label={t("auth.totp.code")} error={error}>
         <AppicaTextInput value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" startSlot={<Key />} />
       </AppicaAuthField>
-      <AppicaSubmitButton loading={loading} loadingLabel="Verifying…" disabled={code.length !== 6}>Verify code</AppicaSubmitButton>
-      {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>Cancel and return</Button>}
+      <AppicaSubmitButton loading={loading} loadingLabel={t("auth.totp.verifying")} disabled={code.length !== 6}>{t("auth.totp.verify")}</AppicaSubmitButton>
+      {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>{t("auth.totp.cancel")}</Button>}
     </form>
   );
 }

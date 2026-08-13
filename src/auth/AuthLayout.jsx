@@ -2,40 +2,44 @@ import { useRef } from "react";
 import { Link } from "react-router";
 import { BrandLogo } from "../BrandLogo";
 import { useConsole } from "../console/ConsoleContext";
+import { useLocale } from "../console/i18n";
 import "../auth.css";
 
 export function AuthLayout({ children, surface }) {
   const { branding, brandingReady } = useConsole();
+  const { t } = useLocale();
+  const siteName = branding?.siteName || "WayX";
   return (
     <main className={`auth-page${surface ? ` auth-page--${surface}` : ""}`}>
       <div className="auth-scene" aria-hidden="true" />
       <header className="auth-topbar">
-        <Link className="auth-brand" to="/" aria-label="WayX home">
+        <Link className="auth-brand" to="/" aria-label={t("auth.common.siteHome", { siteName })}>
           {brandingReady && <BrandLogo key={branding.siteLogo} src={branding.siteLogo} alt="" width="32" height="32" />}
-          <span>WayX</span>
+          <span>{siteName}</span>
         </Link>
-        <Link className="auth-home-link" to="/">Back to home</Link>
+        <Link className="auth-home-link" to="/">{t("auth.common.backHome")}</Link>
       </header>
       <div className="auth-stage">
         <AuthIntro />
-        <section className="auth-card-wrap" aria-label="Account access">
+        <section className="auth-card-wrap" aria-label={t("auth.common.accountAccess")}>
           {children}
-          <p className="auth-security-note">Encrypted in transit · Keys never shown in full · Session protected</p>
+          <p className="auth-security-note">{t("auth.legacy.securityNote")}</p>
         </section>
       </div>
     </main>
   );
 }
 function AuthIntro() {
+  const { t } = useLocale();
   return (
     <section className="auth-intro" aria-labelledby="auth-intro-title">
-      <span className="auth-eyebrow">One account · Every model</span>
-      <h1 id="auth-intro-title">Your gateway,<br /><em>ready when you are.</em></h1>
-      <p>Manage keys, usage, billing, and every provider route from one calm workspace.</p>
+      <span className="auth-eyebrow">{t("auth.legacy.eyebrow")}</span>
+      <h1 id="auth-intro-title">{t("auth.legacy.titleStart")}<br /><em>{t("auth.legacy.titleEmphasis")}</em></h1>
+      <p>{t("auth.legacy.description")}</p>
       <div className="auth-trust-card">
-        <span><b>38</b> models online</span>
-        <span><b>99.99%</b> gateway uptime</span>
-        <span><b>&lt; 1s</b> median latency</span>
+        <span><b>38</b> {t("auth.legacy.modelsOnline")}</span>
+        <span><b>99.99%</b> {t("auth.legacy.gatewayUptime")}</span>
+        <span><b>&lt; 1s</b> {t("auth.legacy.medianLatency")}</span>
       </div>
     </section>
   );

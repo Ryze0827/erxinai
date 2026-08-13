@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocale } from "../console/i18n";
 
 let scriptPromise = null;
 
@@ -14,12 +15,12 @@ function loadTurnstile() {
       if (window.turnstile) resolve(window.turnstile);
       else {
         scriptPromise = null;
-        reject(new Error("Security verification is unavailable."));
+        reject(new Error("auth.error.securityUnavailable"));
       }
     };
     script.onerror = () => {
       scriptPromise = null;
-      reject(new Error("Security verification failed to load."));
+      reject(new Error("auth.error.securityLoadFailed"));
     };
     document.head.appendChild(script);
   });
@@ -27,6 +28,7 @@ function loadTurnstile() {
 }
 
 export function TurnstileWidget({ enabled, siteKey, onToken, resetKey = 0 }) {
+  const { t } = useLocale();
   const containerRef = useRef(null);
   const widgetRef = useRef(null);
   const [error, setError] = useState("");
@@ -44,7 +46,7 @@ export function TurnstileWidget({ enabled, siteKey, onToken, resetKey = 0 }) {
         "expired-callback": () => onToken(""),
         "error-callback": () => {
           onToken("");
-          setError("Security verification failed. Please try again.");
+          setError("auth.error.securityFailed");
         },
       });
     }).catch((loadError) => setError(loadError.message));
@@ -55,6 +57,6 @@ export function TurnstileWidget({ enabled, siteKey, onToken, resetKey = 0 }) {
   }, [enabled, onToken, resetKey, siteKey]);
 
   if (!enabled) return null;
-  if (!siteKey) return <div className="auth-turnstile"><em className="auth-field-error">Security verification is not configured.</em></div>;
-  return <div className="auth-turnstile"><div ref={containerRef} />{error && <em className="auth-field-error">{error}</em>}</div>;
+  if (!siteKey) return <div className="auth-turnstile"><em className="auth-field-error">{t("auth.error.securityNotConfigured")}</em></div>;
+  return <div className="auth-turnstile"><div ref={containerRef} />{error && <em className="auth-field-error">{t(error)}</em>}</div>;
 }

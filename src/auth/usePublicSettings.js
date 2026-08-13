@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { authApi } from "../api/auth";
 import { normalizeSiteName, persistBranding } from "../branding";
+import { useLocale } from "../console/i18n";
 
 let cachedSettings = null;
 let settingsPromise = null;
@@ -22,19 +23,20 @@ function fetchSettings(force) {
 }
 
 export function usePublicSettings() {
+  const { t } = useLocale();
   const [settings, setSettings] = useState(cachedSettings);
   const [loading, setLoading] = useState(!cachedSettings);
-  const [error, setError] = useState("");
+  const [failed, setFailed] = useState(false);
   const mountedRef = useRef(true);
 
   const load = useCallback(async (force = false) => {
     setLoading(true);
-    setError("");
+    setFailed(false);
     try {
       const nextSettings = await fetchSettings(force);
       if (mountedRef.current) setSettings(nextSettings);
     } catch {
-      if (mountedRef.current) setError("We couldn't load the authentication settings.");
+      if (mountedRef.current) setFailed(true);
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -46,5 +48,8 @@ export function usePublicSettings() {
     return () => { mountedRef.current = false; };
   }, [load, settings]);
 
-  return { settings, loading, error, retry: () => load(true) };
+  const retry = useCallback(() => load(true), [load]);
+  const error = failed ? t("auth.error.settings") : "";
+
+  return { settings, loading, error, retry };
 }

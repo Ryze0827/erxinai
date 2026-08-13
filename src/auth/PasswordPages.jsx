@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 import { Button } from "@appica/ui-react/button";
 import { authApi } from "../api/auth";
+import { useLocale } from "../console/i18n";
 import {
   AppicaAuthCard,
   AppicaAuthField,
@@ -28,6 +29,7 @@ function takeResetContext() {
 }
 
 export function ForgotPasswordPage() {
+  const { locale, t } = useLocale();
   const { settings, loading: settingsLoading, error: settingsError, retry } = usePublicSettings();
   const [email, setEmail] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
@@ -38,18 +40,24 @@ export function ForgotPasswordPage() {
   const [turnstileReset, setTurnstileReset] = useState(0);
   const handleToken = useCallback((token) => setTurnstileToken(token), []);
 
+  useEffect(() => {
+    setEmailError("");
+    setError("");
+    setMessage("");
+  }, [locale]);
+
   const submit = async (event) => {
     event.preventDefault();
     if (!settings) return;
-    if (!isEmail(email)) return setEmailError("Enter a valid email address.");
+    if (!isEmail(email)) return setEmailError(t("auth.error.emailInvalid"));
     setLoading(true);
     setEmailError("");
     setError("");
     try {
       const response = await authApi.forgotPassword({ email: email.trim(), turnstile_token: turnstileToken || undefined });
-      setMessage(response.message || "If the email is registered, a reset link will arrive shortly.");
+      setMessage(response.message || t("auth.forgot.success"));
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "We couldn't request a reset link."));
+      setError(getErrorMessage(requestError, t("auth.forgot.failed"), t));
       setTurnstileToken("");
       setTurnstileReset((value) => value + 1);
     } finally {
@@ -64,19 +72,20 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <AppicaAuthLayout><AppicaAuthCard kicker="Account recovery" title="Reset your password" description="We'll email a secure reset link if the account exists." footer={<Link to="/login">Back to login</Link>}>
+    <AppicaAuthLayout><AppicaAuthCard kicker={t("auth.forgot.kicker")} title={t("auth.forgot.title")} description={t("auth.forgot.description")} footer={<Link to="/login">{t("auth.forgot.backToLogin")}</Link>}>
       <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
         <AppicaAuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error || message}</AppicaAuthNotice>
-        {settingsError && <Button className="w-fit" variant="ghost" size="sm" type="button" onClick={retry}>Retry loading settings</Button>}
-        <AppicaAuthField label="Email address" error={emailError}><AppicaEmailInput type="email" value={email} onValueChange={updateEmail} error={emailError} placeholder="you@company.com" autoComplete="email" autoFocus /></AppicaAuthField>
+        {settingsError && <Button className="w-fit" variant="ghost" size="sm" type="button" onClick={retry}>{t("auth.common.retrySettings")}</Button>}
+        <AppicaAuthField label={t("auth.common.email")} error={emailError}><AppicaEmailInput type="email" value={email} onValueChange={updateEmail} error={emailError} placeholder={t("auth.common.emailPlaceholder")} autoComplete="email" autoFocus /></AppicaAuthField>
         <TurnstileWidget enabled={settings?.turnstile_enabled} siteKey={settings?.turnstile_site_key} onToken={handleToken} resetKey={turnstileReset} />
-        <AppicaSubmitButton loading={loading} loadingLabel="Sending…" disabled={Boolean(message) || settingsLoading || Boolean(settingsError) || settings?.password_reset_enabled === false || (settings?.turnstile_enabled && !turnstileToken)}>Send reset link</AppicaSubmitButton>
+        <AppicaSubmitButton loading={loading} loadingLabel={t("auth.forgot.submitting")} disabled={Boolean(message) || settingsLoading || Boolean(settingsError) || settings?.password_reset_enabled === false || (settings?.turnstile_enabled && !turnstileToken)}>{t("auth.forgot.submit")}</AppicaSubmitButton>
       </form>
     </AppicaAuthCard></AppicaAuthLayout>
   );
 }
 
 export function ResetPasswordPage() {
+  const { locale, t } = useLocale();
   const [{ email, token }, setResetContext] = useState(takeResetContext);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -84,6 +93,12 @@ export function ResetPasswordPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setErrors({});
+    setError("");
+    setMessage("");
+  }, [locale]);
 
   useEffect(() => {
     const captureResetContext = () => {
@@ -100,19 +115,19 @@ export function ResetPasswordPage() {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!email || !token) return setError("This reset link is incomplete.");
+    if (!email || !token) return setError(t("auth.reset.incompleteLink"));
     const nextErrors = {};
-    if (password.length < 6) nextErrors.password = "Password must be at least 6 characters.";
-    if (password !== confirmation) nextErrors.confirmation = "The passwords do not match.";
+    if (password.length < 6) nextErrors.password = t("auth.error.passwordMin");
+    if (password !== confirmation) nextErrors.confirmation = t("auth.reset.passwordMismatch");
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
     setLoading(true);
     setError("");
     try {
       const response = await authApi.resetPassword({ email, token, new_password: password });
-      setMessage(response.message || "Your password has been reset.");
+      setMessage(response.message || t("auth.reset.success"));
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "Password reset failed."));
+      setError(getErrorMessage(requestError, t("auth.reset.failed"), t));
     } finally {
       setLoading(false);
     }
@@ -126,12 +141,12 @@ export function ResetPasswordPage() {
   };
 
   return (
-    <AppicaAuthLayout><AppicaAuthCard kicker="Choose a new password" title="Secure your account" description={email ? `Resetting the password for ${email}.` : "Open the complete link from your reset email."} footer={<Link to="/login">Return to login</Link>}>
+    <AppicaAuthLayout><AppicaAuthCard kicker={t("auth.reset.kicker")} title={t("auth.reset.title")} description={email ? t("auth.reset.descriptionForEmail", { email }) : t("auth.reset.description")} footer={<Link to="/login">{t("auth.reset.returnToLogin")}</Link>}>
       <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
         <AppicaAuthNotice tone={error ? "error" : "info"}>{error || message}</AppicaAuthNotice>
-        <AppicaAuthField label="New password" error={errors.password}><AppicaPasswordInput value={password} onChange={(event) => updatePassword("password", event.target.value)} error={errors.password} placeholder="At least 6 characters" autoComplete="new-password" /></AppicaAuthField>
-        <AppicaAuthField label="Confirm password" error={errors.confirmation}><AppicaPasswordInput value={confirmation} onChange={(event) => updatePassword("confirmation", event.target.value)} error={errors.confirmation} placeholder="Repeat your new password" autoComplete="new-password" /></AppicaAuthField>
-        <AppicaSubmitButton loading={loading} loadingLabel="Resetting…" disabled={Boolean(message)}>Reset password</AppicaSubmitButton>
+        <AppicaAuthField label={t("auth.reset.newPassword")} error={errors.password}><AppicaPasswordInput value={password} onChange={(event) => updatePassword("password", event.target.value)} error={errors.password} placeholder={t("auth.reset.passwordPlaceholder")} autoComplete="new-password" /></AppicaAuthField>
+        <AppicaAuthField label={t("auth.reset.confirmPassword")} error={errors.confirmation}><AppicaPasswordInput value={confirmation} onChange={(event) => updatePassword("confirmation", event.target.value)} error={errors.confirmation} placeholder={t("auth.reset.confirmationPlaceholder")} autoComplete="new-password" /></AppicaAuthField>
+        <AppicaSubmitButton loading={loading} loadingLabel={t("auth.reset.submitting")} disabled={Boolean(message)}>{t("auth.reset.submit")}</AppicaSubmitButton>
       </form>
     </AppicaAuthCard></AppicaAuthLayout>
   );

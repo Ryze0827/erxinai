@@ -1,9 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { Button } from "@appica/ui-react/button";
+import { useToastManager } from "@appica/ui-react/toast";
+import { AlertTriangle } from "@appica/icons-react";
 import { authApi } from "../api/auth";
 import { persistAuthResponse } from "../api/session";
 import { useConsole } from "../console/ConsoleContext";
+import { useLocale } from "../console/i18n";
 import { AgreementPrompt, useAgreement } from "./AgreementPrompt";
 import {
   AppicaAuthCard,
@@ -20,31 +22,59 @@ import { OAuthButtons } from "./OAuthButtons";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { usePublicSettings } from "./usePublicSettings";
 
+const AUTH_SETTINGS_TOAST_ID = "auth-settings-error";
+
 export function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { notify } = useConsole();
+  const { locale, t } = useLocale();
+  const { add: addToast, close: closeToast } = useToastManager();
   const { settings, loading: settingsLoading, error: settingsError, retry } = usePublicSettings();
   const agreement = useAgreement(settings);
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
-  const [error, setError] = useState(sessionStorage.getItem("auth_expired") ? "Your session expired. Please sign in again." : "");
+  const [sessionExpired, setSessionExpired] = useState(() => Boolean(sessionStorage.getItem("auth_expired")));
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileReset, setTurnstileReset] = useState(0);
   const [totp, setTotp] = useState(null);
   const handleTurnstileToken = useCallback((token) => setTurnstileToken(token), []);
 
+  useEffect(() => {
+    setErrors({});
+    setError("");
+  }, [locale]);
+
+  useEffect(() => {
+    if (!settingsError) {
+      closeToast(AUTH_SETTINGS_TOAST_ID);
+      return undefined;
+    }
+    addToast({
+      id: AUTH_SETTINGS_TOAST_ID,
+      type: "warning",
+      title: settingsError,
+      timeout: 0,
+      priority: "high",
+      data: { icon: <AlertTriangle /> },
+      actionProps: { children: t("auth.common.retrySettings"), onClick: retry },
+    });
+    return () => closeToast(AUTH_SETTINGS_TOAST_ID);
+  }, [addToast, closeToast, retry, settingsError, t]);
+
   const updateForm = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: "" }));
+    setSessionExpired(false);
     setError("");
   };
 
   const validate = () => {
     const nextErrors = {};
-    if (!isEmail(form.email)) nextErrors.email = "Enter a valid email address.";
-    if (form.password.length < 6) nextErrors.password = "Password must be at least 6 characters.";
+    if (!isEmail(form.email)) nextErrors.email = t("auth.error.emailInvalid");
+    if (form.password.length < 6) nextErrors.password = t("auth.error.passwordMin");
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -59,6 +89,7 @@ export function LoginPage() {
     event.preventDefault();
     if (!settings) return;
     if (!validate() || !agreement.accepted) return;
+    setSessionExpired(false);
     setLoading(true);
     setError("");
     try {
@@ -73,7 +104,7 @@ export function LoginPage() {
         completeLogin(response);
       }
     } catch (requestError) {
-      const message = getErrorMessage(requestError, "Login failed.");
+      const message = getErrorMessage(requestError, t("auth.login.failed"), t);
       if (requestError?.reason === "INVALID_CREDENTIALS") {
         setError("");
         notify("error", message);
@@ -93,35 +124,35 @@ export function LoginPage() {
     try {
       completeLogin(await authApi.login2FA({ temp_token: totp.temp_token, totp_code: code }));
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "Verification failed."));
+      setError(getErrorMessage(requestError, t("auth.totp.failed"), t));
     } finally {
       setLoading(false);
     }
   };
 
-  const footer = settings?.backend_mode_enabled ? null : <><span>New to WayX?</span> <Link to="/register">Create an account</Link></>;
+  const displayedError = error || (sessionExpired ? t("auth.login.sessionExpired") : "");
+  const footer = settings?.backend_mode_enabled ? null : <><span>{t("auth.login.newUser")}</span> <Link to="/register">{t("auth.login.createAccount")}</Link></>;
 
   return (
     <AppicaAuthLayout>
-      <AppicaAuthCard kicker="Welcome back" title="Log in to WayX" description="Pick up exactly where your last request left off." footer={footer}>
+      <AppicaAuthCard kicker={t("auth.login.kicker")} title={t("auth.login.title")} description={t("auth.login.description")} footer={footer}>
         {totp ? (
           <AppicaTotpForm loading={loading} error={error} email={totp.user_email_masked} onSubmit={handleTotp} onCancel={() => { setTotp(null); setError(""); }} />
         ) : (
           <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
-            <AppicaAuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error}</AppicaAuthNotice>
-            {settingsError && <Button className="w-fit" variant="ghost" size="sm" type="button" onClick={retry}>Retry loading settings</Button>}
-            <AppicaAuthField label="Email address" error={errors.email}>
-              <AppicaEmailInput type="email" value={form.email} onValueChange={(value) => updateForm("email", value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
+            <AppicaAuthNotice tone={displayedError ? "error" : "info"}>{displayedError}</AppicaAuthNotice>
+            <AppicaAuthField label={t("auth.common.email")} error={errors.email}>
+              <AppicaEmailInput type="email" value={form.email} onValueChange={(value) => updateForm("email", value)} error={errors.email} placeholder={t("auth.common.emailPlaceholder")} autoComplete="email" autoFocus />
             </AppicaAuthField>
-            <AppicaAuthField label="Password" error={errors.password}>
-              <AppicaPasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder="Enter your password" />
+            <AppicaAuthField label={t("auth.common.password")} error={errors.password}>
+              <AppicaPasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder={t("auth.login.passwordPlaceholder")} />
             </AppicaAuthField>
             <div className="flex justify-end">
-              {settings?.password_reset_enabled && <Link className="outline-ring text-foreground-intense rounded-xs text-sm underline-offset-4 hover:underline" to="/forgot-password">Forgot password?</Link>}
+              {settings?.password_reset_enabled && <Link className="outline-ring text-foreground-intense rounded-xs text-sm underline-offset-4 hover:underline" to="/forgot-password">{t("auth.login.forgotPassword")}</Link>}
             </div>
             <TurnstileWidget enabled={settings?.turnstile_enabled} siteKey={settings?.turnstile_site_key} onToken={handleTurnstileToken} resetKey={turnstileReset} />
             <AgreementPrompt agreement={agreement} />
-            <AppicaSubmitButton loading={loading} loadingLabel="Signing in…" disabled={settingsLoading || Boolean(settingsError) || !agreement.accepted || (settings?.turnstile_enabled && !turnstileToken)}>Log in</AppicaSubmitButton>
+            <AppicaSubmitButton loading={loading} loadingLabel={t("auth.login.submitting")} disabled={settingsLoading || Boolean(settingsError) || !agreement.accepted || (settings?.turnstile_enabled && !turnstileToken)}>{t("auth.login.submit")}</AppicaSubmitButton>
             {!settings?.backend_mode_enabled && <OAuthButtons settings={settings} searchParams={searchParams} onError={setError} />}
           </form>
         )}

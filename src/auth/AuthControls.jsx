@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocale } from "../console/i18n";
 
 export function AuthField({ label, error, hint, children }) {
   return (
@@ -27,8 +28,9 @@ function PasswordVisibilityIcon({ visible }) {
 }
 
 export function PasswordInput({ value, onChange, error, autoComplete = "current-password", placeholder }) {
+  const { t } = useLocale();
   const [visible, setVisible] = useState(false);
-  const label = visible ? "Hide password" : "Show password";
+  const label = t(visible ? "auth.common.hidePassword" : "auth.common.showPassword");
   const action = (
     <button className="auth-password-toggle" type="button" aria-label={label} aria-pressed={visible} title={label} onClick={() => setVisible((current) => !current)}>
       <PasswordVisibilityIcon visible={visible} />
@@ -47,10 +49,11 @@ export function PasswordInput({ value, onChange, error, autoComplete = "current-
   );
 }
 
-export function SubmitButton({ loading, children, loadingLabel = "Working…", disabled }) {
+export function SubmitButton({ loading, children, loadingLabel, disabled }) {
+  const { t } = useLocale();
   return (
     <button className="auth-submit" type="submit" disabled={loading || disabled}>
-      <span>{loading ? loadingLabel : children}</span>
+      <span>{loading ? loadingLabel || t("auth.common.working") : children}</span>
       <i aria-hidden="true" />
     </button>
   );
@@ -62,6 +65,7 @@ export function AuthNotice({ children, tone = "info" }) {
 }
 
 export function TotpForm({ loading, error, email, onSubmit, onCancel }) {
+  const { t } = useLocale();
   const [code, setCode] = useState("");
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -69,12 +73,12 @@ export function TotpForm({ loading, error, email, onSubmit, onCancel }) {
   };
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
-      <AuthNotice>Enter the six-digit code from your authenticator{email ? ` for ${email}` : ""}.</AuthNotice>
-      <AuthField label="Authentication code" error={error}>
+      <AuthNotice>{email ? t("auth.totp.descriptionForEmail", { email }) : t("auth.totp.description")}</AuthNotice>
+      <AuthField label={t("auth.totp.code")} error={error}>
         <TextInput value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" />
       </AuthField>
-      <SubmitButton loading={loading} loadingLabel="Verifying…" disabled={code.length !== 6}>Verify code</SubmitButton>
-      {onCancel && <button className="auth-link-button" type="button" onClick={onCancel}>Cancel and return</button>}
+      <SubmitButton loading={loading} loadingLabel={t("auth.totp.verifying")} disabled={code.length !== 6}>{t("auth.totp.verify")}</SubmitButton>
+      {onCancel && <button className="auth-link-button" type="button" onClick={onCancel}>{t("auth.totp.cancel")}</button>}
     </form>
   );
 }

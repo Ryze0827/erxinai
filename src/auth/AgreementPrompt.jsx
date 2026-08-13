@@ -9,6 +9,7 @@ import { DialogDescription } from "@appica/ui-react/dialog";
 import { DialogFooter } from "@appica/ui-react/dialog";
 import { DialogHeader } from "@appica/ui-react/dialog";
 import { DialogTitle } from "@appica/ui-react/dialog";
+import { useLocale } from "../console/i18n";
 
 const AGREEMENT_KEY = "sub2api_login_agreement_consent";
 
@@ -44,26 +45,27 @@ export function useAgreement(settings) {
 }
 
 export function AgreementPrompt({ agreement }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   if (!agreement.enabled) return null;
   return (
     <>
       <div className="text-foreground-muted flex items-start gap-3 text-sm leading-6">
-        <Checkbox className="mt-1 shrink-0" checked={agreement.accepted} onCheckedChange={(checked) => checked && agreement.accept()} aria-label="Accept the login agreement" />
-        <span>I have read and accept the <Button className="h-auto p-0 align-baseline underline underline-offset-4" variant="ghost" size="sm" type="button" onClick={() => setOpen(true)}>login agreement</Button>.</span>
+        <Checkbox className="mt-1 shrink-0" checked={agreement.accepted} onCheckedChange={(checked) => checked && agreement.accept()} aria-label={t("auth.agreement.acceptLabel")} />
+        <span>{t("auth.agreement.prefix")}<Button className="h-auto p-0 align-baseline underline underline-offset-4" variant="ghost" size="sm" type="button" onClick={() => setOpen(true)}>{t("auth.agreement.link")}</Button>{t("auth.agreement.suffix")}</span>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl" viewportProps={{ className: "dark" }}>
           <DialogHeader>
-            <DialogTitle>Login agreement</DialogTitle>
-            <DialogDescription>Please review the current terms before continuing.</DialogDescription>
+            <DialogTitle>{t("auth.agreement.title")}</DialogTitle>
+            <DialogDescription>{t("auth.agreement.description")}</DialogDescription>
           </DialogHeader>
           <DialogBody className="max-h-[60svh] overflow-y-auto">
             <div className="flex flex-col gap-7 **:h4:text-foreground-intense **:h4:text-lg **:h4:font-semibold **:p:text-foreground-muted **:p:leading-7">
               {agreement.documents.map((document) => <article className="flex flex-col gap-3" key={document.id || document.title}><h4>{document.title}</h4><ReactMarkdown>{document.content_md || ""}</ReactMarkdown></article>)}
             </div>
           </DialogBody>
-          <DialogFooter><Button className="w-full" type="button" variant="light" onClick={() => { agreement.accept(); setOpen(false); }}>Accept and continue</Button></DialogFooter>
+          <DialogFooter><Button className="w-full" type="button" variant="light" onClick={() => { agreement.accept(); setOpen(false); }}>{t("auth.agreement.confirm")}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </>
