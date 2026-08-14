@@ -130,7 +130,6 @@ html[data-console-theme] .console-site-announcement-slot {
 
 html[data-console-theme] .console-site-announcement {
   border-color: var(--warning-soft);
-  border-radius: var(--radius-full);
   color: var(--warning-foreground);
   background: var(--warning-subtle);
 }
@@ -867,7 +866,6 @@ html[data-console-theme] [data-slot="alert"].console-site-announcement {
   align-items: center;
   padding: 0.125rem 0.625rem;
   border-color: var(--border-muted);
-  border-radius: var(--radius-full);
   color: var(--foreground);
   background: var(--background-muted);
   backdrop-filter: none;
