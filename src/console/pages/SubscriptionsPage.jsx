@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@appica/ui-react/table";
+import { Table } from "@appica/ui-react/table";
+import { TableBody } from "@appica/ui-react/table";
+import { TableCell } from "@appica/ui-react/table";
+import { TableHead } from "@appica/ui-react/table";
+import { TableHeader } from "@appica/ui-react/table";
+import { TableRow } from "@appica/ui-react/table";
 import { Link } from "react-router";
 import { subscriptionsApi } from "../../api";
 import { useConsole } from "../ConsoleContext";

@@ -1,22 +1,20 @@
 import { useEffect, useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@appica/ui-react/dropdown-menu";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@appica/ui-react/combobox";
+import { DropdownMenu } from "@appica/ui-react/dropdown-menu";
+import { DropdownMenuCheckboxItem } from "@appica/ui-react/dropdown-menu";
+import { DropdownMenuContent } from "@appica/ui-react/dropdown-menu";
+import { DropdownMenuRadioGroup } from "@appica/ui-react/dropdown-menu";
+import { DropdownMenuRadioItem } from "@appica/ui-react/dropdown-menu";
+import { DropdownMenuTrigger } from "@appica/ui-react/dropdown-menu";
+import { Combobox } from "@appica/ui-react/combobox";
+import { ComboboxContent } from "@appica/ui-react/combobox";
+import { ComboboxEmpty } from "@appica/ui-react/combobox";
+import { ComboboxInput } from "@appica/ui-react/combobox";
+import { ComboboxItem } from "@appica/ui-react/combobox";
+import { ComboboxList } from "@appica/ui-react/combobox";
 import { DatePicker } from "@appica/ui-react/date-picker";
-import { Tabs, TabsList, TabsTrigger } from "@appica/ui-react/tabs";
+import { Tabs } from "@appica/ui-react/tabs";
+import { TabsList } from "@appica/ui-react/tabs";
+import { TabsTrigger } from "@appica/ui-react/tabs";
 import { Button } from "../UI";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
@@ -121,9 +119,9 @@ export function SearchSelect({ value, onChange, options, placeholder, id }) {
     const target = { id, value: nextValue };
     onChange?.({ target, currentTarget: target });
   };
-  return <Combobox items={items} value={items.find((option) => option.value === String(value ?? "")) || null} onValueChange={(next) => emitChange(next?.value ?? "")} inputValue={String(value ?? "")} onInputValueChange={emitChange} itemToStringLabel={(option) => option?.label || ""} itemToStringValue={(option) => option?.value || ""} isItemEqualToValue={(option, selected) => option?.value === selected?.value} filter={(option, query) => option.label.toLowerCase().includes(String(query || "").toLowerCase())} size="md" variant="outline" clearable modal={false}><ComboboxInput id={id} className="console-input console-search-select" placeholder={placeholder} /><ComboboxContent className="console-select-menu console-search-select-menu"><ComboboxEmpty>{locale === "zh" ? "没有匹配选项" : "No matching options"}</ComboboxEmpty><ComboboxList>{(option) => <ComboboxItem value={option} key={option.value}>{option.label}</ComboboxItem>}</ComboboxList></ComboboxContent></Combobox>;
+  return <Combobox items={items} value={items.find((option) => option.value === String(value ?? "")) || null} onValueChange={(next) => emitChange(next?.value ?? "")} inputValue={String(value ?? "")} onInputValueChange={emitChange} itemToStringLabel={(option) => option?.label || ""} itemToStringValue={(option) => option?.value || ""} isItemEqualToValue={(option, selected) => option?.value === selected?.value} filter={(option, query) => option.label.toLowerCase().includes(String(query || "").toLowerCase())} size="md" variant="outline" clearable modal={false}><ComboboxInput id={id} placeholder={placeholder} /><ComboboxContent><ComboboxEmpty>{locale === "zh" ? "没有匹配选项" : "No matching options"}</ComboboxEmpty><ComboboxList>{(option) => <ComboboxItem value={option} key={option.value}>{option.label}</ComboboxItem>}</ComboboxList></ComboboxContent></Combobox>;
 }
 
 export function CompactTabs({ items, value, onChange, label, className = "" }) {
-  return <Tabs value={value} onValueChange={onChange} variant="pill" size="sm" className="console-compact-tabs-root"><TabsList className={`console-compact-tabs ${className}`} aria-label={label}>{items.map((item) => <TabsTrigger value={item.value} className={value === item.value ? "is-active" : ""} key={item.value}>{item.label}</TabsTrigger>)}</TabsList></Tabs>;
+  return <Tabs value={value} onValueChange={onChange} variant="pill" size="sm" className="console-compact-tabs-root w-fit"><TabsList className={className} aria-label={label}>{items.map((item) => <TabsTrigger value={item.value} key={item.value}>{item.label}</TabsTrigger>)}</TabsList></Tabs>;
 }

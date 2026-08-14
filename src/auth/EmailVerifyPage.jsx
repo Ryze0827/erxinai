@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { Button } from "@appica/ui-react/button";
 import { authApi } from "../api/auth";
 import { persistAuthResponse } from "../api/session";
 import { useLocale } from "../console/i18n";
-import { AuthCard, AuthLayout } from "./AuthLayout";
-import { AuthField, AuthNotice, SubmitButton, TextInput } from "./AuthControls";
+import {
+  AppicaAuthCard,
+  AppicaAuthField,
+  AppicaAuthLayout,
+  AppicaAuthNotice,
+  AppicaSubmitButton,
+  AppicaTextInput,
+} from "./AppicaAuth";
 import { getErrorMessage } from "./authUtils";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { usePublicSettings } from "./usePublicSettings";
@@ -79,21 +86,21 @@ export function EmailVerifyPage() {
   };
 
   return (
-    <AuthLayout>
-      <AuthCard kicker={t("auth.verify.kicker")} title={t("auth.verify.title")} description={data ? t("auth.verify.description", { email: data.email }) : t("auth.verify.missingDescription")} footer={<Link to="/register">{t("auth.verify.backToRegistration")}</Link>}>
-        {!data ? <AuthNotice tone="error">{t("auth.verify.restart")}</AuthNotice> : (
-          <form className="auth-form" onSubmit={handleVerify}>
-            <AuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error}</AuthNotice>
-            {settingsError && <button className="auth-link-button" type="button" onClick={retry}>{t("auth.common.retrySettings")}</button>}
-            <AuthField label={t("auth.verify.code")}>
-              <TextInput className="auth-code-input" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" autoFocus />
-            </AuthField>
-            <SubmitButton loading={loading} loadingLabel={t("auth.totp.verifying")} disabled={code.length !== 6}>{t("auth.verify.submit")}</SubmitButton>
+    <AppicaAuthLayout>
+      <AppicaAuthCard kicker={t("auth.verify.kicker")} title={t("auth.verify.title")} description={data ? t("auth.verify.description", { email: data.email }) : t("auth.verify.missingDescription")} footer={<Link to="/register">{t("auth.verify.backToRegistration")}</Link>}>
+        {!data ? <AppicaAuthNotice tone="error">{t("auth.verify.restart")}</AppicaAuthNotice> : (
+          <form className="flex flex-col gap-5" onSubmit={handleVerify}>
+            <AppicaAuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error}</AppicaAuthNotice>
+            {settingsError && <Button type="button" variant="ghost" onClick={retry}>{t("auth.common.retrySettings")}</Button>}
+            <AppicaAuthField label={t("auth.verify.code")}>
+              <AppicaTextInput value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" autoFocus />
+            </AppicaAuthField>
+            <AppicaSubmitButton loading={loading} loadingLabel={t("auth.totp.verifying")} disabled={code.length !== 6}>{t("auth.verify.submit")}</AppicaSubmitButton>
             <TurnstileWidget enabled={settings?.turnstile_enabled && countdown === 0} siteKey={settings?.turnstile_site_key} onToken={handleTurnstileToken} resetKey={turnstileReset} />
-            <button className="auth-link-button" type="button" onClick={resend} disabled={settingsLoading || Boolean(settingsError) || countdown > 0 || sending || (settings?.turnstile_enabled && !turnstileToken)}>{countdown > 0 ? t("auth.verify.resendIn", { seconds: countdown }) : sending ? t("auth.verify.sending") : t("auth.verify.resend")}</button>
+            <Button type="button" variant="ghost" onClick={resend} disabled={settingsLoading || Boolean(settingsError) || countdown > 0 || sending || (settings?.turnstile_enabled && !turnstileToken)}>{countdown > 0 ? t("auth.verify.resendIn", { seconds: countdown }) : sending ? t("auth.verify.sending") : t("auth.verify.resend")}</Button>
           </form>
         )}
-      </AuthCard>
-    </AuthLayout>
+      </AppicaAuthCard>
+    </AppicaAuthLayout>
   );
 }

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Avatar } from "@appica/ui-react/avatar";
+import { AvatarFallback } from "@appica/ui-react/avatar";
 import { userApi } from "../../api";
 import affiliateBalanceDark from "../../assets/console/affiliate-balance-dark.png";
 import affiliateBalanceLight from "../../assets/console/affiliate-balance-light.png";
@@ -55,7 +57,7 @@ export function AffiliatePage() {
   const detail = state.detail;
   const inviteLink = `${window.location.origin}/register?aff=${encodeURIComponent(detail.aff_code)}`;
   const columns = [
-    { key: "username", label: locale === "zh" ? "用户" : "User", render: (row) => { const name = row.username || row.display_name || row.email?.split("@")[0] || "—"; return <span className="console-affiliate-user"><i>{String(name).slice(0, 2).toUpperCase()}</i><strong>{name}</strong></span>; } },
+    { key: "username", label: locale === "zh" ? "用户" : "User", render: (row) => { const name = row.username || row.display_name || row.email?.split("@")[0] || "—"; return <span className="flex items-center gap-2"><Avatar size={32}><AvatarFallback>{String(name).slice(0, 2).toUpperCase()}</AvatarFallback></Avatar><strong>{name}</strong></span>; } },
     { key: "email", label: t("profile.email") },
     { key: "created_at", label: locale === "zh" ? "加入时间" : "Joined", render: (row) => formatDate(row.created_at, { dateOnly: true }) },
     { key: "total_rebate", label: t("affiliate.lifetime"), render: (row) => <strong className="console-affiliate-rebate">{formatCurrency(row.total_rebate)}</strong>, align: "right" },

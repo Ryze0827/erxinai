@@ -116,7 +116,7 @@ final result: passed
 - 聚焦对比：状态参考/实现纵向合成图 `artifacts/design-qa/2026-08-13-ui-polish/status-reference-comparison.png`；Appica 卡片参考/登录实现横向合成图 `artifacts/design-qa/2026-08-13-ui-polish/auth-card-reference-comparison.png`。
 - 状态时间线的 36 个数据段均为 14 CSS px 高、2 CSS px 圆角和等间距布局；正常、警告、异常、未知分别使用 success、warning、error、neutral 角色色，不再以高度表达状态。浏览器确认所有数据段等高，且无横向溢出。
 - 用量记录工具栏已不再渲染本页 IP 数量，只保留批量查询/隐藏归属地按钮。
-- 首页及认证页均只使用本地 WayX 标识 `/assets/img/wayx-mark-64.png`；未发现旧 Appica 内联标识或 `sentence-ai-icon.png` 引用。
+- 首页及认证页均只使用本地 WayX 标识 `/assets/img/wayx-mark-05-64.png`；未发现旧 Appica 内联标识或 `sentence-ai-icon.png` 引用。
 - 登录/注册页移除左侧说明区，桌面卡片宽 512 CSS px 且水平居中；移动端 390 CSS px 视口下左右各保留 16 CSS px，横向溢出为 0。卡片使用 Appica solid frame，输入框的 focus ring、边框与圆角均由 Appica 组件及角色 token 提供。
 - 交互复验：邮箱输入框自动聚焦并显示 3 CSS px focus ring；认证页切换入口保持单行居中；干净页面浏览器 error 日志为 0。
 - 首轮 P2：状态段圆角过于胶囊化，已收敛为 2 CSS px；移动登录页底部切换入口被 Appica CardFooter 默认方向拆成两行，已改为单行居中。复验后未发现 P0、P1 或 P2 视觉问题。

@@ -57,6 +57,6 @@ export function TurnstileWidget({ enabled, siteKey, onToken, resetKey = 0 }) {
   }, [enabled, onToken, resetKey, siteKey]);
 
   if (!enabled) return null;
-  if (!siteKey) return <div className="auth-turnstile"><em className="auth-field-error">{t("auth.error.securityNotConfigured")}</em></div>;
-  return <div className="auth-turnstile"><div ref={containerRef} />{error && <em className="auth-field-error">{t(error)}</em>}</div>;
+  if (!siteKey) return <div className="flex flex-col gap-2"><p className="text-error-emphasis text-sm" role="alert">{t("auth.error.securityNotConfigured")}</p></div>;
+  return <div className="flex flex-col gap-2"><div ref={containerRef} />{error && <p className="text-error-emphasis text-sm" role="alert">{t(error)}</p>}</div>;
 }

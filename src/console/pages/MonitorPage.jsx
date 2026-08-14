@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Badge as AppicaBadge } from "@appica/ui-react/badge";
 import { Table as AppicaTable } from "@appica/ui-react/table";
 import { TableBody as AppicaTableBody } from "@appica/ui-react/table";
 import { TableCell as AppicaTableCell } from "@appica/ui-react/table";
@@ -9,9 +10,8 @@ import { monitorApi } from "../../api";
 import { PlatformMark } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, EmptyState, ErrorState, IconButton, Modal, Page, Panel, SelectInput, StatusBadge, TextInput } from "../UI";
+import { Button, EmptyState, ErrorState, IconButton, Page, Panel, SelectInput, Skeleton, Spinner, TextInput } from "../UI";
 import { CompactTabs } from "../components/ConsoleControls";
-import { statusLabel } from "../utils";
 
 const MONITOR_REFRESH_KEY = "sentence_monitor_refresh";
 const MONITOR_WINDOWS = [7, 15, 30, 90];
@@ -50,8 +50,31 @@ function monitorStatusLabel(tone, locale) {
   return labels[tone];
 }
 
+function MonitorStatusBadge({ tone, label }) {
+  const variant = { operational: "success", degraded: "warning", failed: "error", unknown: "soft" }[tone] || "soft";
+  const icon = { operational: "circleCheck", degraded: "warning", failed: "warning", unknown: "info" }[tone] || "info";
+  return <AppicaBadge variant={variant} size="sm" className="console-monitor-status-badge"><Icon name={icon} size={13} data-icon="start" aria-hidden="true" />{label}</AppicaBadge>;
+}
+
 function latestCheck(item) {
   return item.timeline?.at(-1)?.checked_at || item.last_checked_at || item.updated_at;
+}
+
+function checkAgeLabel(value, locale, now = Date.now()) {
+  const checkedAt = new Date(value).getTime();
+  if (!Number.isFinite(checkedAt)) return "—";
+  const seconds = Math.max(0, Math.floor((now - checkedAt) / 1000));
+  return locale === "zh" ? `${seconds} 秒前` : `${seconds} seconds ago`;
+}
+
+function RelativeCheckTime({ value, locale }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!value) return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [value]);
+  return checkAgeLabel(value, locale, now);
 }
 
 function itemRequests(item) {
@@ -109,7 +132,7 @@ function MonitorToolbar({ windowDays, setWindowDays, filter, setFilter, counts, 
   };
   const refreshValue = refresh.auto ? String(refresh.seconds) : "off";
   const windowTabs = MONITOR_WINDOWS.map((days) => ({ value: String(days), label: `${days} ${locale === "zh" ? "天" : "days"}` }));
-  const statusTabs = MONITOR_FILTERS.map((value) => ({ value, label: <><i className={`is-${value}`} />{filterLabels[value]} <b>{value === "all" ? counts.total : counts[value]}</b></> }));
+  const statusTabs = MONITOR_FILTERS.map((value) => ({ value, label: <>{filterLabels[value]} <b>{value === "all" ? counts.total : counts[value]}</b></> }));
   const updateRefresh = (event) => {
     const seconds = Number(event.target.value);
     setRefresh({ auto: seconds > 0, seconds: seconds || 60 });
@@ -167,53 +190,113 @@ function availabilityValue(item, days) {
   return Number.isFinite(value) ? `${value.toFixed(2)}%` : "—";
 }
 
-function MonitorInspector({ item, detail, windowDays, locale, formatNumber, formatDate, onOpenModal }) {
+function MonitorInspector({ item, detail, windowDays, locale, formatNumber }) {
   if (!item) return <Panel className="console-monitor-inspector"><EmptyState icon="channel" /></Panel>;
-  const resolved = detail?.item || item;
+  const detailMatches = detail?.sourceId === item.id;
+  const resolved = detailMatches ? detail?.item || item : item;
   const tone = monitorTone(resolved.primary_status || item.primary_status);
   const timeline = resolved.timeline || item.timeline || [];
-  const models = resolved.models || [];
+  const models = detailMatches ? resolved.models || [] : [];
   const provider = resolved.provider || resolved.group_name || item.provider || "AI";
   const availability = Number(resolved[`availability_${windowDays}d`] ?? resolved.availability_7d ?? item.availability_7d) || 0;
-  return <Panel className={`console-monitor-inspector is-${tone}`}><header className="console-monitor-inspector-head"><i className="console-monitor-provider-mark"><PlatformMark platform={provider} /></i><div><h2>{item.name}</h2><p>{provider} <b>•</b> {item.primary_model || item.group_name || "—"}</p></div><StatusBadge status={item.primary_status} label={monitorStatusLabel(tone, locale)} /><span><small>{locale === "zh" ? "检查于" : "Checked"}</small><strong>{latestCheck(item) ? formatDate(latestCheck(item)) : "—"}</strong></span><Button onClick={onOpenModal}>{locale === "zh" ? "完整详情" : "View full details"}<Icon name="external" size={14} /></Button></header><div className="console-monitor-inspector-metrics"><div className={Number(item.primary_latency_ms) > MONITOR_LATENCY_DANGER_MS ? "is-danger" : tone === "degraded" ? "is-warning" : "is-success"}><span>{locale === "zh" ? "延迟" : "Latency"}</span><strong>{metricDuration(item.primary_latency_ms, formatNumber)}</strong>{tone !== "operational" && <small><Icon name="warning" size={13} />{locale === "zh" ? "检测到间歇性延迟" : "Intermittent latency detected"}</small>}</div><div><span>Ping</span><strong>{metricDuration(itemPing(item), formatNumber)}</strong></div><div className="is-success"><span>{windowDays}{locale === "zh" ? " 天可用率" : "-day availability"}</span><strong>{availability.toFixed(2)}%</strong></div></div><div className="console-monitor-history"><header><h3>{locale === "zh" ? "状态历史" : "Status history"} <Icon name="info" size={13} /></h3><div><span className="is-operational">{locale === "zh" ? "正常" : "Healthy"}</span><span className="is-degraded">{locale === "zh" ? "警告" : "Warning"}</span><span className="is-failed">{locale === "zh" ? "异常" : "Incident"}</span><span className="is-unknown">{locale === "zh" ? "未知" : "Unknown"}</span></div></header><Sparkline timeline={timeline} days={windowDays} locale={locale} /></div><div className="console-monitor-availability"><h3>{locale === "zh" ? "分窗口可用率" : "Availability by window"} <Icon name="info" size={13} /></h3><div>{[7, 15, 30].map((days) => <span key={days}><small>{days} {locale === "zh" ? "天" : "days"}</small><strong>{availabilityValue(resolved, days)}</strong></span>)}</div></div><div className="console-monitor-models"><h3>{locale === "zh" ? "模型健康度" : "Model health"} <Icon name="info" size={13} /></h3>{detail?.loading ? <div className="console-loading"><i /><span>{locale === "zh" ? "正在读取详情" : "Loading details"}</span></div> : detail?.error ? <ErrorState message={detail.error} /> : !models.length ? <EmptyState /> : <div className="console-monitor-models-table"><AppicaTable size="sm" borderStyle="none"><AppicaTableHeader><AppicaTableRow><AppicaTableHead>{locale === "zh" ? "模型" : "Model"}</AppicaTableHead><AppicaTableHead>{locale === "zh" ? "最新状态" : "Latest status"}</AppicaTableHead><AppicaTableHead>7d</AppicaTableHead><AppicaTableHead>15d</AppicaTableHead><AppicaTableHead>30d</AppicaTableHead><AppicaTableHead>{locale === "zh" ? "平均延迟" : "Avg latency 7d"}</AppicaTableHead></AppicaTableRow></AppicaTableHeader><AppicaTableBody>{models.map((model) => { const modelTone = monitorTone(model.latest_status); return <AppicaTableRow key={model.model}><AppicaTableCell data-label={locale === "zh" ? "模型" : "Model"}><strong>{model.model}</strong></AppicaTableCell><AppicaTableCell data-label={locale === "zh" ? "最新状态" : "Latest status"}><StatusBadge status={model.latest_status} label={monitorStatusLabel(modelTone, locale)} /></AppicaTableCell><AppicaTableCell data-label="7d">{availabilityValue(model, 7)}</AppicaTableCell><AppicaTableCell data-label="15d">{availabilityValue(model, 15)}</AppicaTableCell><AppicaTableCell data-label="30d">{availabilityValue(model, 30)}</AppicaTableCell><AppicaTableCell data-label={locale === "zh" ? "平均延迟" : "Avg latency 7d"}>{metricDuration(model.avg_latency_7d_ms, formatNumber)}</AppicaTableCell></AppicaTableRow>; })}</AppicaTableBody></AppicaTable></div>}</div></Panel>;
+  const modelContent = models.length ? (
+    <div className="console-monitor-models-table">
+      <AppicaTable size="sm" borderStyle="none">
+        <AppicaTableHeader>
+          <AppicaTableRow>
+            <AppicaTableHead>{locale === "zh" ? "模型" : "Model"}</AppicaTableHead>
+            <AppicaTableHead>{locale === "zh" ? "最新状态" : "Latest status"}</AppicaTableHead>
+            <AppicaTableHead>7d</AppicaTableHead>
+            <AppicaTableHead>15d</AppicaTableHead>
+            <AppicaTableHead>30d</AppicaTableHead>
+            <AppicaTableHead>{locale === "zh" ? "平均延迟" : "Avg latency 7d"}</AppicaTableHead>
+          </AppicaTableRow>
+        </AppicaTableHeader>
+        <AppicaTableBody>
+          {models.map((model) => {
+            const modelTone = monitorTone(model.latest_status);
+            return <AppicaTableRow key={model.model}>
+              <AppicaTableCell data-label={locale === "zh" ? "模型" : "Model"}><strong>{model.model}</strong></AppicaTableCell>
+              <AppicaTableCell data-label={locale === "zh" ? "最新状态" : "Latest status"}><MonitorStatusBadge tone={modelTone} label={monitorStatusLabel(modelTone, locale)} /></AppicaTableCell>
+              <AppicaTableCell data-label="7d">{availabilityValue(model, 7)}</AppicaTableCell>
+              <AppicaTableCell data-label="15d">{availabilityValue(model, 15)}</AppicaTableCell>
+              <AppicaTableCell data-label="30d">{availabilityValue(model, 30)}</AppicaTableCell>
+              <AppicaTableCell data-label={locale === "zh" ? "平均延迟" : "Avg latency 7d"}>{metricDuration(model.avg_latency_7d_ms, formatNumber)}</AppicaTableCell>
+            </AppicaTableRow>;
+          })}
+        </AppicaTableBody>
+      </AppicaTable>
+    </div>
+  ) : detailMatches && detail?.error ? <ErrorState message={detail.error} /> : !detailMatches || detail?.loading ? <Spinner label={locale === "zh" ? "正在读取详情" : "Loading details"} /> : <EmptyState />;
+  return (
+    <Panel className={`console-monitor-inspector is-${tone}`}>
+      <header className="console-monitor-inspector-head">
+        <i className="console-monitor-provider-mark"><PlatformMark platform={provider} /></i>
+        <div><h2>{item.name}</h2><p>{provider} <b>•</b> {item.primary_model || item.group_name || "—"}</p></div>
+        <span className="console-monitor-inspector-check"><small>{locale === "zh" ? "检查于" : "Checked"}</small><strong><RelativeCheckTime value={latestCheck(resolved)} locale={locale} /></strong></span>
+      </header>
+      <div className="console-monitor-inspector-metrics">
+        <div className={Number(item.primary_latency_ms) > MONITOR_LATENCY_DANGER_MS ? "is-danger" : tone === "degraded" ? "is-warning" : "is-success"}>
+          <span>{locale === "zh" ? "延迟" : "Latency"}</span><strong>{metricDuration(item.primary_latency_ms, formatNumber)}</strong>
+          {tone !== "operational" && <small><Icon name="warning" size={13} />{locale === "zh" ? "检测到间歇性延迟" : "Intermittent latency detected"}</small>}
+        </div>
+        <div><span>Ping</span><strong>{metricDuration(itemPing(item), formatNumber)}</strong></div>
+        <div className="is-success"><span>{windowDays}{locale === "zh" ? " 天可用率" : "-day availability"}</span><strong>{availability.toFixed(2)}%</strong></div>
+      </div>
+      <div className="console-monitor-history">
+        <header>
+          <h3>{locale === "zh" ? "状态历史" : "Status history"}</h3>
+          <div><span className="is-operational">{locale === "zh" ? "正常" : "Healthy"}</span><span className="is-degraded">{locale === "zh" ? "警告" : "Warning"}</span><span className="is-failed">{locale === "zh" ? "异常" : "Incident"}</span><span className="is-unknown">{locale === "zh" ? "未知" : "Unknown"}</span></div>
+        </header>
+        <Sparkline timeline={timeline} days={windowDays} locale={locale} />
+      </div>
+      <div className="console-monitor-availability">
+        <h3>{locale === "zh" ? "分窗口可用率" : "Availability by window"}</h3>
+        <div>{[7, 15, 30].map((days) => <span key={days}><small>{days} {locale === "zh" ? "天" : "days"}</small><strong>{availabilityValue(resolved, days)}</strong></span>)}</div>
+      </div>
+      <div className="console-monitor-models" aria-busy={detailMatches && detail?.loading ? "true" : undefined}>
+        <h3>{locale === "zh" ? "模型健康度" : "Model health"}</h3>
+        {modelContent}
+      </div>
+    </Panel>
+  );
 }
 
 function MonitorLoading({ locale }) {
-  return <><section className="console-monitor-overview is-loading" aria-label={locale === "zh" ? "正在加载渠道概览" : "Loading channel overview"}>{Array.from({ length: 5 }, (_, index) => <div className="console-monitor-overview-item" key={index}><i /><div><span /><strong /><small /></div></div>)}</section><div className="console-monitor-master-detail is-loading"><Panel className="console-monitor-master"><header /><div>{Array.from({ length: 6 }, (_, index) => <i key={index} />)}</div></Panel><Panel className="console-monitor-inspector"><header /><div /></Panel></div></>;
+  return <><section className="console-monitor-overview" aria-label={locale === "zh" ? "正在加载渠道概览" : "Loading channel overview"}>{Array.from({ length: 5 }, (_, index) => <div className="console-monitor-overview-item" key={index}><Skeleton className="size-10" /><div className="flex flex-1 flex-col items-end gap-2"><Skeleton className="h-3 w-20" /><Skeleton className="h-6 w-14" /><Skeleton className="h-2 w-16" /></div></div>)}</section><div className="console-monitor-master-detail"><Panel className="console-monitor-master"><div className="console-panel-body flex flex-col gap-3"><Skeleton className="h-5 w-24" />{Array.from({ length: 6 }, (_, index) => <Skeleton className="h-14 w-full" key={index} />)}</div></Panel><Panel className="console-monitor-inspector"><div className="console-panel-body flex flex-col gap-4"><Skeleton className="h-8 w-2/3" /><Skeleton className="h-64 w-full" /></div></Panel></div></>;
 }
 
-function MonitorContent({ state, locale, load, items, counts, windowDays, details, formatNumber, formatDate, selectedId, onSelect, detail, onOpenModal }) {
+function MonitorContent({ state, locale, load, items, counts, windowDays, details, formatNumber, selectedId, onSelect, detail }) {
   if (state.loading) return <MonitorLoading locale={locale} />;
   if (state.error) return <Panel><ErrorState message={state.error} onRetry={load} /></Panel>;
   if (!state.items.length) return <Panel><EmptyState icon="pulse" /></Panel>;
   const selectedItem = items.find((item) => item.id === selectedId) || items[0];
-  return <><MonitorOverview items={state.items} counts={counts} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} /><div className="console-monitor-master-detail"><Panel className="console-monitor-master"><header><h2>{locale === "zh" ? "渠道" : "Channels"}</h2><span>{locale === "zh" ? "按状态排序" : "Sort by status"}<Icon name="chevronDown" size={14} /></span></header>{items.length ? <div className="console-monitor-master-list">{items.map((item) => <MonitorListItem key={item.id} item={item} selected={item.id === selectedItem?.id} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} onSelect={onSelect} />)}</div> : <EmptyState icon="filter" description={locale === "zh" ? "当前筛选条件下没有渠道。" : "No channels match this filter."} />}<footer><span>{items.length} {locale === "zh" ? "个渠道" : "channels"}</span><div><IconButton icon="chevronRight" label={locale === "zh" ? "上一页" : "Previous page"} disabled /><b>1</b><IconButton icon="chevronRight" label={locale === "zh" ? "下一页" : "Next page"} disabled /></div></footer></Panel><MonitorInspector item={selectedItem} detail={detail} windowDays={windowDays} locale={locale} formatNumber={formatNumber} formatDate={formatDate} onOpenModal={onOpenModal} /></div></>;
-}
-
-function MonitorDetail({ detail, locale, formatNumber, t }) {
-  if (detail?.loading) return <div className="console-loading"><i /><span>{t("common.loading")}</span></div>;
-  if (detail?.error) return <ErrorState message={detail.error} />;
-  return <div className="console-monitor-detail">{(detail?.item?.models || []).map((model) => <div key={model.model}><div><strong>{model.model}</strong><StatusBadge status={model.latest_status} label={statusLabel(model.latest_status, locale)} /></div><div><span>7d <strong>{Number(model.availability_7d || 0).toFixed(2)}%</strong></span><span>15d <strong>{Number(model.availability_15d || 0).toFixed(2)}%</strong></span><span>30d <strong>{Number(model.availability_30d || 0).toFixed(2)}%</strong></span><span>{t("monitor.latency")} <strong>{metricDuration(model.avg_latency_7d_ms, formatNumber)}</strong></span></div></div>)}</div>;
+  return <><MonitorOverview items={state.items} counts={counts} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} /><div className="console-monitor-master-detail"><Panel className="console-monitor-master"><header><h2>{locale === "zh" ? "渠道" : "Channels"}</h2><span>{locale === "zh" ? "按状态排序" : "Sort by status"}<Icon name="chevronDown" size={14} /></span></header>{items.length ? <div className="console-monitor-master-list">{items.map((item) => <MonitorListItem key={item.id} item={item} selected={item.id === selectedItem?.id} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} onSelect={onSelect} />)}</div> : <EmptyState icon="filter" description={locale === "zh" ? "当前筛选条件下没有渠道。" : "No channels match this filter."} />}<footer><span>{items.length} {locale === "zh" ? "个渠道" : "channels"}</span><div><IconButton icon="chevronRight" label={locale === "zh" ? "上一页" : "Previous page"} disabled /><b>1</b><IconButton icon="chevronRight" label={locale === "zh" ? "下一页" : "Next page"} disabled /></div></footer></Panel><MonitorInspector item={selectedItem} detail={detail} windowDays={windowDays} locale={locale} formatNumber={formatNumber} /></div></>;
 }
 
 export function MonitorPage() {
-  const { t, locale, formatDate, formatNumber } = useLocale();
+  const { t, locale, formatNumber } = useLocale();
   const [state, setState] = useState({ loading: true, error: "", items: [] });
   const [refresh, setRefresh] = useState(storedRefresh);
   const [detail, setDetail] = useState(null);
-  const [detailOpen, setDetailOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState("");
   const [windowDays, setWindowDays] = useState(7);
   const [filter, setFilter] = useState("all");
   const [details, setDetails] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [listVersion, setListVersion] = useState(0);
   const requestRef = useRef(null);
   const loadingRef = useRef(false);
   const detailRef = useRef(null);
   const detailsRef = useRef(null);
+  const loadedListVersionRef = useRef(0);
   const load = useCallback(async (silent = false) => {
     if (silent && (document.hidden || loadingRef.current)) return;
-    if (!silent) setState((current) => ({ ...current, loading: true, error: "" }));
+    if (!silent) {
+      setRefreshing(true);
+      setState((current) => current.items.length ? { ...current, loading: false, error: "" } : { ...current, loading: true, error: "" });
+    }
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
@@ -221,14 +304,22 @@ export function MonitorPage() {
     try {
       const data = await monitorApi.list(controller.signal);
       if (requestRef.current === controller) {
-        setDetails({});
-        setDetail(null);
-        setState({ loading: false, error: "", items: data.items || data || [] });
+        const nextItems = Array.isArray(data) ? data : data?.items || [];
+        setDetail((current) => {
+          if (!current?.sourceId) return current;
+          const nextItem = nextItems.find((item) => item.id === current.sourceId);
+          return nextItem ? { ...current, item: { ...current.item, ...nextItem, ...(current.item?.models ? { models: current.item.models } : {}) } } : current;
+        });
+        setState({ loading: false, error: "", items: nextItems });
+        setListVersion((version) => version + 1);
       }
     } catch (error) {
       if (error.name !== "AbortError" && !silent) setState((current) => ({ ...current, loading: false, error: error.message }));
     } finally {
-      if (requestRef.current === controller) loadingRef.current = false;
+      if (requestRef.current === controller) {
+        loadingRef.current = false;
+        if (!silent) setRefreshing(false);
+      }
     }
   }, []);
   useEffect(() => { load(); return () => requestRef.current?.abort(); }, [load]);
@@ -256,33 +347,50 @@ export function MonitorPage() {
     const request = Symbol("monitor-detail");
     detailRef.current = request;
     setSelectedId(item.id);
-    setDetail({ loading: true, item, sourceId: item.id });
+    setDetail((current) => {
+      const previousItem = current?.sourceId === item.id ? current.item : null;
+      return {
+        loading: true,
+        item: previousItem ? { ...previousItem, ...item, ...(previousItem.models ? { models: previousItem.models } : {}) } : item,
+        sourceId: item.id,
+      };
+    });
     try {
       const full = await monitorApi.status(item.id);
       if (detailRef.current === request) {
         setDetails((current) => ({ ...current, [item.id]: full }));
-        setDetail({ loading: false, item: { ...item, ...full }, sourceId: item.id });
+        setDetail((current) => {
+          const previousItem = current?.sourceId === item.id ? current.item : null;
+          const nextItem = { ...(previousItem || {}), ...item, ...full };
+          return {
+            loading: false,
+            item: full?.models === undefined && previousItem?.models ? { ...nextItem, models: previousItem.models } : nextItem,
+            sourceId: item.id,
+          };
+        });
       }
     } catch (error) {
-      if (detailRef.current === request) setDetail({ loading: false, item, sourceId: item.id, error: error.message });
+      if (detailRef.current === request) {
+        setDetail((current) => ({ loading: false, item: current?.sourceId === item.id ? { ...current.item, ...item } : item, sourceId: item.id, error: error.message }));
+      }
     }
   }, []);
-  const closeDetail = () => {
-    setDetailOpen(false);
-  };
   const statusCounts = countByStatus(state.items);
   const counts = { ...statusCounts, total: state.items.length };
   const filteredItems = state.items.filter((item) => (filter === "all" || monitorTone(item.primary_status) === filter) && (!search.trim() || `${item.name || ""} ${item.provider || ""} ${item.primary_model || ""}`.toLowerCase().includes(search.trim().toLowerCase())));
   const selectedItem = filteredItems.find((item) => item.id === selectedId) || filteredItems[0];
   useEffect(() => {
-    if (selectedItem && detail?.sourceId !== selectedItem.id) selectItem(selectedItem);
-  }, [detail?.sourceId, selectItem, selectedItem]);
+    if (!selectedItem) return;
+    if (loadedListVersionRef.current !== listVersion || detail?.sourceId !== selectedItem.id) {
+      loadedListVersionRef.current = listVersion;
+      selectItem(selectedItem);
+    }
+  }, [detail?.sourceId, listVersion, selectItem, selectedItem]);
 
   return (
     <Page title={t("monitor.title")} className="console-monitor-page">
-      <MonitorToolbar windowDays={windowDays} setWindowDays={setWindowDays} filter={filter} setFilter={setFilter} counts={counts} refresh={refresh} setRefresh={setRefresh} loading={state.loading} onRefresh={load} search={search} setSearch={setSearch} locale={locale} />
-      <MonitorContent state={state} locale={locale} load={load} items={filteredItems} counts={counts} windowDays={windowDays} details={details} formatNumber={formatNumber} formatDate={formatDate} selectedId={selectedId} onSelect={selectItem} detail={detail} onOpenModal={() => setDetailOpen(true)} />
-      <Modal open={detailOpen} title={detail?.item?.name || t("monitor.title")} onClose={closeDetail} size="large"><MonitorDetail detail={detail} locale={locale} formatNumber={formatNumber} t={t} /></Modal>
+      <MonitorToolbar windowDays={windowDays} setWindowDays={setWindowDays} filter={filter} setFilter={setFilter} counts={counts} refresh={refresh} setRefresh={setRefresh} loading={state.loading || refreshing} onRefresh={load} search={search} setSearch={setSearch} locale={locale} />
+      <MonitorContent state={state} locale={locale} load={load} items={filteredItems} counts={counts} windowDays={windowDays} details={details} formatNumber={formatNumber} selectedId={selectedId} onSelect={selectItem} detail={detail} />
     </Page>
   );
 }

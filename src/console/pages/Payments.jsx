@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrandAlipay, BrandStripe, BrandWechat, CreditCard } from "@appica/icons-react";
+import { BackgroundPattern } from "@appica/ui-react/background-pattern";
 import { Radio } from "@appica/ui-react/radio";
 import { RadioGroup } from "@appica/ui-react/radio-group";
 import { NumberField } from "@appica/ui-react/number-field";
@@ -277,7 +278,7 @@ async function loadPurchaseOverview() {
 }
 
 function OverviewMetric({ label, value, loading }) {
-  return <div className="console-purchase-overview-metric"><small>{label}</small>{loading ? <i aria-hidden="true" /> : <strong>{value}</strong>}</div>;
+  return <div className="console-purchase-overview-metric"><small>{label}</small>{loading ? <Skeleton className="h-6 w-20" /> : <strong>{value}</strong>}</div>;
 }
 
 function overviewDate(value) {
@@ -486,34 +487,47 @@ export function OrdersPage() {
     try {
       const [orders, eligible] = await Promise.allSettled([paymentApi.orders({ page: paging.page, page_size: paging.pageSize, status: filter }), paymentApi.refundableProviders()]);
       if (orders.status === "rejected") throw orders.reason;
-      if (mountedRef.current) setState((current) => ({ ...current, loading: false, items: orders.value.items || [], total: orders.value.total || 0, pages: orders.value.pages || 1, eligible: new Set(eligible.value?.provider_instance_ids || []) }));
+      if (mountedRef.current) setState((current) => ({ ...current, loading: false, items: orders.value.items || [], total: orders.value.total || 0, pages: orders.value.pages || 1, eligible: new Set(eligible.status === "fulfilled" ? eligible.value?.provider_instance_ids || [] : []) }));
     } catch (error) { if (mountedRef.current) setState((current) => ({ ...current, loading: false, error: error.message })); }
   }, [filter, paging]);
   useEffect(() => { mountedRef.current = true; load(); return () => { mountedRef.current = false; }; }, [load]);
   const submitAction = async () => {
+    if (!dialog?.item || !["cancel", "refund"].includes(dialog.type)) return;
     setState((current) => ({ ...current, busy: true }));
-    try { if (dialog.type === "cancel") await paymentApi.cancel(dialog.item.id); else await paymentApi.refund(dialog.item.id, reason.trim()); notify("success", t("common.success")); setDialog(null); setReason(""); load(); }
-    catch (error) { notify("error", error.message); } finally { setState((current) => ({ ...current, busy: false })); }
+    try {
+      if (dialog.type === "cancel") await paymentApi.cancel(dialog.item.id);
+      else await paymentApi.refund(dialog.item.id, reason.trim());
+      notify("success", t("common.success"));
+      setDialog(null);
+      setReason("");
+      load();
+    } catch (error) { notify("error", error.message); } finally { if (mountedRef.current) setState((current) => ({ ...current, busy: false })); }
   };
-  const displayAmount = (item) => item?.amount == null ? "—" : formatUsd(item.amount);
+  const displayAmount = (item) => {
+    if (item?.amount == null) return "—";
+    const amount = Number(item.amount);
+    const formatted = formatUsd(amount);
+    return successfulOrder(item.status) && amount > 0 ? `+${formatted}` : formatted;
+  };
   const columns = [
-    { key: "out_trade_no", label: t("orders.number"), render: (row) => <span className="console-order-number">{row.out_trade_no}</span> },
-    { key: "amount", label: t("orders.amount"), render: (row) => <span className="console-order-amount">{displayAmount(row)}</span> },
+    { key: "id", label: t("orders.id"), render: (row) => <span className="console-order-id">{row.id ?? "—"}</span> },
+    { key: "out_trade_no", label: t("orders.number"), render: (row) => <span className="console-order-number">{row.out_trade_no || "—"}</span> },
+    { key: "amount", label: t("orders.amount"), render: (row) => <span className={`console-order-amount text-sm font-medium tabular-nums ${successfulOrder(row.status) ? "text-success-emphasis" : "text-foreground"}`}>{displayAmount(row)}</span> },
     { key: "payment_type", label: t("orders.method"), render: (row) => orderPaymentLabel(row.payment_type) },
     { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={String(row.status).toLowerCase()} label={statusLabel(String(row.status).toLowerCase(), locale)} /> },
     { key: "created_at", label: t("common.date"), render: (row) => formatDate(row.created_at) },
-    { key: "actions", label: t("common.actions"), render: (row) => <div className="console-inline-actions"><InlineButton className="console-order-view" onClick={() => setDialog({ type: "view", item: row })}>{locale === "zh" ? "查看" : "View"}</InlineButton>{String(row.status).toUpperCase() === "PENDING" && <Button variant="danger" onClick={() => setDialog({ type: "cancel", item: row })}>{t("orders.cancel")}</Button>}{String(row.status).toUpperCase() === "COMPLETED" && row.provider_instance_id && state.eligible.has(row.provider_instance_id) && <Button onClick={() => setDialog({ type: "refund", item: row })}>{t("orders.refund")}</Button>}</div> },
+    { key: "actions", label: t("common.actions"), render: (row) => <div className="console-inline-actions"><InlineButton className="console-order-view" onClick={() => setDialog({ type: "view", item: row })}>{locale === "zh" ? "查看" : "View"}</InlineButton>{String(row.status).toUpperCase() === "PENDING" && <InlineButton variant="danger" onClick={() => setDialog({ type: "cancel", item: row })}>{t("orders.cancel")}</InlineButton>}{String(row.status).toUpperCase() === "COMPLETED" && row.provider_instance_id && state.eligible.has(row.provider_instance_id) && <InlineButton onClick={() => setDialog({ type: "refund", item: row })}>{t("orders.refund")}</InlineButton>}</div> },
   ];
   const filterOptions = ["PENDING", "COMPLETED", "FAILED", "REFUNDED"];
   const setStatusFilter = (value) => { setFilter(value); setPaging((current) => ({ ...current, page: 1 })); };
   const statusTabs = [{ value: "", label: t("common.all") }, ...filterOptions.map((status) => ({ value: status, label: statusLabel(status.toLowerCase(), locale) }))];
   const orderTable = <><DataTable className="console-orders-table" columns={columns} rows={state.items} empty={<EmptyState icon="order" />} /><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
-  return <Page title={t("orders.title")} className="console-orders-page" actions={<Button variant="primary" icon="plus" onClick={() => navigate("/purchase")}>{t("purchase.title")}</Button>}><Panel className="console-orders-panel" aria-busy={state.loading}><div className="console-orders-toolbar"><CompactTabs value={filter} items={statusTabs} label={locale === "zh" ? "订单状态" : "Order status"} className="console-orders-status-tabs" onChange={setStatusFilter} /><Button icon="refresh" onClick={load}>{t("common.refresh")}</Button></div>{state.loading && !state.items.length ? <TableSkeleton columns={6} /> : state.error && !state.items.length ? <ErrorState message={state.error} onRetry={load} /> : orderTable}</Panel><ConfirmDialog open={dialog?.type === "cancel"} title={t("orders.cancel")} description={locale === "zh" ? "确定取消这个待支付订单吗？" : "Cancel this pending order?"} busy={state.busy} onClose={() => setDialog(null)} onConfirm={submitAction} /><Modal open={dialog?.type === "refund"} title={t("orders.refund")} onClose={() => setDialog(null)} size="small" footer={<><Button onClick={() => setDialog(null)}>{t("common.cancel")}</Button><Button variant="primary" onClick={submitAction} disabled={!reason.trim() || state.busy}>{t("common.confirm")}</Button></>}><Field label={t("orders.reason")}><TextArea rows="4" value={reason} onChange={(event) => setReason(event.target.value)} /></Field></Modal><Modal open={dialog?.type === "view"} title={locale === "zh" ? "订单详情" : "Order details"} onClose={() => setDialog(null)} size="small"><dl className="console-order-detail">{dialog?.item && [[t("orders.number"), dialog.item.out_trade_no], [t("orders.amount"), displayAmount(dialog.item)], [t("orders.method"), orderPaymentLabel(dialog.item.payment_type)], [t("common.status"), statusLabel(String(dialog.item.status).toLowerCase(), locale)], [t("common.date"), formatDate(dialog.item.created_at)]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></Modal></Page>;
+  return <Page title={t("orders.title")} className="console-orders-page" actions={<Button variant="primary" icon="plus" onClick={() => navigate("/purchase")}>{t("purchase.title")}</Button>}><Panel className="console-orders-panel" aria-busy={state.loading}><div className="console-orders-toolbar"><CompactTabs value={filter} items={statusTabs} label={locale === "zh" ? "订单状态" : "Order status"} className="console-orders-status-tabs" onChange={setStatusFilter} /><Button icon="refresh" onClick={load}>{t("common.refresh")}</Button></div>{state.loading && !state.items.length ? <TableSkeleton columns={7} /> : state.error && !state.items.length ? <ErrorState message={state.error} onRetry={load} /> : orderTable}</Panel><ConfirmDialog open={dialog?.type === "cancel"} title={t("orders.cancel")} description={locale === "zh" ? "确定取消这个待支付订单吗？" : "Cancel this pending order?"} busy={state.busy} onClose={() => setDialog(null)} onConfirm={submitAction} /><Modal open={dialog?.type === "refund"} title={t("orders.refund")} onClose={() => setDialog(null)} size="small" footer={<><Button onClick={() => setDialog(null)}>{t("common.cancel")}</Button><Button variant="primary" onClick={submitAction} disabled={!reason.trim() || state.busy}>{t("common.confirm")}</Button></>}><Field label={t("orders.reason")}><TextArea rows="4" value={reason} onChange={(event) => setReason(event.target.value)} /></Field></Modal><Modal open={dialog?.type === "view"} title={locale === "zh" ? "订单详情" : "Order details"} onClose={() => setDialog(null)} size="small"><dl className="console-order-detail">{dialog?.item && [[t("orders.id"), dialog.item.id ?? "—"], [t("orders.number"), dialog.item.out_trade_no || "—"], [t("orders.amount"), displayAmount(dialog.item)], [t("orders.method"), orderPaymentLabel(dialog.item.payment_type)], [t("common.status"), statusLabel(String(dialog.item.status).toLowerCase(), locale)], [t("common.date"), formatDate(dialog.item.created_at)]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></Modal></Page>;
 }
 
 function PaymentShell({ children }) {
   const { branding, brandingReady } = useConsole();
-  return <div className="console-public-shell"><div className="console-scene" /><Link className={`console-public-brand ${brandingReady ? "" : "is-pending"}`} to="/">{brandingReady && <BrandLogo key={branding.siteLogo} src={branding.siteLogo} alt="" />}{brandingReady && <strong>{branding.siteName}</strong>}</Link><main>{children}</main></div>;
+  return <BackgroundPattern variant="dots" spotlight track="window" className="console-public-shell"><Link className={`console-public-brand ${brandingReady ? "" : "is-pending"}`} to="/">{brandingReady && <BrandLogo key={branding.siteLogo} src={branding.siteLogo} alt="" />}{brandingReady && <strong>{branding.siteName}</strong>}</Link><main>{children}</main></BackgroundPattern>;
 }
 
 function countdownText(seconds) {
@@ -670,7 +684,7 @@ export function StripePaymentPage({ popup = false }) {
     const result = await stripe.confirmPayment({ elements, confirmParams: { return_url: `${window.location.origin}/payment/result?${paymentQuery(snapshot)}` }, redirect: "if_required" });
     if (result.error) setState((current) => ({ ...current, busy: false, error: result.error.message })); else finish();
   };
-  return <PaymentShell><Panel className="console-stripe-card"><div className="console-panel-body">{state.loading && <Spinner />}{state.error && <ErrorState message={state.error} />}{state.success && <div className="console-payment-success"><Icon name="check" size={28} /><h1>{t("payment.success")}</h1></div>}{state.qr && <div className="console-payment-success"><h1>{t("payment.waiting")}</h1><img className="console-qr" src={state.qr} alt="WeChat Pay QR code" /></div>}<div id="stripe-payment-element" hidden={state.loading || state.error || state.success || state.qr} />{state.ready && !state.success && <Button variant="primary" onClick={pay} disabled={state.busy}>{state.busy ? t("common.loading") : t("purchase.pay")}</Button>}<Link className="console-text-link" to="/purchase">{t("payment.back")}</Link></div></Panel></PaymentShell>;
+  return <PaymentShell><Panel className="console-stripe-card"><div className="console-panel-body">{state.loading && <Spinner />}{state.error && <ErrorState message={state.error} />}{state.success && <div className="console-payment-success"><Icon name="check" size={28} /><h1>{t("payment.success")}</h1></div>}{state.qr && <div className="console-payment-success"><h1>{t("payment.waiting")}</h1><img className="console-qr" src={state.qr} alt="WeChat Pay QR code" /></div>}<div id="stripe-payment-element" hidden={state.loading || state.error || state.success || state.qr} />{state.ready && !state.success && <Button variant="primary" onClick={pay} disabled={state.busy}>{state.busy ? t("common.loading") : t("purchase.pay")}</Button>}<Link className={buttonLinkClass({ variant: "ghost" })} to="/purchase">{t("payment.back")}</Link></div></Panel></PaymentShell>;
 }
 
 export function StripePopupPage() { return <StripePaymentPage popup />; }
@@ -698,7 +712,7 @@ export function AirwallexPaymentPage() {
     initialize().catch((loadError) => active && setError(loadError.message));
     return () => { active = false; };
   }, [locale, snapshot?.clientSecret, snapshot?.countryCode, snapshot?.currency, snapshot?.intentId, snapshot?.paymentEnv]);
-  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body">{error ? <ErrorState message={error} /> : <Spinner label={t("payment.processing")} />}<Link className="console-text-link" to="/purchase">{t("payment.back")}</Link></div></Panel></PaymentShell>;
+  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body">{error ? <ErrorState message={error} /> : <Spinner label={t("payment.processing")} />}<Link className={buttonLinkClass({ variant: "ghost" })} to="/purchase">{t("payment.back")}</Link></div></Panel></PaymentShell>;
 }
 
 function fragmentParams() {

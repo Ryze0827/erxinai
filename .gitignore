@@ -1,6 +1,7 @@
 node_modules/
 .npm-cache/
 dist/
+output/
 .env.local
 .playwright-cli/
 .DS_Store

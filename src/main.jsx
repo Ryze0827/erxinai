@@ -4,8 +4,6 @@ import { BrowserRouter } from "react-router";
 import { ThemeProvider } from "@appica/ui-react/providers/theme-provider";
 import { App } from "./App.jsx";
 import "./appica.css";
-import "./cascade.css";
-import "./styles.css";
 import "./console/appica.css";
 
 createRoot(document.getElementById("root")).render(

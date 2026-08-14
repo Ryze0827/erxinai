@@ -1,12 +1,10 @@
 import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@appica/ui-react/table";
+import { Table } from "@appica/ui-react/table";
+import { TableBody } from "@appica/ui-react/table";
+import { TableCell } from "@appica/ui-react/table";
+import { TableHead } from "@appica/ui-react/table";
+import { TableHeader } from "@appica/ui-react/table";
+import { TableRow } from "@appica/ui-react/table";
 import { IMAGE_GATEWAY_BASE_URL } from "../../api";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";

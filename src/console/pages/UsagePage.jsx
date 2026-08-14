@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Skeleton } from "@appica/ui-react/skeleton";
-import {
-  Table as AppicaTable,
-  TableBody as AppicaTableBody,
-  TableCell as AppicaTableCell,
-  TableHead as AppicaTableHead,
-  TableHeader as AppicaTableHeader,
-  TableRow as AppicaTableRow,
-} from "@appica/ui-react/table";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@appica/ui-react/tooltip";
+import { Table as AppicaTable } from "@appica/ui-react/table";
+import { TableBody as AppicaTableBody } from "@appica/ui-react/table";
+import { TableCell as AppicaTableCell } from "@appica/ui-react/table";
+import { TableHead as AppicaTableHead } from "@appica/ui-react/table";
+import { TableHeader as AppicaTableHeader } from "@appica/ui-react/table";
+import { TableRow as AppicaTableRow } from "@appica/ui-react/table";
+import { Tooltip } from "@appica/ui-react/tooltip";
+import { TooltipContent } from "@appica/ui-react/tooltip";
+import { TooltipProvider } from "@appica/ui-react/tooltip";
+import { TooltipTrigger } from "@appica/ui-react/tooltip";
 import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { GroupBadge } from "../GroupBadge";
@@ -314,7 +315,7 @@ function UsageTabs({ enabled, tab, setTab, errorCount, locale, t }) {
 
 function RecordsSkeleton({ columns, rowCount = 20 }) {
   const { t } = useLocale();
-  return <><div className="console-table-wrap console-records-skeleton" role="status" aria-label={t("common.loading")}><AppicaTable className="console-table" size="sm" borderStyle="none" aria-hidden="true"><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <AppicaTableHead key={column.key}><span className="console-table-header-content">{column.label}</span></AppicaTableHead>)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{Array.from({ length: rowCount }, (_, row) => <AppicaTableRow key={row}>{columns.map((column) => <AppicaTableCell key={column.key}><Skeleton className="console-records-skeleton-cell" /></AppicaTableCell>)}</AppicaTableRow>)}</AppicaTableBody></AppicaTable></div><div className="console-pagination console-records-pagination-skeleton" aria-hidden="true"><Skeleton /><div><Skeleton /><Skeleton /><Skeleton /></div></div></>;
+  return <><div className="console-table-wrap console-records-skeleton" role="status" aria-label={t("common.loading")}><AppicaTable className="console-table" size="sm" borderStyle="none" aria-hidden="true"><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <AppicaTableHead key={column.key}><span>{column.label}</span></AppicaTableHead>)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{Array.from({ length: rowCount }, (_, row) => <AppicaTableRow key={row}>{columns.map((column) => <AppicaTableCell key={column.key}><Skeleton className="console-records-skeleton-cell" /></AppicaTableCell>)}</AppicaTableRow>)}</AppicaTableBody></AppicaTable></div><div className="console-pagination console-records-pagination-skeleton" aria-hidden="true"><Skeleton /><div><Skeleton /><Skeleton /><Skeleton /></div></div></>;
 }
 
 function ErrorRecords({ loading, columns, errors, sort, setSort, paging, setPaging, openError }) {

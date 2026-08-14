@@ -3,7 +3,7 @@ import { redeemApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, EmptyState, ErrorState, IconButton, Page, Panel, Skeleton, TextInput } from "../UI";
+import { Button, EmptyState, ErrorState, Page, Panel, Skeleton, TextInput } from "../UI";
 
 function redeemType(item) {
   return item?.type || item?.code_type || "unknown";
@@ -47,7 +47,7 @@ function RedeemSummary({ user, history, locale, formatCurrency }) {
   return <section className="console-redeem-summary"><div className="console-redeem-summary-metrics">{metrics.map(([label, value, suffix]) => <div key={label}><small>{label}<Icon name="info" size={13} /></small><strong>{value}</strong>{suffix && <span>{suffix}</span>}</div>)}</div></section>;
 }
 
-function RedeemForm({ code, setCode, busy, onSubmit, result, contact, locale, formatCurrency, t }) {
+function RedeemForm({ code, setCode, busy, onSubmit, result, locale, formatCurrency, t }) {
   const items = locale === "zh"
     ? [
       ["wallet", "余额", "增加账户可用余额。"],
@@ -61,8 +61,7 @@ function RedeemForm({ code, setCode, busy, onSubmit, result, contact, locale, fo
       ["calendar", "Subscription", "Unlock premium subscriptions and features."],
       ["gift", "Trial access", "Get free trial days and feature evaluations."],
     ];
-  const supportHref = contact?.startsWith("http") ? contact : contact?.includes("@") ? `mailto:${contact}` : "";
-  return <Panel className="console-redeem-entry"><div className="console-panel-body"><h2>{locale === "zh" ? "兑换码" : "Redeem a code"}</h2><p>{locale === "zh" ? "兑换余额、并发、订阅或试用权益。" : "Apply balance, concurrency, subscription, or trial benefits."}</p><form onSubmit={onSubmit}><div className="console-redeem-input"><TextInput value={code} onChange={(event) => setCode(event.target.value)} placeholder={t("redeem.placeholder")} autoComplete="off" />{code && <IconButton className="console-redeem-clear" icon="close" label={locale === "zh" ? "清空兑换码" : "Clear code"} onClick={() => setCode("")} />}</div><Button type="submit" variant="primary" disabled={!code.trim() || busy}>{busy ? t("common.loading") : (locale === "zh" ? "立即兑换" : "Redeem now")}</Button></form><div className="console-redeem-security"><Icon name="shield" size={17} /><span>{locale === "zh" ? "兑换码仅可使用一次，并会立即生效。" : "Codes are single-use and applied instantly."}</span></div><RedemptionResult result={result} locale={locale} formatCurrency={formatCurrency} t={t} /><div className="console-redeem-divider" /><h3>{locale === "zh" ? "关于兑换码" : "About redemption codes"}</h3><div className="console-redeem-info-list">{items.map(([icon, label, description], index) => <div className={`is-tone-${index + 1}`} key={label}><i><Icon name={icon} size={18} /></i><span><strong>{label}</strong><small>{description}</small></span></div>)}</div><div className="console-redeem-support"><span>{locale === "zh" ? "需要帮助？" : "Need help?"}</span>{supportHref ? <a href={supportHref} target={supportHref.startsWith("http") ? "_blank" : undefined} rel="noreferrer">{locale === "zh" ? "联系客服" : "Contact support"}<Icon name="external" size={13} /></a> : <span>{contact || (locale === "zh" ? "联系客服" : "Contact support")}</span>}</div></div></Panel>;
+  return <Panel className="console-redeem-entry"><div className="console-panel-body"><h2>{locale === "zh" ? "兑换码" : "Redeem a code"}</h2><p>{locale === "zh" ? "兑换余额、并发、订阅或试用权益。" : "Apply balance, concurrency, subscription, or trial benefits."}</p><form onSubmit={onSubmit}><div className="console-redeem-input"><TextInput clearable value={code} onChange={(event) => setCode(event.target.value)} onClear={() => setCode("")} placeholder={t("redeem.placeholder")} autoComplete="off" /></div><Button type="submit" variant="primary" disabled={!code.trim() || busy}>{busy ? t("common.loading") : (locale === "zh" ? "立即兑换" : "Redeem now")}</Button></form><div className="console-redeem-security"><Icon name="shield" size={17} /><span>{locale === "zh" ? "兑换码仅可使用一次，并会立即生效。" : "Codes are single-use and applied instantly."}</span></div><RedemptionResult result={result} locale={locale} formatCurrency={formatCurrency} t={t} /><div className="console-redeem-divider" /><h3>{locale === "zh" ? "关于兑换码" : "About redemption codes"}</h3><div className="console-redeem-info-list">{items.map(([icon, label, description], index) => <div className={`is-tone-${index + 1}`} key={label}><i><Icon name={icon} size={18} /></i><span><strong>{label}</strong><small>{description}</small></span></div>)}</div></div></Panel>;
 }
 
 function RedeemHistory({ state, history, locale, formatCurrency, formatDate, load }) {
@@ -75,7 +74,7 @@ function RedeemHistory({ state, history, locale, formatCurrency, formatDate, loa
 
 export function RedeemPage() {
   const { t, locale, formatCurrency, formatDate } = useLocale();
-  const { user, refreshUser, notify, settings } = useConsole();
+  const { user, refreshUser, notify } = useConsole();
   const [code, setCode] = useState("");
   const [history, setHistory] = useState([]);
   const [result, setResult] = useState(null);
@@ -99,6 +98,6 @@ export function RedeemPage() {
   };
   return <Page title={t("redeem.title")} className="console-redeem-page">
     <RedeemSummary user={user} history={history} locale={locale} formatCurrency={formatCurrency} />
-    <div className="console-redeem-grid"><RedeemForm code={code} setCode={setCode} busy={state.busy} onSubmit={redeem} result={result} contact={settings?.contact_info} locale={locale} formatCurrency={formatCurrency} t={t} /><RedeemHistory state={state} history={history} locale={locale} formatCurrency={formatCurrency} formatDate={formatDate} load={load} /></div>
+    <div className="console-redeem-grid"><RedeemForm code={code} setCode={setCode} busy={state.busy} onSubmit={redeem} result={result} locale={locale} formatCurrency={formatCurrency} t={t} /><RedeemHistory state={state} history={history} locale={locale} formatCurrency={formatCurrency} formatDate={formatDate} load={load} /></div>
   </Page>;
 }

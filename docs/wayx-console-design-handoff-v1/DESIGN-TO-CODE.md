@@ -71,7 +71,6 @@
 
 - `/subscriptions`：保留页面、路由和头部订阅入口，侧边栏隐藏。
 - `/video-workflow`：保留直接访问，侧边栏隐藏；使用 `assets/illustrations/video-workflow-poster-wide.png`。
-- `/key-usage`：保留公开密钥用量查询表面。
 - `/payment/*`：保留二维码、Stripe、Airwallex、回调与结果状态页。
 - `/custom/:id`：只允许现有安全的 Markdown 自定义页，不嵌入任意外部 URL。
 
@@ -976,4 +975,3 @@ src/console/
 - 新透明 `wayx-mark.png` 已按确认稿的紫蓝交叉 X 方向制作，同时保留完整品牌锁定截图供几何校准；如果未来提供官方矢量源，应无损替换 raster mark，锁定区几何不变。
 - 主稿是静态状态，无法覆盖所有长文本、极端数据量和错误态；这些状态以本文档和现有业务行为为准。
 - 示例 endpoint、金额、日期、模型和用户信息不是生产固定值。
-

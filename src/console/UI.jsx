@@ -1,55 +1,54 @@
-import { Children, isValidElement, useMemo, useRef } from "react";
+import { Children, isValidElement, useMemo } from "react";
 import { Badge as AppicaBadge } from "@appica/ui-react/badge";
-import { Button as AppicaButton, buttonVariants as appicaButtonVariants } from "@appica/ui-react/button";
-import {
-  Card as AppicaCard,
-  CardHeader as AppicaCardHeader,
-  CardTitle as AppicaCardTitle,
-} from "@appica/ui-react/card";
-import { Alert, AlertAction, AlertIcon, AlertTitle } from "@appica/ui-react/alert";
+import { Button as AppicaButton } from "@appica/ui-react/button";
+import { buttonVariants as appicaButtonVariants } from "@appica/ui-react/button";
+import { Card as AppicaCard } from "@appica/ui-react/card";
+import { CardHeader as AppicaCardHeader } from "@appica/ui-react/card";
+import { CardTitle as AppicaCardTitle } from "@appica/ui-react/card";
+import { Alert } from "@appica/ui-react/alert";
+import { AlertAction } from "@appica/ui-react/alert";
+import { AlertIcon } from "@appica/ui-react/alert";
+import { AlertTitle } from "@appica/ui-react/alert";
+import { AlertDialog } from "@appica/ui-react/alert-dialog";
+import { AlertDialogClose } from "@appica/ui-react/alert-dialog";
+import { AlertDialogContent } from "@appica/ui-react/alert-dialog";
+import { AlertDialogDescription } from "@appica/ui-react/alert-dialog";
+import { AlertDialogFooter } from "@appica/ui-react/alert-dialog";
+import { AlertDialogHeader } from "@appica/ui-react/alert-dialog";
+import { AlertDialogTitle } from "@appica/ui-react/alert-dialog";
 import { CopyButton as AppicaCopyButton } from "@appica/ui-react/copy-button";
-import {
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@appica/ui-react/dialog";
+import { Dialog } from "@appica/ui-react/dialog";
+import { DialogBody } from "@appica/ui-react/dialog";
+import { DialogContent } from "@appica/ui-react/dialog";
+import { DialogDescription } from "@appica/ui-react/dialog";
+import { DialogFooter } from "@appica/ui-react/dialog";
+import { DialogHeader } from "@appica/ui-react/dialog";
+import { DialogTitle } from "@appica/ui-react/dialog";
 import { Input as AppicaInput } from "@appica/ui-react/input";
-import {
-  Field as AppicaField,
-  FieldDescription as AppicaFieldDescription,
-  FieldError as AppicaFieldError,
-  FieldLabel as AppicaFieldLabel,
-} from "@appica/ui-react/field";
-import {
-  Pagination as AppicaPagination,
-  PaginationEllipsis as AppicaPaginationEllipsis,
-  PaginationItem as AppicaPaginationItem,
-  PaginationLink as AppicaPaginationLink,
-  PaginationList as AppicaPaginationList,
-} from "@appica/ui-react/pagination";
+import { Field as AppicaField } from "@appica/ui-react/field";
+import { FieldDescription as AppicaFieldDescription } from "@appica/ui-react/field";
+import { FieldError as AppicaFieldError } from "@appica/ui-react/field";
+import { FieldLabel as AppicaFieldLabel } from "@appica/ui-react/field";
+import { Pagination as AppicaPagination } from "@appica/ui-react/pagination";
+import { PaginationEllipsis as AppicaPaginationEllipsis } from "@appica/ui-react/pagination";
+import { PaginationItem as AppicaPaginationItem } from "@appica/ui-react/pagination";
+import { PaginationLink as AppicaPaginationLink } from "@appica/ui-react/pagination";
+import { PaginationList as AppicaPaginationList } from "@appica/ui-react/pagination";
 import { Progress as AppicaProgress } from "@appica/ui-react/progress";
-import {
-  Select as AppicaSelect,
-  SelectContent as AppicaSelectContent,
-  SelectItem as AppicaSelectItem,
-  SelectTrigger as AppicaSelectTrigger,
-  SelectValue as AppicaSelectValue,
-} from "@appica/ui-react/select";
+import { Select as AppicaSelect } from "@appica/ui-react/select";
+import { SelectContent as AppicaSelectContent } from "@appica/ui-react/select";
+import { SelectItem as AppicaSelectItem } from "@appica/ui-react/select";
+import { SelectTrigger as AppicaSelectTrigger } from "@appica/ui-react/select";
+import { SelectValue as AppicaSelectValue } from "@appica/ui-react/select";
 import { Spinner as AppicaSpinner } from "@appica/ui-react/spinner";
 import { Skeleton as AppicaSkeleton } from "@appica/ui-react/skeleton";
 import { Switch as AppicaSwitch } from "@appica/ui-react/switch";
-import {
-  Table as AppicaTable,
-  TableBody as AppicaTableBody,
-  TableCell as AppicaTableCell,
-  TableHead as AppicaTableHead,
-  TableHeader as AppicaTableHeader,
-  TableRow as AppicaTableRow,
-} from "@appica/ui-react/table";
+import { Table as AppicaTable } from "@appica/ui-react/table";
+import { TableBody as AppicaTableBody } from "@appica/ui-react/table";
+import { TableCell as AppicaTableCell } from "@appica/ui-react/table";
+import { TableHead as AppicaTableHead } from "@appica/ui-react/table";
+import { TableHeader as AppicaTableHeader } from "@appica/ui-react/table";
+import { TableRow as AppicaTableRow } from "@appica/ui-react/table";
 import { Textarea as AppicaTextarea } from "@appica/ui-react/textarea";
 import { Tooltip as AppicaTooltip } from "@appica/ui-react/tooltip";
 import { TooltipContent as AppicaTooltipContent } from "@appica/ui-react/tooltip";
@@ -94,16 +93,16 @@ const buttonVariants = {
 };
 
 export function Button({ variant = "secondary", icon, className = "", children, ...props }) {
-  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size="md" className={`console-button console-button--${variant} ${className}`} {...props}>{icon && <Icon name={icon} size={18} data-icon="start" />}{children}</AppicaButton>;
+  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size="md" className={className} {...props}>{icon && <Icon name={icon} size={18} data-icon="start" />}{children}</AppicaButton>;
 }
 
 export function buttonLinkClass({ variant = "secondary", size = "md", className = "" } = {}) {
   const resolvedVariant = buttonVariants[variant] || variant;
-  return `${appicaButtonVariants({ variant: resolvedVariant, size })} console-button console-button--${variant} ${className}`.trim();
+  return `${appicaButtonVariants({ variant: resolvedVariant, size })} ${className}`.trim();
 }
 
-export function IconButton({ icon, label, className = "", ...props }) {
-  return <AppicaButton type="button" variant="outline" size="icon-md" className={`console-icon-button ${className}`} aria-label={label} title={label} {...props}><Icon name={icon} size={18} /></AppicaButton>;
+export function IconButton({ icon, label, variant = "secondary", size = "icon-md", className = "", ...props }) {
+  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size={size} className={`console-icon-button ${className}`} aria-label={label} title={label} {...props}><Icon name={icon} size={18} /></AppicaButton>;
 }
 
 export function InlineButton({ variant = "ghost", size = "sm", icon, className = "", children, ...props }) {
@@ -111,11 +110,11 @@ export function InlineButton({ variant = "ghost", size = "sm", icon, className =
 }
 
 export function Field({ label, hint, error, className = "", children }) {
-  return <AppicaField className={`console-field ${className}`} invalid={Boolean(error)}>{label && <AppicaFieldLabel>{label}</AppicaFieldLabel>}{children}{error && <AppicaFieldError match>{error}</AppicaFieldError>}{hint && !error && <AppicaFieldDescription>{hint}</AppicaFieldDescription>}</AppicaField>;
+  return <AppicaField className={`min-w-0 ${className}`.trim()} invalid={Boolean(error)}>{label && <AppicaFieldLabel>{label}</AppicaFieldLabel>}{children}{error && <AppicaFieldError match>{error}</AppicaFieldError>}{hint && !error && <AppicaFieldDescription>{hint}</AppicaFieldDescription>}</AppicaField>;
 }
 
 export function TextInput({ className = "", ...props }) {
-  return <AppicaInput variant="outline" inputSize="md" className={`console-input ${className}`} {...props} />;
+  return <AppicaInput variant="outline" inputSize="md" className={className} {...props} />;
 }
 
 function selectOptionText(children) {
@@ -145,17 +144,17 @@ export function SelectInput({ children, className = "", value = "", onChange, di
     onChange?.({ target, currentTarget: target });
   };
   return <AppicaSelect items={options} value={selectedValue || null} onValueChange={change} disabled={disabled} size="md" variant="outline" alignItemWithTrigger={false}>
-    <AppicaSelectTrigger id={id} className={`console-input console-select console-select-trigger ${className}`} aria-label={props["aria-label"]} aria-describedby={props["aria-describedby"]}>
+    <AppicaSelectTrigger id={id} className={className} aria-label={props["aria-label"]} aria-describedby={props["aria-describedby"]}>
       <AppicaSelectValue placeholder={locale === "zh" ? "请选择" : "Select an option"}>{(currentValue) => options.find((option) => option.value === String(currentValue ?? ""))?.label || (locale === "zh" ? "请选择" : "Select an option")}</AppicaSelectValue>
     </AppicaSelectTrigger>
-    <AppicaSelectContent className="console-select-menu">
-      {options.map((option) => <AppicaSelectItem className="console-select-option" key={option.key} value={option.value} disabled={option.disabled}>{option.label}</AppicaSelectItem>)}
+    <AppicaSelectContent>
+      {options.map((option) => <AppicaSelectItem key={option.key} value={option.value} disabled={option.disabled}>{option.label}</AppicaSelectItem>)}
     </AppicaSelectContent>
   </AppicaSelect>;
 }
 
 export function TextArea({ className = "", ...props }) {
-  return <AppicaTextarea variant="outline" inputSize="md" className={`console-input console-textarea ${className}`} {...props} />;
+  return <AppicaTextarea variant="outline" inputSize="md" className={className} {...props} />;
 }
 
 export function Toggle({ checked, onChange, label, ariaLabel, disabled }) {
@@ -165,7 +164,7 @@ export function Toggle({ checked, onChange, label, ariaLabel, disabled }) {
 export function Spinner({ label }) {
   const { t } = useLocale();
   const loadingLabel = label || t("common.loading");
-  return <div className="console-loading" role="status"><AppicaSpinner className="console-appica-spinner" variant="dots" aria-label={loadingLabel} /><span>{loadingLabel}</span></div>;
+  return <div className="console-loading" role="status"><AppicaSpinner variant="dots" aria-label={loadingLabel} /><span>{loadingLabel}</span></div>;
 }
 
 export function Skeleton({ className = "", ...props }) {
@@ -193,7 +192,7 @@ export function StatusBadge({ status, label }) {
   const normalized = String(status || "unknown").toLowerCase();
   const tone = statusTone[normalized] || "neutral";
   const variant = tone === "danger" ? "error" : tone === "neutral" ? "soft" : tone;
-  return <AppicaBadge variant={variant} size="md" className={`console-status console-status--${tone}`}><i />{label || normalized.replaceAll("_", " ")}</AppicaBadge>;
+  return <AppicaBadge variant={variant} size="md">{label || normalized.replaceAll("_", " ")}</AppicaBadge>;
 }
 
 export function ProgressBar({ value, tone = "primary" }) {
@@ -205,7 +204,7 @@ export function ProgressBar({ value, tone = "primary" }) {
 export function Modal({ open, title, description, children, footer, onClose, size = "medium" }) {
   const { t } = useLocale();
   return <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose?.()}>
-    <DialogContent closeLabel={t("common.close")} className={`console-modal console-modal--${size}`} viewportProps={{ className: "console-modal-layer" }}>
+    <DialogContent closeLabel={t("common.close")} className={`console-modal--${size}`}>
       <div className="console-modal-content">
         <DialogHeader className="console-modal-head"><div><DialogTitle>{title}</DialogTitle>{description && <DialogDescription>{description}</DialogDescription>}</div></DialogHeader>
         <DialogBody className="console-modal-body">{children}</DialogBody>
@@ -217,7 +216,7 @@ export function Modal({ open, title, description, children, footer, onClose, siz
 
 export function ConfirmDialog({ open, title, description, confirmLabel, tone = "danger", busy, onConfirm, onClose }) {
   const { t } = useLocale();
-  return <Modal open={open} title={title} description={description} onClose={onClose} size="small" footer={<><Button onClick={onClose} disabled={busy}>{t("common.cancel")}</Button><Button variant={tone} onClick={onConfirm} disabled={busy}>{confirmLabel || t("common.confirm")}</Button></>}><div className="console-confirm-icon"><Icon name="warning" size={28} /></div></Modal>;
+  return <AlertDialog open={open} onOpenChange={(nextOpen) => !nextOpen && !busy && onClose?.()}><AlertDialogContent aria-busy={busy}><AlertDialogHeader><AlertDialogTitle>{title}</AlertDialogTitle>{description && <AlertDialogDescription>{description}</AlertDialogDescription>}</AlertDialogHeader><AlertDialogFooter><AlertDialogClose render={<AppicaButton type="button" variant="outline" size="md" />} disabled={busy}>{t("common.cancel")}</AlertDialogClose><AppicaButton type="button" variant={buttonVariants[tone] || tone} size="md" onClick={onConfirm} disabled={busy}>{confirmLabel || t("common.confirm")}</AppicaButton></AlertDialogFooter></AlertDialogContent></AlertDialog>;
 }
 
 function paginationItems(page, totalPages) {
@@ -240,8 +239,8 @@ export function Pagination({ page = 1, pageSize = 20, total = 0, pages, onPageCh
   const end = Math.min(total, page * pageSize);
   const range = locale === "zh" ? `${start}–${end} / 共 ${total}` : `${start}–${end} of ${total}`;
   const items = paginationItems(page, totalPages);
-  const pageButton = (target, label, icon, className = "", disabled = false) => <AppicaPaginationLink render={<button type="button" />} className={className} disabled={disabled} aria-label={label} onClick={() => onPageChange(target)}>{icon ? <Icon name={icon} size={16} /> : target}</AppicaPaginationLink>;
-  return <div className="console-pagination"><span>{range}</span><div>{onPageSizeChange && <SelectInput value={pageSize} searchable={false} aria-label={locale === "zh" ? "每页条数" : "Rows per page"} onChange={(event) => onPageSizeChange(Number(event.target.value))}>{[10, 20, 50, 100].map((size) => <option value={size} key={size}>{locale === "zh" ? `${size} 条 / 页` : `${size} per page`}</option>)}</SelectInput>}<AppicaPagination size="md" className="console-pagination-nav-list"><AppicaPaginationList><AppicaPaginationItem>{pageButton(page - 1, t("common.previous"), "chevronRight", "console-pagination-nav is-previous", page <= 1)}</AppicaPaginationItem>{items.map((item) => <AppicaPaginationItem key={item}>{typeof item === "number" ? <AppicaPaginationLink render={<button type="button" />} active={item === page} className={`console-pagination-page ${item === page ? "is-current" : ""}`} onClick={() => onPageChange(item)}>{item}</AppicaPaginationLink> : <AppicaPaginationEllipsis className="console-pagination-ellipsis" />}</AppicaPaginationItem>)}<AppicaPaginationItem>{pageButton(page + 1, t("common.next"), "chevronRight", "console-pagination-nav", page >= totalPages)}</AppicaPaginationItem></AppicaPaginationList></AppicaPagination></div></div>;
+  const pageButton = (target, label, icon, disabled = false) => <AppicaPaginationLink render={<button type="button" />} disabled={disabled} aria-label={label} onClick={() => onPageChange(target)}><Icon name={icon} size={16} /></AppicaPaginationLink>;
+  return <div className="console-pagination"><span>{range}</span><div>{onPageSizeChange && <SelectInput value={pageSize} searchable={false} aria-label={locale === "zh" ? "每页条数" : "Rows per page"} onChange={(event) => onPageSizeChange(Number(event.target.value))}>{[10, 20, 50, 100].map((size) => <option value={size} key={size}>{locale === "zh" ? `${size} 条 / 页` : `${size} per page`}</option>)}</SelectInput>}<AppicaPagination size="md"><AppicaPaginationList><AppicaPaginationItem>{pageButton(page - 1, t("common.previous"), "chevronLeft", page <= 1)}</AppicaPaginationItem>{items.map((item) => <AppicaPaginationItem key={item}>{typeof item === "number" ? <AppicaPaginationLink render={<button type="button" />} active={item === page} onClick={() => onPageChange(item)}>{item}</AppicaPaginationLink> : <AppicaPaginationEllipsis />}</AppicaPaginationItem>)}<AppicaPaginationItem>{pageButton(page + 1, t("common.next"), "chevronRight", page >= totalPages)}</AppicaPaginationItem></AppicaPaginationList></AppicaPagination></div></div>;
 }
 
 function mobileColumnLabel(column) {
@@ -271,40 +270,21 @@ function ConsoleTableHeader({ column, sortKey, sortOrder, onSort }) {
   const active = sortable && sortKey === column.key;
   const direction = active && sortOrder === "asc" ? "ascending" : active ? "descending" : "none";
   const icon = active && sortOrder === "asc" ? "arrowUp" : "arrowDown";
-  return <AppicaTableHead data-column={column.key} className={column.align ? `is-${column.align}` : ""} aria-sort={sortable ? direction : undefined}>{sortable ? <AppicaButton type="button" variant="ghost" size="sm" className={`console-table-sort-button ${active ? "is-sorted" : ""}`} onClick={() => onSort(column.key, active && sortOrder === "asc" ? "desc" : "asc")}><span>{column.label}</span><Icon name={icon} size={13} /></AppicaButton> : <span className="console-table-header-content">{column.label}</span>}</AppicaTableHead>;
+  return <AppicaTableHead data-column={column.key} className={column.align ? `is-${column.align}` : ""} aria-sort={sortable ? direction : undefined}>{sortable ? <AppicaButton type="button" variant="ghost" size="sm" className={`console-table-sort-button ${active ? "is-sorted" : ""}`} onClick={() => onSort(column.key, active && sortOrder === "asc" ? "desc" : "asc")}><span>{column.label}</span><Icon name={icon} size={13} /></AppicaButton> : <span>{column.label}</span>}</AppicaTableHead>;
 }
 
-function ConsoleTableRow({ row, index, rowKey, columns, onRowClick, onHover }) {
+function ConsoleTableRow({ row, index, rowKey, columns, onRowClick }) {
   const click = (event) => {
     if (!rowHasInteractiveTarget(event)) onRowClick?.(row);
   };
-  return <AppicaTableRow key={row[rowKey] ?? index} onPointerEnter={(event) => onHover(event.currentTarget)} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <AppicaTableCell key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : <TruncatedText value={row[column.key]} />}</AppicaTableCell>)}</AppicaTableRow>;
+  return <AppicaTableRow key={row[rowKey] ?? index} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <AppicaTableCell key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : <TruncatedText value={row[column.key]} />}</AppicaTableCell>)}</AppicaTableRow>;
 }
 
 export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "" }) {
-  const wrapRef = useRef(null);
-  const tableRef = useRef(null);
-  const hoverRef = useRef(null);
   if (!rows?.length) return empty || <EmptyState />;
-  const clearHover = () => {
-    if (hoverRef.current) hoverRef.current.style.opacity = "0";
-  };
-  const hoverRow = (row) => {
-    const wrap = wrapRef.current;
-    const table = tableRef.current;
-    const hover = hoverRef.current;
-    if (!wrap || !table || !hover || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    const wrapRect = wrap.getBoundingClientRect();
-    const rowRect = row.getBoundingClientRect();
-    hover.style.width = `${Math.max(table.scrollWidth, wrap.clientWidth)}px`;
-    hover.style.height = `${rowRect.height}px`;
-    hover.style.transform = `translate3d(0, ${rowRect.top - wrapRect.top + wrap.scrollTop}px, 0)`;
-    hover.style.opacity = "1";
-  };
   return (
-    <div className={`console-table-wrap ${className}`} ref={wrapRef} onPointerLeave={clearHover} onScroll={clearHover}>
-      <span className="console-table-hover" ref={hoverRef} aria-hidden="true" />
-      <AppicaTable className="console-table" size="sm" borderStyle="none" ref={tableRef}><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} onHover={hoverRow} />)}</AppicaTableBody></AppicaTable>
+    <div className={`console-table-wrap ${className}`}>
+      <AppicaTable className="console-table" size="sm" borderStyle="none" hoverableRows><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} />)}</AppicaTableBody></AppicaTable>
     </div>
   );
 }

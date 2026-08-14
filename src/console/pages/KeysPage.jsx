@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Skeleton } from "@appica/ui-react/skeleton";
 import { Toggle as AppicaToggle } from "@appica/ui-react/toggle";
 import { ToggleGroup } from "@appica/ui-react/toggle-group";
+import { useSearchParams } from "react-router";
 import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
@@ -79,8 +80,8 @@ function endpointItems(settings, defaultLabel) {
 
 function EndpointPopover({ settings }) {
   const { t, locale } = useLocale();
-  if (!settings) return <section className="console-endpoint-popover" role="status" aria-label={t("common.loading")}><header><strong>{t("keys.endpoints")}</strong></header><Skeleton className="console-endpoint-placeholder" /></section>;
   const defaultLabel = t("keys.endpointDefault");
+  if (!settings) return <section className="console-endpoint-popover" role="status" aria-label={t("common.loading")}><header><strong>{t("keys.endpoints")}</strong><span><Skeleton className="console-endpoint-count-placeholder" /> {locale === "zh" ? "个可用" : "available"}</span></header><div className="console-endpoint-grid"><div className="console-endpoint-item" aria-hidden="true"><b>{defaultLabel}</b><code><Skeleton className="console-endpoint-value-placeholder" /></code><span className="console-endpoint-action-placeholder"><Icon name="copy" size={16} /></span><span className="console-endpoint-action-placeholder"><Icon name="pulse" size={16} /></span></div></div></section>;
   const items = endpointItems(settings, defaultLabel);
   return <section className="console-endpoint-popover"><header><strong>{t("keys.endpoints")}</strong><span>{items.length} {locale === "zh" ? "个可用" : "available"}</span></header><div className="console-endpoint-grid">{items.map((item) => <div className="console-endpoint-item" key={item.endpoint} title={item.description || item.endpoint}><b>{item.name}{item.primary && item.name !== defaultLabel && <small>{defaultLabel}</small>}</b><code title={item.endpoint}>{item.endpoint}</code><CopyButton value={item.endpoint} /><a href={`https://www.tcptest.cn/http/${encodeURIComponent(item.endpoint)}`} target="_blank" rel="noreferrer" aria-label={t("keys.endpointSpeed")} title={t("keys.endpointSpeed")}><Icon name="pulse" size={16} /><span>{t("keys.endpointSpeed")}</span></a></div>)}</div></section>;
 }
@@ -106,7 +107,7 @@ function UsageCell({ row, stats, formatCurrency, locale }) {
 function RateWindow({ label, used, limit, resetAt, formatCurrency, locale }) {
   if (!Number(limit)) return null;
   const percent = Number(used || 0) / Number(limit) * 100;
-  return <div><span><b>{label}</b><strong>{formatCurrency(used)} / {formatCurrency(limit)}</strong></span><ProgressBar value={percent} tone={percent >= 100 ? "danger" : percent >= 80 ? "warning" : "primary"} />{resetAt && <small>↻ {resetCountdown(resetAt, locale)}</small>}</div>;
+  return <div><span><b>{label}</b><strong>{formatCurrency(used)} / {formatCurrency(limit)}</strong></span><ProgressBar value={percent} tone={percent >= 100 ? "danger" : percent >= 80 ? "warning" : "primary"} />{resetAt && <small><Icon name="refresh" size={12} />{resetCountdown(resetAt, locale)}</small>}</div>;
 }
 
 function RateLimitCell({ row, onReset, formatCurrency, locale }) {
@@ -189,6 +190,27 @@ function keyFormWarning(form, locale) {
   return "";
 }
 
+function keySortValue(row, key) {
+  if (key === "current_concurrency") return Number(row.current_concurrency) || 0;
+  if (["expires_at", "last_used_at", "created_at"].includes(key)) return row[key] ? new Date(row[key]).getTime() : null;
+  return String(row[key] ?? "").toLocaleLowerCase();
+}
+
+function sortedKeyRows(items, sort) {
+  const direction = sort.order === "asc" ? 1 : -1;
+  return [...items].sort((left, right) => {
+    const leftValue = keySortValue(left, sort.key);
+    const rightValue = keySortValue(right, sort.key);
+    if (leftValue === rightValue) return 0;
+    if (leftValue === null) return 1;
+    if (rightValue === null) return -1;
+    const comparison = typeof leftValue === "number"
+      ? leftValue - rightValue
+      : leftValue.localeCompare(rightValue, undefined, { numeric: true, sensitivity: "base" });
+    return comparison * direction;
+  });
+}
+
 function shouldOmitStatus(editor, form) {
   return ["expired", "quota_exhausted"].includes(editor.item?.status) && form.status !== "active";
 }
@@ -201,7 +223,8 @@ function KeysTableContent({ state, columns, result, sort, setSort, paging, setPa
   if (state.loading && !result.items.length) return <TableSkeleton columns={columns.length} className="console-keys-table-skeleton" />;
   if (state.error && !result.items.length) return <ErrorState message={state.error} onRetry={load} />;
   const empty = <EmptyState icon="key" title={keyText(locale, "还没有 API 密钥", "No API keys yet")} action={<Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button>} />;
-  return <><DataTable className="console-keys-table" columns={columns} rows={result.items} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} empty={empty} /><Pagination page={paging.page} pageSize={paging.pageSize} total={result.total} pages={result.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
+  const rows = sortedKeyRows(result.items, sort);
+  return <><DataTable className="console-keys-table" columns={columns} rows={rows} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} empty={empty} /><Pagination page={paging.page} pageSize={paging.pageSize} total={result.total} pages={result.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 }
 
 function KeysTablePanel({ query, setQuery, setPaging, groups, settings, load, state, allColumns, hidden, toggleColumn, openCreate, columns, result, sort, setSort, paging, locale, t }) {
@@ -234,6 +257,7 @@ function CreatedKeyDialog({ createdKey, setCreatedKey, t }) {
 export function KeysPage() {
   const { t, locale, formatCurrency, formatDate } = useLocale();
   const { notify, settings } = useConsole();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState({ search: "", status: "", group_id: "" });
   const [paging, setPaging] = useState({ page: 1, pageSize: 20 });
   const [sort, setSort] = useState({ key: "created_at", order: "desc" });
@@ -241,6 +265,7 @@ export function KeysPage() {
   const [usageStats, setUsageStats] = useState({});
   const [groups, setGroups] = useState([]);
   const [rates, setRates] = useState({});
+  const [groupsReady, setGroupsReady] = useState(false);
   const [state, setState] = useState({ loading: true, error: "" });
   const [editor, setEditor] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -266,9 +291,17 @@ export function KeysPage() {
   }, [paging, query, sort]);
 
   useEffect(() => { load(); return () => requestRef.current?.abort(); }, [load]);
-  useEffect(() => { let active = true; Promise.allSettled([groupsApi.available(), groupsApi.rates()]).then(([groupResult, rateResult]) => { if (!active) return; const groupData = groupResult.value; setGroups(Array.isArray(groupData) ? groupData : groupData?.items || []); setRates(rateResult.value?.rates || rateResult.value || {}); }); return () => { active = false; }; }, []);
+  useEffect(() => { let active = true; Promise.allSettled([groupsApi.available(), groupsApi.rates()]).then(([groupResult, rateResult]) => { if (!active) return; const groupData = groupResult.value; setGroups(Array.isArray(groupData) ? groupData : groupData?.items || []); setRates(rateResult.value?.rates || rateResult.value || {}); setGroupsReady(true); }); return () => { active = false; }; }, []);
 
-  const openCreate = () => { setForm({ ...emptyForm, group_id: groups[0]?.id || "", expiration_date: expiryDate(30) }); setEditor({ type: "create" }); };
+  const openCreate = useCallback(() => { setForm({ ...emptyForm, name: "plus", group_id: groups[0]?.id || "", expiration_date: expiryDate(30) }); setEditor({ type: "create" }); }, [groups]);
+  const createRequested = searchParams.get("create") === "1";
+  useEffect(() => {
+    if (!createRequested || !groupsReady || editor) return;
+    openCreate();
+    const next = new URLSearchParams(searchParams);
+    next.delete("create");
+    setSearchParams(next, { replace: true });
+  }, [createRequested, editor, groupsReady, openCreate, searchParams, setSearchParams]);
   const openEdit = (item) => { setForm(formForKey(item)); setEditor({ type: "edit", item }); };
   const submit = async () => {
     const warning = keyFormWarning(form, locale);
@@ -294,7 +327,7 @@ export function KeysPage() {
     { key: "usage", label: locale === "zh" ? "用量" : "Usage", render: (row) => <UsageCell row={row} stats={usageStats} formatCurrency={formatCurrency} locale={locale} /> },
     { key: "rate_limit", label: locale === "zh" ? "周期限额" : "Rate limits", render: (row) => <RateLimitCell row={row} onReset={() => setDialog({ type: "resetRate", item: row })} formatCurrency={formatCurrency} locale={locale} /> },
     { key: "expires_at", label: t("keys.expires"), sortable: true, render: (row) => <span className={row.expires_at && new Date(row.expires_at) < new Date() ? "console-danger-text" : ""}>{row.expires_at ? formatDate(row.expires_at) : t("common.never")}</span> },
-    { key: "status", label: t("common.status"), sortable: true, render: (row) => <StatusBadge status={row.status} label={statusLabel(row.status, locale)} /> },
+    { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={row.status} label={statusLabel(row.status, locale)} /> },
     { key: "last_used_at", label: t("keys.lastUsed"), sortable: true, render: (row) => row.last_used_at ? formatDate(row.last_used_at) : "—" },
     { key: "last_used_ip", label: locale === "zh" ? "最近 IP" : "Last used IP", render: (row) => row.last_used_ip || "—" },
     { key: "created_at", label: locale === "zh" ? "创建时间" : "Created", sortable: true, render: (row) => <span>{formatDate(row.created_at)}</span> },

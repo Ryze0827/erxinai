@@ -143,16 +143,14 @@ def save_gif(frames, durations, output_path):
 def main():
     root = Path(__file__).resolve().parents[1]
     source_path = root / "public/assets/img/wayx-mark-05.png"
-    output_path = root / "public/assets/img/wayx-mark-05-windmill.gif"
     ui_output_path = root / "public/assets/img/wayx-mark-05-windmill-96.gif"
     logo = centered_logo(Image.open(source_path).convert("RGBA"))
     rgba_frames, durations = build_frames(logo)
-    frame_count = save_gif(rgba_frames, durations, output_path)
     crop_offset = (CANVAS_SIZE - UI_CROP_SIZE) // 2
     crop_box = (crop_offset, crop_offset, crop_offset + UI_CROP_SIZE, crop_offset + UI_CROP_SIZE)
     ui_frames = [frame.crop(crop_box).resize((UI_SIZE, UI_SIZE), Image.Resampling.LANCZOS) for frame in rgba_frames]
-    save_gif(ui_frames, durations, ui_output_path)
-    print(f"Wrote {output_path} and {ui_output_path} ({frame_count} frames, {sum(durations)} ms loop)")
+    frame_count = save_gif(ui_frames, durations, ui_output_path)
+    print(f"Wrote {ui_output_path} ({frame_count} frames, {sum(durations)} ms loop)")
 
 
 if __name__ == "__main__":

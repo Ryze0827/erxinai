@@ -604,12 +604,12 @@ function HeroSection() {
             <Link className={`${buttonVariants({ variant: "outline", size: "lg" })} w-full sm:w-auto`} to="/login">Browse Components</Link>
           </GradientGlow>
         </div>
-        <div className="hero-works hero-supports text-foreground-muted mt-8 flex flex-col items-center gap-3 text-sm">
+        <div className="text-foreground-muted mt-8 flex flex-col items-center gap-3 text-sm">
           <span>Available for</span>
-          <div className="hero-agents-strip" aria-label="Supported AI tools">
+          <div className="inline-flex flex-wrap items-center justify-center" aria-label="Supported AI tools">
             {modelProviders.map(({ name, src }) => (
               <img
-                className="hero-mark"
+                className="relative -ml-3 size-12 first:ml-0 sm:-ml-4 sm:size-15 motion-safe:transition-transform motion-safe:hover:z-1 motion-safe:hover:-translate-y-1.5 motion-safe:hover:scale-110"
                 key={name}
                 src={src}
                 title={name}

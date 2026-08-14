@@ -23,7 +23,6 @@ import { CustomPage } from "./console/pages/CustomPage";
 import { ImageApiDocsPage } from "./console/pages/ImageApiDocsPage";
 import { ImageStudioPage } from "./console/pages/ImageStudioPage";
 import { VideoWorkflowPage } from "./console/pages/VideoWorkflowPage";
-import { KeyUsagePage } from "./console/pages/KeyUsagePage";
 import { AirwallexPaymentPage, OrdersPage, PaymentQRCodePage, PaymentResultPage, PurchasePage, StripePaymentPage, StripePopupPage, WeChatPaymentCallbackPage } from "./console/pages/Payments";
 
 function ConsoleRoute({ children, ...guard }) {
@@ -72,7 +71,6 @@ export function App() {
           <Route path="/payment/qrcode" element={<ProtectedRoute standardOnly feature="payment_enabled" mode="opt-out"><PaymentQRCodePage /></ProtectedRoute>} />
           <Route path="/custom/:id" element={<ConsoleRoute><CustomPage /></ConsoleRoute>} />
 
-          <Route path="/key-usage" element={<KeyUsagePage />} />
           <Route path="/payment/result" element={<PaymentResultPage />} />
           <Route path="/payment/stripe" element={<StripePaymentPage />} />
           <Route path="/payment/stripe-popup" element={<StripePopupPage />} />

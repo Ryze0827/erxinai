@@ -70,10 +70,9 @@ npm run preview  # Preview the production build locally
 ├── src/
 │   ├── App.jsx                      # Landing page behavior and application routes
 │   ├── api/                         # API client, authentication endpoints, and token storage
-│   ├── auth/                        # Authentication pages, controls, and OAuth state machine
-│   ├── gatewayDemos.js              # Interactive AI gateway demonstrations
-│   ├── landing-page.html            # Main landing-page markup
-│   └── *.css                        # Page and component styles
+│   ├── auth/                        # Appica authentication pages and OAuth state machine
+│   ├── console/                     # Authenticated console pages and shared Appica primitives
+│   └── landing/                     # Appica public landing page
 ├── public/assets/                   # Local fonts and images
 └── vite.config.mjs                  # Vite configuration
 ```

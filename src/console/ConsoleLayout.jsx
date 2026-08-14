@@ -1,22 +1,28 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, Navigate, NavLink, useLocation, useNavigate } from "react-router";
-import { Avatar, AvatarFallback, AvatarImage } from "@appica/ui-react/avatar";
-import { Alert, AlertIcon, AlertTitle } from "@appica/ui-react/alert";
+import { Avatar } from "@appica/ui-react/avatar";
+import { AvatarFallback } from "@appica/ui-react/avatar";
+import { AvatarImage } from "@appica/ui-react/avatar";
+import { Alert } from "@appica/ui-react/alert";
+import { AlertIcon } from "@appica/ui-react/alert";
+import { AlertTitle } from "@appica/ui-react/alert";
 import { BackgroundPattern } from "@appica/ui-react/background-pattern";
 import { Dialog } from "@appica/ui-react/dialog";
 import { DialogContent } from "@appica/ui-react/dialog";
 import { DialogTitle } from "@appica/ui-react/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLinkItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@appica/ui-react/dropdown-menu";
-import { Navigation, NavigationItem, NavigationLink, NavigationList } from "@appica/ui-react/navigation";
-import { Popover, PopoverContent, PopoverTrigger } from "@appica/ui-react/popover";
+import { DropdownMenu } from "@appica/ui-react/dropdown-menu";
+import { DropdownMenuContent } from "@appica/ui-react/dropdown-menu";
+import { DropdownMenuItem } from "@appica/ui-react/dropdown-menu";
+import { DropdownMenuSeparator } from "@appica/ui-react/dropdown-menu";
+import { DropdownMenuTrigger } from "@appica/ui-react/dropdown-menu";
+import { Navigation } from "@appica/ui-react/navigation";
+import { NavigationItem } from "@appica/ui-react/navigation";
+import { NavigationLink } from "@appica/ui-react/navigation";
+import { NavigationList } from "@appica/ui-react/navigation";
+import { Popover } from "@appica/ui-react/popover";
+import { PopoverContent } from "@appica/ui-react/popover";
+import { PopoverTrigger } from "@appica/ui-react/popover";
 import { announcementsApi, keysApi, subscriptionsApi } from "../api";
 import { getAccessToken } from "../api/session";
 import { BrandLogo } from "../BrandLogo";
@@ -129,7 +135,12 @@ function SidebarUserMenu({ collapsed, onNavigate }) {
     navigate("/login", { replace: true });
   };
 
-  return <><DropdownMenu size="md"><DropdownMenuTrigger className="console-sidebar-user" title={collapsed ? t("nav.accountMenu") : undefined} aria-label={collapsed ? t("nav.accountMenu") : undefined}><Avatar size={42} shape="rounded" className="console-sidebar-avatar">{avatar && <AvatarImage src={avatar} alt="" />}<AvatarFallback>{initial}</AvatarFallback></Avatar><div><strong>{displayName}</strong><small>{t("nav.workspaceOwner")}</small></div><Icon name="chevronDown" size={15} data-icon="end" /></DropdownMenuTrigger><DropdownMenuContent side="top" align="start" className="console-user-popover"><div className="console-user-summary"><Avatar size={40} shape="rounded" className="console-user-summary-avatar">{avatar && <AvatarImage src={avatar} alt="" />}<AvatarFallback>{initial}</AvatarFallback></Avatar><div><strong>{displayName}</strong>{user?.email && <small>{user.email}</small>}</div></div><DropdownMenuSeparator /><DropdownMenuLinkItem render={<Link to="/profile" />} onClick={onNavigate}><Icon name="user" size={17} data-icon="start" />{t("nav.profile")}</DropdownMenuLinkItem><DropdownMenuLinkItem render={<Link to="/keys" />} onClick={onNavigate}><Icon name="apiKey" size={17} data-icon="start" />{t("nav.keys")}</DropdownMenuLinkItem><DropdownMenuItem onClick={() => setTeamMembersOpen(true)}><Icon name="users" size={17} data-icon="start" />{t("nav.inviteMembers")}</DropdownMenuItem>{settings?.contact_info && <div className="console-user-contact"><Icon name="chat" size={17} /><div><span>{t("common.contactSupport")}</span><p>{settings.contact_info}</p></div></div>}<DropdownMenuSeparator /><DropdownMenuItem className="console-user-logout" onClick={handleLogout}><Icon name="logout" size={17} data-icon="start" />{t("nav.logout")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu><Dialog open={teamMembersOpen} onOpenChange={setTeamMembersOpen}><DialogContent frame={false} closeButton={false} initialFocus={teamMembersCardRef} className="console-team-members-dialog"><DialogTitle className="sr-only">{t("nav.inviteMembers")}</DialogTitle><TeamMembersCard ref={teamMembersCardRef} className="console-team-members-floating-card" ownerName={displayName} ownerEmail={user?.email || "—"} ownerLabel={t("teamMembers.you")} footer={<p className="bg-background-muted text-foreground-muted rounded-lg px-3 py-2 text-center text-xs">{t("teamMembers.comingSoon")}</p>} /></DialogContent></Dialog></>;
+  const openAccountPage = (path) => {
+    onNavigate?.();
+    navigate(path);
+  };
+
+  return <><DropdownMenu size="md"><DropdownMenuTrigger className="console-sidebar-user" title={collapsed ? t("nav.accountMenu") : undefined} aria-label={collapsed ? t("nav.accountMenu") : undefined}><Avatar size={42} shape="rounded" className="console-sidebar-avatar">{avatar && <AvatarImage src={avatar} alt="" />}<AvatarFallback>{initial}</AvatarFallback></Avatar><div><strong>{displayName}</strong><small>{t("nav.workspaceOwner")}</small></div><Icon name="chevronDown" size={15} data-icon="end" /></DropdownMenuTrigger><DropdownMenuContent side="top" align="start" className="console-user-popover"><div className="console-user-summary"><Avatar size={40} shape="rounded" className="console-user-summary-avatar">{avatar && <AvatarImage src={avatar} alt="" />}<AvatarFallback>{initial}</AvatarFallback></Avatar><div><strong>{displayName}</strong>{user?.email && <small>{user.email}</small>}</div></div><DropdownMenuSeparator /><DropdownMenuItem onClick={() => openAccountPage("/profile")}><Icon name="user" size={17} data-icon="start" />{t("nav.profile")}</DropdownMenuItem><DropdownMenuItem onClick={() => openAccountPage("/keys")}><Icon name="apiKey" size={17} data-icon="start" />{t("nav.keys")}</DropdownMenuItem><DropdownMenuItem onClick={() => setTeamMembersOpen(true)}><Icon name="users" size={17} data-icon="start" />{t("nav.inviteMembers")}</DropdownMenuItem>{settings?.contact_info && <div className="console-user-contact"><Icon name="chat" size={17} /><div><span>{t("common.contactSupport")}</span><p>{settings.contact_info}</p></div></div>}<DropdownMenuSeparator /><DropdownMenuItem className="console-user-logout" onClick={handleLogout}><Icon name="logout" size={17} data-icon="start" />{t("nav.logout")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu><Dialog open={teamMembersOpen} onOpenChange={setTeamMembersOpen}><DialogContent frame={false} closeButton={false} initialFocus={teamMembersCardRef} className="console-team-members-dialog"><DialogTitle className="sr-only">{t("nav.inviteMembers")}</DialogTitle><TeamMembersCard ref={teamMembersCardRef} className="console-team-members-floating-card" ownerName={displayName} ownerEmail={user?.email || "—"} ownerLabel={t("teamMembers.you")} footer={<p className="bg-background-muted text-foreground-muted rounded-lg px-3 py-2 text-center text-xs">{t("teamMembers.comingSoon")}</p>} /></DialogContent></Dialog></>;
 }
 
 function announcementContent(item) {
@@ -373,6 +384,14 @@ export function ConsoleLayout({ children }) {
   const title = pageTitle(location.pathname, allItems, t);
   const logo = DEFAULT_SITE_LOGO;
   const siteName = branding?.siteName || DEFAULT_SITE_NAME;
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.dataset.consolePage = "true";
+    return () => {
+      delete root.dataset.consolePage;
+    };
+  }, []);
 
   useEffect(() => {
     if (!brandingReady) return;

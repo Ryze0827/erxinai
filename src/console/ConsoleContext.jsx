@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ToastProvider, useToastManager } from "@appica/ui-react/toast";
+import { ToastProvider } from "@appica/ui-react/toast";
+import { useToastManager } from "@appica/ui-react/toast";
 import { authApi } from "../api/auth";
 import { clearAuthSession, AUTH_SESSION_EVENT, getAccessToken, getRefreshToken, getStoredUser, setStoredUser } from "../api/session";
 import { usePublicSettings } from "../auth/usePublicSettings";
