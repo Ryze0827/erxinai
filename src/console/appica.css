@@ -710,6 +710,13 @@ html[data-console-theme] .console-sidebar-foot {
   border-top: var(--border-width) solid var(--border-muted);
 }
 
+html[data-console-theme] .console-sidebar-assistant {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  padding: 0 1rem 1rem;
+}
+
 html[data-console-theme] [data-slot="dropdown-menu-trigger"].console-sidebar-user {
   display: grid;
   width: 100%;
@@ -3220,10 +3227,6 @@ html[data-console-theme] .console-image-doc-runbook-head > a {
   font-weight: 600;
 }
 
-html[data-console-theme] .console-image-runbook > [data-slot="card-content"] {
-  overflow: visible;
-}
-
 html[data-console-theme] .console-image-runbook-step {
   display: flex;
   min-width: 0;
@@ -3231,10 +3234,6 @@ html[data-console-theme] .console-image-runbook-step {
   padding: 1.25rem;
   border: 0;
   border-radius: 0;
-}
-
-html[data-console-theme] .console-image-runbook-step + .console-image-runbook-step {
-  border-inline-start: var(--border-width) solid var(--border-muted);
 }
 
 html[data-console-theme] .console-image-runbook-step > header,
@@ -3690,7 +3689,6 @@ html[data-console-theme] .console-markdown th {
 
 html[data-console-theme] .console-image-runbook-grid {
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.15fr) minmax(0, 0.95fr);
-  gap: 0;
 }
 
 html[data-console-theme] .console-description-list,
@@ -4292,6 +4290,11 @@ html[data-console-theme] .console-sidebar.is-collapsed .console-sidebar-user {
   background: transparent;
 }
 
+html[data-console-theme] .console-sidebar.is-collapsed .console-sidebar-assistant {
+  justify-content: center;
+  padding-inline: 0.75rem;
+}
+
 html[data-console-theme] .console-sidebar-overlay {
   position: fixed;
   z-index: 35;
@@ -4549,6 +4552,11 @@ html[data-console-theme] .console-tour-card > footer > [data-slot="button"] {
     padding: 0.75rem;
     border: var(--border-width) solid var(--border-muted);
     background: var(--background);
+  }
+
+  html[data-console-theme] .console-sidebar.is-collapsed .console-sidebar-assistant {
+    justify-content: flex-end;
+    padding-inline: 1rem;
   }
 
   html[data-console-theme] .console-workspace,

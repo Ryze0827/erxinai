@@ -5,7 +5,6 @@ import { AccordionContent } from "@appica/ui-react/accordion";
 import { AccordionItem } from "@appica/ui-react/accordion";
 import { AccordionTrigger } from "@appica/ui-react/accordion";
 import { Avatar } from "@appica/ui-react/avatar";
-import { AvatarBadge } from "@appica/ui-react/avatar";
 import { AvatarFallback } from "@appica/ui-react/avatar";
 import { AvatarGroup } from "@appica/ui-react/avatar";
 import { AvatarImage } from "@appica/ui-react/avatar";
@@ -14,7 +13,6 @@ import { Badge } from "@appica/ui-react/badge";
 import { BorderBeam } from "@appica/ui-react/border-beam";
 import { Button } from "@appica/ui-react/button";
 import { buttonVariants } from "@appica/ui-react/button";
-import { Chip } from "@appica/ui-react/chip";
 import { Dialog } from "@appica/ui-react/dialog";
 import { DialogBody } from "@appica/ui-react/dialog";
 import { DialogContent } from "@appica/ui-react/dialog";
@@ -46,7 +44,6 @@ import { Separator } from "@appica/ui-react/separator";
 import { Slider } from "@appica/ui-react/slider";
 import { Sparkline } from "@appica/ui-react/sparkline";
 import { SparklineChart } from "@appica/ui-react/sparkline";
-import { Spinner } from "@appica/ui-react/spinner";
 import { Switch } from "@appica/ui-react/switch";
 import { Tabs } from "@appica/ui-react/tabs";
 import { TabsList } from "@appica/ui-react/tabs";
@@ -55,10 +52,6 @@ import { TextAnimate } from "@appica/ui-react/text-animate";
 import { Thumbnail } from "@appica/ui-react/thumbnail";
 import { Toggle } from "@appica/ui-react/toggle";
 import { ToggleGroup } from "@appica/ui-react/toggle-group";
-import { Toolbar } from "@appica/ui-react/toolbar";
-import { ToolbarButton } from "@appica/ui-react/toolbar";
-import { ToolbarGroup } from "@appica/ui-react/toolbar";
-import { ToolbarInput } from "@appica/ui-react/toolbar";
 import { useTheme } from "@appica/ui-react/hooks/use-theme";
 import {
   Accessible,
@@ -86,10 +79,8 @@ import {
   Moon,
   MoonStars,
   Menu2,
-  Microphone,
   Package,
   Palette,
-  Paperclip,
   PlayerPauseFilled,
   PlayerPlayFilled,
   PlayerSkipBackFilled,
@@ -98,10 +89,8 @@ import {
   Route,
   Rocket,
   Search,
-  Send,
   ShoppingCart,
   ShoppingCartPlus,
-  Sparkles,
   StarFilled,
   SunHigh,
   TextDirectionRtl,
@@ -109,6 +98,7 @@ import {
   Users,
   Wallet,
 } from "@appica/icons-react";
+import { AppicaAssistantCard } from "../AppicaAssistant";
 import { BrandLogo } from "../BrandLogo";
 import { TeamMembersCard } from "../TeamMembersCard";
 import { DEFAULT_SITE_NAME } from "../branding";
@@ -501,37 +491,7 @@ function RatingCard() {
 }
 
 function AssistantCard() {
-  return (
-    <ShowcaseCard className="order-3 min-[85rem]:h-[55%]" contentClassName="flex flex-col">
-      <div className="flex items-center gap-2.5">
-        <Avatar size="sm">
-          <AvatarFallback className="bg-background-inverse text-foreground-inverse">
-            <Sparkles className="size-4.5" />
-            <AvatarBadge animate />
-          </AvatarFallback>
-        </Avatar>
-        <span className="text-foreground-intense text-sm font-semibold">Appica Assistant</span>
-      </div>
-      <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3">
-        <p className="bg-secondary-soft text-foreground-emphasis max-w-[85%] self-end rounded-lg rounded-br-3xs px-3.5 py-2 text-sm">Build me a pricing page with a monthly / annual toggle.</p>
-        <p className="bg-background-muted text-foreground max-w-[85%] self-start rounded-lg rounded-bl-3xs px-3.5 py-2 text-sm">On it - composing Tabs, Switch and Table into a three-tier layout.</p>
-        <p className="bg-secondary-soft text-foreground-emphasis max-w-[85%] self-end rounded-md rounded-br-3xs px-3.5 py-2 text-sm">Make the Pro tier featured.</p>
-        <span className="text-foreground-muted inline-flex items-center gap-2 px-1 text-xs"><Spinner className="text-[1.4em]" variant="sparkle" currentColor />Generating preview</span>
-      </div>
-      <div className="mt-3 hidden flex-wrap gap-1.5 min-[85rem]:flex">
-        <Chip variant="outline" size="sm">Add a FAQ section</Chip>
-        <Chip variant="outline" size="sm">Use dark theme</Chip>
-      </div>
-      <Toolbar className="mt-3 w-full" aria-label="Message composer">
-        <ToolbarInput className="placeholder:text-foreground-subtle h-10 min-w-0 flex-1 ps-3.5 text-sm outline-none" type="text" placeholder="Ask anything…" aria-label="Message the assistant" />
-        <ToolbarGroup aria-label="Composer actions">
-          <ToolbarButton className={buttonVariants({ variant: "ghost", size: "icon-sm" })} aria-label="Attach files"><Paperclip /></ToolbarButton>
-          <ToolbarButton className={buttonVariants({ variant: "ghost", size: "icon-sm" })} aria-label="Dictate a message"><Microphone /></ToolbarButton>
-          <ToolbarButton className={`${buttonVariants({ variant: "primary", size: "icon-sm" })} me-1`} aria-label="Send message"><Send /></ToolbarButton>
-        </ToolbarGroup>
-      </Toolbar>
-    </ShowcaseCard>
-  );
+  return <AppicaAssistantCard className="order-3 w-80 shrink-0 min-[85rem]:h-[55%] min-[85rem]:min-h-0 min-[85rem]:w-auto min-[85rem]:shrink" />;
 }
 
 function ModelSettingsCard() {
