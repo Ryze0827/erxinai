@@ -24,6 +24,7 @@ import { NavigationList } from "@appica/ui-react/navigation";
 import { Popover } from "@appica/ui-react/popover";
 import { PopoverContent } from "@appica/ui-react/popover";
 import { PopoverTrigger } from "@appica/ui-react/popover";
+import { useReducedMotion } from "@appica/ui-react/hooks/use-reduced-motion";
 import { MessageChatbot, X } from "@appica/icons-react";
 import { announcementsApi, keysApi, subscriptionsApi } from "../api";
 import { getAccessToken } from "../api/session";
@@ -39,11 +40,49 @@ import { Button, buttonLinkClass, EmptyState, IconButton, InlineButton, Modal, S
 import { safeExternalUrl, safeImageUrl } from "./utils";
 
 const SIDEBAR_STORAGE_KEY = "sentence_console_sidebar_collapsed";
-const SIDEBAR_MOTION = { duration: 220, easing: "cubic-bezier(.2, .76, .25, 1)" };
+const SIDEBAR_MOTION = { duration: 220, easing: "cubic-bezier(.2, .76, .25, 1)", fill: "both" };
+const SIDEBAR_LAYOUT_DISPLAYS = new Set(["flex", "inline-flex", "grid", "inline-grid"]);
+const SIDEBAR_MOTION_STATIC_SELECTOR = "[data-sidebar-motion-static]";
+const LAYOUT_IDENTITY_TRANSFORMS = new Set([
+  "none",
+  "matrix(1, 0, 0, 1, 0, 0)",
+  "matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)",
+]);
 const STORE_URL = "https://shop.erxin.store";
 
-function canAnimateSidebar() {
-  return window.matchMedia("(min-width: 981px)").matches && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function isDesktopSidebar() {
+  return window.matchMedia("(min-width: 981px)").matches;
+}
+
+function sidebarAnchorPoint(element, rect) {
+  const textNode = [...element.childNodes].find((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+  if (!textNode) return { left: rect.left, top: rect.top };
+  const range = document.createRange();
+  range.selectNodeContents(textNode);
+  const textRect = range.getBoundingClientRect();
+  return textRect.width || textRect.height ? { left: textRect.left, top: textRect.top } : { left: rect.left, top: rect.top };
+}
+
+function captureSlidingLayout(root, activeElements = new Set()) {
+  const candidates = new Set([...activeElements].filter((element) => element !== root && root.contains(element) && !element.closest(SIDEBAR_MOTION_STATIC_SELECTOR)));
+  root.querySelectorAll("*").forEach((container) => {
+    if (container.closest(SIDEBAR_MOTION_STATIC_SELECTOR)) return;
+    if (!SIDEBAR_LAYOUT_DISPLAYS.has(getComputedStyle(container).display)) return;
+    [...container.children].forEach((child) => {
+      if (!child.closest(SIDEBAR_MOTION_STATIC_SELECTOR)) candidates.add(child);
+    });
+  });
+  const anchors = new Map();
+  candidates.forEach((element) => {
+    if (!element.isConnected) return;
+    const style = getComputedStyle(element);
+    if (style.display === "none" || style.visibility === "hidden" || (!LAYOUT_IDENTITY_TRANSFORMS.has(style.transform) && !activeElements.has(element))) return;
+    const rect = element.getBoundingClientRect();
+    if (!rect.width || !rect.height || rect.right <= 0 || rect.left >= window.innerWidth || rect.bottom <= 0 || rect.top >= window.innerHeight) return;
+    const point = sidebarAnchorPoint(element, rect);
+    anchors.set(element, point);
+  });
+  return { anchors };
 }
 
 const overviewNav = [
@@ -359,7 +398,7 @@ function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
     return () => { active = false; };
   }, []);
 
-  return <><header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label={t(mobileOpen ? "nav.closeMenu" : "nav.openMenu")} onClick={() => setMobileOpen((value) => !value)} /><strong>{title}</strong></div><div className="console-header-actions">{summary?.active_count > 0 && <Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-subscription-pill" })} to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<Walkthrough setMobileOpen={setMobileOpen} />{safeExternalUrl(settings?.doc_url) && <a className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-header-link" })} href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<InlineButton variant="outline" size="md" className="console-header-language" icon="language" aria-label={t("nav.switchLanguage")} title={t("nav.switchLanguage")} onClick={() => setLocale(locale === "en" ? "zh" : "en")}><span>{t("nav.language")}</span></InlineButton><ThemeToggle className="console-header-preference" /><AnnouncementMenu /><Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-balance-link" })} to="/purchase" aria-label={`${t("nav.purchase")}: ${formatUsd(user?.balance || 0)}`}><Icon name="wallet" size={17} data-icon="start" /><strong className="console-balance-value">{formatUsd(user?.balance || 0)}</strong></Link></div></header><SiteAnnouncementBar /></>;
+  return <><header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label={t(mobileOpen ? "nav.closeMenu" : "nav.openMenu")} onClick={() => setMobileOpen((value) => !value)} /><strong>{title}</strong></div><div className="console-header-actions" data-sidebar-motion-static>{summary?.active_count > 0 && <Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-subscription-pill" })} to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<Walkthrough setMobileOpen={setMobileOpen} />{safeExternalUrl(settings?.doc_url) && <a className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-header-link" })} href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<InlineButton variant="outline" size="md" className="console-header-language" icon="language" aria-label={t("nav.switchLanguage")} title={t("nav.switchLanguage")} onClick={() => setLocale(locale === "en" ? "zh" : "en")}><span>{t("nav.language")}</span></InlineButton><ThemeToggle className="console-header-preference" /><AnnouncementMenu /><Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-balance-link" })} to="/purchase" aria-label={`${t("nav.purchase")}: ${formatUsd(user?.balance || 0)}`}><Icon name="wallet" size={17} data-icon="start" /><strong className="console-balance-value">{formatUsd(user?.balance || 0)}</strong></Link></div></header><SiteAnnouncementBar /></>;
 }
 
 function pageTitle(pathname, items, t) {
@@ -380,9 +419,11 @@ export function ConsoleLayout({ children }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1");
+  const sidebarRef = useRef(null);
   const workspaceRef = useRef(null);
-  const workspaceMotionRef = useRef(null);
-  const workspaceStartLeftRef = useRef(null);
+  const sidebarLayoutRef = useRef(null);
+  const sidebarMotionsRef = useRef(new Map());
+  const reduceMotion = useReducedMotion();
   const batchEnabled = useBatchNavigationAccess(authenticated);
   const simpleMode = user?.run_mode === "simple";
   const customItems = (settings?.custom_menu_items || []).filter((item) => item.visibility === "user").sort((a, b) => a.sort_order - b.sort_order).flatMap((item) => { const kind = nativeCustomPageKind(item); const markdown = item.page_slug || String(item.url || "").startsWith("md:"); return nativeCustomPageRoute(kind) || !markdown ? [] : [{ path: `/custom/${item.id}`, label: item.label, icon: nativeCustomPageIcon(kind) }]; });
@@ -413,23 +454,60 @@ export function ConsoleLayout({ children }) {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
   useLayoutEffect(() => {
+    const sidebar = sidebarRef.current;
     const workspace = workspaceRef.current;
-    const startLeft = workspaceStartLeftRef.current;
-    workspaceStartLeftRef.current = null;
-    if (!workspace || startLeft == null || !canAnimateSidebar()) return;
-    const offset = startLeft - workspace.getBoundingClientRect().left;
-    if (Math.abs(offset) < 1) return;
-    const animation = workspace.animate(
-      [{ transform: `translate3d(${offset}px, 0, 0)` }, { transform: "translate3d(0, 0, 0)" }],
-      SIDEBAR_MOTION,
-    );
-    workspaceMotionRef.current = animation;
-    animation.onfinish = () => {
-      animation.cancel();
-      if (workspaceMotionRef.current === animation) workspaceMotionRef.current = null;
+    const snapshots = sidebarLayoutRef.current;
+    sidebarLayoutRef.current = null;
+    if (!workspace || !snapshots || reduceMotion || !isDesktopSidebar()) return;
+    const motions = sidebarMotionsRef.current;
+    const animate = (element, x, y) => {
+      if (Math.abs(x) < 0.5 && Math.abs(y) < 0.5) return;
+      const animation = element.animate(
+        [{ transform: `translate3d(${x}px, ${y}px, 0)` }, { transform: "translate3d(0, 0, 0)" }],
+        SIDEBAR_MOTION,
+      );
+      motions.set(element, animation);
+      animation.onfinish = () => {
+        if (motions.get(element) !== animation) return;
+        animation.cancel();
+        motions.delete(element);
+      };
     };
-  }, [sidebarCollapsed]);
-  useEffect(() => () => workspaceMotionRef.current?.cancel(), []);
+
+    const animateLayout = (root, snapshot) => {
+      if (!root || !snapshot) return;
+      const changes = new Map();
+      snapshot.anchors.forEach((start, element) => {
+        const style = element.isConnected ? getComputedStyle(element) : null;
+        if (!style || style.display === "none" || style.visibility === "hidden" || !LAYOUT_IDENTITY_TRANSFORMS.has(style.transform)) return;
+        const rect = element.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const point = sidebarAnchorPoint(element, rect);
+        const change = {
+          x: start.left - point.left,
+          y: start.top - point.top,
+        };
+        if (Math.abs(change.x) >= 0.5 || Math.abs(change.y) >= 0.5) changes.set(element, change);
+      });
+      changes.forEach((change, element) => {
+        let ancestor = element.parentElement;
+        let ancestorChange;
+        while (ancestor && ancestor !== root) {
+          ancestorChange = changes.get(ancestor);
+          if (ancestorChange) break;
+          ancestor = ancestor.parentElement;
+        }
+        animate(element, change.x - (ancestorChange?.x || 0), change.y - (ancestorChange?.y || 0));
+      });
+    };
+
+    animateLayout(workspace, snapshots.workspace);
+    animateLayout(sidebar, snapshots.sidebar);
+  }, [reduceMotion, sidebarCollapsed]);
+  useEffect(() => () => {
+    sidebarMotionsRef.current.forEach((animation) => animation.cancel());
+    sidebarMotionsRef.current.clear();
+  }, []);
   useEffect(() => {
     if (!mobileOpen) return undefined;
     const close = (event) => event.key === "Escape" && setMobileOpen(false);
@@ -443,12 +521,20 @@ export function ConsoleLayout({ children }) {
 
   const collapseLabel = sidebarCollapsed ? t("nav.expand") : t("nav.collapse");
   const toggleSidebar = () => {
+    const sidebar = sidebarRef.current;
     const workspace = workspaceRef.current;
-    workspaceStartLeftRef.current = workspace?.getBoundingClientRect().left ?? null;
-    workspaceMotionRef.current?.cancel();
+    if (workspace && !reduceMotion && isDesktopSidebar()) {
+      const activeElements = new Set(sidebarMotionsRef.current.keys());
+      sidebarLayoutRef.current = {
+        sidebar: sidebar ? captureSlidingLayout(sidebar, activeElements) : null,
+        workspace: captureSlidingLayout(workspace, activeElements),
+      };
+    }
+    sidebarMotionsRef.current.forEach((animation) => animation.cancel());
+    sidebarMotionsRef.current.clear();
     setSidebarCollapsed((value) => !value);
   };
-  return <BackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <BrandLogo key={logo} src={logo} alt="" width="31" height="31" decoding="sync" fetchPriority="high" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><SidebarAssistant /><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></BackgroundPattern>;
+  return <BackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`} ref={sidebarRef}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <BrandLogo key={logo} src={logo} alt="" width="31" height="31" decoding="sync" fetchPriority="high" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><SidebarAssistant /><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></BackgroundPattern>;
 }
 
 export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false }) {

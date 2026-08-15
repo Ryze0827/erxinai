@@ -99,7 +99,7 @@ function Sparkline({ timeline = [], days, locale, compact = false }) {
       <div className="console-uptime-line" aria-hidden="true">
         {recent.map((point, index) => <i key={`${point.checked_at}-${index}`} className={`is-${monitorTone(point.status)}`} />)}
       </div>
-      {!compact && <div><span>{locale === "zh" ? `${days} 天前` : `${days}d ago`}</span><span>{recent.length} {locale === "zh" ? "个数据点" : "data points"}</span><span>{locale === "zh" ? "现在" : "Now"}</span></div>}
+      {!compact && <div><span>{locale === "zh" ? "现在" : "Now"}</span><span>{recent.length} {locale === "zh" ? "个数据点" : "data points"}</span><span>{locale === "zh" ? `${days} 天前` : `${days}d ago`}</span></div>}
     </div>
   );
 }

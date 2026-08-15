@@ -1,164 +1,222 @@
-# Design QA — Appica UI 首页与认证页
+# Design QA — 中转效率驾驶舱
 
-日期：2026-08-13
+## Evidence
 
-参考页面：https://appica.dev/ui
+- Source visual truth: `/Users/liwei/.codex/generated_images/01a000db-920b-72e0-a0f3-9b021c307c28/exec-9ffbf21b-4959-4147-b2e2-0c2aeabf2de2.png`
+- Final browser implementation: `/private/tmp/dashboard-heatmap-spacing-fixed.png`
+- Full-view comparison: `/private/tmp/dashboard-heatmap-spacing-full-comparison.png`
+- Focused heatmap comparison: `/private/tmp/dashboard-heatmap-spacing-focused-comparison.png`
+- Focused lower-panel comparison: `/private/tmp/relay-efficiency-spacing-focused-comparison.png`
+- Focused routing comparison: `/private/tmp/relay-route-comparison-dark.png`
+- Focused metric comparison: `/private/tmp/relay-metrics-comparison-dark.png`
+- Source pixels: 1747 × 900.
+- Implementation viewport and pixels: 1920 × 936 CSS px at device pixel ratio 1.
+- Density normalization: the full implementation capture was scaled proportionally to 1747 px wide before stacking it with the source. The focused source and implementation lower rows were cropped from their native captures and each scaled to 1600 px wide before stacking.
+- State: Chinese locale, dark theme, overview route, no current-day usage, cumulative platform fallback active.
 
-本地页面：http://localhost:5173/
+## Findings
 
-## 验收结果
+- No actionable P0, P1, or P2 findings remain.
+- The live account has two platform routes rather than the four illustrative routes in the mock. This is expected dynamic-content variation, not design drift.
+- The cache bar preserves Appica `Meter` semantics while reproducing the mock's nine discrete segments: 0.75rem track height, one-token corner rounding, a dark-to-bright active ramp, and neutral inactive blocks. Its layout compensates for the page's `0.9` CSS zoom and snaps the track to the rendered pixel grid; all nine cells measure exactly `15px` and all eight gaps measure exactly `2px` at the QA viewport.
+- The 92.3% state now renders eight complete segments and 30.7% of the ninth segment, so the final block retains a visible unfilled remainder without changing the gap rhythm.
+- The heatmap compensates for the same page-level zoom and snaps its dynamic 23-column × 7-row grid to rendered pixels. At the QA viewport every cell is exactly `14px × 14px`; all horizontal and vertical gaps, including the weekday-label rows, are exactly `3px`.
+- The routing table uses the source's left-aligned column starts. At the QA viewport they resolve to `1306.19`, `1525.39`, `1656.38`, and `1752.08` CSS px; the normalized focused comparison aligns with the reference within seven pixels.
+- Platform markers reuse the existing `PlatformMark` brand icons. Routing meters use the reference's blue ramp for every platform while the icon color carries platform identity.
 
-最终结果：通过。
+## Required Fidelity Surfaces
 
-- 首页在 1440 × 900 浅色状态下与参考站保持相同的区块位置和页面高度：页面高度均为 4152 CSS px；Hero 标题、功能区标题、组件区标题和页脚起点完全一致。
-- 390 × 844 移动端保持参考站的标题折行、按钮宽度、点阵背景、横向卡片顺序和首屏尺寸；没有横向溢出。
-- 右上角按产品要求替换为国际化、明暗主题和登录/控制台入口，因此该区域是相对参考站唯一的有意差异。
-- 登录和注册页已使用 Appica UI 的 Card、Field、Input、Button、Badge、Alert、Progress、BackgroundPattern 等组件；桌面和移动端均无横向溢出。
-- 默认主题为 light；浅色/深色切换可用，切换后首页尺寸保持稳定。
-- 内部控制台菜单和路由未纳入本次改动范围。
+- Fonts and typography: preserved the product's existing font stack and optical hierarchy. Panel titles, metric labels, numeric values, table headers, and footer insight match the source's relative weight, scale, line height, and truncation behavior.
+- Spacing and layout rhythm: the heatmap and efficiency panel form the same asymmetric lower grid as the source. Heatmap cells and both grid axes now use an integer-pixel rhythm after page scaling; the metric cluster, vertical dividers, routing table, footer divider, card radius, and desktop density align in the full and focused comparisons. At 1920 × 936 the new panel ends above the viewport bottom, so every component is visible without scrolling.
+- Colors and visual tokens: all new surfaces use Appica/role-based tokens. Dark-theme background, muted borders, foreground hierarchy, blue cache state, platform-icon identity colors, and the shared blue routing-meter ramp match the selected direction without hard-coded palette values.
+- Image quality and asset fidelity: the selected lower panel contains no raster imagery. Existing brand assets were preserved, icons come from the installed Appica icon set, and the charts remain native data visualizations; no placeholder imagery, handcrafted SVG, or substitute CSS illustration was introduced.
+- Copy and content: labels use real metric scopes. When today's routing data is empty, the component falls back to existing cumulative platform fields and changes the scope badge to `路由 · 累计`; it never displays mock values as real data.
+- Accessibility and behavior: meters expose `role="meter"`, labels, and current values. The time-range menu opens and closes correctly, focus remains visible for keyboard use, and the page has no browser console warnings or errors.
+- Viewport resilience: checked 1920 × 936, 1280 × 800, and 760 × 900. The dashboard has no horizontal document overflow; the lower grid collapses to one column and the efficiency body stacks on narrow screens.
 
-## 最终对比证据
+## Comparison History
 
-- 桌面浅色并排对比（左侧参考站，右侧本地实现）：`artifacts/design-qa/landing-auth/final-desktop-light-comparison.jpg`
-- 移动浅色并排对比（左侧参考站，右侧本地实现）：`artifacts/design-qa/landing-auth/final-mobile-light-comparison.jpg`
-- 本地桌面深色：首页 `artifacts/design-qa/landing-auth/local-final-desktop-dark-top.jpg`
-- 本地登录页：`artifacts/design-qa/landing-auth/local-final-login-desktop-light.jpg`、`artifacts/design-qa/landing-auth/local-final-login-mobile-light.jpg`
-- 本地注册页：`artifacts/design-qa/landing-auth/local-final-register-desktop-light.jpg`、`artifacts/design-qa/landing-auth/local-final-register-mobile-light.jpg`
+1. Initial browser pass — `/private/tmp/relay-efficiency-dashboard-dark-v1.png`
+   - [P2] With zero current-day traffic, the entire routing half was empty, which materially weakened the selected composition and the component's usefulness.
+   - Fix: use the same dashboard response's `total_*` platform fields only when all `today_*` platform fields are empty, and expose the change with a `路由 · 累计` badge.
+2. Final browser pass — `/private/tmp/relay-efficiency-dashboard-final-clean.png`
+   - The real cumulative route rows restore the intended information density, meter alignment, and visual balance.
+3. Precision pass — `/private/tmp/relay-efficiency-segmented-exact.png`
+   - [P2] The first cache treatment used a masked continuous fill, created a partial trailing block, and did not match the mock's segment count or inactive-track color.
+   - [P2] The second and third metric labels sat below the cache label because their content used independent flex spacing.
+   - Fix: render nine real segments inside the Appica meter, quantize the active state, match the reference's non-linear blue ramp and neutral remainder, and place all three metrics on a shared four-row grid.
+4. Fractional and routing pass — `/private/tmp/relay-efficiency-revision-dark.png`
+   - [P2] Quantizing the cache value filled the ninth block completely at 92.3%, overstating the visible result; the change label also exposed percentage-point notation rather than a percentage change.
+   - [P2] Routing columns used proportional right-aligned tracks that pushed actual spend and route share away from the source anchors. Per-platform meter colors and generic square markers also diverged from the selected design and existing group identity system.
+   - Fix: preserve nine equal fixed cells while filling the final cell fractionally, calculate the seven-day comparison as a relative percentage, use the measured four-column proportions and left alignment, apply one role-based blue meter ramp, and reuse `PlatformMark` icons.
+   - The combined lower-panel, routing, and metric comparisons show no remaining P0/P1/P2 mismatch.
+5. Pixel-snapping and routing-density pass — `/private/tmp/relay-efficiency-spacing-fixed.png`
+   - [P2] The nominal `0.125rem` cache gap became `1.8px` after the page-level `0.9` zoom. Although the layout rectangles reported equal subpixel gaps, rasterization made alternating gaps look one or two pixels wide.
+   - [P2] With only two live platform rows, `justify-content: center` left excess space between the routing header and the first record.
+   - Fix: derive one rendered-pixel unit from the page scale, use CSS `round(down, …)` to make the available track width divisible into nine equal rendered cells, and compensate the gap to exactly two rendered pixels. Align the route list to the start and reduce its table top padding.
+   - Post-fix evidence: nine `15px` cells, eight `2px` gaps, no space between the table header box and first row, and a `25.19px` titlebar-to-first-row distance. The focused stacked comparison shows the tighter routing rhythm without changing the four-column alignment.
+6. Heatmap pixel-grid pass — `/private/tmp/dashboard-heatmap-spacing-fixed.png`
+   - [P2] The heatmap's nominal `3px` row and column gaps became `2.7px` after the page-level `0.9` zoom. Equal subpixel geometry therefore rasterized with visibly inconsistent upper/lower spacing.
+   - Fix: derive the heatmap gap from the rendered-pixel unit, snap the available dynamic grid width to a multiple of its column count, and apply the same exact gap to the seven weekday rows.
+   - Post-fix evidence: all 161 cells resolve to `14px × 14px`, all 22 horizontal gaps and all six vertical gaps resolve to `3px`, weekday labels share the same `14px` row height and `3px` gaps, and the focused comparison shows a uniform grid rhythm.
 
-## 结构测量
+## Implementation Checklist
 
-| 检查项 | 参考站 | 本地实现 | 结果 |
-| --- | ---: | ---: | --- |
-| 桌面页面高度 | 4152 | 4152 | 一致 |
-| Hero 标题位置/尺寸 | 320, 192 / 800 × 120 | 320, 192 / 800 × 120 | 一致 |
-| 功能区标题 Y | 1568 | 1568 | 一致 |
-| 组件区标题位置/尺寸 | 60, 2467.5 / 522 × 92 | 60, 2467.5 / 522 × 92 | 一致 |
-| 页脚起点 | 3323 | 3323 | 一致 |
-| 页脚高度 | 828.55 | 828.56 | 一致 |
-| 移动端横向溢出 | 0 | 0 | 一致 |
-| 登录页横向溢出 | — | 0 | 通过 |
-| 注册页横向溢出 | — | 0 | 通过 |
-
-## 交互检查
-
-- 首页移动抽屉可打开和关闭。
-- 搜索按钮可打开 Appica Dialog，搜索输入框和文档入口可访问。
-- 国际化按钮可在中文/英文之间切换，并同步更新登录/控制台文案。
-- 主题按钮可在 light/dark 之间切换；移除已存主题后仍以 light 渲染。
-- 登录状态由现有 `useConsole()` 鉴权状态驱动：未登录显示登录，已登录显示控制台并跳转现有控制台入口。
-- 首页展示卡片中的尺码、收藏、数量、Tab、Slider、Switch 等使用 Appica 组件和可操作状态。
-- 登录和注册页保留现有认证、OAuth、协议、验证码与注册选项逻辑。
-
-## 视觉判断
-
-未发现需要继续整改的 P0、P1 或 P2 视觉问题。动态轮播标题会因截图时刻不同显示不同短语；这与参考站行为一致，不属于偏差。
-
-## 本轮组件墙复刻复验
-
-- 2048 × 888 浅色状态下，卡片顺序已恢复为 Assistant / Product / Audio / Revenue / Transactions；第二行依次为 Model settings / Command / Order / Team / Rating。
-- 10 张卡片的宽度、高度、列位置及列内 Y 偏移逐项测量，与参考站完全一致；五列卡片宽度为 387.19–387.20 CSS px，列间距为 16 CSS px。
-- 1440 × 900 状态与参考站一致使用四列、每列 336 CSS px，并隐藏 Assistant / Model settings 列；无横向滚动。
-- 52 个关键文本节点的卡片内 X / Y / 宽度 / 高度逐项比对，无剩余差值；Geist 字体及 `Geist Fallback` 指标与参考站一致。
-- Assistant 卡片已恢复相同的头像状态点、三段气泡、Sparkle Spinner、快捷 Chip、Toolbar 输入及三个操作按钮。
-- Model settings 已恢复相同的模型 Select、Temperature / Context window Slider，以及两个 Switch；模型选项与参考站一致。
-- 商品收藏、尺码选择、播放器按钮、订单状态、成员头像和 Owner Badge、交易图标与筛选、评分星标均已按参考站的组件、状态和交互复验。
-- 全新页面加载为 light，未出现 Vite 错误覆盖层或浏览器 error 日志。
-- 最终组件墙并排对比（左侧参考站，右侧本地实现）：`artifacts/design-qa/landing-auth/final-showcase-comparison-2048.jpg`
-
-## 本轮背景交互与圆角隔离复验
-
-- 参考真值：`https://appica.dev/ui`；实现目标：`http://localhost:5173/`；复验状态为 light、页面纵向滚动 520 CSS px、指针位于组件墙区域。
-- 首轮定位到两项 P1：本地组件墙缺少源站 `BackgroundPattern` 的 spotlight/window tracking；全局 `cascade.css` 覆盖了 Appica 的 radius 变量，导致卡片、按钮、输入框和 Tabs 被其他页面样式污染。
-- 首页根节点现在独立恢复 Appica 的完整 radius 比例；计算样式复验中，卡片 `rounded-xl`、常规按钮 `rounded-sm`、输入框 `rounded-md`、圆形播放器按钮及 Tabs indicator 均与源站一致，且作用域不会修改登录、注册或内部控制台。
-- 背景跟随实测：指针移动至 `(700, 300)` 后，highlight 更新为 `--pattern-x: 700px`、`--pattern-y: 167px`，可见态 opacity 为 `0.866089`，静止 1.35 秒后 opacity 回到 `0`，与源站的跟随和淡出模型一致。
-- 组件结构继续收敛：Command Navigation 恢复默认尺寸和选中态；播放器主按钮恢复圆形；订单进度恢复 75%；Team header 对齐；Model Switch 使用 `sm`；Rating 文本和 Meter 继承关系与源站一致。
-- 1280 × 720、deviceScaleFactor 1 的同状态并排对比（左侧参考站，右侧本地实现）：`artifacts/design-qa/landing-auth/gallery-refinement-comparison-1280x720.jpg`。两张输入图均为 1280 × 720 像素，无密度缩放。
-- 交互复验通过：商品收藏可开/关；交易 Tabs 的 Income 状态只显示 Payroll 与 Stripe payout，恢复 All 后回到完整列表；浏览器 error 日志为 0。
-- 最终判断：未发现需要继续整改的 P0、P1 或 P2 问题。右上角国际化、主题和登录入口为用户要求的有意差异。
+- [x] Existing API fields verified and used without backend changes.
+- [x] Real cache reuse, actual cost per million tokens, and balance runway calculations implemented.
+- [x] Real platform distribution with explicit current-day/cumulative scope implemented.
+- [x] Appica Badge and Meter components used.
+- [x] Desktop fit, narrow-width behavior, menu interaction, meter semantics, and console logs verified.
+- [x] Production build and `git diff --check` passed.
 
 final result: passed
 
-## 2026-08-13 Hero 标题动效与模型入口复验
+---
 
-- 源真值：`https://appica.dev/ui` 的实时 Hero 标题动效，以及用户提供的旧首页模型图标参考图。
-- 实现目标：`http://127.0.0.1:5173/`；视口 1280 × 720 CSS px、deviceScaleFactor 1、light 状态。
-- 对比证据：并排图 `artifacts/design-qa/2026-08-13-hero-motion-models/hero-source-local-comparison.jpg`（左侧源站、右侧本地），以及同目录的 `appica-hero-source.jpg`、`local-hero-before.jpg`、`local-hero-after.jpg`。
-- 标题动态短语已改用 Appica `TextAnimate` 的 `highlight` 预设并按字符渲染；抽样中 13 个字符的 opacity 从 `0.18` 依次过渡至 `1`，所有字符的 transform 均为 `none`，不再出现逐词上升。
-- 动态短语继续占用所有候选文案的最大固定宽度，切换过程中标题和顶部组件不会水平跳动；浏览器横向溢出为 0。
-- `Available for` 已单独水平居中，React 徽标已移除；其下恢复 main 分支原有 Claude、Codex、Cursor、Grok、Hermes、OpenCode、Antigravity 七个资源，未切换分支。
-- 七个入口均使用 Appica `Thumbnail` 的 image / rounded 外观及背景分隔 ring；单个尺寸为 56 CSS px，组合中心点与 `Available for` 中心点同为 640 CSS px，全部图片加载完成。
-- 本地 Vite 页面无 error 日志；复验后未发现 P0、P1 或 P2 问题。
+# Design QA — 渠道状态历史像素间距
 
-final result: passed
+## Evidence
 
-## 2026-08-13 首页顶部导航复验
+- Scoped source capture: `/private/tmp/channel-status-history-spacing-before.png`
+- Final browser implementation: `/private/tmp/channel-status-history-spacing-fixed.png`
+- Full-view comparison: `/private/tmp/channel-status-history-full-comparison.png`
+- Focused status-history comparison: `/private/tmp/channel-status-history-focused-comparison.png`
+- Source, viewport, and implementation pixels: 1920 × 992 at device pixel ratio 1.
+- State: Chinese locale, authenticated channel-status route, Light theme, 7-day window, one selected channel, 48 status data points.
+- Scope: preserve the existing component and data while making every inter-cell gap visually identical.
 
-- 源真值：`https://appica.dev/ui` 的实时首页导航，以及用户提供的交互态截图 `/var/folders/ng/bz9rf9ds7_s6bh2gwx8132yw0000gn/T/codex-clipboard-0e7bab89-8876-4c97-af28-2c2ed9c7d660.png`（666 × 94）。
-- 实现目标：`http://127.0.0.1:5173/`；视口 1280 × 720 CSS px、deviceScaleFactor 1、light 状态。
-- 全页顶部证据：源站 `artifacts/design-qa/2026-08-13-header-nav/appica-header-source.jpg`（1280 × 96）；本地 `artifacts/design-qa/2026-08-13-header-nav/local-header-final.jpg`（1280 × 96）。WayX 品牌、国际化、主题和登录入口是需求规定的有意差异。
-- 聚焦静止态对比：`artifacts/design-qa/2026-08-13-header-nav/navigation-idle-comparison.png`。源站和实现均裁切为 428 × 56，无密度缩放；字体大小、字重、行高、各项宽度、28 CSS px 间距与 Figma 图标尺寸一致。
-- 聚焦交互态对比：`artifacts/design-qa/2026-08-13-header-nav/navigation-active-comparison.png`。用户截图中的导航区域从 548 × 70 归一化为 428 × 55；本地 Appica active 状态为 428 × 56。该状态与 hover/focus-visible 使用同一组 Appica `line` 变体规则。
-- 字体与排版：本地改为 Appica `NavigationLink`，计算样式与源站一致为 `Geist, Geist Fallback`、14 CSS px、500、20 CSS px，水平项上下内边距均为 10 CSS px。
-- 间距与交互：导航项高度统一为 40 CSS px；下划线高度 2 CSS px、距底部 6 CSS px，并沿用 Appica 的 300ms background-size 动画和圆头处理。
-- 色彩与视觉 token：文字、悬浮文字和下划线均继承 Appica `foreground-strong` / `foreground-intense` 角色色，无自定义色值。
-- 图像与图标：该区域无位图；Figma 外链箭头继续使用与源站相同的 Appica 图标组件，未使用自绘图形。
-- 文案：Docs、Components、Icons、Country Flags、Figma 与源站一致。
-- 国际化复验：中英文切换前后导航 X、右边界和右侧控件组 X 位移均为 0；页面横向溢出为 0。
-- 比较历史：首轮发现 P2——本地使用普通链接，字重为 400、可点击区域高度仅 18 CSS px，且完全缺少参考图中的下划线状态。现已替换为 Appica `Navigation` 的 `line` 变体；复验后未发现 P0、P1 或 P2 问题。
+## Findings
 
-final result: passed
+- No actionable P0, P1, or P2 findings remain.
+- Before the fix, the nominal `2px` gap became `1.796875px` under the page-level `0.9` zoom and rasterized inconsistently across the 48 cells.
+- The final implementation derives a rendered-pixel unit from the page scale. All 47 gaps now measure exactly `2px`, while the timeline width, 48-point distribution, status colors, labels, and surrounding inspector layout remain unchanged.
+- No Vite error overlay was present after the change.
 
-## 2026-08-13 用量、渠道状态、品牌与认证页复验
+## Required Fidelity Surfaces
 
-- 源真值：用户提供的状态时间线参考图（1131 × 140）、状态配色参考图，以及 Appica 卡片/输入交互参考图（529 × 589）。
-- 实现目标：`http://127.0.0.1:5173/monitor`、`/usage`、`/login`、`/register` 与首页导航；复验状态为 light、deviceScaleFactor 1。
-- 全页证据：`artifacts/design-qa/2026-08-13-ui-polish/status-timeline-and-ip-toolbar-light.png`、`login-centered-light-full.png`、`login-centered-mobile-light.png`、`register-centered-light.png`、`landing-header-light.png`。
-- 聚焦对比：状态参考/实现纵向合成图 `artifacts/design-qa/2026-08-13-ui-polish/status-reference-comparison.png`；Appica 卡片参考/登录实现横向合成图 `artifacts/design-qa/2026-08-13-ui-polish/auth-card-reference-comparison.png`。
-- 状态时间线的 36 个数据段均为 14 CSS px 高、2 CSS px 圆角和等间距布局；正常、警告、异常、未知分别使用 success、warning、error、neutral 角色色，不再以高度表达状态。浏览器确认所有数据段等高，且无横向溢出。
-- 用量记录工具栏已不再渲染本页 IP 数量，只保留批量查询/隐藏归属地按钮。
-- 首页及认证页均只使用本地 WayX 标识 `/assets/img/wayx-mark-05-64.png`；未发现旧 Appica 内联标识或 `sentence-ai-icon.png` 引用。
-- 登录/注册页移除左侧说明区，桌面卡片宽 512 CSS px 且水平居中；移动端 390 CSS px 视口下左右各保留 16 CSS px，横向溢出为 0。卡片使用 Appica solid frame，输入框的 focus ring、边框与圆角均由 Appica 组件及角色 token 提供。
-- 交互复验：邮箱输入框自动聚焦并显示 3 CSS px focus ring；认证页切换入口保持单行居中；干净页面浏览器 error 日志为 0。
-- 首轮 P2：状态段圆角过于胶囊化，已收敛为 2 CSS px；移动登录页底部切换入口被 Appica CardFooter 默认方向拆成两行，已改为单行居中。复验后未发现 P0、P1 或 P2 视觉问题。
+- Fonts and typography: unchanged.
+- Spacing and layout rhythm: only the status-cell column gap changed; panel dimensions and timeline width are unchanged.
+- Colors and visual tokens: status colors remain existing semantic success, warning, error, and background tokens.
+- Image quality and assets: no image or icon asset changed.
+- Copy and content: live status values and labels remain unchanged.
+- Accessibility and behavior: the existing `role="img"` and aria summary remain intact; no interaction behavior changed.
 
-final result: passed
+## Comparison History
 
-## 2026-08-13 首页模型图标悬浮态复验
+1. Initial capture — `/private/tmp/channel-status-history-spacing-before.png`
+   - [P2] The `0.125rem` gap became a non-integer rendered distance under the global scale, producing visibly uneven spacing.
+2. Final capture — `/private/tmp/channel-status-history-spacing-fixed.png`
+   - Fix: compensate the gap by the page scale so the rendered separation is exactly two pixels.
+   - Post-fix evidence: 48 status cells, 47 gaps, every gap exactly `2px`; the focused before/after comparison shows no surrounding layout drift.
 
-- 源真值：当前仓库 `main` 分支的 `src/landing-page.html` 与 `src/styles.css` 图标实现；实现目标：`http://127.0.0.1:5173/`，1280 × 720 CSS px、deviceScaleFactor 1、light 状态。
-- 全页实现证据：`artifacts/design-qa/2026-08-13-model-hover/main-style-local-hover.jpg`。
-- 当前首页直接复用 main 的 `hero-works`、`hero-supports`、`hero-agents-strip` 和 `hero-mark` 结构及样式；图标恢复为原始 `<img>`，不再经过 Appica Thumbnail 包装或自定义 ring。
-- 桌面图标为 72 × 72 CSS px，相邻图标左边距为 -22 CSS px，组合宽度为 372 CSS px；悬浮终态为 `translateY(-6px) scale(1.1)`、z-index 1、`drop-shadow(0 8px 14px rgb(0 0 0 / 35%))`。
-- transition 与 main 一致为 transform / filter 180 ms ease；main 原有的 hover none / pointer coarse 降级规则保持生效。
-- 悬浮前后图标组布局边界不变，页面横向溢出为 0，浏览器 error 日志为 0。
-- 复验未发现 P0、P1 或 P2 问题。
+## Implementation Checklist
+
+- [x] 48-point status history preserved.
+- [x] All rendered inter-cell gaps verified at exactly 2px.
+- [x] Timeline width and inspector layout preserved.
+- [x] Browser error overlay checked.
+- [x] Production build and `git diff --check` passed.
 
 final result: passed
 
-## 2026-08-13 页脚图片阴影与置顶按钮复验
+---
 
-- 源真值：`https://appica.dev/ui` 的实时页脚；实现目标：`http://127.0.0.1:5174/`。
-- 桌面证据：`artifacts/design-qa/2026-08-13-footer-details/appica-footer-desktop.jpg` 与 `artifacts/design-qa/2026-08-13-footer-details/local-footer-desktop.jpg`，均为 1044 × 814 CSS px、1044 × 814 像素、deviceScaleFactor 1。
-- 移动端证据：`artifacts/design-qa/2026-08-13-footer-details/appica-footer-mobile.jpg` 与 `artifacts/design-qa/2026-08-13-footer-details/local-footer-mobile.jpg`，均为 390 × 844 CSS px、390 × 844 像素、deviceScaleFactor 1。
-- 全视图比较覆盖页脚四图、订阅区域和底栏；聚焦比较覆盖图片渐隐、卡片边缘和置顶按钮。源站与本地的品牌、页头操作项属于既有产品差异，不纳入本轮页脚判断。
-- 首轮 P2：四张图只有通用 `shadow-xl`，缺少源站的定向渐隐层；卡片背景与边框过亮；置顶按钮使用普通 `ArrowUp`，轮廓与源站不符。
-- 修复后四图均使用 `0 30px 40px -12px var(--shadow-color)` 投影、60% 渐隐范围，左上/右上从上向下渐隐，左下/右下从下向上渐隐；卡片层恢复为 15% 白色背景和 10% 白色边框。
-- 置顶按钮已改为 Appica `ArrowBarToUp`：SVG 路径为 `M12 10v10m0-10 4 4m-4-4-4 4M4 4h16`，图标 20 × 20 CSS px，按钮 40 × 40 CSS px，与源站一致。
-- 字体与文案没有变更；间距、布局节奏、图片资源和清晰度保持不变；颜色继续通过 Appica 角色 token 与透明度表达，没有新增替代资源或自绘图标。
-- 交互复验：置顶按钮把页面从 `scrollY=3324.5` 平滑滚动至 `0`；浏览器 error 日志为 0。
-- 对照修复后未发现仍需处理的 P0、P1 或 P2 问题。
+# Design QA — 概览指标图标垂直对齐
+
+## Evidence
+
+- Source visual truth: `/Users/liwei/.codex/generated_images/019ffbf9-385d-7bf2-a559-7a406fba5d5e/exec-1bd18e30-11a0-4fb4-a9e1-253d003bb686.png`
+- Final Light implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-light-icon-alignment-1743x902.png`
+- Final Dark implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-dark-icon-alignment-1743x902.png`
+- Full-view comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-icon-alignment-full-comparison.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-icon-alignment-full-comparison.png`
+- Focused comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-icon-alignment-focused-comparison.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-icon-alignment-focused-comparison.png`
+- Before/after comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-icon-alignment-before-after.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-icon-alignment-before-after.png`
+- Source, viewport, and implementation pixels: 1743 × 902 at device pixel ratio 1.
+- State: Chinese locale, authenticated overview route, Light and Dark themes.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain.
+- The metric icon is shifted down by `0.25rem` with a visual transform, centering it more naturally against the label-and-value pair.
+- The transform does not participate in layout, so the metric strip remains `1455 × 117` CSS px and the first metric remains 94 CSS px high at the QA viewport.
+- Typography, colors, data, card dimensions, chart layout, Token heatmap, and relay-efficiency panel are unchanged.
+- Both theme states render the new alignment consistently, and the final interaction pass produced no browser console warnings or errors.
+
+## Required Fidelity Surfaces
+
+- Fonts and typography: unchanged.
+- Spacing and layout rhythm: only the icon's painted Y position changed; no grid track or container measurement changed.
+- Colors and visual tokens: unchanged.
+- Image quality and assets: existing Appica icons remain crisp vector assets; no new asset was introduced.
+- Copy and content: unchanged.
+
+## Comparison History
+
+1. Previous implementation — `dashboard-light-final-1743x902.png`, `dashboard-dark-final-1743x902.png`
+   - [P2] Metric icons sat slightly high relative to the combined label-and-value block.
+   - Fix: add `transform: translateY(0.25rem)` to `.console-dashboard-metric-icon`.
+2. Final focused pass — before/after and source/final comparison files listed above.
+   - The icons visibly move down without shifting labels, values, dividers, or card boundaries. No remaining P0/P1/P2 mismatch exists for the requested alignment change.
+
+## Implementation Checklist
+
+- [x] Light and Dark states captured.
+- [x] Metric strip dimensions verified unchanged.
+- [x] Browser console checked with no new warnings or errors.
+- [x] Production build and `git diff --check` passed.
 
 final result: passed
 
-## 2026-08-14 控制台概览纵向密度复验
+---
 
-- 源真值：用户提供的控制台截图 `/var/folders/gk/q08f7_l552l_n3fyzsc25v_m0000gn/T/codex-clipboard-820a4c18-c4b5-4ff6-858b-0756964e9de0.png`；源图为 1920 × 992 px，实现使用 1920 × 1024 CSS px 浅色视口，浏览器 DPR 为 2，截图归一化输出为 1920 × 1024 px。
-- 首轮全视图证据：`artifacts/design-qa/2026-08-14-dashboard-density/dashboard-final-1920x1024.jpg`；首轮目标区块证据：`artifacts/design-qa/2026-08-14-dashboard-density/dashboard-focus-1920x1024.jpg`。
-- 首轮把快捷操作入口从 48 CSS px 收紧为 40 CSS px、顶部留白从 16 CSS px 收紧为 12 CSS px；实测快捷操作区域高 53 CSS px、外层概览区高 177 CSS px。
-- 用户要求再次收紧后，入口高度调整为 36 CSS px、顶部留白调整为 8 CSS px；最终实测快捷操作区域高 45 CSS px、外层概览区高 169 CSS px。
-- 最终全视图证据：`artifacts/design-qa/2026-08-14-dashboard-density/dashboard-final-tightened-1920x1024.jpg`；同一内容区域的 1640 × 360 px 并排对照（左侧源图、右侧实现）：`artifacts/design-qa/2026-08-14-dashboard-density/dashboard-tightened-comparison.jpg`，两侧均从 x=270、y=125 原尺寸裁切，无缩放。
-- 指标概览的上下内边距由 16 CSS px 收紧为 12 CSS px，单项最小高度由 112 CSS px 收紧为 104 CSS px；实测整个指标栏高 130 CSS px。
-- 五个快捷入口仍等分排列，七个指标仍保持同宽、分隔线完整、图标和文案垂直对齐；字体与排版、颜色与角色 token、图片质量、文案内容、圆角和响应式列规则均未改变。
-- 验证使用与正式页面相同的 DOM 结构和生产样式；临时 QA 路由已在复验后移除。对照后未发现 P0、P1 或 P2 问题。
+# Design QA — 概览页 Light / Dark 着色
+
+## Evidence
+
+- Light source visual truth: `/Users/liwei/.codex/generated_images/019ffbf9-385d-7bf2-a559-7a406fba5d5e/exec-1bd18e30-11a0-4fb4-a9e1-253d003bb686.png`
+- Dark source visual truth: `/Users/liwei/.codex/generated_images/019ffbf9-385d-7bf2-a559-7a406fba5d5e/exec-ac87b8c3-d55d-440f-b3a2-6008c9e687f9.png`
+- Final Light implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-light-final-1743x902.png`
+- Final Dark implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-dark-final-1743x902.png`
+- Full-view comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-comparison-full.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-comparison-full.png`
+- Focused comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-comparison-focus.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-comparison-focus.png`
+- Source, viewport, and implementation pixels: 1743 × 902 at device pixel ratio 1.
+- State: Chinese locale, authenticated overview route, active overview navigation item, Light and Dark themes.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain within the requested coloring scope.
+- The sidebar active state uses a low-saturation blue surface in both themes; no orange navigation state remains. Hover and active icons use the same semantic blue emphasis.
+- The seven metric cards retain their original row dimensions and data while gaining Appica icons with blue, green, violet, cyan, orange, and rose semantic treatments.
+- Token trend and model distribution retain their existing native chart structure. Only the chart role colors changed, producing a blue high-contrast trend and blue/green/orange/violet distribution segments.
+- The bottom Token heatmap and relay-efficiency panel were excluded from this coloring change as requested.
+- Current live values differ from the illustrative references. This is expected dynamic-content variation, not design drift.
+
+## Required Fidelity Surfaces
+
+- Structure and dimensions: no component, dataset, panel, width, or section height was removed or resized. At the QA viewport the hero is `1455 × 152`, metric strip `1455 × 117`, chart grid `1455 × 300`, Token heatmap `470 × 224`, and relay-efficiency panel `974 × 224` CSS px.
+- Colors and tokens: all additions use Appica role-based variables and `color-mix`; no literal palette values or hue-based Tailwind utilities were added. Light surfaces remain restrained while Dark icon backgrounds use dark tinted fills rather than bright orange blocks.
+- Icons and assets: metric icons come from the installed Appica icon package through the existing `Icon` wrapper. No handwritten SVG, emoji, image asset, or placeholder was introduced.
+- Accessibility and behavior: semantic icon contrast remains readable in both themes. Theme switching and existing navigation links continue to work, and the final interaction pass produced no new console warnings or errors.
+- Excluded surfaces: the existing heatmap and relay-efficiency implementation, values, sizing, and Appica component usage remain unchanged by this pass.
+
+## Comparison History
+
+1. Initial Light browser pass — `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-light-1920x1024.png`
+   - [P2] Appica `primary` resolves to the neutral foreground role in this theme, so the initial trend line, first donut segment, and active navigation icon remained black instead of the approved blue.
+   - Fix: move interactive blue and first-series mappings to `secondary-emphasis`, retain role-based green/orange, and derive violet by mixing semantic secondary and error roles.
+2. Light/Dark refinement pass — final implementation captures listed above.
+   - [P2] Direct muted role fills made metric icons and the Dark active navigation surface more saturated than the approved low-fatigue treatment.
+   - Fix: mix muted semantic roles with the current theme background, add subtle current-color borders, and use the derived violet for latency and usage accents.
+3. Final side-by-side pass — full-view and focused comparison files listed above.
+   - No remaining P0/P1/P2 mismatch exists in the requested sidebar, quick-action, metric, trend, or model-distribution coloring scope.
+
+## Implementation Checklist
+
+- [x] Existing components, data, panel widths, and panel heights preserved.
+- [x] Model distribution component structure preserved.
+- [x] Sidebar active and hover color styles applied globally.
+- [x] Light and Dark theme switching verified.
+- [x] Final browser interaction pass has no new console warnings or errors.
+- [x] Production build and `git diff --check` passed.
 
 final result: passed
