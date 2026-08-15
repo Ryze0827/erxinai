@@ -69,7 +69,7 @@ function Sparkline({ timeline = [], days, locale }) {
           return <i key={`${point.checked_at}-${index}`} className={`is-${monitorTone(point.status)}`} style={{ height: `${height}%` }} />;
         })}
       </div>
-      <div><span>{locale === "zh" ? `${days} 天前` : `${days}d ago`}</span><span>{locale === "zh" ? "现在" : "Now"}</span></div>
+      <div><span>{locale === "zh" ? "现在" : "Now"}</span><span>{locale === "zh" ? `${days} 天前` : `${days}d ago`}</span></div>
     </div>
   );
 }
