@@ -140,7 +140,7 @@ html[data-console-theme] .console-site-announcement-slot {
 
 html[data-console-theme] .console-site-announcement {
   border-color: var(--warning-soft);
-  color: var(--warning-foreground);
+  color: var(--foreground);
   background: var(--warning-subtle);
 }
 
@@ -916,15 +916,15 @@ html[data-console-theme] [data-slot="alert"].console-site-announcement {
   grid-template-areas: "icon title";
   align-items: center;
   padding: 0.125rem 0.625rem;
-  border-color: var(--border-muted);
+  border-color: var(--warning-soft);
   color: var(--foreground);
-  background: var(--background-muted);
+  background: var(--warning-subtle);
   backdrop-filter: none;
 }
 
 html[data-console-theme] [data-slot="alert"].console-site-announcement [data-slot="alert-icon"] {
   margin-inline-end: 0.5rem;
-  color: var(--foreground-strong);
+  color: var(--warning-emphasis);
 }
 
 html[data-console-theme] [data-slot="alert"].console-site-announcement [data-slot="alert-title"] {
