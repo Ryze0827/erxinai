@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Badge } from "@appica/ui-react/badge";
 import { Skeleton } from "@appica/ui-react/skeleton";
 import { Table as AppicaTable } from "@appica/ui-react/table";
 import { TableBody as AppicaTableBody } from "@appica/ui-react/table";
@@ -31,6 +32,8 @@ function last24Hours() {
 
 const emptyFilters = { ...last24Hours(), api_key_id: "", group_id: "", model: "", request_type: "", billing_type: "", billing_mode: "" };
 const emptyErrorFilters = { api_key_id: "", model: "", category: "", status_code: "" };
+const FIRST_TOKEN_WARNING_MS = 10000;
+const FIRST_TOKEN_DANGER_MS = 30000;
 
 function clean(object) {
   return Object.fromEntries(Object.entries(object).filter(([, value]) => value !== "" && value !== null && value !== undefined));
@@ -82,12 +85,12 @@ function reasoningLabel(value) {
 }
 
 function UsageStats({ stats, loading }) {
-  const { t, locale, formatCurrency, formatNumber } = useLocale();
+  const { t, locale, formatCurrency } = useLocale();
   if (loading && !stats) return <div className="console-stat-grid console-stat-grid--4 console-usage-stats" role="status" aria-label={t("common.loading")}>{["blue", "green", "amber", "rose"].map((tone) => <StatCardSkeleton key={tone} tone={tone} />)}</div>;
   const value = stats || {};
   const cacheCreate = value.total_cache_creation_tokens || 0;
   const cacheRead = value.total_cache_read_tokens || value.total_cache_tokens || 0;
-  return <div className="console-stat-grid console-stat-grid--4 console-usage-stats"><div className="console-stat"><div><span>{t("usage.requests")}<Icon name="info" size={13} /></span><strong>{formatCompact(value.total_requests, locale)}</strong></div></div><div className="console-stat console-stat--tokens"><div><span>{t("usage.tokens")}<Icon name="info" size={13} /></span><strong>{formatTokenMillions(value.total_tokens)}</strong><small className="console-usage-token-summary" title={`${locale === "zh" ? "缓存创建" : "Cache creation"}: ${formatTokenMillions(cacheCreate)} · ${locale === "zh" ? "缓存读取" : "Cache read"}: ${formatTokenMillions(cacheRead)}`}><span><Icon name="arrowDown" size={12} />IN <b>{formatTokenMillions(value.total_input_tokens)}</b></span><span><Icon name="arrowUp" size={12} />OUT <b>{formatTokenMillions(value.total_output_tokens)}</b></span><span><Icon name="reset" size={12} />CACHE <b>{formatTokenMillions(cacheCreate + cacheRead)}</b></span></small></div></div><div className="console-stat console-stat--cost"><div><span>{t("usage.actualCost")}<Icon name="info" size={13} /></span><strong>{formatCurrency(value.total_actual_cost)}</strong><small>{locale === "zh" ? "标准" : "Standard"} <b>{formatCurrency(value.total_cost)}</b></small></div></div><div className="console-stat"><div><span>{t("usage.avgLatency")}<Icon name="info" size={13} /></span><strong>{formatDuration(value.average_duration_ms)}</strong></div></div></div>;
+  return <div className="console-stat-grid console-stat-grid--4 console-usage-stats"><div className="console-stat is-requests"><div><span>{t("usage.requests")}</span><strong>{formatCompact(value.total_requests, locale)}</strong></div><i className="console-usage-stat-icon" aria-hidden="true"><Icon name="send" size={20} /></i></div><div className="console-stat is-tokens"><div><span>{t("usage.tokens")}</span><strong>{formatTokenMillions(value.total_tokens)}</strong><small className="console-usage-token-summary" title={`${locale === "zh" ? "缓存创建" : "Cache creation"}: ${formatTokenMillions(cacheCreate)} · ${locale === "zh" ? "缓存读取" : "Cache read"}: ${formatTokenMillions(cacheRead)}`}><span><Icon name="arrowDown" size={12} />IN <b>{formatTokenMillions(value.total_input_tokens)}</b></span><span><Icon name="arrowUp" size={12} />OUT <b>{formatTokenMillions(value.total_output_tokens)}</b></span><span><Icon name="reset" size={12} />CACHE <b>{formatTokenMillions(cacheCreate + cacheRead)}</b></span></small></div><i className="console-usage-stat-icon" aria-hidden="true"><Icon name="coins" size={20} /></i></div><div className="console-stat is-cost"><div><span>{t("usage.actualCost")}</span><strong>{formatCurrency(value.total_actual_cost)}</strong><small>{locale === "zh" ? "标准" : "Standard"} <b>{formatCurrency(value.total_cost)}</b></small></div><i className="console-usage-stat-icon" aria-hidden="true"><Icon name="wallet" size={20} /></i></div><div className="console-stat is-latency"><div><span>{t("usage.avgLatency")}</span><strong>{formatDuration(value.average_duration_ms)}</strong></div><i className="console-usage-stat-icon" aria-hidden="true"><Icon name="hourglass" size={20} /></i></div></div>;
 }
 
 function FilterSelect({ label, value, onChange, children }) {
@@ -129,7 +132,7 @@ function ModelGroupCell({ row }) {
 }
 
 function TypeBillingCell({ row, t }) {
-  return <div className="console-usage-type-billing"><span className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</span><small>{billingModeLabel(row, t)}</small></div>;
+  return <div className="console-usage-type-billing"><Badge variant="soft" size="sm" className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</Badge><small>{billingModeLabel(row, t)}</small></div>;
 }
 
 function TokenCell({ row, locale }) {
@@ -249,10 +252,18 @@ function latencyLabel(value) {
   return formatted.endsWith("ms") ? formatted : `${Number.parseFloat(formatted)}s`;
 }
 
+function firstTokenTone(value) {
+  const duration = Number(value);
+  if (value == null || !Number.isFinite(duration)) return "";
+  if (duration > FIRST_TOKEN_DANGER_MS) return "is-danger";
+  if (duration > FIRST_TOKEN_WARNING_MS) return "is-warning";
+  return "is-success";
+}
+
 function LatencyCell({ row, locale }) {
   const first = latencyLabel(row.first_token_ms);
   const total = latencyLabel(row.duration_ms);
-  return <div className="console-latency" title={`${locale === "zh" ? "首 Token" : "First token"}: ${first}\n${locale === "zh" ? "总耗时" : "Duration"}: ${total}`}><span>{first}</span><span className="console-latency-divider" aria-hidden="true">|</span><span>{total}</span></div>;
+  return <div className="console-latency" title={`${locale === "zh" ? "首 Token" : "First token"}: ${first}\n${locale === "zh" ? "总耗时" : "Duration"}: ${total}`}><span className={firstTokenTone(row.first_token_ms)}>{first}</span><span className="console-latency-divider" aria-hidden="true">|</span><span>{total}</span></div>;
 }
 
 function ErrorDetail({ item }) {
@@ -279,7 +290,7 @@ function GroupDistribution({ data, loading }) {
   const values = rows.map((row) => Number(metric === "tokens" ? row.total_tokens : row.actual_cost) || 0);
   const total = Math.max(values.reduce((sum, value) => sum + value, 0), 1);
   const loadingRows = <div className="console-group-distribution-list console-group-distribution-skeleton" aria-hidden="true">{Array.from({ length: 5 }, (_, index) => <div key={index}><span><Skeleton /><Skeleton /></span><Skeleton /></div>)}</div>;
-  return <Panel title={localized(locale, "分组分布", "Group distribution")} actions={<CompactTabs value={metric} onChange={setMetric} items={[{ value: "tokens", label: "Tokens" }, { value: "actual_cost", label: locale === "zh" ? "费用" : "Spend" }]} />} className="console-group-distribution">{loading ? loadingRows : !rows.length ? <EmptyState /> : <div className="console-group-distribution-list">{rows.map((row, index) => { const value = values[index]; const percent = value / total * 100; return <div key={`${row.group_name}-${index}`}><span><strong>{row.group_name || "—"}</strong><small>{metric === "tokens" ? formatTokenMillions(value) : formatCurrency(value)} <b>({percent.toFixed(1)}%)</b></small></span><i><b style={{ width: `${percent}%` }} /></i></div>; })}</div>}</Panel>;
+  return <Panel title={localized(locale, "分组分布", "Group distribution")} actions={<CompactTabs value={metric} onChange={setMetric} items={[{ value: "tokens", label: "Tokens" }, { value: "actual_cost", label: locale === "zh" ? "费用" : "Spend" }]} />} className="console-group-distribution">{loading ? loadingRows : !rows.length ? <EmptyState /> : <div className="console-group-distribution-list">{rows.map((row, index) => { const value = values[index]; const percent = value / total * 100; return <div className={`is-tone-${index % 4 + 1}`} key={`${row.group_name}-${index}`}><span><strong>{row.group_name || "—"}</strong><small>{metric === "tokens" ? formatTokenMillions(value) : formatCurrency(value)} <b>({percent.toFixed(1)}%)</b></small></span><i><b style={{ width: `${percent}%` }} /></i></div>; })}</div>}</Panel>;
 }
 
 function UsageChartsPanel({ data, loading, locale }) {
@@ -293,7 +304,7 @@ function UsageToolbar({ filters, changeRange, currentColumns, currentHidden, loa
   };
   const alwaysVisible = tab === "errors" ? ["status", "created_at"] : ["created_at"];
   const exportLabel = exporting ? localized(locale, "导出中…", "Exporting…") : localized(locale, "导出 CSV", "Export CSV");
-  return <div className="console-usage-toolbar"><DateRangePicker startDate={filters.start_date} endDate={filters.end_date} onChange={changeRange} /><Button icon="refresh" onClick={refresh} disabled={state.loading || state.errorLoading}>{t("common.refresh")}</Button><ColumnPicker columns={currentColumns} hidden={currentHidden.hidden} onToggle={currentHidden.toggle} alwaysVisible={alwaysVisible} />{tab !== "errors" && <Button variant="primary" icon="download" onClick={exportCsv} disabled={exporting}>{exportLabel}</Button>}</div>;
+  return <div className="console-usage-toolbar"><DateRangePicker startDate={filters.start_date} endDate={filters.end_date} onChange={changeRange} /><Button icon="refresh" onClick={refresh} loading={state.loading || state.errorLoading}>{t("common.refresh")}</Button><ColumnPicker columns={currentColumns} hidden={currentHidden.hidden} onToggle={currentHidden.toggle} alwaysVisible={alwaysVisible} />{tab !== "errors" && <Button variant="primary" icon="download" onClick={exportCsv} disabled={exporting}>{exportLabel}</Button>}</div>;
 }
 
 function UsageFilterPanel({ tab, filters, errorFilters, options, modelOptions, errorModelOptions, setFilter, setErrorFilter, reset, locale, t }) {
@@ -440,7 +451,7 @@ export function UsagePage() {
     { key: "key_name", label: locale === "zh" ? "密钥名称" : "Key name", render: (row) => <div className="console-key-name"><TruncatedText value={row.key_name} render={<strong />} />{row.key_deleted && <small>{locale === "zh" ? "已删除" : "Deleted"}</small>}</div> },
     { key: "model", label: t("usage.model"), sortable: true }, { key: "endpoint", label: locale === "zh" ? "端点" : "Endpoint", render: (row) => <TruncatedText value={row.inbound_endpoint} render={<code />} className="console-endpoint-code" /> },
     { key: "client_ip", label: "IP", render: (row) => <IpGeoCell ip={row.client_ip} enabled={geoEnabled} /> }, { key: "group", label: t("usage.group"), render: (row) => <TruncatedText value={row.group_name} /> },
-    { key: "type", label: t("usage.type"), render: (row) => <TruncatedText value={typeLabel(requestType(row), t)} className={`console-type-badge is-${requestType(row)}`} /> },
+    { key: "type", label: t("usage.type"), render: (row) => <Badge variant="soft" size="sm" className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</Badge> },
     { key: "platform", label: locale === "zh" ? "平台" : "Platform" }, { key: "category", label: locale === "zh" ? "分类" : "Category", render: (row) => <TruncatedText value={row.category} className="console-chip" /> },
     { key: "status", label: locale === "zh" ? "状态" : "Status", sortable: true, render: (row) => <StatusBadge status="failed" label={String(row.status_code || "—")} /> },
     { key: "message", label: locale === "zh" ? "错误信息" : "Message", render: (row) => <TruncatedText value={row.message} className="console-clamp" multiline /> },

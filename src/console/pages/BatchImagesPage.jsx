@@ -420,7 +420,7 @@ function FilterPanel({ keys, filters, taskDraft, setTaskDraft, onFilter, onApply
     <Field label={labels.downloaded}><SelectInput value={filters.downloaded} onChange={(event) => onFilter("downloaded", event.target.value)}><option value="">{t("common.all")}</option><option value="true">{labels.yes}</option><option value="false">{labels.no}</option></SelectInput></Field>
     <Button icon="search" onClick={onApply}>{t("common.search")}</Button>
     <Button icon="reset" onClick={onReset}>{labels.reset}</Button>
-    <Button icon="refresh" onClick={onRefresh} disabled={loading}>{t("common.refresh")}</Button>
+    <Button icon="refresh" onClick={onRefresh} loading={loading}>{t("common.refresh")}</Button>
   </div></Panel>;
 }
 

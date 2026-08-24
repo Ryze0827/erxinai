@@ -22,6 +22,7 @@ import { BatchImagesPage } from "./console/pages/BatchImagesPage";
 import { CustomPage } from "./console/pages/CustomPage";
 import { ImageApiDocsPage } from "./console/pages/ImageApiDocsPage";
 import { ImageStudioPage } from "./console/pages/ImageStudioPage";
+import { InvoicePage } from "./console/pages/InvoicePage";
 import { VideoWorkflowPage } from "./console/pages/VideoWorkflowPage";
 import { AirwallexPaymentPage, OrdersPage, PaymentQRCodePage, PaymentResultPage, PurchasePage, StripePaymentPage, StripePopupPage, WeChatPaymentCallbackPage } from "./console/pages/Payments";
 
@@ -64,6 +65,7 @@ export function App() {
           <Route path="/profile" element={<ConsoleRoute><ProfilePage /></ConsoleRoute>} />
           <Route path="/image-studio" element={<ConsoleRoute><ImageStudioPage /></ConsoleRoute>} />
           <Route path="/image-api-docs" element={<ConsoleRoute><ImageApiDocsPage /></ConsoleRoute>} />
+          <Route path="/invoice" element={<ConsoleRoute standardOnly feature="payment_enabled" mode="opt-out"><InvoicePage /></ConsoleRoute>} />
           <Route path="/video-workflow" element={<ConsoleRoute><VideoWorkflowPage /></ConsoleRoute>} />
           <Route path="/subscriptions" element={<ConsoleRoute standardOnly><SubscriptionsPage /></ConsoleRoute>} />
           <Route path="/purchase" element={<ConsoleRoute standardOnly feature="payment_enabled" mode="opt-out"><PurchasePage /></ConsoleRoute>} />

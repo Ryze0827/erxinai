@@ -26,9 +26,52 @@ html[data-console-theme] {
   --console-chart-2: var(--foreground-strong);
   --console-chart-3: var(--foreground);
   --console-chart-4: var(--foreground-muted);
+  --console-selection-border: color-mix(in oklab, var(--secondary-emphasis) 28%, var(--border-muted));
+  --console-selection-surface: color-mix(in oklab, var(--secondary-muted) 34%, var(--background));
+  --console-selection-hover-border: color-mix(in oklab, var(--secondary-emphasis) 20%, var(--border-muted));
+  --console-selection-hover-surface: color-mix(in oklab, var(--secondary-muted) 18%, var(--background));
+  --console-selection-ring: color-mix(in oklab, var(--secondary-emphasis) 48%, transparent);
   --console-overlay: color-mix(in oklab, var(--background-inverse) 54%, transparent);
   --focus-ring: 0 0 0 var(--border-width) var(--ring-primary);
   --pattern-color: var(--border-intense);
+}
+
+/* Status labels use a quiet semantic treatment so the same state reads
+   consistently across keys, monitoring, payments, and subscriptions. The
+   role tokens adapt with the Appica theme, while the muted mix keeps both
+   light and dark surfaces away from fluorescent fills. */
+html[data-console-theme] [data-slot="badge"].console-status-badge {
+  --console-status-accent: var(--foreground-muted);
+  --console-status-surface: var(--background-muted);
+  border: var(--border-width) solid color-mix(in oklab, var(--console-status-accent) 30%, var(--border-muted));
+  color: color-mix(in oklab, var(--console-status-accent) 52%, var(--foreground-intense));
+  background: color-mix(in oklab, var(--console-status-surface) 20%, var(--background));
+  box-shadow: none;
+  font-weight: 500;
+}
+
+html[data-console-theme] [data-slot="badge"].console-status-badge::before {
+  content: none;
+}
+
+html[data-console-theme] [data-slot="badge"].console-status-badge.is-success {
+  --console-status-accent: var(--success-emphasis);
+  --console-status-surface: var(--success-muted);
+}
+
+html[data-console-theme] [data-slot="badge"].console-status-badge.is-warning {
+  --console-status-accent: var(--warning-intense);
+  --console-status-surface: var(--warning-muted);
+}
+
+html[data-console-theme] [data-slot="badge"].console-status-badge.is-danger {
+  --console-status-accent: var(--error-intense);
+  --console-status-surface: var(--error-muted);
+}
+
+html[data-console-theme] [data-slot="badge"].console-status-badge.is-info {
+  --console-status-accent: var(--info-emphasis);
+  --console-status-surface: var(--info-muted);
 }
 
 html[data-console-theme] .console-shell {
@@ -332,15 +375,12 @@ html[data-console-theme] .console-plan-card {
   box-shadow: none;
 }
 
-html[data-console-theme] .console-payment-methods > label:hover,
 html[data-console-theme] .console-purchase-amounts > [data-slot="toggle"]:hover,
 html[data-console-theme] .console-plan-card:hover {
   border-color: var(--border-strong);
   background: var(--background-subtle);
 }
 
-html[data-console-theme] .console-payment-methods > label.is-selected,
-html[data-console-theme] .console-purchase-amounts > [data-slot="toggle"][data-pressed],
 html[data-console-theme] .console-plan-card.is-selected {
   border-color: var(--primary);
   background: var(--primary-subtle);
@@ -356,7 +396,7 @@ html[data-console-theme] .console-purchase-step .console-payment-methods > label
   display: grid;
   width: 100%;
   min-height: 5.75rem;
-  grid-template-columns: 3.375rem minmax(0, 1fr) 1.5rem;
+  grid-template-columns: 3.375rem minmax(0, 1fr);
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
@@ -386,17 +426,6 @@ html[data-console-theme] .console-tool-grid > label {
   background: var(--background);
   cursor: pointer;
   text-align: left;
-}
-
-html[data-console-theme] .console-tool-grid > label:hover {
-  border-color: var(--border-strong);
-  background: var(--background-subtle);
-}
-
-html[data-console-theme] .console-tool-grid > label.is-active {
-  border-color: var(--primary);
-  color: var(--foreground-intense);
-  background: var(--primary-subtle);
 }
 
 html[data-console-theme] .console-tool-grid > label > span,
@@ -491,16 +520,6 @@ html[data-console-theme] [data-slot="button"].console-monitor-list-item {
   border-color: var(--border-muted);
   color: var(--foreground);
   background: var(--background);
-}
-
-html[data-console-theme] [data-slot="button"].console-monitor-list-item:hover {
-  color: var(--foreground-intense);
-  background: var(--background-muted);
-}
-
-html[data-console-theme] [data-slot="button"].console-monitor-list-item.is-selected {
-  outline-color: var(--primary);
-  color: var(--foreground-intense);
 }
 
 html[data-console-theme] .console-monitor-master > footer [data-slot="button"] {
@@ -1807,7 +1826,7 @@ html[data-console-theme] .console-keys-page .console-table td {
 }
 
 html[data-console-theme] .console-keys-page .console-table th[data-column="name"] { width: 9rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="key"] { width: 13rem; }
+html[data-console-theme] .console-keys-page .console-table th[data-column="key"] { width: 12rem; }
 html[data-console-theme] .console-keys-page .console-table th[data-column="group"] { width: 16rem; }
 html[data-console-theme] .console-keys-page .console-table th[data-column="current_concurrency"] { width: 7.5rem; }
 html[data-console-theme] .console-keys-page .console-table th[data-column="usage"] { width: 9rem; }
@@ -1920,13 +1939,96 @@ html[data-console-theme] .console-keys-page .console-group-trigger {
   background: var(--background);
 }
 
+html[data-console-theme] .console-group-option {
+  min-height: 2.25rem;
+}
+
+html[data-console-theme] .console-group-option > :first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+html[data-console-theme] .console-group-option-content {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+html[data-console-theme] .console-group-option-identity {
+  min-width: 0;
+}
+
+html[data-console-theme] .console-group-option-identity > p {
+  overflow: hidden;
+  margin: 0.25rem 0 0;
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-console-theme] .console-group-option [data-slot="badge"].console-group-badge {
+  min-height: 1.625rem;
+  padding-inline: 0.5rem;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+html[data-console-theme] .console-group-option .console-group-rates {
+  margin-inline-start: auto;
+  padding-inline-start: 0.25rem;
+  font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-group-option .console-group-rates strong {
+  color: var(--foreground-intense);
+  font-weight: 500;
+}
+
 html[data-console-theme] [data-slot="badge"].console-group-badge {
   max-width: 100%;
   gap: 0.375rem;
-  border-color: var(--border-muted);
-  color: var(--foreground);
-  background: var(--background-muted);
   font-weight: 500;
+}
+
+html[data-console-theme] .console-platform-surface {
+  border: var(--border-width) solid color-mix(in oklab, var(--secondary-intense) 20%, var(--border-muted));
+  color: color-mix(in oklab, var(--secondary-intense) 68%, var(--foreground-strong));
+  background: color-mix(in oklab, var(--secondary-muted) 24%, var(--background));
+}
+
+html[data-console-theme] .console-platform-surface:has(> [data-platform="openai"]) {
+  border-color: color-mix(in oklab, var(--success-intense) 20%, var(--border-muted));
+  color: color-mix(in oklab, var(--success-intense) 68%, var(--foreground-strong));
+  background: color-mix(in oklab, var(--success-muted) 22%, var(--background));
+}
+
+html[data-console-theme] .console-platform-surface:has(> [data-platform="anthropic"]) {
+  border-color: color-mix(in oklab, var(--warning-intense) 20%, var(--border-muted));
+  color: color-mix(in oklab, var(--warning-intense) 68%, var(--foreground-strong));
+  background: color-mix(in oklab, var(--warning-muted) 22%, var(--background));
+}
+
+html[data-console-theme] .console-platform-surface:has(> [data-platform="gemini"]) {
+  border-color: color-mix(in oklab, var(--error-intense) 20%, var(--border-muted));
+  color: color-mix(in oklab, var(--error-intense) 68%, var(--foreground-strong));
+  background: color-mix(in oklab, var(--error-muted) 22%, var(--background));
+}
+
+html[data-console-theme] .console-platform-surface:has(> [data-platform="antigravity"]) {
+  border-color: color-mix(in oklab, color-mix(in oklab, var(--secondary-emphasis) 70%, var(--error-emphasis)) 20%, var(--border-muted));
+  color: color-mix(in oklab, color-mix(in oklab, var(--secondary-intense) 70%, var(--error-intense)) 68%, var(--foreground-strong));
+  background: color-mix(in oklab, color-mix(in oklab, var(--secondary-emphasis) 70%, var(--error-emphasis)) 10%, var(--background));
+}
+
+html[data-console-theme] .console-platform-surface:has(> [data-platform="grok"]) {
+  border-color: color-mix(in oklab, var(--info-intense) 20%, var(--border-muted));
+  color: color-mix(in oklab, var(--info-intense) 68%, var(--foreground-strong));
+  background: color-mix(in oklab, var(--info-muted) 22%, var(--background));
 }
 
 html[data-console-theme] [data-slot="badge"].console-group-badge > svg {
@@ -1958,6 +2060,64 @@ html[data-console-theme] [data-slot="badge"].console-group-badge small.is-discou
   padding-inline-start: 0.125rem;
 }
 
+html[data-console-theme] .console-group-trigger:has([data-platform]) {
+  --console-group-accent: var(--secondary-intense);
+  border-color: color-mix(in oklab, var(--console-group-accent) 36%, var(--background));
+  color: color-mix(in oklab, var(--console-group-accent) 82%, var(--foreground-strong));
+  background: color-mix(in oklab, var(--console-group-accent) 11%, var(--background));
+}
+
+html[data-console-theme] .console-group-option:has([data-platform]) {
+  --console-group-accent: var(--secondary-intense);
+}
+
+html[data-console-theme] .console-group-trigger:has([data-platform="openai"]),
+html[data-console-theme] .console-group-option:has([data-platform="openai"]) {
+  --console-group-accent: var(--success-intense);
+}
+
+html[data-console-theme] .console-group-trigger:has([data-platform="anthropic"]),
+html[data-console-theme] .console-group-option:has([data-platform="anthropic"]) {
+  --console-group-accent: var(--warning-intense);
+}
+
+html[data-console-theme] .console-group-trigger:has([data-platform="gemini"]),
+html[data-console-theme] .console-group-option:has([data-platform="gemini"]) {
+  --console-group-accent: var(--error-intense);
+}
+
+html[data-console-theme] .console-group-trigger:has([data-platform="antigravity"]),
+html[data-console-theme] .console-group-option:has([data-platform="antigravity"]) {
+  --console-group-accent: color-mix(in oklab, var(--secondary-intense) 70%, var(--error-intense));
+}
+
+html[data-console-theme] .console-group-trigger:has([data-platform="grok"]),
+html[data-console-theme] .console-group-option:has([data-platform="grok"]) {
+  --console-group-accent: var(--info-intense);
+}
+
+html[data-console-theme] .console-group-trigger:has([data-platform]) [data-slot="badge"].console-group-badge {
+  border-color: transparent;
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+}
+
+html[data-console-theme] .console-group-trigger:has([data-platform]) [data-slot="badge"].console-group-badge::before {
+  content: none;
+}
+
+html[data-console-theme] .console-group-trigger:has([data-platform]) [data-slot="select-icon"] {
+  color: inherit;
+}
+
+html[data-console-theme] .console-group-trigger:has([data-platform]) [data-slot="badge"].console-group-badge small {
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  color: color-mix(in oklab, var(--console-group-accent) 88%, var(--foreground-strong));
+  background: color-mix(in oklab, var(--console-group-accent) 20%, var(--background));
+}
+
 html[data-console-theme] .console-group-rates {
   display: inline-flex;
   flex: none;
@@ -1973,6 +2133,45 @@ html[data-console-theme] .console-group-rates {
 html[data-console-theme] .console-group-rates strong {
   color: var(--foreground-strong);
   font-weight: 600;
+}
+
+html[data-console-theme] .console-group-option:has([data-platform]) [data-slot="badge"].console-group-badge {
+  border-color: color-mix(in oklab, var(--console-group-accent) 36%, var(--background));
+  color: color-mix(in oklab, var(--console-group-accent) 82%, var(--foreground-strong));
+  background: color-mix(in oklab, var(--console-group-accent) 11%, var(--background));
+  box-shadow: none;
+}
+
+html[data-console-theme] .console-group-option:has([data-platform]) [data-slot="badge"].console-group-badge::before {
+  content: none;
+}
+
+html[data-console-theme] .console-group-option .console-group-rates {
+  gap: 0.375rem;
+  padding-inline-start: 0.5rem;
+  color: color-mix(in oklab, var(--console-group-accent) 58%, var(--foreground-muted));
+}
+
+html[data-console-theme] .console-group-option .console-group-rates strong {
+  display: inline-flex;
+  min-height: 1.5rem;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+  color: color-mix(in oklab, var(--console-group-accent) 88%, var(--foreground-strong));
+  background: color-mix(in oklab, var(--console-group-accent) 20%, var(--background));
+}
+
+html[data-console-theme] .console-group-option [data-slot="select-item-indicator"] {
+  display: none;
+}
+
+html[data-console-theme] .console-group-option[data-highlighted] [data-slot="badge"].console-group-badge {
+  border-color: color-mix(in oklab, var(--console-group-accent) 42%, var(--border-muted));
+}
+
+html[data-console-theme] .console-group-option[data-highlighted] .console-group-rates strong {
+  background: color-mix(in oklab, var(--console-group-accent) 26%, var(--background));
 }
 
 html[data-console-theme] .console-concurrency {
@@ -2310,6 +2509,28 @@ html[data-console-theme] .console-monitor-toolbar-divider {
   background: var(--border-muted);
 }
 
+html[data-console-theme] .console-monitor-status-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+html[data-console-theme] .console-monitor-status-label.is-operational {
+  color: color-mix(in oklab, var(--success-emphasis) 52%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-status-label.is-degraded {
+  color: color-mix(in oklab, var(--warning-intense) 58%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-status-label.is-failed {
+  color: color-mix(in oklab, var(--error-intense) 58%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-status-label > b {
+  color: inherit;
+}
+
 html[data-console-theme] .console-monitor-refresh-actions {
   flex: none;
   gap: 0.5rem;
@@ -2367,9 +2588,33 @@ html[data-console-theme] .console-monitor-overview-item > i {
   height: 2.5rem;
   flex: none;
   place-items: center;
+  border: var(--border-width) solid color-mix(in oklab, currentColor 22%, transparent);
   border-radius: var(--radius-md);
-  color: var(--foreground-strong);
-  background: var(--background-muted);
+  color: var(--secondary-emphasis);
+  background: color-mix(in oklab, var(--secondary-muted) 36%, var(--background));
+  font-style: normal;
+}
+
+html[data-console-theme] .console-monitor-overview-item.is-channels > i,
+html[data-console-theme] .console-monitor-overview-item.is-requests > i {
+  color: var(--info-strong);
+  background: color-mix(in oklab, var(--info-muted) 32%, var(--background));
+}
+
+html[data-console-theme] .console-monitor-overview-item.is-available > i,
+html[data-console-theme] .console-monitor-overview-item.is-availability > i {
+  color: var(--success-strong);
+  background: color-mix(in oklab, var(--success-muted) 32%, var(--background));
+}
+
+html[data-console-theme] .console-monitor-overview-item.is-latency > i {
+  color: var(--warning-emphasis);
+  background: color-mix(in oklab, var(--warning-muted) 32%, var(--background));
+}
+
+html[data-console-theme] .console-monitor-overview-item.is-danger > i {
+  color: var(--error-strong);
+  background: color-mix(in oklab, var(--error-muted) 32%, var(--background));
 }
 
 html[data-console-theme] .console-monitor-overview-item > div {
@@ -2436,6 +2681,14 @@ html[data-console-theme] .console-monitor-master > [data-slot="card-content"] > 
   font-weight: 650;
 }
 
+html[data-console-theme] .console-monitor-sort {
+  width: 9.5rem;
+  min-width: 9.5rem;
+  height: 2rem;
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+}
+
 html[data-console-theme] .console-monitor-master > [data-slot="card-content"] > header span,
 html[data-console-theme] .console-monitor-master > [data-slot="card-content"] > footer {
   color: var(--foreground-muted);
@@ -2465,24 +2718,36 @@ html[data-console-theme] .console-monitor-master-list {
 html[data-console-theme] [data-slot="button"].console-monitor-list-item {
   display: grid;
   width: 100%;
-  min-height: 4.5rem;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  min-height: 5rem;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas:
+    "mark identity status latency window"
+    "mark identity . timeline timeline";
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.375rem 0.625rem;
   padding: 0.625rem;
   border: var(--border-width) solid transparent;
   border-radius: var(--radius-lg);
+  transition: none;
   text-align: left;
 }
 
-html[data-console-theme] [data-slot="button"].console-monitor-list-item:nth-child(even) {
-  background: transparent;
+html[data-console-theme] [data-slot="button"].console-monitor-list-item:hover:not(.is-selected) {
+  border-color: var(--console-selection-hover-border);
+  color: var(--foreground-intense);
+  background: var(--console-selection-hover-surface);
 }
 
-html[data-console-theme] [data-slot="button"].console-monitor-list-item.is-selected {
-  border-color: var(--border-strong);
-  outline: 0;
-  background: var(--background-muted);
+html[data-console-theme] [data-slot="button"].console-monitor-list-item:focus-visible {
+  outline: calc(var(--border-width) * 2) solid var(--console-selection-ring);
+  outline-offset: calc(var(--border-width) * 2);
+}
+
+html[data-console-theme] [data-slot="button"].console-monitor-list-item.is-selected,
+html[data-console-theme] [data-slot="button"].console-monitor-list-item.is-selected:hover {
+  border-color: var(--console-selection-border);
+  color: var(--foreground-intense);
+  background: var(--console-selection-surface);
 }
 
 html[data-console-theme] .console-monitor-provider-mark {
@@ -2490,11 +2755,10 @@ html[data-console-theme] .console-monitor-provider-mark {
   width: 2.5rem;
   height: 2.5rem;
   flex: none;
+  grid-area: mark;
   place-items: center;
   overflow: hidden;
   border-radius: var(--radius-md);
-  color: var(--foreground-intense);
-  background: var(--background-muted);
 }
 
 html[data-console-theme] .console-monitor-provider-mark > svg,
@@ -2504,17 +2768,40 @@ html[data-console-theme] .console-monitor-provider-mark > img {
   object-fit: contain;
 }
 
+html[data-console-theme] .console-monitor-provider-mark > svg {
+  fill: none;
+  stroke: currentColor;
+}
+
 html[data-console-theme] .console-monitor-list-identity,
 html[data-console-theme] .console-monitor-list-status,
+html[data-console-theme] .console-monitor-list-latency,
 html[data-console-theme] .console-monitor-list-window {
   display: block;
   min-width: 0;
 }
 
+html[data-console-theme] .console-monitor-list-identity {
+  grid-area: identity;
+}
+
+html[data-console-theme] .console-monitor-list-status {
+  grid-area: status;
+}
+
+html[data-console-theme] .console-monitor-list-latency {
+  min-width: clamp(5rem, 6vw, 7rem);
+  grid-area: latency;
+}
+
+html[data-console-theme] .console-monitor-list-window {
+  grid-area: window;
+}
+
 html[data-console-theme] .console-monitor-list-identity strong,
 html[data-console-theme] .console-monitor-list-identity small,
 html[data-console-theme] .console-monitor-list-status b,
-html[data-console-theme] .console-monitor-list-status strong,
+html[data-console-theme] .console-monitor-list-latency strong,
 html[data-console-theme] .console-monitor-list-window strong {
   display: block;
 }
@@ -2528,6 +2815,7 @@ html[data-console-theme] .console-monitor-list-identity strong {
 
 html[data-console-theme] .console-monitor-list-identity small,
 html[data-console-theme] .console-monitor-list-status,
+html[data-console-theme] .console-monitor-list-latency,
 html[data-console-theme] .console-monitor-list-window {
   color: var(--foreground-muted);
   font-size: var(--text-xs);
@@ -2541,6 +2829,7 @@ html[data-console-theme] .console-monitor-list-identity small {
 }
 
 html[data-console-theme] .console-monitor-list-status,
+html[data-console-theme] .console-monitor-list-latency,
 html[data-console-theme] .console-monitor-list-window {
   text-align: right;
 }
@@ -2559,12 +2848,67 @@ html[data-console-theme] .console-monitor-list-status b > i {
   background: var(--foreground-muted);
 }
 
-html[data-console-theme] .console-monitor-list-status strong {
-  margin-top: 0.25rem;
+html[data-console-theme] .console-monitor-list-item.is-operational {
+  --console-monitor-state: color-mix(in oklab, var(--success-emphasis) 52%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-list-item.is-degraded {
+  --console-monitor-state: color-mix(in oklab, var(--warning-intense) 58%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-list-item.is-failed {
+  --console-monitor-state: color-mix(in oklab, var(--error-intense) 58%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-list-item.is-unknown {
+  --console-monitor-state: var(--foreground-muted);
+}
+
+html[data-console-theme] .console-monitor-list-item .console-monitor-list-status b {
+  color: var(--console-monitor-state, var(--foreground-strong));
+}
+
+html[data-console-theme] .console-monitor-list-item .console-monitor-list-status b > i {
+  background: currentColor;
 }
 
 html[data-console-theme] .console-monitor-timeline.is-compact {
-  display: none;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  grid-area: timeline;
+  justify-content: flex-end;
+}
+
+html[data-console-theme] .console-monitor-timeline.is-compact .console-uptime-line {
+  width: calc(var(--console-monitor-pixel) * 191);
+  height: calc(var(--console-monitor-pixel) * 12);
+  flex: none;
+  align-items: flex-end;
+  column-gap: var(--console-monitor-pixel);
+  margin-top: 0;
+}
+
+html[data-console-theme] .console-monitor-timeline.is-compact .console-uptime-line > i {
+  width: calc(var(--console-monitor-pixel) * 3);
+  min-width: calc(var(--console-monitor-pixel) * 3);
+  flex: 0 0 calc(var(--console-monitor-pixel) * 3);
+}
+
+html[data-console-theme] .console-monitor-timeline.is-compact .console-uptime-line > i.is-operational {
+  height: calc(var(--console-monitor-pixel) * 12);
+}
+
+html[data-console-theme] .console-monitor-timeline.is-compact .console-uptime-line > i.is-degraded {
+  height: calc(var(--console-monitor-pixel) * 8);
+}
+
+html[data-console-theme] .console-monitor-timeline.is-compact .console-uptime-line > i.is-failed {
+  height: calc(var(--console-monitor-pixel) * 4);
+}
+
+html[data-console-theme] .console-monitor-timeline.is-compact .console-uptime-line > i.is-unknown {
+  height: calc(var(--console-monitor-pixel) * 6);
 }
 
 html[data-console-theme] .console-monitor-inspector-head {
@@ -2639,6 +2983,22 @@ html[data-console-theme] .console-monitor-inspector-metrics strong {
   font-weight: 650;
 }
 
+html[data-console-theme] .console-monitor-inspector-metrics > .is-success {
+  --console-monitor-state: color-mix(in oklab, var(--success-emphasis) 42%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-inspector-metrics > .is-warning {
+  --console-monitor-state: color-mix(in oklab, var(--warning-intense) 48%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-inspector-metrics > .is-danger {
+  --console-monitor-state: color-mix(in oklab, var(--error-intense) 48%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-inspector-metrics > :is(.is-success, .is-warning, .is-danger) strong {
+  color: var(--console-monitor-state);
+}
+
 html[data-console-theme] .console-monitor-history,
 html[data-console-theme] .console-monitor-availability,
 html[data-console-theme] .console-monitor-models {
@@ -2680,6 +3040,37 @@ html[data-console-theme] .console-monitor-history > header span,
 html[data-console-theme] .console-monitor-availability small {
   color: var(--foreground-muted);
   font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-monitor-history > header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+html[data-console-theme] .console-monitor-history > header span::before {
+  width: 0.375rem;
+  height: 0.375rem;
+  flex: none;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  content: "";
+}
+
+html[data-console-theme] .console-monitor-history > header span.is-operational {
+  color: color-mix(in oklab, var(--success-emphasis) 52%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-history > header span.is-degraded {
+  color: color-mix(in oklab, var(--warning-intense) 58%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-history > header span.is-failed {
+  color: color-mix(in oklab, var(--error-intense) 58%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-monitor-history > header span.is-unknown {
+  color: var(--foreground-muted);
 }
 
 html[data-console-theme] .console-uptime-line {
@@ -3256,7 +3647,6 @@ html[data-console-theme] .console-image-doc-runbook-head h2 {
 }
 
 html[data-console-theme] .console-image-doc-runbook-head > div > span {
-  gap: 0.25rem;
   padding: 0.375rem 0.625rem;
   border-radius: var(--radius-full);
   color: var(--foreground-muted);
@@ -3529,6 +3919,22 @@ html[data-console-theme] .console-image-doc-errors p {
   color: var(--foreground-muted);
   font-size: var(--text-xs);
   line-height: 1.5;
+}
+
+html[data-console-theme] .console-platform-icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  place-items: center;
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-platform-icon > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
 }
 
 html[data-console-theme] .console-channel-groups,
@@ -3957,8 +4363,8 @@ html[data-console-theme] .console-purchase-balance {
 
 html[data-console-theme] .console-purchase-overview > [data-slot="card-content"] {
   display: grid;
-  width: min(100%, 61rem);
-  grid-template-columns: minmax(16rem, 0.85fr) minmax(0, 1.4fr) 12rem;
+  width: 100%;
+  grid-template-columns: minmax(16rem, 0.85fr) minmax(0, 1.4fr);
   align-items: center;
   gap: 1.5rem;
   padding: 1.25rem;
@@ -3967,6 +4373,10 @@ html[data-console-theme] .console-purchase-overview > [data-slot="card-content"]
 html[data-console-theme] .console-purchase-overview,
 html[data-console-theme] .console-purchase-checkout {
   display: flex;
+}
+
+html[data-console-theme] .console-purchase-overview {
+  padding: 0;
 }
 
 html[data-console-theme] .console-purchase-overview-balance {
@@ -4010,6 +4420,7 @@ html[data-console-theme] .console-purchase-overview-copy strong {
 html[data-console-theme] .console-purchase-overview-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
   gap: 0.75rem;
 }
 
@@ -4037,10 +4448,19 @@ html[data-console-theme] .console-purchase-overview-metric strong {
   white-space: nowrap;
 }
 
-html[data-console-theme] .console-purchase-overview-art {
-  width: 12rem;
-  max-height: 8rem;
-  justify-self: end;
+html[data-console-theme] .console-purchase-overview-value {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+html[data-console-theme] .console-purchase-overview-value > span {
+  flex: none;
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 html[data-console-theme] .console-purchase-checkout > [data-slot="card-content"] {
@@ -4197,9 +4617,20 @@ html[data-console-theme] .console-payment-methods > label {
   background: var(--background);
 }
 
-html[data-console-theme] .console-payment-methods > label.is-selected {
-  border-color: var(--border-strong);
-  background: var(--background-muted);
+html[data-console-theme] .console-payment-methods > label:hover:not(.is-selected) {
+  border-color: var(--console-selection-hover-border);
+  background: var(--console-selection-hover-surface);
+}
+
+html[data-console-theme] .console-payment-methods > label:has([data-slot="radio"]:focus-visible) {
+  outline: calc(var(--border-width) * 2) solid var(--console-selection-ring);
+  outline-offset: calc(var(--border-width) * 2);
+}
+
+html[data-console-theme] .console-payment-methods > label.is-selected,
+html[data-console-theme] .console-payment-methods > label.is-selected:hover {
+  border-color: var(--console-selection-border);
+  background: var(--console-selection-surface);
 }
 
 html[data-console-theme] .console-payment-methods > label strong,
@@ -4257,8 +4688,18 @@ html[data-console-theme] .console-purchase-review > div {
 }
 
 html[data-console-theme] .console-purchase-review dt {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
   color: var(--foreground-muted);
   font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-purchase-review dt > small {
+  color: var(--foreground-subtle);
+  font-size: var(--text-xs);
 }
 
 html[data-console-theme] .console-purchase-review dd {
@@ -4675,9 +5116,6 @@ html[data-console-theme] .console-tour-card > footer > [data-slot="button"] {
     grid-template-columns: 1fr;
   }
 
-  html[data-console-theme] .console-purchase-overview-art {
-    justify-self: center;
-  }
 }
 
 @media (max-width: 47.5rem) {
@@ -4955,7 +5393,6 @@ html[data-console-theme] .console-dashboard-metric > span {
   min-width: 0;
   grid-column: 2;
   align-items: center;
-  gap: 0.375rem;
   color: var(--foreground-muted);
   font-size: var(--text-sm);
   line-height: 1.25;
@@ -5014,9 +5451,9 @@ html[data-console-theme] .console-dashboard-metric.is-actual .console-dashboard-
   background: color-mix(in oklab, var(--warning-muted) 32%, var(--background));
 }
 
-html[data-console-theme] .console-dashboard-metric.is-standard .console-dashboard-metric-icon {
-  color: var(--error-emphasis);
-  background: color-mix(in oklab, var(--error-muted) 32%, var(--background));
+html[data-console-theme] .console-dashboard-metric.is-runway .console-dashboard-metric-icon {
+  color: var(--info-strong);
+  background: color-mix(in oklab, var(--info-muted) 32%, var(--background));
 }
 
 html[data-console-theme] .console-dashboard-metric > strong small {
@@ -5048,6 +5485,14 @@ html[data-console-theme] .console-dashboard-saved span {
   white-space: nowrap;
 }
 
+html[data-console-theme] .console-dashboard-metric-meta span.is-increase {
+  color: var(--warning-strong);
+}
+
+html[data-console-theme] .console-dashboard-metric-meta span.is-decrease {
+  color: var(--error-strong);
+}
+
 html[data-console-theme] .console-dashboard-metric-meta small,
 html[data-console-theme] .console-dashboard-saved small {
   min-width: 0;
@@ -5068,6 +5513,152 @@ html[data-console-theme] .console-dashboard-chart-grid {
   align-items: stretch;
 }
 
+html[data-console-theme] .console-model-preference-panel > [data-slot="card-content"] {
+  min-height: 20rem;
+  overflow: hidden;
+}
+
+html[data-console-theme] .console-model-preference {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+html[data-console-theme] .console-model-preference > p {
+  margin: 0 0 0.75rem;
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+html[data-console-theme] .console-model-preference-scroller {
+  width: 100%;
+  min-width: 0;
+}
+
+html[data-console-theme] .console-model-preference-chart {
+  min-width: 50rem;
+}
+
+html[data-console-theme] .console-model-preference-axis,
+html[data-console-theme] .console-model-preference-row,
+html[data-console-theme] .console-model-preference-skeleton > div {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(10rem, 14rem) minmax(24rem, 1fr) 8rem;
+  align-items: center;
+  gap: 1rem;
+}
+
+html[data-console-theme] .console-model-preference-axis {
+  min-height: 2rem;
+  color: var(--foreground-subtle);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-model-preference-axis > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+html[data-console-theme] .console-model-preference-row {
+  min-height: 3.5rem;
+  border-top: var(--border-width) solid var(--border-muted);
+}
+
+html[data-console-theme] .console-model-preference-model {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+html[data-console-theme] .console-model-preference-model strong {
+  overflow: hidden;
+  color: var(--foreground-intense);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html[data-console-theme] .console-model-preference-model small {
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-model-preference-plot {
+  position: relative;
+  height: 2.5rem;
+}
+
+html[data-console-theme] .console-model-preference-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  border-inline-end: var(--border-width) dashed var(--border-muted);
+  pointer-events: none;
+}
+
+html[data-console-theme] .console-model-preference-grid i {
+  border-inline-start: var(--border-width) dashed var(--border-muted);
+}
+
+html[data-console-theme] .console-model-preference-bar {
+  position: absolute;
+  top: 50%;
+  left: var(--console-preference-left);
+  width: var(--console-preference-width);
+  height: 1.5rem;
+  transform: translateY(-50%);
+  border: var(--border-width) solid color-mix(in oklab, var(--secondary-emphasis) 76%, var(--border-strong));
+  border-radius: var(--radius-md);
+  background: var(--secondary-emphasis);
+  box-shadow: var(--shadow-sm);
+}
+
+html[data-console-theme] .console-model-preference-window {
+  color: var(--foreground-strong);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+html[data-console-theme] .console-model-preference-empty {
+  display: grid;
+  min-height: 11rem;
+  place-items: center;
+  color: var(--foreground-muted);
+  font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-model-preference-skeleton {
+  display: grid;
+}
+
+html[data-console-theme] .console-model-preference-skeleton > div {
+  min-height: 3.5rem;
+  border-top: var(--border-width) solid var(--border-muted);
+}
+
+html[data-console-theme] .console-model-preference-skeleton [data-slot="skeleton"] {
+  height: 1.5rem;
+}
+
+html[data-console-theme] .console-model-preference-skeleton [data-slot="skeleton"]:first-child {
+  width: 72%;
+}
+
+html[data-console-theme] .console-model-preference-skeleton [data-slot="skeleton"]:last-child {
+  width: 68%;
+}
+
 html[data-console-theme] [data-slot="card"].console-trend,
 html[data-console-theme] [data-slot="card"].console-distribution,
 html[data-console-theme] .console-line-chart {
@@ -5078,6 +5669,41 @@ html[data-console-theme] [data-slot="card"].console-trend > [data-slot="card-con
 html[data-console-theme] [data-slot="card"].console-distribution > [data-slot="card-content"] {
   min-height: 20rem;
   overflow: visible;
+}
+
+html[data-console-theme] [data-slot="card"].console-trend--total > [data-slot="card-content"] {
+  height: 20rem;
+  min-height: 20rem;
+  max-height: 20rem;
+  flex: 0 0 20rem;
+}
+
+html[data-console-theme] [data-slot="card"].console-trend--heatmap > [data-slot="card-content"] {
+  overflow: visible;
+}
+
+html[data-console-theme] .console-trend--heatmap .console-token-activity {
+  overflow: visible;
+  justify-content: center;
+  padding: 0 1rem 0.5rem;
+}
+
+html[data-console-theme] .console-trend--heatmap .console-token-activity-calendar {
+  width: 100%;
+  margin-inline: 0;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: 0.5rem 0.375rem;
+  padding-inline-end: 0.5rem;
+}
+
+html[data-console-theme] .console-trend--heatmap .console-token-activity-legend {
+  gap: 0.1875rem;
+  margin-top: 0.375rem;
+}
+
+html[data-console-theme] .console-trend--heatmap .console-token-activity-legend i {
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
 html[data-console-theme] .console-trend-body {
@@ -5091,12 +5717,21 @@ html[data-console-theme] .console-trend-body {
 }
 
 html[data-console-theme] .console-trend-total {
-  position: absolute;
-  top: -3.125rem;
-  right: 1.25rem;
+  position: static;
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+html[data-console-theme] .console-trend-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 html[data-console-theme] .console-trend-total span {
@@ -5122,6 +5757,65 @@ html[data-console-theme] .console-line-chart-plot {
 
 html[data-console-theme] .console-trend-plot {
   height: 12.25rem;
+}
+
+html[data-console-theme] .console-token-column-plot {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+html[data-console-theme] .console-trend-plot:has(.console-token-column-plot) {
+  overflow: visible;
+}
+
+html[data-console-theme] .console-token-column-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+html[data-console-theme] .console-token-column-chart {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+html[data-console-theme] .console-token-column-chart-plot {
+  height: 100% !important;
+}
+
+html[data-console-theme] .console-token-column-chart-plot > div[dir="ltr"] {
+  gap: 0.125rem;
+}
+
+html[data-console-theme] .console-token-column-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: max-content;
+  border: var(--border-width) solid var(--border-overlay);
+  border-radius: var(--radius-2xs);
+  padding: 0.375rem 0.5rem;
+  color: var(--foreground-intense);
+  background: var(--background);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-xs);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+html[data-console-theme] .console-token-column-tooltip strong {
+  color: var(--foreground-muted);
+  font-weight: 500;
+}
+
+html[data-console-theme] .console-token-column-tooltip span {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 html[data-console-theme] .console-line-chart-plot {
@@ -5295,6 +5989,11 @@ html[data-console-theme] .console-donut-segment.is-active {
   filter: drop-shadow(0 0 0.25rem color-mix(in oklab, var(--foreground-intense) 24%, transparent));
 }
 
+html[data-console-theme] .console-donut-segment.is-selected {
+  transform: scale(1.035);
+  filter: drop-shadow(0 0 0.375rem color-mix(in oklab, var(--secondary-emphasis) 42%, transparent));
+}
+
 html[data-console-theme] .console-donut-hit {
   cursor: pointer;
   stroke: transparent;
@@ -5380,10 +6079,31 @@ html[data-console-theme] .console-distribution-table > div {
   grid-template-columns: minmax(0, 1.45fr) 0.7fr 0.8fr minmax(4.75rem, 0.9fr);
   align-items: center;
   gap: 0.5rem;
+  padding-inline: 0.5rem;
   border-bottom: var(--border-width) solid var(--border-muted);
+  border-inline-start: calc(var(--border-width) * 3) solid transparent;
   color: var(--foreground);
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-distribution-table > div:not(.is-head) {
+  cursor: pointer;
+  outline: none;
+}
+
+html[data-console-theme] .console-distribution-table > div:not(.is-head).is-highlighted {
+  background: color-mix(in oklab, var(--secondary-muted) 36%, var(--background));
+}
+
+html[data-console-theme] .console-distribution-table > div:not(.is-head).is-selected {
+  border-inline-start-color: var(--secondary-emphasis);
+  background: color-mix(in oklab, var(--secondary-muted) 56%, var(--background));
+}
+
+html[data-console-theme] .console-distribution-table > div:not(.is-head):focus-visible {
+  outline: calc(var(--border-width) * 2) solid var(--secondary-muted);
+  outline-offset: calc(var(--border-width) * -2);
 }
 
 html[data-console-theme] .console-distribution-table > div:last-child {
@@ -5446,6 +6166,10 @@ html[data-console-theme] .console-dashboard-insight-grid {
   gap: 0.75rem;
 }
 
+html[data-console-theme] .console-dashboard-insight-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 html[data-console-theme] .console-dashboard-insight-grid > [data-slot="card"] {
   min-width: 0;
   height: 100%;
@@ -5453,63 +6177,6 @@ html[data-console-theme] .console-dashboard-insight-grid > [data-slot="card"] {
 
 html[data-console-theme] .console-dashboard-insight-grid > [data-slot="card"] > [data-slot="card-content"] {
   height: 100%;
-}
-
-html[data-console-theme] [data-slot="card"].console-token-activity-panel {
-  --card-radius: var(--radius-2xs);
-  width: 100%;
-  max-width: 32.625rem;
-  align-self: stretch;
-}
-
-html[data-console-theme] .console-token-activity-panel > [data-slot="card-content"] {
-  min-height: 0;
-  overflow: visible;
-  border-radius: var(--radius-2xs);
-}
-
-html[data-console-theme] .console-token-activity-panel [data-slot="card-header"].console-panel-head {
-  min-height: 3.25rem;
-  padding: 0.875rem 1.25rem 0.5rem;
-  border-bottom: 0;
-}
-
-html[data-console-theme] .console-token-activity-title {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  color: var(--foreground-intense);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-html[data-console-theme] .console-token-activity-title small {
-  color: var(--foreground-muted);
-  font-size: var(--text-xs);
-  font-weight: 450;
-}
-
-html[data-console-theme] .console-token-activity-title svg {
-  color: var(--foreground-subtle);
-}
-
-html[data-console-theme] .console-token-activity-range {
-  height: 1.875rem;
-  min-height: 1.875rem;
-  gap: 0.25rem;
-  padding-inline: 0.75rem 0.5rem;
-  border-color: var(--border-muted);
-  border-radius: var(--radius-3xs);
-  color: var(--foreground);
-  background: var(--background-subtle);
-  box-shadow: none;
-  font-size: var(--text-xs);
-  font-weight: 500;
-}
-
-html[data-console-theme] .console-token-activity-range-menu {
-  min-width: 8.5rem;
 }
 
 html[data-console-theme] .console-token-activity {
@@ -5760,370 +6427,11 @@ html[data-console-theme] .console-token-activity-error {
   color: var(--error-strong);
 }
 
-html[data-console-theme] [data-slot="card"].console-relay-efficiency-panel {
-  --card-radius: var(--radius-2xs);
-  min-width: 0;
-}
-
-html[data-console-theme] .console-relay-efficiency-panel > [data-slot="card-content"] {
-  display: flex;
-  min-height: 0;
-  flex-direction: column;
-  overflow: hidden;
-  border-radius: var(--radius-2xs);
-}
-
-html[data-console-theme] .console-relay-efficiency-panel [data-slot="card-header"].console-panel-head {
-  min-height: 3.25rem;
-  padding: 0.75rem 1rem 0.5rem;
-  border-bottom: 0;
-}
-
-html[data-console-theme] .console-relay-efficiency-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  color: var(--foreground-intense);
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-
-html[data-console-theme] .console-relay-efficiency-title svg {
-  color: var(--foreground-subtle);
-}
-
-html[data-console-theme] .console-relay-live-badge {
-  color: var(--foreground);
-  background: var(--background-muted);
-}
-
-html[data-console-theme] .console-relay-live-badge svg {
-  color: var(--info-strong);
-}
-
-html[data-console-theme] .console-relay-efficiency-body {
-  display: grid;
-  min-width: 0;
-  min-height: 0;
-  flex: 1;
-  grid-template-columns: minmax(0, 0.94fr) minmax(20rem, 1.06fr);
-}
-
-html[data-console-theme] .console-relay-efficiency-summary {
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-  flex-direction: column;
-}
-
-html[data-console-theme] .console-relay-section-head,
-html[data-console-theme] .console-relay-platform-titlebar {
-  display: flex;
-  min-height: 3.25rem;
-  align-items: center;
-  padding: 0.75rem 1rem 0.5rem;
-}
-
-html[data-console-theme] .console-relay-efficiency-metrics {
-  display: grid;
-  min-width: 0;
-  min-height: 0;
-  flex: 1;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-inline-end: var(--border-width) solid var(--border-muted);
-}
-
-html[data-console-theme] .console-relay-efficiency-metric {
-  display: grid;
-  min-width: 0;
-  grid-template-rows: 1.125rem 1.75rem 0.75rem 1rem;
-  align-content: center;
-  gap: 0.375rem;
-  padding: 0.625rem 0.875rem 0.75rem;
-}
-
-html[data-console-theme] .console-relay-efficiency-metric + .console-relay-efficiency-metric {
-  border-inline-start: var(--border-width) solid var(--border-muted);
-}
-
-html[data-console-theme] .console-relay-efficiency-metric > span,
-html[data-console-theme] .console-relay-efficiency-metric > small {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--foreground-muted);
-  font-size: var(--text-xs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-html[data-console-theme] .console-relay-efficiency-metric > span {
-  grid-row: 1;
-}
-
-html[data-console-theme] .console-relay-efficiency-metric > div {
-  display: flex;
-  min-width: 0;
-  align-items: baseline;
-  gap: 0.375rem;
-}
-
-html[data-console-theme] .console-relay-efficiency-metric > div:not([data-slot="meter"]):not(.console-relay-meter-scale) {
-  grid-row: 2;
-}
-
-html[data-console-theme] .console-relay-efficiency-metric > small,
-html[data-console-theme] .console-relay-meter-scale {
-  grid-row: 4;
-}
-
-html[data-console-theme] .console-relay-efficiency-metric strong {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--foreground-intense);
-  font-size: var(--text-2xl);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: var(--tracking-tight);
-  line-height: 1.1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-html[data-console-theme] .console-relay-efficiency-metric em {
-  color: var(--foreground);
-  font-size: var(--text-sm);
-  font-style: normal;
-}
-
-html[data-console-theme] .console-relay-efficiency-metric > div > small {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.125rem;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-html[data-console-theme] .console-relay-efficiency-metric > div > small.is-positive {
-  color: var(--success-strong);
-}
-
-html[data-console-theme] .console-relay-efficiency-metric > div > small.is-negative {
-  color: var(--error-strong);
-}
-
-html[data-console-theme] .console-relay-cache-meter,
-html[data-console-theme] .console-relay-platform-meter {
-  display: block;
-  min-width: 0;
-}
-
-html[data-console-theme] .console-relay-cache-meter {
-  grid-row: 3;
-  align-self: center;
-}
-
-html[data-console-theme] .console-relay-cache-segments {
-  --console-relay-cache-pixel: calc(var(--border-width) / var(--console-scale, 1));
-  --console-relay-cache-gap: calc(var(--console-relay-cache-pixel) * 2);
-  display: grid;
-  width: calc(round(down, calc((100% - (var(--console-relay-cache-gap) * 8)) / 9), var(--console-relay-cache-pixel)) * 9 + (var(--console-relay-cache-gap) * 8));
-  height: 0.75rem;
-  grid-template-columns: repeat(9, minmax(0, 1fr));
-  column-gap: var(--console-relay-cache-gap);
-}
-
-html[data-console-theme] .console-relay-cache-segments i {
-  position: relative;
-  min-width: 0;
-  overflow: hidden;
-  border-radius: var(--border-width);
-  background: color-mix(in oklab, var(--foreground-intense) 20%, transparent);
-}
-
-html[data-console-theme] .console-relay-cache-segments i > span {
-  display: block;
-  width: var(--console-relay-segment-progress, 0%);
-  height: 100%;
-  border-start-start-radius: inherit;
-  border-end-start-radius: inherit;
-  background: color-mix(in oklab, var(--secondary-emphasis) var(--console-relay-segment-color), var(--background));
-}
-
-html[data-console-theme] .console-relay-cache-segments i > span.is-full {
-  border-radius: inherit;
-}
-
-html[data-console-theme] .console-relay-meter-scale {
-  justify-content: space-between;
-}
-
-html[data-console-theme] .console-relay-meter-scale small {
-  color: var(--foreground-subtle);
-  font-size: var(--text-xs);
-}
-
-html[data-console-theme] .console-relay-platforms {
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-  flex-direction: column;
-}
-
-html[data-console-theme] .console-relay-platform-titlebar {
-  justify-content: space-between;
-  gap: 1rem;
-  padding-inline: 1.75rem;
-}
-
-html[data-console-theme] .console-relay-platform-titlebar > strong {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--foreground-intense);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-html[data-console-theme] .console-relay-platform-table {
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-  flex: 1;
-  flex-direction: column;
-  padding: 0.25rem 1.75rem 0.625rem;
-}
-
-html[data-console-theme] .console-relay-platform-head,
-html[data-console-theme] .console-relay-platform-row {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: minmax(0, 1.68fr) minmax(0, 0.93fr) minmax(0, 0.63fr) minmax(0, 0.96fr);
-  align-items: center;
-  column-gap: 1.5rem;
-}
-
-html[data-console-theme] .console-relay-platform-head {
-  min-height: 1.5rem;
-  color: var(--foreground-subtle);
-  font-size: var(--text-xs);
-}
-
-html[data-console-theme] .console-relay-platform-head span:not(:first-child) {
-  text-align: start;
-}
-
-html[data-console-theme] .console-relay-platform-list {
-  display: flex;
-  min-height: 0;
-  flex: 1;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-html[data-console-theme] .console-relay-platform-row {
-  min-height: 1.75rem;
-  color: var(--foreground);
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-}
-
-html[data-console-theme] .console-relay-platform-row > span {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.375rem;
-}
-
-html[data-console-theme] .console-relay-platform-mark {
-  display: inline-flex;
-  width: 0.875rem;
-  height: 0.875rem;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  color: var(--foreground-subtle);
-}
-
-html[data-console-theme] .console-relay-platform-mark svg {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: currentColor;
-}
-
-html[data-console-theme] .console-relay-platform-row > span > b {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--foreground-intense);
-  font-weight: 550;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-html[data-console-theme] .console-relay-platform-row > strong {
-  overflow: hidden;
-  color: var(--foreground-strong);
-  font-weight: 550;
-  text-align: start;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-html[data-console-theme] .console-relay-platform-meter [data-slot="meter-progress"] {
-  height: 0.5rem;
-  background: var(--background-strong);
-}
-
-html[data-console-theme] .console-relay-platform-meter [data-slot="meter-indicator"] {
-  background: linear-gradient(90deg, color-mix(in oklab, var(--secondary-emphasis) 82%, var(--background)), color-mix(in oklab, var(--secondary-emphasis) 95%, var(--background)));
-}
-
-html[data-console-theme] .console-relay-platform-row.is-openai .console-relay-platform-mark {
-  color: var(--success-emphasis);
-}
-
-html[data-console-theme] .console-relay-platform-row.is-claude .console-relay-platform-mark {
-  color: var(--warning-emphasis);
-}
-
-html[data-console-theme] .console-relay-platform-row.is-gemini .console-relay-platform-mark {
-  color: var(--error-emphasis);
-}
-
-html[data-console-theme] .console-relay-platform-row.is-antigravity .console-relay-platform-mark {
-  color: var(--secondary-emphasis);
-}
-
-html[data-console-theme] .console-relay-platform-empty {
-  display: flex;
-  min-height: 5rem;
-  align-items: center;
-  justify-content: center;
-  color: var(--foreground-subtle);
-  font-size: var(--text-xs);
-}
-
-html[data-console-theme] .console-relay-efficiency-insight {
-  display: flex;
-  min-height: 2rem;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 1rem;
-  border-top: var(--border-width) solid var(--border-muted);
-  color: var(--foreground-muted);
-  font-size: var(--text-xs);
-  line-height: 1.35;
-}
-
-html[data-console-theme] .console-relay-efficiency-insight svg {
-  flex: none;
-  color: var(--foreground-subtle);
-}
-
-html[data-console-theme] .console-relay-efficiency-insight strong {
-  color: var(--foreground-strong);
-  font-weight: 600;
+html[data-console-theme] .console-usage-page {
+  --console-chart-1: var(--secondary-emphasis);
+  --console-chart-2: var(--success-emphasis);
+  --console-chart-3: var(--warning-emphasis);
+  --console-chart-4: color-mix(in oklab, var(--secondary-emphasis) 70%, var(--error-emphasis));
 }
 
 html[data-console-theme] .console-usage-stats .console-stat {
@@ -6135,13 +6443,42 @@ html[data-console-theme] .console-usage-stats .console-stat {
 }
 
 html[data-console-theme] .console-usage-stats .console-stat > div {
+  flex: 1;
   min-width: 0;
 }
 
-html[data-console-theme] .console-usage-stats .console-stat > div > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
+html[data-console-theme] .console-usage-stat-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  place-items: center;
+  border: var(--border-width) solid color-mix(in oklab, currentColor 22%, transparent);
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-usage-stats .is-requests .console-usage-stat-icon {
+  color: var(--secondary-emphasis);
+  background: color-mix(in oklab, var(--secondary-muted) 36%, var(--background));
+}
+
+html[data-console-theme] .console-usage-stats .is-tokens .console-usage-stat-icon {
+  color: var(--success-strong);
+  background: color-mix(in oklab, var(--success-muted) 32%, var(--background));
+}
+
+html[data-console-theme] .console-usage-stats .is-cost .console-usage-stat-icon {
+  color: var(--warning-emphasis);
+  background: color-mix(in oklab, var(--warning-muted) 32%, var(--background));
+}
+
+html[data-console-theme] .console-usage-stats .is-cost > div > small b {
+  color: var(--error-emphasis);
+}
+
+html[data-console-theme] .console-usage-stats .is-latency .console-usage-stat-icon {
+  color: var(--console-chart-4);
+  background: color-mix(in oklab, var(--console-chart-4) 16%, var(--background));
 }
 
 html[data-console-theme] .console-usage-stats .console-stat strong {
@@ -6169,6 +6506,18 @@ html[data-console-theme] .console-usage-token-summary b {
   color: var(--foreground-intense);
   font-variant-numeric: tabular-nums;
   font-weight: 550;
+}
+
+html[data-console-theme] .console-usage-token-summary span:nth-child(1) svg {
+  color: var(--console-chart-2);
+}
+
+html[data-console-theme] .console-usage-token-summary span:nth-child(2) svg {
+  color: var(--console-chart-1);
+}
+
+html[data-console-theme] .console-usage-token-summary span:nth-child(3) svg {
+  color: var(--console-chart-3);
 }
 
 html[data-console-theme] .console-usage-chart-grid > [data-slot="card"] > [data-slot="card-content"] {
@@ -6241,7 +6590,35 @@ html[data-console-theme] .console-group-distribution-list > div > i > b {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--foreground-intense);
+  background: var(--console-chart-1);
+}
+
+html[data-console-theme] .console-group-distribution-list > .is-tone-2 > i > b {
+  background: var(--console-chart-2);
+}
+
+html[data-console-theme] .console-group-distribution-list > .is-tone-3 > i > b {
+  background: var(--console-chart-3);
+}
+
+html[data-console-theme] .console-group-distribution-list > .is-tone-4 > i > b {
+  background: var(--console-chart-4);
+}
+
+html[data-console-theme] .console-group-distribution-list > .is-tone-1 small b {
+  color: var(--console-chart-1);
+}
+
+html[data-console-theme] .console-group-distribution-list > .is-tone-2 small b {
+  color: var(--console-chart-2);
+}
+
+html[data-console-theme] .console-group-distribution-list > .is-tone-3 small b {
+  color: var(--console-chart-3);
+}
+
+html[data-console-theme] .console-group-distribution-list > .is-tone-4 small b {
+  color: var(--console-chart-4);
 }
 
 html[data-console-theme] .console-usage-filter-panel .console-filter-action-layout {
@@ -6366,6 +6743,37 @@ html[data-console-theme] .console-usage-type-billing {
   align-items: flex-start;
 }
 
+html[data-console-theme] .console-type-badge {
+  border: var(--border-width) solid var(--border-muted);
+  color: var(--foreground-strong);
+  background: var(--background-muted);
+  font-weight: 600;
+}
+
+html[data-console-theme] .console-type-badge.is-stream {
+  border-color: color-mix(in oklab, var(--secondary-emphasis) 24%, var(--border-muted));
+  color: var(--secondary-emphasis);
+  background: color-mix(in oklab, var(--secondary-muted) 34%, var(--background));
+}
+
+html[data-console-theme] .console-type-badge.is-sync {
+  border-color: color-mix(in oklab, var(--success-emphasis) 24%, var(--border-muted));
+  color: var(--success-strong);
+  background: color-mix(in oklab, var(--success-muted) 30%, var(--background));
+}
+
+html[data-console-theme] .console-type-badge.is-ws_v2 {
+  border-color: color-mix(in oklab, var(--console-chart-4) 24%, var(--border-muted));
+  color: var(--console-chart-4);
+  background: color-mix(in oklab, var(--console-chart-4) 14%, var(--background));
+}
+
+html[data-console-theme] .console-type-badge.is-cyber {
+  border-color: color-mix(in oklab, var(--warning-emphasis) 24%, var(--border-muted));
+  color: var(--warning-emphasis);
+  background: color-mix(in oklab, var(--warning-muted) 30%, var(--background));
+}
+
 html[data-console-theme] .console-token-cell {
   min-width: 16rem;
 }
@@ -6401,6 +6809,26 @@ html[data-console-theme] .console-token-cell > div > span b {
   letter-spacing: var(--tracking-wide);
 }
 
+html[data-console-theme] .console-token-cell .is-input svg,
+html[data-console-theme] .console-token-cell .is-input b {
+  color: var(--console-chart-2);
+}
+
+html[data-console-theme] .console-token-cell .is-output svg,
+html[data-console-theme] .console-token-cell .is-output b {
+  color: var(--console-chart-1);
+}
+
+html[data-console-theme] .console-token-cell .is-read svg,
+html[data-console-theme] .console-token-cell .is-read b {
+  color: var(--console-chart-3);
+}
+
+html[data-console-theme] .console-token-cell .is-write svg,
+html[data-console-theme] .console-token-cell .is-write b {
+  color: var(--console-chart-4);
+}
+
 html[data-console-theme] .console-cost-cell,
 html[data-console-theme] .console-latency {
   font-variant-numeric: tabular-nums;
@@ -6421,6 +6849,33 @@ html[data-console-theme] .console-latency-divider {
 html[data-console-theme] .console-cost-cell strong,
 html[data-console-theme] .console-latency strong {
   color: var(--foreground-intense);
+}
+
+html[data-console-theme] .console-cost-cell strong,
+html[data-console-theme] [data-slot="button"].console-cost-detail-trigger {
+  color: var(--warning-emphasis);
+}
+
+html[data-console-theme] .console-latency > span:first-child {
+  color: var(--foreground-strong);
+  font-weight: 550;
+}
+
+html[data-console-theme] .console-latency > span:first-child.is-success {
+  color: color-mix(in oklab, var(--success-emphasis) 42%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-latency > span:first-child.is-warning {
+  color: color-mix(in oklab, var(--warning-intense) 48%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-latency > span:first-child.is-danger {
+  color: color-mix(in oklab, var(--error-intense) 48%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-latency > span:last-child {
+  color: var(--foreground-intense);
+  font-weight: 550;
 }
 
 @container usage-chart-card (max-width: 32rem) {
@@ -6522,22 +6977,6 @@ html[data-console-theme] .console-latency strong {
 }
 
 @media (max-width: 47.5rem) {
-  html[data-console-theme] .console-relay-efficiency-body {
-    grid-template-columns: 1fr;
-  }
-
-  html[data-console-theme] .console-relay-efficiency-summary {
-    border-bottom: var(--border-width) solid var(--border-muted);
-    border-inline-end: 0;
-  }
-
-  html[data-console-theme] .console-relay-efficiency-metrics {
-    border-inline-end: 0;
-  }
-
-  html[data-console-theme] .console-relay-platforms {
-    padding-top: 0;
-  }
 
   html[data-console-theme] .console-dashboard-metric {
     min-height: 6.5rem;
@@ -6657,7 +7096,6 @@ html[data-console-theme] .console-redeem-summary-metrics small {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 0.375rem;
   overflow: hidden;
   color: var(--foreground-muted);
   font-size: var(--text-xs);
@@ -7334,7 +7772,7 @@ html[data-console-theme] .console-affiliate-invitees .console-table-wrap {
 /* Profile, subscription and batch-workspace calibration */
 
 html[data-console-theme] .console-dashboard-hero {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
@@ -7349,30 +7787,6 @@ html[data-console-theme] .console-dashboard-greeting p {
   margin-top: 0.25rem;
   color: var(--foreground-muted);
   font-size: var(--text-sm);
-}
-
-html[data-console-theme] .console-dashboard-saving {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--foreground-muted);
-  font-size: var(--text-sm);
-}
-
-html[data-console-theme] .console-dashboard-saving > i {
-  display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex: none;
-  place-items: center;
-  border-radius: var(--radius-md);
-  color: var(--success-strong);
-  background: var(--success-muted);
-}
-
-html[data-console-theme] .console-dashboard-saving strong {
-  color: var(--foreground-intense);
 }
 
 html[data-console-theme] .console-dashboard-quick-actions {
@@ -7986,8 +8400,6 @@ html[data-console-theme] .console-subscriptions-table .console-subscription-plan
   flex: none;
   place-items: center;
   border-radius: var(--radius-md);
-  color: var(--foreground-intense);
-  background: var(--background-muted);
 }
 
 html[data-console-theme] .console-subscriptions-table .console-subscription-plan > i svg {
@@ -8569,12 +8981,6 @@ html[data-console-theme] .console-purchase-overview {
   min-height: 10.5rem;
 }
 
-html[data-console-theme] .console-purchase-overview-art {
-  display: block;
-  height: 8rem;
-  object-fit: contain;
-}
-
 html[data-console-theme] .console-purchase-tabs-skeleton {
   width: 8rem;
   height: 2.25rem;
@@ -8610,12 +9016,6 @@ html[data-console-theme] .console-purchase-overview-skeleton .console-purchase-o
 html[data-console-theme] .console-purchase-overview-skeleton .console-purchase-overview-metric > [data-slot="skeleton"]:last-child {
   width: 6rem;
   height: 1.25rem;
-}
-
-html[data-console-theme] .console-purchase-overview-skeleton [data-slot="skeleton"].console-purchase-overview-art {
-  width: 12rem;
-  height: 8rem;
-  border-radius: var(--radius-lg);
 }
 
 html[data-console-theme] .console-purchase-step-skeleton {
@@ -8992,10 +9392,6 @@ html[data-console-theme] .console-group-distribution-skeleton > div > [data-slot
     min-height: 0;
   }
 
-  html[data-console-theme] .console-purchase-overview-skeleton [data-slot="skeleton"].console-purchase-overview-art {
-    width: min(100%, 12rem);
-  }
-
   html[data-console-theme] .console-channel-card-skeleton .console-channel-head {
     grid-template-columns: 2.75rem minmax(0, 1fr);
   }
@@ -9045,5 +9441,262 @@ html[data-console-theme] .console-group-distribution-skeleton > div > [data-slot
 
   html[data-console-theme] .console-table-progress {
     width: min(11rem, 100%);
+  }
+}
+
+/* Self-service invoices */
+
+html[data-console-theme] [data-slot="alert"].console-invoice-intro {
+  border-color: var(--primary-soft);
+  background: color-mix(in oklab, var(--primary-subtle) 72%, var(--background));
+}
+
+html[data-console-theme] .console-invoice-orders-panel > [data-slot="card-content"] {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+html[data-console-theme] .console-invoice-orders-description {
+  margin: 0;
+  padding: 0.875rem 1.25rem;
+  border-bottom: var(--border-width) solid var(--border-muted);
+  color: var(--foreground-muted);
+  font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-invoice-orders-panel .console-table-wrap {
+  border: 0;
+  border-radius: 0;
+}
+
+html[data-console-theme] .console-invoice-orders-table .console-table {
+  min-width: 48rem;
+  border: 0;
+  border-radius: 0;
+}
+
+html[data-console-theme] .console-invoice-orders-table .console-table th,
+html[data-console-theme] .console-invoice-orders-table .console-table td,
+html[data-console-theme] .console-invoice-orders-panel > .console-pagination {
+  padding-inline: 1.25rem;
+}
+
+html[data-console-theme] .console-invoice-orders-table .console-table th[data-column="select"],
+html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="select"] {
+  width: 4rem;
+  padding-inline: 1.25rem 0.5rem;
+}
+
+html[data-console-theme] .console-invoice-orders-table .console-table th[data-column="status"],
+html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="status"] {
+  width: 8rem;
+  text-align: end;
+}
+
+html[data-console-theme] .console-invoice-orders-table .console-table tbody tr:has([data-slot="checkbox"][data-checked]) {
+  background: var(--background-subtle);
+}
+
+html[data-console-theme] .console-invoice-order-number,
+html[data-console-theme] .console-invoice-order-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-invoice-order-number {
+  color: var(--foreground-intense);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+html[data-console-theme] .console-invoice-order-amount {
+  color: var(--foreground-intense);
+  font-size: var(--text-sm);
+  font-weight: 550;
+}
+
+html[data-console-theme] .console-invoice-orders-panel > .console-pagination {
+  border-top: var(--border-width) solid var(--border-muted);
+}
+
+html[data-console-theme] .console-invoice-request {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1.25fr) minmax(14rem, 0.75fr) minmax(17rem, auto);
+  align-items: end;
+  gap: 1.25rem;
+}
+
+html[data-console-theme] .console-invoice-selection {
+  display: grid;
+  min-height: 4.5rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  gap: 0.25rem 1rem;
+  padding: 0.75rem 1rem;
+  border: var(--border-width) solid var(--border-muted);
+  border-radius: var(--radius-lg);
+  background: var(--background-muted);
+}
+
+html[data-console-theme] .console-invoice-selection span,
+html[data-console-theme] .console-invoice-selection small {
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-invoice-selection strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--foreground-intense);
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+}
+
+html[data-console-theme] .console-invoice-submit {
+  display: grid;
+  justify-items: end;
+  gap: 0.5rem;
+}
+
+html[data-console-theme] .console-invoice-submit > [data-slot="button"] {
+  min-width: 13rem;
+}
+
+html[data-console-theme] .console-invoice-submit p {
+  display: flex;
+  max-width: 22rem;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+  text-align: end;
+}
+
+html[data-console-theme] .console-invoice-submit p svg {
+  flex: none;
+}
+
+@media (max-width: 80rem) {
+  html[data-console-theme] .console-invoice-request {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html[data-console-theme] .console-invoice-submit {
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    justify-items: start;
+  }
+
+  html[data-console-theme] .console-invoice-submit p {
+    max-width: none;
+    text-align: start;
+  }
+}
+
+@media (max-width: 47.5rem) {
+  html[data-console-theme] [data-slot="alert"].console-invoice-intro {
+    padding: 1rem;
+  }
+
+  html[data-console-theme] .console-invoice-orders-panel [data-slot="card-header"].console-panel-head {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  html[data-console-theme] .console-invoice-orders-description {
+    padding-inline: 1rem;
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table-wrap {
+    overflow: visible;
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table {
+    display: block;
+    min-width: 0;
+    background: transparent;
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table thead {
+    display: none;
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table tbody {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table tbody tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 0.375rem 0.75rem;
+    padding: 0.875rem;
+    border: var(--border-width) solid var(--border-muted);
+    border-radius: var(--radius-lg);
+    background: var(--background);
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table td {
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="select"] {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    padding: 0;
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="id"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="amount"] {
+    grid-column: 3;
+    grid-row: 1;
+    text-align: end;
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="completed_at"] {
+    grid-column: 2;
+    grid-row: 2;
+    color: var(--foreground-muted);
+    font-size: var(--text-xs);
+  }
+
+  html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="status"] {
+    grid-column: 3;
+    grid-row: 2;
+    text-align: end;
+  }
+
+  html[data-console-theme] .console-invoice-request {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-console-theme] .console-invoice-submit {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+  }
+
+  html[data-console-theme] .console-invoice-submit > [data-slot="button"] {
+    width: 100%;
+  }
+
+  html[data-console-theme] .console-invoice-submit p {
+    justify-content: center;
+    text-align: center;
   }
 }

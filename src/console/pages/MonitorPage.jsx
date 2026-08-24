@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Badge as AppicaBadge } from "@appica/ui-react/badge";
 import { Table as AppicaTable } from "@appica/ui-react/table";
 import { TableBody as AppicaTableBody } from "@appica/ui-react/table";
 import { TableCell as AppicaTableCell } from "@appica/ui-react/table";
@@ -10,13 +9,14 @@ import { monitorApi } from "../../api";
 import { PlatformMark } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, EmptyState, ErrorState, IconButton, Page, Panel, SelectInput, Skeleton, Spinner, TextInput } from "../UI";
+import { Button, EmptyState, ErrorState, IconButton, Page, Panel, SelectInput, Skeleton, Spinner, StatusBadge, TextInput } from "../UI";
 import { CompactTabs } from "../components/ConsoleControls";
 
 const MONITOR_REFRESH_KEY = "sentence_monitor_refresh";
 const MONITOR_WINDOWS = [7, 15, 30, 90];
 const MONITOR_FILTERS = ["all", "operational", "degraded", "failed"];
 const MONITOR_LATENCY_DANGER_MS = 5000;
+const MONITOR_STATUS_ORDER = { operational: 0, degraded: 1, failed: 2, unknown: 3 };
 
 function storedRefresh() {
   try {
@@ -51,13 +51,13 @@ function monitorStatusLabel(tone, locale) {
 }
 
 function MonitorStatusBadge({ tone, label }) {
-  const variant = { operational: "success", degraded: "warning", failed: "error", unknown: "soft" }[tone] || "soft";
   const icon = { operational: "circleCheck", degraded: "warning", failed: "warning", unknown: "info" }[tone] || "info";
-  return <AppicaBadge variant={variant} size="sm" className="console-monitor-status-badge"><Icon name={icon} size={13} data-icon="start" aria-hidden="true" />{label}</AppicaBadge>;
+  const status = { operational: "active", degraded: "degraded", failed: "failed", unknown: "inactive" }[tone] || "inactive";
+  return <StatusBadge status={status} label={label} icon={icon} size="sm" />;
 }
 
 function latestCheck(item) {
-  return item.timeline?.at(-1)?.checked_at || item.last_checked_at || item.updated_at;
+  return item.timeline?.[0]?.checked_at || item.last_checked_at || item.updated_at;
 }
 
 function checkAgeLabel(value, locale, now = Date.now()) {
@@ -86,7 +86,7 @@ function itemPing(item) {
 }
 
 function Sparkline({ timeline = [], days, locale, compact = false }) {
-  const recent = timeline.slice(-48);
+  const recent = timeline.slice(0, 48);
   const counts = recent.reduce((result, point) => {
     result[monitorTone(point.status)] += 1;
     return result;
@@ -123,6 +123,16 @@ function windowAvailability(item, days, details) {
   return model?.[`availability_${days}d`] ?? item[`availability_${days}d`] ?? item.availability_7d;
 }
 
+function compareMonitorItems(left, right, sortBy, windowDays, details) {
+  if (sortBy === "status") {
+    const statusDifference = MONITOR_STATUS_ORDER[monitorTone(left.primary_status)] - MONITOR_STATUS_ORDER[monitorTone(right.primary_status)];
+    if (statusDifference) return statusDifference;
+  }
+  const rightAvailability = Number(windowAvailability(right, windowDays, details)) || 0;
+  const leftAvailability = Number(windowAvailability(left, windowDays, details)) || 0;
+  return rightAvailability - leftAvailability;
+}
+
 function MonitorToolbar({ windowDays, setWindowDays, filter, setFilter, counts, refresh, setRefresh, loading, onRefresh, search, setSearch, locale }) {
   const filterLabels = {
     all: locale === "zh" ? "全部" : "All",
@@ -132,7 +142,7 @@ function MonitorToolbar({ windowDays, setWindowDays, filter, setFilter, counts, 
   };
   const refreshValue = refresh.auto ? String(refresh.seconds) : "off";
   const windowTabs = MONITOR_WINDOWS.map((days) => ({ value: String(days), label: `${days} ${locale === "zh" ? "天" : "days"}` }));
-  const statusTabs = MONITOR_FILTERS.map((value) => ({ value, label: <>{filterLabels[value]} <b>{value === "all" ? counts.total : counts[value]}</b></> }));
+  const statusTabs = MONITOR_FILTERS.map((value) => ({ value, label: <span className={`console-monitor-status-label is-${value}`}>{filterLabels[value]} <b>{value === "all" ? counts.total : counts[value]}</b></span> }));
   const updateRefresh = (event) => {
     const seconds = Number(event.target.value);
     setRefresh({ auto: seconds > 0, seconds: seconds || 60 });
@@ -143,7 +153,7 @@ function MonitorToolbar({ windowDays, setWindowDays, filter, setFilter, counts, 
       <div className="console-monitor-toolbar-main">
         <CompactTabs value={String(windowDays)} items={windowTabs} label={locale === "zh" ? "时间窗口" : "Time window"} className="console-monitor-window-tabs" onChange={(value) => setWindowDays(Number(value))} />
         <i className="console-monitor-toolbar-divider" />
-        <CompactTabs value={filter} items={statusTabs} label={locale === "zh" ? "渠道状态" : "Channel status"} className="console-monitor-status-tabs" onChange={setFilter} />
+        <CompactTabs value={filter} items={statusTabs} label={locale === "zh" ? "分组状态" : "Group status"} className="console-monitor-status-tabs" onChange={setFilter} />
       </div>
       <div className="console-monitor-refresh-actions">
         <label className="console-monitor-search"><Icon name="search" size={17} /><TextInput value={search} onChange={(event) => setSearch(event.target.value)} placeholder={locale === "zh" ? "搜索渠道" : "Search channels"} /></label>
@@ -157,7 +167,7 @@ function MonitorToolbar({ windowDays, setWindowDays, filter, setFilter, counts, 
             <option value="120">120s</option>
           </SelectInput>
         </label>
-        <Button className={`console-monitor-manual-refresh ${loading ? "is-loading" : ""}`} icon="refresh" onClick={() => onRefresh()} disabled={loading}>{locale === "zh" ? "刷新" : "Refresh"}</Button>
+        <Button className="console-monitor-manual-refresh" icon="refresh" onClick={() => onRefresh()} loading={loading}>{locale === "zh" ? "刷新" : "Refresh"}</Button>
       </div>
     </section>
   );
@@ -168,11 +178,11 @@ function MonitorOverview({ items, counts, windowDays, details, locale, formatNum
   const latency = average(items.map((item) => Number(item.primary_latency_ms)));
   const requests = items.reduce((sum, item) => sum + itemRequests(item), 0);
   const metrics = [
-    { icon: "channel", label: locale === "zh" ? "渠道总数" : "Total channels", value: formatNumber(items.length), meta: locale === "zh" ? "实时监控中" : "Monitored live", tone: "neutral" },
-    { icon: "shield", label: locale === "zh" ? "可用渠道" : "Available", value: formatNumber(counts.operational), meta: `${counts.degraded} ${locale === "zh" ? "警告" : "warning"}`, tone: "success" },
-    { icon: "chart", label: locale === "zh" ? "平均可用率" : "Avg. availability", value: `${availability.toFixed(2)}%`, meta: `${windowDays}${locale === "zh" ? " 天窗口" : "d window"}`, tone: "success" },
-    { icon: "pulse", label: locale === "zh" ? "平均延迟" : "Avg. latency", value: metricDuration(latency, formatNumber), meta: locale === "zh" ? "全渠道均值" : "Across all channels", tone: latency > MONITOR_LATENCY_DANGER_MS ? "danger" : "success" },
-    { icon: "chart", label: locale === "zh" ? "今日请求数" : "Requests today", value: formatNumber(requests), meta: locale === "zh" ? "今日累计" : "Cumulative today", tone: "success" },
+    { icon: "channel", label: locale === "zh" ? "渠道总数" : "Total channels", value: formatNumber(items.length), meta: locale === "zh" ? "实时监控中" : "Monitored live", tone: "channels" },
+    { icon: "shield", label: locale === "zh" ? "可用渠道" : "Available", value: formatNumber(counts.operational), meta: `${counts.degraded} ${locale === "zh" ? "警告" : "warning"}`, tone: "available" },
+    { icon: "chart", label: locale === "zh" ? "平均可用率" : "Avg. availability", value: `${availability.toFixed(2)}%`, meta: `${windowDays}${locale === "zh" ? " 天窗口" : "d window"}`, tone: "availability" },
+    { icon: "pulse", label: locale === "zh" ? "平均延迟" : "Avg. latency", value: metricDuration(latency, formatNumber), meta: locale === "zh" ? "全渠道均值" : "Across all channels", tone: latency > MONITOR_LATENCY_DANGER_MS ? "danger" : "latency" },
+    { icon: "chart", label: locale === "zh" ? "今日请求数" : "Requests today", value: formatNumber(requests), meta: locale === "zh" ? "今日累计" : "Cumulative today", tone: "requests" },
   ];
 
   return <section className="console-monitor-overview">{metrics.map((metric) => <div className={`console-monitor-overview-item is-${metric.tone}`} key={metric.label}><i><Icon name={metric.icon} size={22} /></i><div><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.meta}</small></div></div>)}</section>;
@@ -182,7 +192,7 @@ function MonitorListItem({ item, selected, windowDays, details, locale, formatNu
   const tone = monitorTone(item.primary_status);
   const availability = Number(windowAvailability(item, windowDays, details)) || 0;
   const provider = item.provider || item.group_name || "AI";
-  return <Button variant="ghost" className={`console-monitor-list-item is-${tone} ${selected ? "is-selected" : ""}`} onClick={() => onSelect(item)}><i className="console-monitor-provider-mark"><PlatformMark platform={provider} /></i><span className="console-monitor-list-identity"><strong>{item.name}</strong><small>{provider} <b>•</b> {item.primary_model || item.group_name || "—"}</small></span><span className="console-monitor-list-status"><b><i />{monitorStatusLabel(tone, locale)}</b><strong>{metricDuration(item.primary_latency_ms, formatNumber)}</strong></span><span className="console-monitor-list-window"><strong>{availability.toFixed(2)}%</strong><Sparkline timeline={item.timeline} days={windowDays} locale={locale} compact /></span></Button>;
+  return <Button variant="ghost" className={`console-monitor-list-item is-${tone} ${selected ? "is-selected" : ""}`} onClick={() => onSelect(item)}><i className="console-monitor-provider-mark console-platform-surface"><PlatformMark platform={provider} /></i><span className="console-monitor-list-identity"><strong>{item.name}</strong><small>{provider} <b>•</b> {item.primary_model || item.group_name || "—"}</small></span><span className="console-monitor-list-status"><b><i />{monitorStatusLabel(tone, locale)}</b></span><span className="console-monitor-list-latency"><strong>{metricDuration(item.primary_latency_ms, formatNumber)}</strong></span><span className="console-monitor-list-window"><strong>{availability.toFixed(2)}%</strong></span><Sparkline timeline={item.timeline} days={windowDays} locale={locale} compact /></Button>;
 }
 
 function availabilityValue(item, days) {
@@ -231,7 +241,7 @@ function MonitorInspector({ item, detail, windowDays, locale, formatNumber }) {
   return (
     <Panel className={`console-monitor-inspector is-${tone}`}>
       <header className="console-monitor-inspector-head">
-        <i className="console-monitor-provider-mark"><PlatformMark platform={provider} /></i>
+        <i className="console-monitor-provider-mark console-platform-surface"><PlatformMark platform={provider} /></i>
         <div><h2>{item.name}</h2><p>{provider} <b>•</b> {item.primary_model || item.group_name || "—"}</p></div>
         <span className="console-monitor-inspector-check"><small>{locale === "zh" ? "检查于" : "Checked"}</small><strong><RelativeCheckTime value={latestCheck(resolved)} locale={locale} /></strong></span>
       </header>
@@ -266,12 +276,12 @@ function MonitorLoading({ locale }) {
   return <><section className="console-monitor-overview" aria-label={locale === "zh" ? "正在加载渠道概览" : "Loading channel overview"}>{Array.from({ length: 5 }, (_, index) => <div className="console-monitor-overview-item" key={index}><Skeleton className="size-10" /><div className="flex flex-1 flex-col items-end gap-2"><Skeleton className="h-3 w-20" /><Skeleton className="h-6 w-14" /><Skeleton className="h-2 w-16" /></div></div>)}</section><div className="console-monitor-master-detail"><Panel className="console-monitor-master"><div className="console-panel-body flex flex-col gap-3"><Skeleton className="h-5 w-24" />{Array.from({ length: 6 }, (_, index) => <Skeleton className="h-14 w-full" key={index} />)}</div></Panel><Panel className="console-monitor-inspector"><div className="console-panel-body flex flex-col gap-4"><Skeleton className="h-8 w-2/3" /><Skeleton className="h-64 w-full" /></div></Panel></div></>;
 }
 
-function MonitorContent({ state, locale, load, items, counts, windowDays, details, formatNumber, selectedId, onSelect, detail }) {
+function MonitorContent({ state, locale, load, items, counts, windowDays, details, formatNumber, selectedId, onSelect, detail, sortBy, setSortBy }) {
   if (state.loading) return <MonitorLoading locale={locale} />;
   if (state.error) return <Panel><ErrorState message={state.error} onRetry={load} /></Panel>;
   if (!state.items.length) return <Panel><EmptyState icon="pulse" /></Panel>;
   const selectedItem = items.find((item) => item.id === selectedId) || items[0];
-  return <><MonitorOverview items={state.items} counts={counts} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} /><div className="console-monitor-master-detail"><Panel className="console-monitor-master"><header><h2>{locale === "zh" ? "渠道" : "Channels"}</h2><span>{locale === "zh" ? "按状态排序" : "Sort by status"}<Icon name="chevronDown" size={14} /></span></header>{items.length ? <div className="console-monitor-master-list">{items.map((item) => <MonitorListItem key={item.id} item={item} selected={item.id === selectedItem?.id} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} onSelect={onSelect} />)}</div> : <EmptyState icon="filter" description={locale === "zh" ? "当前筛选条件下没有渠道。" : "No channels match this filter."} />}<footer><span>{items.length} {locale === "zh" ? "个渠道" : "channels"}</span><div><IconButton icon="chevronRight" label={locale === "zh" ? "上一页" : "Previous page"} disabled /><b>1</b><IconButton icon="chevronRight" label={locale === "zh" ? "下一页" : "Next page"} disabled /></div></footer></Panel><MonitorInspector item={selectedItem} detail={detail} windowDays={windowDays} locale={locale} formatNumber={formatNumber} /></div></>;
+  return <><MonitorOverview items={state.items} counts={counts} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} /><div className="console-monitor-master-detail"><Panel className="console-monitor-master"><header><h2>{locale === "zh" ? "渠道" : "Channels"}</h2><SelectInput className="console-monitor-sort" value={sortBy} onChange={(event) => setSortBy(event.target.value)} aria-label={locale === "zh" ? "渠道排序方式" : "Channel sort order"}><option value="availability">{locale === "zh" ? "按可用率排序" : "Sort by availability"}</option><option value="status">{locale === "zh" ? "按状态排序" : "Sort by status"}</option></SelectInput></header>{items.length ? <div className="console-monitor-master-list">{items.map((item) => <MonitorListItem key={item.id} item={item} selected={item.id === selectedItem?.id} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} onSelect={onSelect} />)}</div> : <EmptyState icon="filter" description={locale === "zh" ? "当前筛选条件下没有渠道。" : "No channels match this filter."} />}<footer><span>{items.length} {locale === "zh" ? "个渠道" : "channels"}</span><div><IconButton icon="chevronRight" label={locale === "zh" ? "上一页" : "Previous page"} disabled /><b>1</b><IconButton icon="chevronRight" label={locale === "zh" ? "下一页" : "Next page"} disabled /></div></footer></Panel><MonitorInspector item={selectedItem} detail={detail} windowDays={windowDays} locale={locale} formatNumber={formatNumber} /></div></>;
 }
 
 export function MonitorPage() {
@@ -283,6 +293,7 @@ export function MonitorPage() {
   const [search, setSearch] = useState("");
   const [windowDays, setWindowDays] = useState(7);
   const [filter, setFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("availability");
   const [details, setDetails] = useState({});
   const [refreshing, setRefreshing] = useState(false);
   const [listVersion, setListVersion] = useState(0);
@@ -377,7 +388,9 @@ export function MonitorPage() {
   }, []);
   const statusCounts = countByStatus(state.items);
   const counts = { ...statusCounts, total: state.items.length };
-  const filteredItems = state.items.filter((item) => (filter === "all" || monitorTone(item.primary_status) === filter) && (!search.trim() || `${item.name || ""} ${item.provider || ""} ${item.primary_model || ""}`.toLowerCase().includes(search.trim().toLowerCase())));
+  const filteredItems = state.items
+    .filter((item) => (filter === "all" || monitorTone(item.primary_status) === filter) && (!search.trim() || `${item.name || ""} ${item.provider || ""} ${item.primary_model || ""}`.toLowerCase().includes(search.trim().toLowerCase())))
+    .sort((left, right) => compareMonitorItems(left, right, sortBy, windowDays, details));
   const selectedItem = filteredItems.find((item) => item.id === selectedId) || filteredItems[0];
   useEffect(() => {
     if (!selectedItem) return;
@@ -390,7 +403,7 @@ export function MonitorPage() {
   return (
     <Page title={t("monitor.title")} className="console-monitor-page">
       <MonitorToolbar windowDays={windowDays} setWindowDays={setWindowDays} filter={filter} setFilter={setFilter} counts={counts} refresh={refresh} setRefresh={setRefresh} loading={state.loading || refreshing} onRefresh={load} search={search} setSearch={setSearch} locale={locale} />
-      <MonitorContent state={state} locale={locale} load={load} items={filteredItems} counts={counts} windowDays={windowDays} details={details} formatNumber={formatNumber} selectedId={selectedId} onSelect={selectItem} detail={detail} />
+      <MonitorContent state={state} locale={locale} load={load} items={filteredItems} counts={counts} windowDays={windowDays} details={details} formatNumber={formatNumber} selectedId={selectedId} onSelect={selectItem} detail={detail} sortBy={sortBy} setSortBy={setSortBy} />
     </Page>
   );
 }

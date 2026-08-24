@@ -44,7 +44,7 @@ function RedeemSummary({ user, history, locale, formatCurrency }) {
     [locale === "zh" ? "历史返利额度" : "Historical rebate", formatCurrency(user?.aff_history_quota || 0)],
     [locale === "zh" ? "累计兑换次数" : "Total redemptions", history.length.toLocaleString()],
   ];
-  return <section className="console-redeem-summary"><div className="console-redeem-summary-metrics">{metrics.map(([label, value, suffix]) => <div key={label}><small>{label}<Icon name="info" size={13} /></small><strong>{value}</strong>{suffix && <span>{suffix}</span>}</div>)}</div></section>;
+  return <section className="console-redeem-summary"><div className="console-redeem-summary-metrics">{metrics.map(([label, value, suffix]) => <div key={label}><small>{label}</small><strong>{value}</strong>{suffix && <span>{suffix}</span>}</div>)}</div></section>;
 }
 
 function RedeemForm({ code, setCode, busy, onSubmit, result, locale, formatCurrency, t }) {

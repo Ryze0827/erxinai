@@ -92,8 +92,9 @@ const buttonVariants = {
   secondary: "outline",
 };
 
-export function Button({ variant = "secondary", icon, className = "", children, ...props }) {
-  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size="md" className={className} {...props}>{icon && <Icon name={icon} size={18} data-icon="start" />}{children}</AppicaButton>;
+export function Button({ variant = "secondary", icon, loading = false, disabled = false, className = "", children, ...props }) {
+  const spinning = loading && icon === "refresh";
+  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size="md" className={className} disabled={disabled || loading} aria-busy={loading || undefined} {...props}>{icon && <Icon name={icon} size={18} data-icon="start" className={spinning ? "animate-spin motion-reduce:animate-none" : ""} />}{children}</AppicaButton>;
 }
 
 export function buttonLinkClass({ variant = "secondary", size = "md", className = "" } = {}) {
@@ -101,8 +102,9 @@ export function buttonLinkClass({ variant = "secondary", size = "md", className 
   return `${appicaButtonVariants({ variant: resolvedVariant, size })} ${className}`.trim();
 }
 
-export function IconButton({ icon, label, variant = "secondary", size = "icon-md", className = "", ...props }) {
-  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size={size} className={`console-icon-button ${className}`} aria-label={label} title={label} {...props}><Icon name={icon} size={18} /></AppicaButton>;
+export function IconButton({ icon, label, loading = false, disabled = false, variant = "secondary", size = "icon-md", className = "", ...props }) {
+  const spinning = loading && icon === "refresh";
+  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size={size} className={`console-icon-button ${className}`} aria-label={label} title={label} disabled={disabled || loading} aria-busy={loading || undefined} {...props}><Icon name={icon} size={18} className={spinning ? "animate-spin motion-reduce:animate-none" : ""} /></AppicaButton>;
 }
 
 export function InlineButton({ variant = "ghost", size = "sm", icon, className = "", children, ...props }) {
@@ -188,11 +190,10 @@ const statusTone = {
   failed: "danger", refund_failed: "danger", error: "danger", disabled: "danger", quota_exhausted: "danger", refunded: "info", partially_refunded: "info",
 };
 
-export function StatusBadge({ status, label }) {
+export function StatusBadge({ status, label, icon, size = "md", className = "" }) {
   const normalized = String(status || "unknown").toLowerCase();
   const tone = statusTone[normalized] || "neutral";
-  const variant = tone === "danger" ? "error" : tone === "neutral" ? "soft" : tone;
-  return <AppicaBadge variant={variant} size="md">{label || normalized.replaceAll("_", " ")}</AppicaBadge>;
+  return <AppicaBadge variant="soft" size={size} className={`console-status-badge is-${tone} ${className}`.trim()}>{icon && <Icon name={icon} data-icon="start" aria-hidden="true" />}{label || normalized.replaceAll("_", " ")}</AppicaBadge>;
 }
 
 export function ProgressBar({ value, tone = "primary" }) {

@@ -30,7 +30,7 @@ export function PlatformMark({ platform }) {
     grok: BrandX,
   };
   const Mark = marks[tone] || World;
-  return <Mark aria-hidden="true" />;
+  return <Mark aria-hidden="true" data-platform={tone} />;
 }
 
 function BadgeDetail({ detail, originalDetail }) {
@@ -42,5 +42,5 @@ function BadgeDetail({ detail, originalDetail }) {
 export function GroupBadge({ name, platform, detail, originalDetail }) {
   if (!name) return <span className="console-muted">—</span>;
   const tone = platformTone(platform);
-  return <Badge variant="soft" size="sm" className={`console-group-badge console-group-badge--${tone}`} title={platform || name}><PlatformMark platform={tone} /><span>{name}</span><BadgeDetail detail={detail} originalDetail={originalDetail} /></Badge>;
+  return <Badge variant="soft" size="sm" className={`console-group-badge console-platform-surface console-group-badge--${tone}`} title={platform || name}><PlatformMark platform={tone} /><span>{name}</span><BadgeDetail detail={detail} originalDetail={originalDetail} /></Badge>;
 }

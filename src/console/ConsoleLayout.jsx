@@ -7,7 +7,6 @@ import { AvatarImage } from "@appica/ui-react/avatar";
 import { Alert } from "@appica/ui-react/alert";
 import { AlertIcon } from "@appica/ui-react/alert";
 import { AlertTitle } from "@appica/ui-react/alert";
-import { BackgroundPattern } from "@appica/ui-react/background-pattern";
 import { Button as AppicaButton } from "@appica/ui-react/button";
 import { Dialog } from "@appica/ui-react/dialog";
 import { DialogContent } from "@appica/ui-react/dialog";
@@ -33,6 +32,7 @@ import { BrandLogo } from "../BrandLogo";
 import { DEFAULT_SITE_LOGO, DEFAULT_SITE_NAME } from "../branding";
 import { TeamMembersCard } from "../TeamMembersCard";
 import { useConsole, resolveFeature } from "./ConsoleContext";
+import { ConsoleBackgroundPattern } from "./components/ConsoleBackgroundPattern";
 import { Icon } from "./Icon";
 import { useLocale } from "./i18n";
 import { nativeCustomPageIcon, nativeCustomPageKind, nativeCustomPageRoute } from "./nativeCustomPages";
@@ -109,6 +109,7 @@ const accountNav = [
 const toolsNav = [
   { path: "/image-studio", key: "imageStudio.title", icon: "imageStudio" },
   { path: "/image-api-docs", key: "imageDocs.title", icon: "apiBook" },
+  { path: "/invoice", key: "nav.invoice", icon: "orderReceipt", feature: "payment", standardOnly: true },
 ];
 
 const featureDefinitions = {
@@ -210,12 +211,14 @@ function AnnouncementMenu() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [popup, setPopup] = useState(null);
   const [popupQueue, setPopupQueue] = useState([]);
   const shownPopupIds = useRef(new Set());
   const mountedRef = useRef(true);
 
   const load = async () => {
+    setLoading(true);
     try {
       const response = await announcementsApi.list(false);
       const nextItems = Array.isArray(response) ? response : [];
@@ -227,6 +230,8 @@ function AnnouncementMenu() {
       if (pending.length) setPopupQueue((current) => [...current, ...pending]);
     } catch (error) {
       if (mountedRef.current) notify("error", error.message);
+    } finally {
+      if (mountedRef.current) setLoading(false);
     }
   };
 
@@ -254,7 +259,7 @@ function AnnouncementMenu() {
     if (current) await markRead(current);
   };
 
-  return <div className="console-popover-wrap"><Popover open={open} onOpenChange={setOpen}><PopoverTrigger render={<IconButton icon="bell" label={t("announcement.title")} />} />{unread > 0 && <b className="console-notification-dot">{unread > 9 ? "9+" : unread}</b>}<PopoverContent arrow={false} align="end" className="console-popover console-announcements"><div className="console-popover-head"><strong>{t("announcement.title")}</strong><IconButton icon="refresh" label={t("common.refresh")} onClick={load} /></div>{!loaded ? <Spinner /> : !items.length ? <EmptyState title={t("announcement.empty")} /> : <div className="console-announcement-list">{items.map((item) => <InlineButton key={item.id} className={item.is_read || item.read_at ? "is-read" : ""} onClick={() => { shownPopupIds.current.add(item.id); setPopup(item); setOpen(false); }}><span><strong>{item.title}</strong><p>{announcementContent(item)}</p><small>{formatDate(item.created_at)}</small></span></InlineButton>)}</div>}</PopoverContent></Popover><Modal open={Boolean(popup)} title={popup?.title || t("announcement.title")} description={popup?.created_at ? formatDate(popup.created_at) : ""} onClose={closePopup} footer={<Button variant="primary" icon="check" onClick={closePopup}>{t("common.confirm")}</Button>}><div className="console-markdown console-announcement-content">{announcementContent(popup)}</div></Modal></div>;
+  return <div className="console-popover-wrap"><Popover open={open} onOpenChange={setOpen}><PopoverTrigger render={<IconButton icon="bell" label={t("announcement.title")} />} />{unread > 0 && <b className="console-notification-dot">{unread > 9 ? "9+" : unread}</b>}<PopoverContent arrow={false} align="end" className="console-popover console-announcements"><div className="console-popover-head"><strong>{t("announcement.title")}</strong><IconButton icon="refresh" label={t("common.refresh")} onClick={load} loading={loading} /></div>{!loaded ? <Spinner /> : !items.length ? <EmptyState title={t("announcement.empty")} /> : <div className="console-announcement-list">{items.map((item) => <InlineButton key={item.id} className={item.is_read || item.read_at ? "is-read" : ""} onClick={() => { shownPopupIds.current.add(item.id); setPopup(item); setOpen(false); }}><span><strong>{item.title}</strong><p>{announcementContent(item)}</p><small>{formatDate(item.created_at)}</small></span></InlineButton>)}</div>}</PopoverContent></Popover><Modal open={Boolean(popup)} title={popup?.title || t("announcement.title")} description={popup?.created_at ? formatDate(popup.created_at) : ""} onClose={closePopup} footer={<Button variant="primary" icon="check" onClick={closePopup}>{t("common.confirm")}</Button>}><div className="console-markdown console-announcement-content">{announcementContent(popup)}</div></Modal></div>;
 }
 
 const walkthroughSteps = [
@@ -534,7 +539,7 @@ export function ConsoleLayout({ children }) {
     sidebarMotionsRef.current.clear();
     setSidebarCollapsed((value) => !value);
   };
-  return <BackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`} ref={sidebarRef}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <BrandLogo key={logo} src={logo} alt="" width="31" height="31" decoding="sync" fetchPriority="high" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><SidebarAssistant /><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></BackgroundPattern>;
+  return <ConsoleBackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`} ref={sidebarRef}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <BrandLogo key={logo} src={logo} alt="" width="31" height="31" decoding="sync" fetchPriority="high" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><SidebarAssistant /><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></ConsoleBackgroundPattern>;
 }
 
 export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false }) {

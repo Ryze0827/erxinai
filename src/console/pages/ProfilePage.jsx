@@ -289,6 +289,7 @@ function IdentityCard() {
   const [emailModal, setEmailModal] = useState(false);
   const [email, setEmail] = useState({ value: "", code: "", password: "", sent: false });
   const [unbind, setUnbind] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const providers = useMemo(() => enabledProviders(settings), [settings]);
   const beginBind = async (provider) => {
     try {
@@ -304,8 +305,12 @@ function IdentityCard() {
   };
   const sendEmail = async () => { try { await userApi.sendEmailBindingCode(email.value); setEmail((current) => ({ ...current, sent: true })); } catch (error) { notify("error", error.message); } };
   const bindEmail = async () => { try { const next = await userApi.bindEmail({ email: email.value, verify_code: email.code, password: email.password }); updateUser(next); setEmailModal(false); setEmail({ value: "", code: "", password: "", sent: false }); notify("success", t("common.saved")); } catch (error) { notify("error", error.message); } };
+  const refresh = async () => {
+    setRefreshing(true);
+    try { await refreshUser(); } finally { setRefreshing(false); }
+  };
   const rows = [{ id: "email", label: "Email", enabled: true }, ...providers];
-  return <Panel title={locale === "zh" ? "登录方式" : "Sign-in methods"} actions={<Button className="console-identity-refresh" icon="refresh" onClick={refreshUser}>{t("common.refresh")}</Button>} className="console-profile-identities"><div className="console-panel-body console-identity-list"><div className="console-identity-table-head"><span>{locale === "zh" ? "提供商" : "Provider"}</span><span>{t("common.status")}</span><span>{locale === "zh" ? "操作" : "Action"}</span></div>{rows.map((provider) => {
+  return <Panel title={locale === "zh" ? "登录方式" : "Sign-in methods"} actions={<Button className="console-identity-refresh" icon="refresh" onClick={refresh} loading={refreshing}>{t("common.refresh")}</Button>} className="console-profile-identities"><div className="console-panel-body console-identity-list"><div className="console-identity-table-head"><span>{locale === "zh" ? "提供商" : "Provider"}</span><span>{t("common.status")}</span><span>{locale === "zh" ? "操作" : "Action"}</span></div>{rows.map((provider) => {
     const bound = provider.id === "email" ? Boolean(user?.email) : bindingStatus(user, provider.id);
     const details = bindingDetails(user, provider.id);
     const canUnbind = provider.id !== "email" && bound && details.can_unbind === true;
