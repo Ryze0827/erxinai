@@ -189,7 +189,7 @@ function SidebarUserMenu({ collapsed, onNavigate }) {
 function SidebarAssistant() {
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
-  const label = locale === "zh" ? (open ? "关闭 Appica Assistant" : "打开 Appica Assistant") : (open ? "Close Appica Assistant" : "Open Appica Assistant");
+  const label = locale === "zh" ? (open ? "关闭 WayX Assistant" : "打开 WayX Assistant") : (open ? "Close WayX Assistant" : "Open WayX Assistant");
   return <div className="console-sidebar-assistant"><Popover open={open} onOpenChange={setOpen}><PopoverTrigger render={<AppicaButton type="button" variant="soft" size="icon-lg" className="group/assistant" aria-label={label} title={label}><MessageChatbot aria-hidden="true" className="absolute transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.77,0,0.175,1)] group-data-[popup-open]/assistant:transform-[rotate(45deg)_scale(.85)] group-data-[popup-open]/assistant:opacity-0 motion-reduce:transform-none motion-reduce:transition-opacity" /><X aria-hidden="true" className="absolute transform-[rotate(-45deg)_scale(.85)] opacity-0 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.77,0,0.175,1)] group-data-[popup-open]/assistant:transform-none group-data-[popup-open]/assistant:opacity-100 motion-reduce:transform-none motion-reduce:transition-opacity" /></AppicaButton>} /><PopoverContent arrow={false} side="right" align="end" className="w-108 max-w-[calc(100vw-2rem)] border-0 bg-transparent p-0 shadow-none"><AppicaAssistantCard className="w-full" /></PopoverContent></Popover></div>;
 }
 
@@ -278,13 +278,21 @@ function visibleWalkthroughTarget(selector) {
   });
 }
 
+function walkthroughRootScale() {
+  const scale = Number.parseFloat(window.getComputedStyle(document.documentElement).zoom);
+  return Number.isFinite(scale) && scale > 0 ? scale : 1;
+}
+
 function walkthroughTargetRect(element) {
+  const scale = walkthroughRootScale();
   const padding = 8;
   const rect = element.getBoundingClientRect();
-  const top = Math.max(8, rect.top - padding);
-  const left = Math.max(8, rect.left - padding);
-  const right = Math.min(window.innerWidth - 8, rect.right + padding);
-  const bottom = Math.min(window.innerHeight - 8, rect.bottom + padding);
+  const viewportWidth = window.innerWidth / scale;
+  const viewportHeight = window.innerHeight / scale;
+  const top = Math.max(8, rect.top / scale - padding);
+  const left = Math.max(8, rect.left / scale - padding);
+  const right = Math.min(viewportWidth - 8, rect.right / scale + padding);
+  const bottom = Math.min(viewportHeight - 8, rect.bottom / scale + padding);
   return { top, left, width: Math.max(1, right - left), height: Math.max(1, bottom - top), right, bottom };
 }
 
@@ -293,15 +301,18 @@ function sameWalkthroughRect(current, next) {
 }
 
 function walkthroughCardPosition(target) {
+  const scale = walkthroughRootScale();
+  const viewportWidth = window.innerWidth / scale;
+  const viewportHeight = window.innerHeight / scale;
   const margin = 12;
   const gap = 16;
-  const width = Math.min(360, window.innerWidth - margin * 2);
+  const width = Math.min(360, viewportWidth - margin * 2);
   if (window.innerWidth <= 760 || !target) return { width, left: margin, right: "auto", top: "auto", bottom: margin };
   const estimatedHeight = 244;
-  const left = Math.min(Math.max(margin, target.left + target.width / 2 - width / 2), window.innerWidth - width - margin);
-  if (target.bottom + gap + estimatedHeight <= window.innerHeight - margin) return { width, left, right: "auto", top: target.bottom + gap, bottom: "auto" };
+  const left = Math.min(Math.max(margin, target.left + target.width / 2 - width / 2), viewportWidth - width - margin);
+  if (target.bottom + gap + estimatedHeight <= viewportHeight - margin) return { width, left, right: "auto", top: target.bottom + gap, bottom: "auto" };
   if (target.top - gap - estimatedHeight >= margin) return { width, left, right: "auto", top: target.top - gap - estimatedHeight, bottom: "auto" };
-  return { width, left, right: "auto", top: Math.max(margin, window.innerHeight - estimatedHeight - margin), bottom: "auto" };
+  return { width, left, right: "auto", top: Math.max(margin, viewportHeight - estimatedHeight - margin), bottom: "auto" };
 }
 
 function Walkthrough({ setMobileOpen }) {

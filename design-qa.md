@@ -71,6 +71,55 @@
 
 final result: passed
 
+# Design QA — Dark 模式橙色主按钮
+
+## Evidence
+
+- Source visual truth: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/reference-dark-orange.png`
+- Before implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/before-dark-blue.png`
+- Final implementation at the reference size: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/after-dark-orange-buttons-only-1672x941.png`
+- Additional 2560 × 1352 implementation capture: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/after-dark-orange-buttons-only.png`
+- Full-view comparison: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/comparison-reference-vs-buttons-only.png`
+- Source, comparison viewport, and implementation pixels: 1672 × 941 at device pixel ratio 1.
+- State: Chinese locale, unauthenticated landing route, Dark theme.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain within the revised button-only scope.
+- Dark primary buttons now use the existing warning-role amber token, aligning their filled surfaces with the warm WayX logo without introducing a literal palette value.
+- The selector is limited to primary-styled `button`, `a`, and `role="button"` controls. Header, hero, assistant send, media play, product request, authentication, and console primary actions inherit the same treatment.
+- The root primary and secondary roles are unchanged. Progress bars, sliders, active tabs, status dots, positive values, success badges, and the outline CTA therefore retain their existing styling and semantics as explicitly requested.
+- The reference also applies orange to non-button accents. Those visible differences are intentionally deferred by the user's revised scope and are not treated as implementation drift.
+- The unauthenticated implementation shows “登录 / 开始使用” while the reference shows authenticated labels. This is expected state-dependent content, not a styling mismatch.
+- The final browser pass found zero broken images, zero horizontal overflow, and no console warnings or errors.
+
+## Required Fidelity Surfaces
+
+- Brand and color: only Dark primary button fills, hover aliases, foreground contrast, and focus-ring aliases changed; all values derive from role-based design tokens.
+- Layout and typography: no dimensions, spacing, radius, type, content structure, or assets changed in this pass.
+- Theme isolation: Light mode retained its existing primary-button treatment after an interactive Light → Dark toggle check.
+- Semantic isolation: success and error roles remain unchanged, and non-button primary/secondary accents are not remapped.
+
+## Comparison History
+
+1. Baseline — `before-dark-blue.png`
+   - Dark primary buttons used the existing blue emphasis.
+2. Broad orange exploration — discarded after the user narrowed the request.
+   - Global accent remapping was removed so charts, states, tabs, and text would not change.
+3. Final button-only pass — `comparison-reference-vs-buttons-only.png`
+   - Primary button backgrounds use the closest existing amber role token; non-button accents remain intentionally unchanged.
+
+## Implementation Checklist
+
+- [x] Dark primary button fills changed to amber.
+- [x] Non-button accent and semantic colors preserved.
+- [x] Light theme verified unchanged.
+- [x] Reference and implementation compared at 1672 × 941.
+- [x] Broken images, horizontal overflow, and browser console checked.
+- [x] `git diff --check` passed; project tests and build were not run per repository instruction.
+
+final result: passed
+
 ---
 
 # Design QA — 渠道状态历史像素间距
@@ -218,5 +267,56 @@ final result: passed
 - [x] Light and Dark theme switching verified.
 - [x] Final browser interaction pass has no new console warnings or errors.
 - [x] Production build and `git diff --check` passed.
+
+final result: passed
+
+---
+
+# Design QA — 控制台紧凑组件圆角一致性
+
+## Evidence
+
+- Source reference: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/reference-purchase.png`
+- Baseline implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/purchase-before-2560x1352.png`
+- Final purchase implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/purchase-after-final.png`
+- Final API docs implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/image-api-docs-after.png`
+- Final API key modal implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/use-key-modal-after.png`
+- Full source/implementation comparison: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/purchase-source-implementation-full.png`
+- Focused source/implementation comparison: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/purchase-source-implementation-focus.png`
+- Source viewport: 2560 × 1352. Final browser capture: 2560 × 1296 at device pixel ratio 1; the source was normalized to the same visible height for comparison.
+- State: Chinese locale, authenticated console, Light theme.
+
+## Findings
+
+- No actionable P0, P1, or P2 findings remain within the requested compact-component radius scope.
+- Root cause: 22 console selectors referenced an undefined `--radius-full` custom property, so affected step numbers, status markers, compact badges, and progress indicators resolved to square corners.
+- The console theme now maps those selectors to the existing `--radius-2xs` role token through one scoped compact-radius token. At the console scale, the requested 01/02/03 markers render with a consistent 10px radius instead of 0px.
+- The same computed radius was verified on the purchase steps, image API documentation steps and summary markers, affiliate steps, and the four-step API-key usage modal.
+- All console menu routes expose the same scoped radius token. The inspected purchase, API key, usage, monitor, order, redemption, affiliate, image studio, image API docs, invoice, and admin overview routes showed no broken image assets or style fallback.
+- Typography, colors, card geometry, layout, theme behavior, data, and interactions remain unchanged.
+
+## Required Fidelity Surfaces
+
+- Shape: compact identifiers keep a restrained curve and remain visually distinct from full pills and circular status dots.
+- Tokens: only existing Appica role-based radius tokens are used; no literal radius or hue value was added.
+- Scope: the alias is limited to `html[data-console-theme]`, so the marketing site and its theme remain unaffected.
+- Assets and copy: unchanged.
+
+## Comparison History
+
+1. Baseline purchase capture — `purchase-before-2560x1352.png`
+   - [P2] The 01/02/03 markers rendered with `border-radius: 0px` because the referenced variable was undefined.
+2. Final focused comparison — `purchase-source-implementation-focus.png`
+   - Fix: resolve all 22 console references through the shared compact-radius token.
+   - The 01/02/03 markers now show the requested light curve while all surrounding cards, controls, and spacing remain stable.
+
+## Implementation Checklist
+
+- [x] Shared compact radius added at the console theme boundary.
+- [x] Purchase, API docs, affiliate, and API-key modal components verified at 10px rendered radius.
+- [x] All console menu routes checked for token availability and broken image assets.
+- [x] Focused and full source/implementation comparisons inspected.
+- [x] Fresh page reload introduced no new browser warnings or errors.
+- [x] `git diff --check` passed; project build and tests were not run per repository instructions.
 
 final result: passed

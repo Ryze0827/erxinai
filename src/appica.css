@@ -96,13 +96,13 @@ html[data-console-theme="dark"] {
   color: var(--foreground-intense);
 }
 
-/* Keep dark-mode primary actions prominent without turning them into white
-   blocks. The local aliases also update hover gradients and focus rings. */
-html[data-console-theme="dark"] :where(button, a, [role="button"]).bg-primary {
-  --primary: var(--secondary-emphasis);
-  --primary-muted: var(--secondary-intense);
-  --primary-foreground: var(--foreground-intense);
-  --focus-ring-primary: var(--focus-ring-secondary);
+/* Align Dark-mode primary button fills with the warm WayX logo. Keep these
+   aliases local so non-button primary accents preserve their original roles. */
+.dark :where(button, a, [role="button"]).bg-primary {
+  --primary: var(--warning);
+  --primary-muted: var(--warning-emphasis);
+  --primary-foreground: var(--warning-foreground);
+  --focus-ring-primary: var(--focus-ring-warning);
 }
 
 .appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]) {

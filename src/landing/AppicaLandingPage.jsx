@@ -103,7 +103,6 @@ import { useConsole } from "../console/ConsoleContext";
 import { useLocale } from "../console/i18n";
 import "./AppicaLandingPage.css";
 
-const APPICA_ORIGIN = "https://appica.dev";
 const HEADLINE_ROTATION_INTERVAL_MS = 3200;
 const AUDIO_TRACK_DURATION_SECONDS = 222;
 
@@ -173,33 +172,23 @@ const features = [
   },
 ];
 
-const componentGroups = [
-  {
-    value: "actions",
-    label: "landing.group.actions",
-    count: 30,
-    items: [
-      "Autocomplete", "Button", "Button Group", "Calendar", "Checkbox", "Chip", "Color Area", "Color Picker", "Color Slider", "Color Swatch",
-      "Color Swatch Picker", "Combobox", "Copy Button", "Date Field", "Date Picker", "Field", "Form", "Input", "Number Field", "OTP Field",
-      "Radio", "Rating", "Select", "Slider", "Switch", "Textarea", "Time Field", "Toggle", "Toggle Group", "Toolbar",
-    ],
-  },
-  { value: "display", label: "landing.group.display", count: 13, items: ["Avatar", "Badge", "Card", "Carousel", "Table", "Thumbnail", "Tree"] },
-  { value: "effects", label: "landing.group.effects", count: 4, items: ["Background Pattern", "Border Beam", "Gradient Glow", "Text Animate"] },
-  { value: "navigation", label: "landing.group.navigation", count: 9, items: ["Breadcrumb", "Command Menu", "Dropdown Menu", "Navigation", "Pagination", "Tabs"] },
-  { value: "overlays", label: "landing.group.overlays", count: 6, items: ["Dialog", "Drawer", "Popover", "Preview Card", "Tooltip"] },
-  { value: "feedback", label: "landing.group.feedback", count: 8, items: ["Alert", "Loader", "Progress", "Skeleton", "Spinner", "Toast"] },
+const searchResults = [
+  "landing.searchResult.installation",
+  "landing.searchResult.agents",
+  "landing.searchResult.usage",
+  "landing.searchResult.theming",
+  "landing.searchResult.colors",
+  "landing.searchResult.fonts",
+  "landing.searchResult.dark",
+  "landing.searchResult.rtl",
 ];
 
-const searchResults = [
-  ["landing.searchResult.installation", "/ui/docs/react/installation"],
-  ["landing.searchResult.agents", "/ui/docs/react/agents"],
-  ["landing.searchResult.usage", "/ui/docs/react/usage"],
-  ["landing.searchResult.theming", "/ui/docs/react/theming"],
-  ["landing.searchResult.colors", "/ui/docs/react/colors"],
-  ["landing.searchResult.fonts", "/ui/docs/react/fonts"],
-  ["landing.searchResult.dark", "/ui/docs/react/dark-mode"],
-  ["landing.searchResult.rtl", "/ui/docs/react/rtl"],
+const primaryNavigationItems = [
+  "landing.nav.features",
+  "landing.nav.models",
+  "landing.nav.integration",
+  "landing.nav.pricing",
+  "landing.nav.status",
 ];
 
 function SearchDialog({ open, onOpenChange }) {
@@ -214,10 +203,10 @@ function SearchDialog({ open, onOpenChange }) {
         <DialogBody className="flex flex-col gap-3">
           <Input autoFocus clearable startSlot={<Search />} placeholder={t("landing.searchPlaceholder")} aria-label={t("landing.searchPlaceholder")} />
           <div className="flex flex-col gap-1">
-            {searchResults.map(([labelKey, href]) => (
-              <a key={href} className="text-foreground hover:bg-background-muted outline-ring flex items-center justify-between rounded-md px-3 py-2 text-sm" href={`${APPICA_ORIGIN}${href}`}>
-                {t(labelKey)}<ArrowUpRight className="size-4" />
-              </a>
+            {searchResults.map((labelKey) => (
+              <span key={labelKey} className="text-foreground flex cursor-default items-center justify-between rounded-md px-3 py-2 text-sm" aria-disabled="true">
+                {t(labelKey)}<ArrowUpRight className="size-4" aria-hidden="true" />
+              </span>
             ))}
           </div>
         </DialogBody>
@@ -227,25 +216,13 @@ function SearchDialog({ open, onOpenChange }) {
 }
 
 function MobileNavigation({ open, onOpenChange }) {
-  const { authenticated } = useConsole();
   const { t } = useLocale();
-  const items = [
-    ["landing.nav.features", "#capabilities"],
-    ["landing.nav.models", "#supported-models"],
-    ["landing.nav.integration", authenticated ? "/keys" : "/login"],
-    ["landing.nav.pricing", authenticated ? "/purchase" : "/login"],
-    ["landing.nav.status", authenticated ? "/monitor" : "/login"],
-  ];
   return (
     <Drawer side="left" open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="max-w-80">
         <DrawerHeader><DrawerTitle>{t("landing.drawerTitle")}</DrawerTitle></DrawerHeader>
         <DrawerBody className="flex flex-col gap-1 px-4 pb-6">
-          {items.map(([labelKey, href]) => (
-            href.startsWith("#")
-              ? <a className="text-foreground hover:bg-background-muted outline-ring flex rounded-xs px-3 py-3 text-base" href={href} key={labelKey} onClick={() => onOpenChange(false)}>{t(labelKey)}</a>
-              : <Link className="text-foreground hover:bg-background-muted outline-ring flex rounded-xs px-3 py-3 text-base" to={href} key={labelKey} onClick={() => onOpenChange(false)}>{t(labelKey)}</Link>
-          ))}
+          {primaryNavigationItems.map((labelKey) => <span className="text-foreground flex rounded-xs px-3 py-3 text-base" key={labelKey}>{t(labelKey)}</span>)}
         </DrawerBody>
       </DrawerContent>
     </Drawer>
@@ -259,13 +236,6 @@ function LandingHeader({ theme, onThemeChange }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const nextLocale = locale === "zh" ? "en" : "zh";
   const authLabel = authenticated ? t("nav.dashboard") : t("auth.login.submit");
-  const navigationItems = [
-    ["landing.nav.features", "#capabilities"],
-    ["landing.nav.models", "#supported-models"],
-    ["landing.nav.integration", authenticated ? "/keys" : "/login"],
-    ["landing.nav.pricing", authenticated ? "/purchase" : "/login"],
-    ["landing.nav.status", authenticated ? "/monitor" : "/login"],
-  ];
   const themeLabel = theme === "dark"
     ? (locale === "zh" ? "切换至浅色模式" : "Switch to light mode")
     : (locale === "zh" ? "切换至深色模式" : "Switch to dark mode");
@@ -278,7 +248,7 @@ function LandingHeader({ theme, onThemeChange }) {
         </div>
         <Navigation className="hidden lg:block" variant="line" aria-label={t("landing.nav.primary")}>
           <NavigationList>
-            {navigationItems.map(([labelKey, href]) => <NavigationItem key={labelKey}>{href.startsWith("#") ? <NavigationLink render={<a href={href} />}>{t(labelKey)}</NavigationLink> : <NavigationLink render={<Link to={href} />}>{t(labelKey)}</NavigationLink>}</NavigationItem>)}
+            {primaryNavigationItems.map((labelKey) => <NavigationItem key={labelKey}><NavigationLink className="pointer-events-none" tabIndex={-1} render={<span />}>{t(labelKey)}</NavigationLink></NavigationItem>)}
           </NavigationList>
         </Navigation>
         <div className="flex items-center justify-self-end gap-1.5 sm:gap-2">
@@ -313,7 +283,7 @@ function ProductCard() {
   return (
     <ShowcaseCard className="order-2 min-[85rem]:h-[45%]" contentClassName="flex flex-col">
       <div className="relative h-34 overflow-hidden rounded-lg">
-        <img className="absolute inset-0 size-full object-cover" src="/assets/appica/landing/nimbus-runner.webp" alt={t("landing.product.imageAlt")} />
+        <img className="absolute inset-0 size-full object-cover" src="/assets/wayx/landing/nimbus-runner.webp" alt={t("landing.product.imageAlt")} />
         <Badge className="absolute start-2 top-2" variant="light" size="sm">{t("landing.product.badge")}</Badge>
         <Toggle className={buttonVariants({ variant: "light", size: "icon-sm", className: "absolute! inset-e-2 top-2" })} pressed={favorite} onPressedChange={setFavorite} aria-label={t("landing.audio.favorite")}><Heart className="in-data-pressed:hidden" /><HeartFilled className="hidden in-data-pressed:block" /></Toggle>
       </div>
@@ -390,7 +360,7 @@ function AudioCard() {
   return (
     <ShowcaseCard className="order-5 min-[85rem]:h-[36%]" contentClassName="flex flex-col justify-between gap-4">
       <div className="flex items-center gap-3">
-        <img className="size-12 shrink-0 rounded-md object-cover" src="/assets/appica/landing/album-cover.webp" alt={t("landing.audio.imageAlt")} />
+        <img className="size-12 shrink-0 rounded-md object-cover" src="/assets/wayx/landing/album-cover.webp" alt={t("landing.audio.imageAlt")} />
         <div className="min-w-0 flex-1"><div className="text-foreground-intense truncate text-sm font-medium">{t("landing.audio.title")}</div><div className="text-foreground-muted truncate text-xs">{t("landing.audio.subtitle")}</div></div>
         <Toggle className={buttonVariants({ variant: "ghost", size: "icon-sm" })} pressed={favorite} onPressedChange={setFavorite} aria-label={t("landing.audio.favorite")}><Heart className="in-data-pressed:hidden" /><HeartFilled className="hidden in-data-pressed:block" /></Toggle>
       </div>
@@ -428,7 +398,7 @@ function OrderCard() {
       </div>
       <Separator className="my-4" />
       <div className="flex items-center gap-3">
-        <Avatar size="sm"><AvatarImage src="/assets/appica/avatars/02.jpg" alt="WayX route" /><AvatarFallback>WX</AvatarFallback></Avatar>
+        <Avatar size="sm"><AvatarImage src="/assets/wayx/avatars/02.jpg" alt="WayX route" /><AvatarFallback>WX</AvatarFallback></Avatar>
         <div className="min-w-0 flex-1"><div className="text-foreground-intense truncate text-sm font-medium">{t("landing.order.primaryRoute")}</div><div className="text-foreground-muted text-xs">{t("landing.order.latency")}</div></div>
         <Button variant="outline" size="icon-sm" aria-label={t("landing.order.route")}><Route /></Button>
       </div>
@@ -448,7 +418,7 @@ function RevenueCard() {
       <div className="mt-4 flex flex-col gap-2.5">
         <span className="text-foreground-muted text-xs">{t("landing.usage.topModels")}</span>
         {[["us", t("landing.usage.model.1"), "21.7M", "45%"], ["de", t("landing.usage.model.2"), "9.6M", "20%"], ["jp", t("landing.usage.model.3"), "7.2M", "15%"]].map(([flag, model, amount, share]) => (
-          <div className="flex items-center gap-2" key={model}><img className="size-4" src={`/assets/appica/flags/${flag}.svg`} alt="" /><span className="text-foreground text-xs">{model}</span><span className="text-foreground-intense ms-auto text-xs font-medium tabular-nums">{amount}</span><span className="text-foreground-muted w-8 text-end text-xs tabular-nums">{share}</span></div>
+          <div className="flex items-center gap-2" key={model}><img className="size-4" src={`/assets/wayx/flags/${flag}.svg`} alt="" /><span className="text-foreground text-xs">{model}</span><span className="text-foreground-intense ms-auto text-xs font-medium tabular-nums">{amount}</span><span className="text-foreground-muted w-8 text-end text-xs tabular-nums">{share}</span></div>
         ))}
       </div>
       <Sparkline className="mt-auto pt-3" data={[32, 24, 43, 38, 24, 50, 73, 62, 51, 55, 70, 86]}>
@@ -492,7 +462,7 @@ function RatingCard() {
         {ratings.map(([stars, value]) => <div className="flex items-center gap-2.5" key={stars}><span className="text-foreground-muted w-2 text-xs tabular-nums">{stars}</span><Meter className="flex-1" value={value} aria-label={`${stars} ${t("landing.health.detail")}`}><MeterProgress /></Meter><span className="text-foreground-muted w-8 text-end text-xs tabular-nums">{value}%</span></div>)}
       </div>
       <Separator className="my-4" />
-      <div className="flex items-center gap-3"><AvatarGroup>{["02", "04", "09"].map((avatar) => <Avatar size="xs" key={avatar}><AvatarImage src={`/assets/appica/avatars/${avatar}.jpg`} alt="" /><AvatarFallback>WX</AvatarFallback></Avatar>)}</AvatarGroup><span className="text-foreground-muted text-xs">{t("landing.health.routes")}</span></div>
+      <div className="flex items-center gap-3"><AvatarGroup>{["02", "04", "09"].map((avatar) => <Avatar size="xs" key={avatar}><AvatarImage src={`/assets/wayx/avatars/${avatar}.jpg`} alt="" /><AvatarFallback>WX</AvatarFallback></Avatar>)}</AvatarGroup><span className="text-foreground-muted text-xs">{t("landing.health.routes")}</span></div>
     </ShowcaseCard>
   );
 }
@@ -610,50 +580,18 @@ function FeatureSection() {
   );
 }
 
-function ComponentPreview() {
-  const { t } = useLocale();
-  return (
-    <a className="outline-ring block w-full max-w-183.75 rounded-2xl" href={`${APPICA_ORIGIN}/ui/components`} aria-label={t("landing.library.aria")}>
-      <img className="h-auto w-full rounded-2xl dark:hidden" src="/assets/appica/landing/component-preview-light.jpg" alt={t("landing.library.aria")} />
-      <img className="hidden h-auto w-full rounded-2xl dark:block" src="/assets/appica/landing/component-preview-dark.jpg" alt={t("landing.library.aria")} />
-    </a>
-  );
-}
-
-function ComponentLibrarySection() {
-  const { t } = useLocale();
-  return (
-    <section className="appica-landing-container py-20 sm:py-24 md:py-28 lg:py-32 xl:py-36 min-[85rem]:py-40">
-      <div className="grid gap-6 md:grid-cols-12 md:grid-rows-[1fr_auto_auto_1fr] md:gap-x-12 md:gap-y-0">
-        <h2 className="text-foreground-intense text-3xl font-semibold md:col-span-5 md:row-start-2 md:text-4xl lg:text-5xl">{t("landing.library.heading")}</h2>
-        <div className="flex items-start justify-end md:col-span-7 md:row-span-4 md:row-start-1"><ComponentPreview /></div>
-        <div className="md:col-span-5 md:col-start-1 md:row-start-3">
-          <Accordion className="md:mt-10" defaultValue={["actions"]} variant="flush" icon="plus" iconVariant="icon-box">
-          {componentGroups.map((group) => (
-            <AccordionItem key={group.value} value={group.value} variant="flush">
-              <AccordionTrigger><span>{t(group.label)} <sup className="text-foreground-muted ms-1 text-xs">{group.count}</sup></span></AccordionTrigger>
-              <AccordionContent><div className="flex flex-wrap gap-1.5 pt-1">{group.items.map((item) => <Badge variant="soft" size="lg" render={<a href={`${APPICA_ORIGIN}/ui/components/react/${item.toLowerCase().replaceAll(" & ", "-").replaceAll(" ", "-")}`} />} key={item}>{item}</Badge>)}</div></AccordionContent>
-            </AccordionItem>
-          ))}
-          </Accordion>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function FooterMedia() {
   return (
     <div className="@container relative mx-auto w-full max-w-173">
       <GradientGlow className="rounded-2xl" blur="3xl" style={{ "--gradient-glow-opacity": 0.2 }}>
         <div className="grid grid-cols-2 items-center gap-7">
           <div className="flex flex-col gap-7">
-            <FooterMediaCard src="/assets/appica/landing/footer-1.webp" beamDelay={0} fadeFrom="top" />
-            <FooterMediaCard src="/assets/appica/landing/footer-2.webp" beamDelay={-5} fadeFrom="bottom" />
+            <FooterMediaCard src="/assets/wayx/landing/footer-1.png" beamDelay={0} fadeFrom="top" />
+            <FooterMediaCard src="/assets/wayx/landing/footer-2.png" beamDelay={-5} fadeFrom="bottom" />
           </div>
           <div className="flex flex-col gap-7">
-            <FooterMediaCard src="/assets/appica/landing/footer-3.webp" beamDelay={-1} fadeFrom="top" />
-            <FooterMediaCard src="/assets/appica/landing/footer-4.webp" beamDelay={-0.35} fadeFrom="bottom" />
+            <FooterMediaCard src="/assets/wayx/landing/footer-3.png" beamDelay={-1} fadeFrom="top" />
+            <FooterMediaCard src="/assets/wayx/landing/footer-4.png" beamDelay={-0.35} fadeFrom="bottom" />
           </div>
         </div>
       </GradientGlow>
@@ -720,7 +658,7 @@ export function AppicaLandingPage() {
       <LandingHeader theme={theme} onThemeChange={setTheme} />
       <main>
         <HeroSection />
-        <div className="relative z-1"><FeatureSection /><ComponentLibrarySection /></div>
+        <div className="relative z-1"><FeatureSection /></div>
       </main>
       <LandingFooter />
     </div>

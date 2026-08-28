@@ -32,6 +32,8 @@ html[data-console-theme] {
   --console-selection-hover-surface: color-mix(in oklab, var(--secondary-muted) 18%, var(--background));
   --console-selection-ring: color-mix(in oklab, var(--secondary-emphasis) 48%, transparent);
   --console-overlay: color-mix(in oklab, var(--background-inverse) 54%, transparent);
+  --console-radius-compact: var(--radius-2xs);
+  --radius-full: var(--console-radius-compact);
   --focus-ring: 0 0 0 var(--border-width) var(--ring-primary);
   --pattern-color: var(--border-intense);
 }
@@ -1787,6 +1789,7 @@ html[data-console-theme] .console-endpoint-item > a > span {
 html[data-console-theme] .console-keys-panel > [data-slot="card-content"] {
   display: flex;
   flex-direction: column;
+  border: 0;
 }
 
 html[data-console-theme] .console-keys-panel .console-table-page-toolbar {
@@ -1816,6 +1819,8 @@ html[data-console-theme] .console-keys-panel .console-pagination {
 html[data-console-theme] .console-keys-page .console-table {
   min-width: 94rem;
   table-layout: fixed;
+  padding: 0;
+  border: 0;
 }
 
 html[data-console-theme] .console-keys-page .console-table tbody tr {
@@ -4259,6 +4264,10 @@ html[data-console-theme] .console-usage-toolbar {
   max-width: 100%;
   flex-wrap: wrap;
   justify-content: flex-start;
+  padding: 1rem;
+  border: var(--border-width) solid var(--border-muted);
+  border-radius: var(--radius-xl);
+  background: var(--background);
 }
 
 html[data-console-theme] .console-usage-page {
@@ -4513,6 +4522,10 @@ html[data-console-theme] .console-purchase-step-title > span {
   background: var(--background-muted);
   font-size: var(--text-xs);
   font-style: normal;
+}
+
+html[data-console-theme] .console-purchase-progress i {
+  border-radius: var(--radius-sm);
 }
 
 html[data-console-theme] .console-purchase-step {
@@ -6449,7 +6462,7 @@ html[data-console-theme] .console-usage-stats .console-stat {
 }
 
 html[data-console-theme] .console-usage-stats {
-  grid-template-columns: minmax(0, 0.9fr) minmax(18rem, 1.3fr) repeat(2, minmax(0, 0.9fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 html[data-console-theme] .console-usage-stats .console-stat > div {
@@ -6649,6 +6662,13 @@ html[data-console-theme] .console-usage-records-panel .console-table td {
 
 html[data-console-theme] .console-usage-records-panel .console-table td {
   height: 5.5rem;
+}
+
+/* Record rows contain several tooltip-backed values. Skip painting rows outside
+   the viewport while preserving their fixed layout height during page scroll. */
+html[data-console-theme] .console-usage-records-panel .console-table tbody tr {
+  content-visibility: auto;
+  contain-intrinsic-block-size: 5.5rem;
 }
 
 html[data-console-theme] .console-usage-records-panel .console-table td:not(:has(button, a, input, select, textarea, [role="button"])) {
@@ -7615,7 +7635,8 @@ html[data-console-theme] .console-affiliate-steps {
   min-width: 0;
   grid-area: steps;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  column-gap: 2rem;
+  row-gap: 1rem;
   margin-top: 1.25rem;
   padding-top: 1.25rem;
   border-top: var(--border-width) solid var(--border-muted);
@@ -7674,8 +7695,9 @@ html[data-console-theme] .console-affiliate-steps small {
 
 html[data-console-theme] .console-affiliate-step-arrow {
   position: absolute;
-  top: 0.375rem;
-  right: -0.75rem;
+  top: 0.875rem;
+  left: calc(100% + 1rem);
+  transform: translate(-50%, -50%);
   color: var(--foreground-subtle);
 }
 
@@ -7771,6 +7793,7 @@ html[data-console-theme] .console-affiliate-invitees .console-table-wrap {
 /* Profile, subscription and batch-workspace calibration */
 
 html[data-console-theme] .console-dashboard-hero {
+  border: var(--border-width) solid var(--border-muted);
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }

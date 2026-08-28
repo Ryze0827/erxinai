@@ -281,11 +281,11 @@ function ConsoleTableRow({ row, index, rowKey, columns, onRowClick }) {
   return <AppicaTableRow key={row[rowKey] ?? index} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <AppicaTableCell key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : <TruncatedText value={row[column.key]} />}</AppicaTableCell>)}</AppicaTableRow>;
 }
 
-export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "" }) {
+export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "", hoverableRows = true }) {
   if (!rows?.length) return empty || <EmptyState />;
   return (
     <div className={`console-table-wrap ${className}`}>
-      <AppicaTable className="console-table" size="sm" borderStyle="none" hoverableRows><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} />)}</AppicaTableBody></AppicaTable>
+      <AppicaTable className="console-table" size="sm" borderStyle="none" hoverableRows={hoverableRows}><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} />)}</AppicaTableBody></AppicaTable>
     </div>
   );
 }
