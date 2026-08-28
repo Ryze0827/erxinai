@@ -211,7 +211,7 @@ export function DashboardPage() {
   const [range] = useState({ start_date: dateInput(-29), end_date: dateInput() });
   const [data, setData] = useState({ stats: null, models: [], trend: [] });
   const [activity, setActivity] = useState({ loading: true, error: "", items: [] });
-  const [tokenView, setTokenView] = useState("heatmap");
+  const [tokenView, setTokenView] = useState("bar");
   const [modelPreferences, setModelPreferences] = useState({ loading: true, error: "", items: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -323,11 +323,11 @@ export function DashboardPage() {
     <div className="console-dashboard-hero"><div className="console-dashboard-greeting"><h1>{greeting}, {displayName}</h1><p>{greetingDate}</p></div><div className="console-dashboard-quick-actions"><Link className="is-key" to="/keys?create=1"><Icon name="key" size={21} /><span>{t("dashboard.createKey")}</span></Link>{!simpleMode && <Link className="is-usage" to="/usage"><Icon name="chart" size={21} /><span>{t("dashboard.inspectUsage")}</span></Link>}{!simpleMode && settings?.payment_enabled !== false && <Link className="is-credit" to="/purchase"><Icon name="plus" size={21} /><span>{t("dashboard.addCredit")}</span></Link>}{!simpleMode && <Link className="is-image" to={IMAGE_STUDIO_PATH}><Icon name="image" size={21} /><span>{t("dashboard.generateImage")}</span></Link>}{!simpleMode && <Link className="is-redeem" to="/redeem"><Icon name="gift" size={21} /><span>{t("redeem.title")}</span></Link>}</div></div>
     <section className="console-dashboard-metrics console-panel">
       <DashboardMetric icon="coins" label={locale === "zh" ? "今日 Token" : "Today's tokens"} value={formatTokenMillions(stats.today_tokens)} tone="token"><MetricDelta current={stats.today_tokens} previous={yesterdayTokens} previousLabel={locale === "zh" ? "昨日 · " : "Yesterday · "} formatPrevious={formatTokenMillions} /></DashboardMetric>
+      <DashboardMetric icon="send" label={locale === "zh" ? "今日请求" : "Today's requests"} value={formatNumber(stats.today_requests)} tone="requests"><MetricDelta current={stats.today_requests} previous={yesterdayRequests} previousLabel={locale === "zh" ? "昨日 · " : "Yesterday · "} formatPrevious={(value) => formatNumber(value)} /></DashboardMetric>
+      <DashboardMetric icon="wallet" label={locale === "zh" ? "今日实际费用" : "Today's actual spend"} value={formatNumber(todayActual, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 4, maximumFractionDigits: 4 })} tone="actual"><MetricDelta current={todayActual} previous={yesterdayActual} previousLabel={locale === "zh" ? "昨日 · " : "Yesterday · "} formatPrevious={formatCurrency} /></DashboardMetric>
       <DashboardMetric icon="gauge" label={locale === "zh" ? "实时吞吐" : "Real-time throughput"} value={formatNumber(stats.rpm, { maximumFractionDigits: 0 })} unit="RPM" tone="throughput" />
       <DashboardMetric icon="hourglass" label={t("dashboard.latency")} value={formatDuration(stats.average_duration_ms)} tone="latency" />
       <DashboardMetric icon="pulse" label="TPM" value={formatTokenMillionsFixed(stats.tpm)} tone="tpm" />
-      <DashboardMetric icon="send" label={locale === "zh" ? "今日请求" : "Today's requests"} value={formatNumber(stats.today_requests)} tone="requests"><MetricDelta current={stats.today_requests} previous={yesterdayRequests} previousLabel={locale === "zh" ? "昨日 · " : "Yesterday · "} formatPrevious={(value) => formatNumber(value)} /></DashboardMetric>
-      <DashboardMetric icon="wallet" label={locale === "zh" ? "今日实际费用" : "Today's actual spend"} value={formatNumber(todayActual, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 4, maximumFractionDigits: 4 })} tone="actual"><MetricDelta current={todayActual} previous={yesterdayActual} previousLabel={locale === "zh" ? "昨日 · " : "Yesterday · "} formatPrevious={formatCurrency} /></DashboardMetric>
       <DashboardMetric icon="clock" label={t("dashboard.balanceRunway")} value={runwayValue} unit={runwayUnit} tone="runway"><div className="console-dashboard-saved"><small>{t("dashboard.balanceRunwayBasis")}</small></div></DashboardMetric>
     </section>
     <div className="console-dashboard-chart-grid">

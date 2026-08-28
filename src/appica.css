@@ -65,6 +65,46 @@ body {
   color: var(--foreground);
 }
 
+/* The library's muted border matches the muted surface in both themes, which
+   makes nested cards and controls disappear. Promote every outline by one
+   visual tier while keeping muted, default, and strong borders distinct. */
+html[data-console-theme="light"] {
+  --border-muted: color-mix(in oklab, var(--foreground-intense) 10%, var(--background));
+  --border: color-mix(in oklab, var(--foreground-intense) 15%, var(--background));
+  --border-strong: color-mix(in oklab, var(--foreground-intense) 23%, var(--background));
+  --border-overlay: color-mix(in oklab, var(--foreground-intense) 17%, var(--background));
+  --focus-ring-input: var(--border-strong);
+}
+
+html[data-console-theme="dark"] {
+  --border-muted: color-mix(in oklab, var(--foreground-intense) 18%, var(--background));
+  --border: color-mix(in oklab, var(--foreground-intense) 26%, var(--background));
+  --border-strong: color-mix(in oklab, var(--foreground-intense) 38%, var(--background));
+  --border-overlay: color-mix(in oklab, var(--foreground-intense) 28%, var(--background));
+  --focus-ring-input: var(--border-strong);
+}
+
+/* Pill tabs use a bright indicator by default. Keep selected segments within
+   the dark surface hierarchy so chart, filter, and view switches stay calm. */
+.dark [data-slot="tabs-list"].bg-background-muted > [data-slot="tabs-indicator"] {
+  border: var(--border-width) solid var(--border-strong);
+  background: var(--background-strong);
+  box-shadow: none;
+}
+
+.dark [data-slot="tabs-list"].bg-background-muted > [data-slot="tabs-trigger"][data-active] {
+  color: var(--foreground-intense);
+}
+
+/* Keep dark-mode primary actions prominent without turning them into white
+   blocks. The local aliases also update hover gradients and focus rings. */
+html[data-console-theme="dark"] :where(button, a, [role="button"]).bg-primary {
+  --primary: var(--secondary-emphasis);
+  --primary-muted: var(--secondary-intense);
+  --primary-foreground: var(--foreground-intense);
+  --focus-ring-primary: var(--focus-ring-secondary);
+}
+
 .appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]) {
   color: var(--foreground);
   caret-color: var(--foreground);

@@ -60,16 +60,13 @@ import {
   ArrowBarToUp,
   ArrowUpRight,
   BrandFigma,
-  BrandGithub,
   BrandTypescript,
-  BrandX,
   CircleCheckFilled,
   CodeAi,
   Components,
   Copy,
   CreditCard,
   Cpu,
-  ExternalLink,
   FileAi,
   FileDescription,
   Heart,
@@ -205,10 +202,6 @@ const searchResults = [
   ["landing.searchResult.rtl", "/ui/docs/react/rtl"],
 ];
 
-function SourceLink({ href, children, className = "" }) {
-  return <a className={`outline-ring rounded-xs ${className}`} href={`${APPICA_ORIGIN}${href}`}>{children}</a>;
-}
-
 function SearchDialog({ open, onOpenChange }) {
   const { t } = useLocale();
   return (
@@ -234,12 +227,14 @@ function SearchDialog({ open, onOpenChange }) {
 }
 
 function MobileNavigation({ open, onOpenChange }) {
+  const { authenticated } = useConsole();
   const { t } = useLocale();
   const items = [
-    ["landing.nav.docs", "/ui/docs"],
-    ["landing.nav.components", "/ui/components"],
-    ["landing.nav.icons", "/ui/icons"],
-    ["landing.nav.flags", "/ui/country-flags"],
+    ["landing.nav.features", "#capabilities"],
+    ["landing.nav.models", "#supported-models"],
+    ["landing.nav.integration", authenticated ? "/keys" : "/login"],
+    ["landing.nav.pricing", authenticated ? "/purchase" : "/login"],
+    ["landing.nav.status", authenticated ? "/monitor" : "/login"],
   ];
   return (
     <Drawer side="left" open={open} onOpenChange={onOpenChange}>
@@ -247,13 +242,10 @@ function MobileNavigation({ open, onOpenChange }) {
         <DrawerHeader><DrawerTitle>{t("landing.drawerTitle")}</DrawerTitle></DrawerHeader>
         <DrawerBody className="flex flex-col gap-1 px-4 pb-6">
           {items.map(([labelKey, href]) => (
-            <SourceLink key={href} href={href} className="text-foreground hover:bg-background-muted flex px-3 py-3 text-base">
-              {t(labelKey)}
-            </SourceLink>
+            href.startsWith("#")
+              ? <a className="text-foreground hover:bg-background-muted outline-ring flex rounded-xs px-3 py-3 text-base" href={href} key={labelKey} onClick={() => onOpenChange(false)}>{t(labelKey)}</a>
+              : <Link className="text-foreground hover:bg-background-muted outline-ring flex rounded-xs px-3 py-3 text-base" to={href} key={labelKey} onClick={() => onOpenChange(false)}>{t(labelKey)}</Link>
           ))}
-          <a className="text-foreground hover:bg-background-muted outline-ring flex items-center gap-2 rounded-md px-3 py-3 text-base" href="https://www.figma.com/community/file/1657080448204231925">
-            {t("landing.nav.figma")} <ExternalLink className="size-4" />
-          </a>
         </DrawerBody>
       </DrawerContent>
     </Drawer>
@@ -267,6 +259,13 @@ function LandingHeader({ theme, onThemeChange }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const nextLocale = locale === "zh" ? "en" : "zh";
   const authLabel = authenticated ? t("nav.dashboard") : t("auth.login.submit");
+  const navigationItems = [
+    ["landing.nav.features", "#capabilities"],
+    ["landing.nav.models", "#supported-models"],
+    ["landing.nav.integration", authenticated ? "/keys" : "/login"],
+    ["landing.nav.pricing", authenticated ? "/purchase" : "/login"],
+    ["landing.nav.status", authenticated ? "/monitor" : "/login"],
+  ];
   const themeLabel = theme === "dark"
     ? (locale === "zh" ? "切换至浅色模式" : "Switch to light mode")
     : (locale === "zh" ? "切换至深色模式" : "Switch to dark mode");
@@ -279,11 +278,7 @@ function LandingHeader({ theme, onThemeChange }) {
         </div>
         <Navigation className="hidden lg:block" variant="line" aria-label={t("landing.nav.primary")}>
           <NavigationList>
-            <NavigationItem><NavigationLink render={<a href={`${APPICA_ORIGIN}/ui/docs`} />}>{t("landing.nav.docs")}</NavigationLink></NavigationItem>
-            <NavigationItem><NavigationLink render={<a href={`${APPICA_ORIGIN}/ui/components`} />}>{t("landing.nav.components")}</NavigationLink></NavigationItem>
-            <NavigationItem><NavigationLink render={<a href={`${APPICA_ORIGIN}/ui/icons`} />}>{t("landing.nav.icons")}</NavigationLink></NavigationItem>
-            <NavigationItem><NavigationLink render={<a href={`${APPICA_ORIGIN}/ui/country-flags`} />}>{t("landing.nav.flags")}</NavigationLink></NavigationItem>
-            <NavigationItem><NavigationLink render={<a href="https://www.figma.com/community/file/1657080448204231925" />}>{t("landing.nav.figma")} <ArrowUpRight /></NavigationLink></NavigationItem>
+            {navigationItems.map(([labelKey, href]) => <NavigationItem key={labelKey}>{href.startsWith("#") ? <NavigationLink render={<a href={href} />}>{t(labelKey)}</NavigationLink> : <NavigationLink render={<Link to={href} />}>{t(labelKey)}</NavigationLink>}</NavigationItem>)}
           </NavigationList>
         </Navigation>
         <div className="flex items-center justify-self-end gap-1.5 sm:gap-2">
@@ -576,11 +571,10 @@ function HeroSection() {
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link className={`${buttonVariants({ variant: "primary", size: "lg" })} w-full sm:w-auto`} to={authenticated ? "/admin/dashboard" : "/login"}>{authenticated ? t("landing.hero.console") : t("landing.hero.start")}</Link>
           <GradientGlow className="rounded-lg" revealOn="hover" showOnTouch border>
-            <Link className={`${buttonVariants({ variant: "outline", size: "lg" })} w-full sm:w-auto`} to="/login">{t("landing.hero.integration")}</Link>
+            <Link className={`${buttonVariants({ variant: "outline", size: "lg" })} w-full sm:w-auto`} to={authenticated ? "/keys" : "/login"}>{t("landing.hero.integration")}</Link>
           </GradientGlow>
         </div>
-        <div className="text-foreground-muted mt-8 flex flex-col items-center gap-3 text-sm">
-          <span>{t("landing.hero.meta")}</span>
+        <div className="text-foreground-muted mt-8 flex scroll-mt-24 flex-col items-center gap-3 text-sm" id="supported-models">
           <span>{t("landing.hero.support")}</span>
           <div className="inline-flex flex-wrap items-center justify-center" aria-label={t("landing.hero.supportAria")}>
             {modelProviders.map(({ name, src }) => (
@@ -608,7 +602,7 @@ function HeroSection() {
 function FeatureSection() {
   const { t } = useLocale();
   return (
-    <section className="appica-landing-container -mt-16">
+    <section className="appica-landing-container -mt-16 scroll-mt-24" id="capabilities">
       <h2 className="text-foreground-intense text-3xl font-semibold md:text-4xl lg:text-5xl">{t("landing.feature.heading")}</h2>
       <div className="mt-14 hidden grid-cols-3 gap-x-12 gap-y-9 md:grid">{features.map(({ title, description, icon: Icon }) => <article className="flex max-w-83 flex-col items-start" key={title}><Thumbnail className="mb-3.5" variant="icon-outline" size="lg"><Icon /></Thumbnail><h3 className="text-foreground-intense text-xl font-semibold">{t(title)}</h3><p className="text-foreground-muted mt-2.5">{t(description)}</p></article>)}</div>
       <Accordion className="mt-8 md:hidden" variant="alt">{features.map(({ title, description, icon: Icon }) => <AccordionItem key={title} value={title}><AccordionTrigger><Icon className="size-5" />{t(title)}</AccordionTrigger><AccordionContent>{t(description)}</AccordionContent></AccordionItem>)}</Accordion>
@@ -709,7 +703,6 @@ function LandingFooter() {
               <div className="flex items-start gap-2.5"><Input className="flex-1" inputSize="lg" value={email} onChange={(event) => { setEmail(event.target.value); setSubscribed(false); }} placeholder={t("landing.footer.emailPlaceholder")} aria-label={t("landing.footer.emailPlaceholder")} type="email" /><Button type="submit" size="icon-lg" aria-label={t("landing.footer.subscribe")}><ArrowUpRight /></Button></div>
               <div className="mt-3 text-sm"><p className="text-foreground-subtle" role="status">{subscribed ? t("landing.footer.thanks") : t("landing.footer.noNoise")}</p></div>
             </form>
-            <nav className="mt-8 flex items-center gap-2" aria-label={t("landing.footer.social")}><a className={buttonVariants({ variant: "soft", size: "icon-md" })} href="https://x.com/Appica_dev" aria-label="X"><BrandX /></a><a className={buttonVariants({ variant: "soft", size: "icon-md" })} href="https://github.com/appica-dev/appica-ui" aria-label="GitHub"><BrandGithub /></a></nav>
           </div>
           <div className="max-md:order-first md:col-span-7"><FooterMedia /></div>
         </div>
