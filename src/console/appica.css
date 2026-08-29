@@ -2653,7 +2653,7 @@ html[data-console-theme] .console-monitor-overview-item small {
 html[data-console-theme] .console-monitor-master-detail {
   height: 40rem;
   min-height: 40rem;
-  grid-template-columns: minmax(22rem, 0.34fr) minmax(0, 1fr);
+  grid-template-columns: minmax(28rem, 0.44fr) minmax(0, 1fr);
   align-items: stretch;
 }
 
@@ -4689,6 +4689,17 @@ html[data-console-theme] .console-payment-mark svg {
   color: var(--foreground-intense);
   fill: none;
   stroke: currentColor;
+}
+
+html[data-console-theme] .console-payment-mark.is-alipay {
+  --console-payment-brand: oklch(0.599 0.219 259.04);
+  border: var(--border-width) solid color-mix(in oklab, var(--console-payment-brand) 24%, var(--border-muted));
+  color: var(--console-payment-brand);
+  background: color-mix(in oklab, var(--console-payment-brand) 14%, var(--background));
+}
+
+html[data-console-theme] .console-payment-mark.is-alipay svg {
+  color: inherit;
 }
 
 html[data-console-theme] .console-purchase-review {
