@@ -71,7 +71,7 @@ function TrendLoading({ showLegend = true }) {
 function TokenColumnChart({ rows, ticks, title, locale }) {
   const values = rows.map((row) => row._total_tokens);
   const labels = rows.map((row) => chartDateLabel(row.date, locale));
-  return <div className="console-token-column-plot"><svg className="console-token-column-grid" viewBox="0 0 680 220" preserveAspectRatio="none" aria-hidden="true">{ticks.map((tick, index) => <line key={tick} x1="0" y1={6 + index * 46} x2="680" y2={6 + index * 46} />)}</svg><Sparkline data={values} labels={labels} color="var(--console-chart-1)" className="console-token-column-chart"><SparklineChart variant="column" height={220} tooltip className="console-token-column-chart-plot" aria-label={title} renderTooltip={(point) => <div className="console-token-column-tooltip"><strong>{point.label}</strong><span>{formatTokenMillions(point.value)} {locale === "zh" ? "Token" : "tokens"}</span></div>} /></Sparkline></div>;
+  return <div className="console-token-column-plot"><svg className="console-token-column-grid" viewBox="0 0 680 220" preserveAspectRatio="none" aria-hidden="true">{ticks.map((tick, index) => <line key={tick} x1="0" y1={6 + index * 46} x2="680" y2={6 + index * 46} />)}</svg><Sparkline data={values} labels={labels} color="var(--console-chart-1)" className="console-token-column-chart"><SparklineChart variant="column" height={220} indicator={false} tooltip className="console-token-column-chart-plot" aria-label={title} renderTooltip={(point) => <div className="console-token-column-tooltip"><strong>{point.label}</strong><span>{formatTokenMillions(point.value)} {locale === "zh" ? "Token" : "tokens"}</span></div>} /></Sparkline></div>;
 }
 
 function linePoints(data, key, width, height, max) {

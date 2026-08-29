@@ -100,6 +100,7 @@ import { BrandLogo } from "../BrandLogo";
 import { TeamMembersCard } from "../TeamMembersCard";
 import { DEFAULT_SITE_NAME } from "../branding";
 import { useConsole } from "../console/ConsoleContext";
+import { PlatformMark } from "../console/GroupBadge";
 import { useLocale } from "../console/i18n";
 import "./AppicaLandingPage.css";
 
@@ -417,8 +418,8 @@ function RevenueCard() {
       <div className="mt-1 flex items-baseline gap-2"><h3 className="text-foreground-intense text-3xl font-semibold tabular-nums">48.2M</h3><p className="text-foreground-muted text-xs">{t("landing.usage.vsLast")}</p></div>
       <div className="mt-4 flex flex-col gap-2.5">
         <span className="text-foreground-muted text-xs">{t("landing.usage.topModels")}</span>
-        {[["us", t("landing.usage.model.1"), "21.7M", "45%"], ["de", t("landing.usage.model.2"), "9.6M", "20%"], ["jp", t("landing.usage.model.3"), "7.2M", "15%"]].map(([flag, model, amount, share]) => (
-          <div className="flex items-center gap-2" key={model}><img className="size-4" src={`/assets/wayx/flags/${flag}.svg`} alt="" /><span className="text-foreground text-xs">{model}</span><span className="text-foreground-intense ms-auto text-xs font-medium tabular-nums">{amount}</span><span className="text-foreground-muted w-8 text-end text-xs tabular-nums">{share}</span></div>
+        {[["anthropic", t("landing.usage.model.1"), "21.7M", "45%"], ["openai", t("landing.usage.model.2"), "9.6M", "20%"], ["gemini", t("landing.usage.model.3"), "7.2M", "15%"]].map(([platform, model, amount, share]) => (
+          <div className="flex items-center gap-2" key={model}><span className="console-platform-surface grid size-4 shrink-0 place-items-center rounded-sm *:size-3"><PlatformMark platform={platform} /></span><span className="text-foreground text-xs">{model}</span><span className="text-foreground-intense ms-auto text-xs font-medium tabular-nums">{amount}</span><span className="text-foreground-muted w-8 text-end text-xs tabular-nums">{share}</span></div>
         ))}
       </div>
       <Sparkline className="mt-auto pt-3" data={[32, 24, 43, 38, 24, 50, 73, 62, 51, 55, 70, 86]}>
