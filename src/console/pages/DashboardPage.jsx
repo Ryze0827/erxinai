@@ -25,6 +25,14 @@ const MODEL_PREFERENCE_TICKS = [0, 4, 8, 12, 16, 20, 24];
 const IMAGE_STUDIO_PATH = nativeCustomPageRoute(NATIVE_CUSTOM_PAGE.imageStudio);
 const LOAD_FAILED_ERROR = "common.loadFailed";
 
+function greetingKey(hour) {
+  if (hour < 6) return "dashboard.greeting.lateNight";
+  if (hour < 12) return "dashboard.greeting.morning";
+  if (hour < 14) return "dashboard.greeting.noon";
+  if (hour < 18) return "dashboard.greeting.afternoon";
+  return "dashboard.greeting.evening";
+}
+
 function settledValue(result, fallback) {
   return result.status === "fulfilled" ? result.value : fallback;
 }
@@ -303,7 +311,7 @@ export function DashboardPage() {
   const stats = data.stats || {};
   const displayName = user?.username || user?.email?.split("@")[0] || (locale === "zh" ? "用户" : "there");
   const hour = new Date().getHours();
-  const greeting = locale === "zh" ? (hour < 12 ? "早上好" : hour < 18 ? "下午好" : "晚上好") : (hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
+  const greeting = t(greetingKey(hour));
   const todayActual = Number(stats.today_actual_cost) || 0;
   const averageDailyCost = recentActualCost(data.trend, -6, 7) / 7;
   const balance = user?.balance == null ? null : Number(user.balance);

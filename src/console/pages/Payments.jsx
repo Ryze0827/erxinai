@@ -58,6 +58,7 @@ function paymentDescription(type, locale = "en") {
 function PaymentMark({ type, method }) {
   const normalized = type === "alipay_direct" ? "alipay" : type === "wxpay_direct" ? "wxpay" : type;
   const customIcon = safeImageUrl(method?.icon_url || method?.icon);
+  if (normalized === "alipay") return <span className="console-payment-mark is-alipay"><BrandAlipay size={22} aria-hidden="true" /></span>;
   if (customIcon) return <span className="console-payment-mark"><img src={customIcon} alt="" /></span>;
   const marks = { alipay: BrandAlipay, wxpay: BrandWechat, stripe: BrandStripe };
   const Mark = marks[normalized] || CreditCard;
