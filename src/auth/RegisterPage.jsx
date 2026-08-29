@@ -1,10 +1,25 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { Badge } from "@appica/ui-react/badge";
+import { Button } from "@appica/ui-react/button";
+import { Collapsible } from "@appica/ui-react/collapsible";
+import { CollapsibleContent } from "@appica/ui-react/collapsible";
+import { CollapsibleTrigger } from "@appica/ui-react/collapsible";
+import { Progress } from "@appica/ui-react/progress";
 import { authApi } from "../api/auth";
 import { persistAuthResponse } from "../api/session";
+import { useLocale } from "../console/i18n";
 import { AgreementPrompt, useAgreement } from "./AgreementPrompt";
-import { AuthCard, AuthLayout } from "./AuthLayout";
-import { AuthField, AuthNotice, PasswordInput, SubmitButton, TextInput } from "./AuthControls";
+import {
+  AppicaAuthCard,
+  AppicaAuthField,
+  AppicaAuthLayout,
+  AppicaAuthNotice,
+  AppicaEmailInput,
+  AppicaPasswordInput,
+  AppicaSubmitButton,
+  AppicaTextInput,
+} from "./AppicaAuth";
 import { getAffiliateCode, getErrorMessage, isEmail } from "./authUtils";
 import { OAuthButtons } from "./OAuthButtons";
 import { TurnstileWidget } from "./TurnstileWidget";
@@ -24,6 +39,7 @@ function isAllowedEmail(email, suffixes = []) {
 export function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { locale, t } = useLocale();
   const { settings, loading: settingsLoading, error: settingsError, retry } = usePublicSettings();
   const agreement = useAgreement(settings);
   const affiliateCode = useMemo(() => getAffiliateCode(searchParams), [searchParams]);
@@ -37,7 +53,13 @@ export function RegisterPage() {
   const [turnstileReset, setTurnstileReset] = useState(0);
   const handleTurnstileToken = useCallback((token) => setTurnstileToken(token), []);
 
+  useEffect(() => {
+    setErrors({});
+    setError("");
+  }, [locale]);
+
   const strength = [form.password.length >= 6, /[a-z]/i.test(form.password), /\d/.test(form.password), /[^a-z0-9]/i.test(form.password)].filter(Boolean).length;
+  const strengthColor = strength < 2 ? "var(--error-emphasis)" : strength < 4 ? "var(--warning-emphasis)" : "var(--success-emphasis)";
 
   const updateForm = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -48,10 +70,10 @@ export function RegisterPage() {
 
   const validate = () => {
     const nextErrors = {};
-    if (!isEmail(form.email)) nextErrors.email = "Enter a valid email address.";
-    if (form.password.length < 6) nextErrors.password = "Password must be at least 6 characters.";
-    if (!isAllowedEmail(form.email, settings?.registration_email_suffix_whitelist)) nextErrors.email = "This email domain is not allowed.";
-    if (settings?.invitation_code_enabled && !form.invitation.trim()) nextErrors.invitation = "Invitation code is required.";
+    if (!isEmail(form.email)) nextErrors.email = t("auth.error.emailInvalid");
+    if (form.password.length < 6) nextErrors.password = t("auth.error.passwordMin");
+    if (!isAllowedEmail(form.email, settings?.registration_email_suffix_whitelist)) nextErrors.email = t("auth.error.emailDomainNotAllowed");
+    if (settings?.invitation_code_enabled && !form.invitation.trim()) nextErrors.invitation = t("auth.error.invitationRequired");
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -93,7 +115,7 @@ export function RegisterPage() {
     if (!validate() || !agreement.accepted) return;
     const invitationValid = !settings?.invitation_code_enabled || await validateCode("invitation");
     const promoValid = !form.promo.trim() || await validateCode("promo");
-    if (!invitationValid || !promoValid) return setError("Check the invitation or promo code and try again.");
+    if (!invitationValid || !promoValid) return setError(t("auth.register.codeCheckFailed"));
     setLoading(true);
     setError("");
     try {
@@ -105,7 +127,7 @@ export function RegisterPage() {
         navigate("/keys", { replace: true });
       }
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "Registration failed."));
+      setError(getErrorMessage(requestError, t("auth.register.failed"), t));
       setTurnstileToken("");
       setTurnstileReset((value) => value + 1);
     } finally {
@@ -116,37 +138,37 @@ export function RegisterPage() {
   const registrationClosed = settings && (settings.registration_enabled === false || settings.backend_mode_enabled);
 
   return (
-    <AuthLayout surface="register">
-      <AuthCard interactive={false} kicker="Start building" title="Create your WayX account" description="One account for every key, model, and project." footer={<><span>Already have an account?</span> <Link to="/login">Log in</Link></>}>
-        <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          <AuthNotice>{settingsLoading ? "Loading registration options…" : ""}</AuthNotice>
-          <AuthNotice tone={settingsError || error || registrationClosed ? "error" : "info"}>{settingsError || error || (registrationClosed ? "Registration is currently closed." : "")}</AuthNotice>
-          {settingsError && <button className="auth-link-button" type="button" onClick={retry}>Retry loading settings</button>}
-          <AuthField label="Email address" error={errors.email}>
-            <TextInput type="email" value={form.email} onChange={(event) => updateForm("email", event.target.value)} error={errors.email} placeholder="you@company.com" autoComplete="email" autoFocus />
-          </AuthField>
-          <AuthField label="Password" error={errors.password}>
-            <PasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder="Create a secure password" autoComplete="new-password" />
-            <div className="auth-strength" aria-label={`Password strength ${strength} of 4`}>
-              {[1, 2, 3, 4].map((step) => <i key={step} data-active={strength >= step} />)}
-              <span>{strength < 2 ? "Keep going" : strength < 4 ? "Good password" : "Strong password"}</span>
+    <AppicaAuthLayout animatedLogo>
+      <AppicaAuthCard kicker={t("auth.register.kicker")} title={t("auth.register.title")} description={t("auth.register.description")} footer={<><span>{t("auth.register.existingUser")}</span> <Link to="/login">{t("auth.register.login")}</Link></>}>
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
+          <AppicaAuthNotice>{settingsLoading ? t("auth.register.loadingOptions") : ""}</AppicaAuthNotice>
+          <AppicaAuthNotice tone={settingsError || error || registrationClosed ? "error" : "info"}>{settingsError || error || (registrationClosed ? t("auth.register.closed") : "")}</AppicaAuthNotice>
+          {settingsError && <Button className="w-fit" variant="ghost" size="sm" type="button" onClick={retry}>{t("auth.common.retrySettings")}</Button>}
+          <AppicaAuthField label={t("auth.common.email")} error={errors.email}>
+            <AppicaEmailInput type="email" value={form.email} onValueChange={(value) => updateForm("email", value)} error={errors.email} placeholder={t("auth.common.emailPlaceholder")} autoComplete="email" autoFocus />
+          </AppicaAuthField>
+          <AppicaAuthField label={t("auth.common.password")} error={errors.password}>
+            <AppicaPasswordInput value={form.password} onChange={(event) => updateForm("password", event.target.value)} error={errors.password} placeholder={t("auth.register.passwordPlaceholder")} autoComplete="new-password" />
+            <div className="flex items-center gap-3" aria-label={t("auth.register.passwordStrength", { strength })}>
+              <Progress className="flex-1" value={strength * 25} max={100} indicatorColor={strengthColor} />
+              <span className="text-foreground-muted text-xs">{t(strength < 2 ? "auth.register.strengthLow" : strength < 4 ? "auth.register.strengthGood" : "auth.register.strengthStrong")}</span>
             </div>
-          </AuthField>
+          </AppicaAuthField>
           {(settings?.invitation_code_enabled || settings?.promo_code_enabled) && (
-            <>
-              <button type="button" className="auth-extras-toggle" aria-expanded={showExtras} onClick={() => setShowExtras((value) => !value)}><span>Have an invite or promo code?</span><b>{showExtras ? "Hide" : "Add"}</b></button>
-              <div className="auth-extras" data-open={showExtras} aria-hidden={!showExtras}>
-                {settings?.invitation_code_enabled && <AuthField label="Invitation code" error={errors.invitation || (status.invitation === "invalid" ? "Invalid invitation code." : "")}><TextInput value={form.invitation} onChange={(event) => updateForm("invitation", event.target.value)} onBlur={() => validateCode("invitation")} disabled={!showExtras} placeholder="Required invitation code" action={status.invitation === "valid" ? <small>Valid</small> : null} /></AuthField>}
-                {settings?.promo_code_enabled && <AuthField label="Promo code" error={status.promo === "invalid" ? "Invalid promo code." : ""}><TextInput value={form.promo} onChange={(event) => updateForm("promo", event.target.value)} onBlur={() => validateCode("promo")} disabled={!showExtras} placeholder="Optional promo code" action={status.promo === "valid" ? <small>Valid</small> : null} /></AuthField>}
-              </div>
-            </>
+            <Collapsible className="flex flex-col gap-4" open={showExtras} onOpenChange={setShowExtras}>
+              <CollapsibleTrigger className="w-full justify-between" render={<Button type="button" variant="outline" />}><span>{t("auth.register.extrasPrompt")}</span><strong>{t(showExtras ? "auth.register.hideExtras" : "auth.register.addExtras")}</strong></CollapsibleTrigger>
+              <CollapsibleContent className="flex flex-col gap-5">
+                {settings?.invitation_code_enabled && <AppicaAuthField label={t("auth.register.invitationCode")} error={errors.invitation || (status.invitation === "invalid" ? t("auth.error.invitationInvalid") : "")}><AppicaTextInput value={form.invitation} onChange={(event) => updateForm("invitation", event.target.value)} onBlur={() => validateCode("invitation")} placeholder={t("auth.register.invitationPlaceholder")} action={status.invitation === "valid" ? <Badge variant="success" size="sm">{t("auth.common.valid")}</Badge> : null} /></AppicaAuthField>}
+                {settings?.promo_code_enabled && <AppicaAuthField label={t("auth.register.promoCode")} error={status.promo === "invalid" ? t("auth.error.promoInvalid") : ""}><AppicaTextInput value={form.promo} onChange={(event) => updateForm("promo", event.target.value)} onBlur={() => validateCode("promo")} placeholder={t("auth.register.promoPlaceholder")} action={status.promo === "valid" ? <Badge variant="success" size="sm">{t("auth.common.valid")}</Badge> : null} /></AppicaAuthField>}
+              </CollapsibleContent>
+            </Collapsible>
           )}
           <TurnstileWidget enabled={settings?.turnstile_enabled} siteKey={settings?.turnstile_site_key} onToken={handleTurnstileToken} resetKey={turnstileReset} />
           <AgreementPrompt agreement={agreement} />
-          <SubmitButton loading={loading} loadingLabel={settings?.email_verify_enabled ? "Sending code…" : "Creating account…"} disabled={settingsLoading || Boolean(settingsError) || registrationClosed || !agreement.accepted || (settings?.turnstile_enabled && !turnstileToken)}>{settings?.email_verify_enabled ? "Continue" : "Create account"}</SubmitButton>
+          <AppicaSubmitButton loading={loading} loadingLabel={t(settings?.email_verify_enabled ? "auth.register.sendingCode" : "auth.register.creating")} disabled={settingsLoading || Boolean(settingsError) || registrationClosed || !agreement.accepted || (settings?.turnstile_enabled && !turnstileToken)}>{t(settings?.email_verify_enabled ? "auth.register.continue" : "auth.register.create")}</AppicaSubmitButton>
           {!settings?.backend_mode_enabled && <OAuthButtons settings={settings} searchParams={searchParams} onError={setError} />}
         </form>
-      </AuthCard>
-    </AuthLayout>
+      </AppicaAuthCard>
+    </AppicaAuthLayout>
   );
 }

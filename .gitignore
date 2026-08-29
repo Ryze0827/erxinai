@@ -1,13 +1,14 @@
 node_modules/
 .npm-cache/
 dist/
+output/
 .env.local
 .playwright-cli/
 .DS_Store
 .idea/
 
 !.omc/
-.omc/*
+**/.omc/*
 !.omc/skills/
 !.omc/skills/**
 !.omc/rules/

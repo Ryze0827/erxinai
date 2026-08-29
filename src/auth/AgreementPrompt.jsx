@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { Button } from "@appica/ui-react/button";
+import { Checkbox } from "@appica/ui-react/checkbox";
+import { Dialog } from "@appica/ui-react/dialog";
+import { DialogBody } from "@appica/ui-react/dialog";
+import { DialogContent } from "@appica/ui-react/dialog";
+import { DialogDescription } from "@appica/ui-react/dialog";
+import { DialogFooter } from "@appica/ui-react/dialog";
+import { DialogHeader } from "@appica/ui-react/dialog";
+import { DialogTitle } from "@appica/ui-react/dialog";
+import { useLocale } from "../console/i18n";
 
 const AGREEMENT_KEY = "sub2api_login_agreement_consent";
 
@@ -35,25 +45,29 @@ export function useAgreement(settings) {
 }
 
 export function AgreementPrompt({ agreement }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   if (!agreement.enabled) return null;
   return (
     <>
-      <label className="auth-checkbox auth-agreement">
-        <input type="checkbox" checked={agreement.accepted} onChange={(event) => event.target.checked && agreement.accept()} />
-        <span>I have read and accept the <button className="auth-inline-button" type="button" onClick={(event) => { event.preventDefault(); setOpen(true); }}>login agreement</button>.</span>
-      </label>
-      {open && (
-        <div className="auth-modal-backdrop" role="presentation" onMouseDown={() => setOpen(false)}>
-          <section className="auth-modal" role="dialog" aria-modal="true" aria-label="Login agreement" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="auth-modal-header"><h3>Login agreement</h3><button type="button" onClick={() => setOpen(false)}>Close</button></div>
-            <div className="auth-legal-content">
-              {agreement.documents.map((document) => <article key={document.id || document.title}><h4>{document.title}</h4><ReactMarkdown>{document.content_md || ""}</ReactMarkdown></article>)}
+      <div className="text-foreground-muted flex items-start gap-3 text-sm leading-6">
+        <Checkbox className="mt-1 shrink-0" checked={agreement.accepted} onCheckedChange={(checked) => checked && agreement.accept()} aria-label={t("auth.agreement.acceptLabel")} />
+        <span>{t("auth.agreement.prefix")}<Button className="h-auto p-0 align-baseline underline underline-offset-4" variant="ghost" size="sm" type="button" onClick={() => setOpen(true)}>{t("auth.agreement.link")}</Button>{t("auth.agreement.suffix")}</span>
+      </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl" viewportProps={{ className: "dark" }}>
+          <DialogHeader>
+            <DialogTitle>{t("auth.agreement.title")}</DialogTitle>
+            <DialogDescription>{t("auth.agreement.description")}</DialogDescription>
+          </DialogHeader>
+          <DialogBody className="max-h-[60svh] overflow-y-auto">
+            <div className="flex flex-col gap-7 **:h4:text-foreground-intense **:h4:text-lg **:h4:font-semibold **:p:text-foreground-muted **:p:leading-7">
+              {agreement.documents.map((document) => <article className="flex flex-col gap-3" key={document.id || document.title}><h4>{document.title}</h4><ReactMarkdown>{document.content_md || ""}</ReactMarkdown></article>)}
             </div>
-            <button className="auth-submit" type="button" onClick={() => { agreement.accept(); setOpen(false); }}><span>Accept and continue</span><i aria-hidden="true" /></button>
-          </section>
-        </div>
-      )}
+          </DialogBody>
+          <DialogFooter><Button className="w-full" type="button" variant="light" onClick={() => { agreement.accept(); setOpen(false); }}>{t("auth.agreement.confirm")}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -1,8 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { ToastProvider } from "@appica/ui-react/toast";
+import { useToastManager } from "@appica/ui-react/toast";
 import { authApi } from "../api/auth";
 import { clearAuthSession, AUTH_SESSION_EVENT, getAccessToken, getRefreshToken, getStoredUser, setStoredUser } from "../api/session";
 import { usePublicSettings } from "../auth/usePublicSettings";
 import { readCachedBranding, resolveBranding } from "../branding";
+import { Icon } from "./Icon";
 
 const ConsoleContext = createContext(null);
 
@@ -12,14 +15,12 @@ export function resolveFeature(settings, key, mode = "opt-in") {
   return mode === "opt-out";
 }
 
-export function ConsoleProvider({ children }) {
+function ConsoleProviderValue({ children }) {
   const { settings, loading: settingsLoading, error: settingsError, retry: retrySettings } = usePublicSettings();
-  const cachedBranding = useMemo(() => readCachedBranding(), []);
-  const branding = useMemo(() => settings ? resolveBranding(settings) : cachedBranding || (settingsError ? resolveBranding() : null), [cachedBranding, settings, settingsError]);
+  const { add: addToast, close: closeToast, toasts } = useToastManager();
+  const cachedBranding = useMemo(() => readCachedBranding() || resolveBranding(), []);
+  const branding = useMemo(() => settings ? resolveBranding(settings) : cachedBranding, [cachedBranding, settings]);
   const [user, setUser] = useState(() => getStoredUser());
-  const [toasts, setToasts] = useState([]);
-  const nextToastId = useRef(0);
-  const toastTimers = useRef(new Set());
 
   const syncSession = useCallback(() => setUser(getStoredUser()), []);
   useEffect(() => {
@@ -30,11 +31,6 @@ export function ConsoleProvider({ children }) {
       window.removeEventListener("storage", syncSession);
     };
   }, [syncSession]);
-  useEffect(() => () => {
-    toastTimers.current.forEach((timer) => window.clearTimeout(timer));
-    toastTimers.current.clear();
-  }, []);
-
   const refreshUser = useCallback(async () => {
     if (!getAccessToken()) return null;
     const nextUser = await authApi.getCurrentUser();
@@ -49,19 +45,19 @@ export function ConsoleProvider({ children }) {
   }, []);
 
   const dismissToast = useCallback((id) => {
-    setToasts((current) => current.filter((toast) => toast.id !== id));
-  }, []);
+    closeToast(String(id));
+  }, [closeToast]);
 
   const notify = useCallback((type, message, duration = 4200) => {
-    const id = ++nextToastId.current;
-    setToasts((current) => [...current, { id, type, message }]);
-    const timer = window.setTimeout(() => {
-      toastTimers.current.delete(timer);
-      dismissToast(id);
-    }, duration);
-    toastTimers.current.add(timer);
-    return id;
-  }, [dismissToast]);
+    const icon = type === "success" ? "check" : type === "info" ? "info" : "warning";
+    return addToast({
+      type,
+      title: message,
+      timeout: duration,
+      priority: type === "error" ? "high" : "low",
+      data: { icon: <Icon name={icon} size={18} /> },
+    });
+  }, [addToast]);
 
   const logout = useCallback(async () => {
     const refreshToken = getRefreshToken();
@@ -92,6 +88,10 @@ export function ConsoleProvider({ children }) {
   }), [user, settings, settingsLoading, settingsError, branding, retrySettings, refreshUser, updateUser, logout, notify, toasts, dismissToast]);
 
   return <ConsoleContext.Provider value={value}>{children}</ConsoleContext.Provider>;
+}
+
+export function ConsoleProvider({ children }) {
+  return <ToastProvider timeout={4200}><ConsoleProviderValue>{children}</ConsoleProviderValue></ToastProvider>;
 }
 
 export function useConsole() {

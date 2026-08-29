@@ -1,4 +1,4 @@
-import { apiRequest, gatewayRequest } from "./client";
+import { apiRequest } from "./client";
 
 export const usageApi = {
   list: (query = {}, signal) => apiRequest("/usage", { query, signal }),
@@ -15,5 +15,4 @@ export const usageApi = {
   }),
   errors: (query = {}, signal) => apiRequest("/usage/errors", { query, signal }),
   error: (id, signal) => apiRequest(`/usage/errors/${id}`, { signal }),
-  publicKeyUsage: (apiKey, query = {}, signal) => gatewayRequest("/v1/usage", { apiKey, query, signal }),
 };

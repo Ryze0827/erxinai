@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Checkbox as AppicaCheckbox } from "@appica/ui-react/checkbox";
 import { batchImagesApi, keysApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { useLocale } from "../i18n";
@@ -17,6 +18,7 @@ import {
   SelectInput,
   Spinner,
   StatusBadge,
+  TableSkeleton,
   TextArea,
   TextInput,
 } from "../UI";
@@ -384,11 +386,7 @@ function deleteFailureMessage(total, failed, locale) {
 }
 
 function SelectionCheckbox({ checked, indeterminate = false, label, onChange }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (ref.current) ref.current.indeterminate = indeterminate;
-  }, [indeterminate]);
-  return <input ref={ref} type="checkbox" checked={checked} aria-label={label} onChange={(event) => onChange(event.target.checked)} />;
+  return <AppicaCheckbox checked={checked} indeterminate={indeterminate} aria-label={label} onCheckedChange={onChange} />;
 }
 
 function BatchForm({ form, setForm, keys, models, modelsLoading }) {
@@ -415,21 +413,21 @@ function BatchForm({ form, setForm, keys, models, modelsLoading }) {
 function FilterPanel({ keys, filters, taskDraft, setTaskDraft, onFilter, onApply, onReset, onRefresh, loading }) {
   const { t, locale } = useLocale();
   const labels = localCopy("filters", locale);
-  return <Panel><div className="console-toolbar">
+  return <Panel className="console-batch-filters"><div className="console-toolbar">
     <Field label={t("batch.task")} className="is-wide"><TextInput value={taskDraft} onChange={(event) => setTaskDraft(event.target.value)} onKeyDown={(event) => event.key === "Enter" && onApply()} placeholder={labels.search} /></Field>
     <Field label={labels.key}><SelectInput value={filters.keyId} onChange={(event) => onFilter("keyId", event.target.value)}><option value="">{labels.allKeys}</option>{keys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</SelectInput></Field>
     <Field label={t("common.status")}><SelectInput value={filters.status} onChange={(event) => onFilter("status", event.target.value)}><option value="">{t("common.all")}</option>{["queued", "running", "indexing", "processing_results", "settling", "completed", "failed", "cancelled", "output_deleted"].map((status) => <option key={status} value={status}>{statusLabel(status, locale)}</option>)}</SelectInput></Field>
     <Field label={labels.downloaded}><SelectInput value={filters.downloaded} onChange={(event) => onFilter("downloaded", event.target.value)}><option value="">{t("common.all")}</option><option value="true">{labels.yes}</option><option value="false">{labels.no}</option></SelectInput></Field>
     <Button icon="search" onClick={onApply}>{t("common.search")}</Button>
     <Button icon="reset" onClick={onReset}>{labels.reset}</Button>
-    <IconButton icon="refresh" label={t("common.refresh")} onClick={onRefresh} disabled={loading} />
+    <Button icon="refresh" onClick={onRefresh} loading={loading}>{t("common.refresh")}</Button>
   </div></Panel>;
 }
 
 function SelectionBar({ count, downloadCount, deleteCount, busy, onDownload, onDelete, onClear }) {
   const { locale } = useLocale();
   if (!count) return null;
-  return <Panel><div className="console-toolbar">
+  return <Panel className="console-batch-selection"><div className="console-toolbar">
     <strong>{locale === "zh" ? `已选择 ${count} 个任务` : `${count} jobs selected`}</strong>
     <Button icon="download" onClick={onDownload} disabled={!downloadCount || busy}>{locale === "zh" ? `下载选中 (${downloadCount})` : `Download (${downloadCount})`}</Button>
     <Button variant="danger" icon="trash" onClick={onDelete} disabled={!deleteCount || busy}>{locale === "zh" ? `删除记录 (${deleteCount})` : `Delete (${deleteCount})`}</Button>
@@ -598,10 +596,10 @@ function NoKeysNotice({ hasKeys, state }) {
 function JobsPanel({ state, tableProps, pagingProps, onRetry }) {
   const { t } = useLocale();
   let content;
-  if (state.loading) content = <Spinner />;
-  else if (state.error) content = <ErrorState message={state.error} onRetry={onRetry} />;
+  if (state.loading && !tableProps.rows.length) content = <TableSkeleton columns={9} rows={3} />;
+  else if (state.error && !tableProps.rows.length) content = <ErrorState message={state.error} onRetry={onRetry} />;
   else content = <><JobTable {...tableProps} /><CursorPagination {...pagingProps} /></>;
-  return <Panel title={t("batch.jobs")}>{content}</Panel>;
+  return <Panel title={t("batch.jobs")} className="console-batch-jobs" aria-busy={state.loading}>{content}</Panel>;
 }
 
 function CreateBatchModal({ open, form, setForm, keys, models, modelsLoading, working, onClose, onSubmit }) {
@@ -658,7 +656,7 @@ function BatchImagesView(props) {
   const { keys, jobsState, filters, taskDraft, selectedRows, downloadableRows, deletableRows, working, rows, childrenByParent, selected, expanded, formatCurrency, formatDate, locale, page, pageSize, formOpen, form, models, modelsLoading, detail, detailKey, retryable, guideOpen, confirm, actions } = props;
   const tableProps = { rows, childrenByParent, selected, expanded, formatCurrency, formatDate, locale, onSelect: actions.toggleSelected, onSelectAll: actions.toggleAll, onExpand: actions.toggleExpanded, onInspect: actions.inspect, onCancel: actions.confirmCancel, onDownload: actions.downloadOne, onRetry: actions.retryFailed, onDelete: actions.confirmDelete, busy: Boolean(working) };
   const pagingProps = { page, pageSize, count: rows.length, hasMore: jobsState.hasMore, loading: jobsState.loading, onPage: actions.setPage, onPageSize: actions.changePageSize };
-  return <Page title={t("batch.title")} actions={<PageActions hasKeys={Boolean(keys.length)} onGuide={actions.openGuide} onCreate={actions.openCreate} />}>
+  return <Page title={t("batch.title")} className="console-batch-page" actions={<PageActions hasKeys={Boolean(keys.length)} onGuide={actions.openGuide} onCreate={actions.openCreate} />}>
     <FilterPanel keys={keys} filters={filters} taskDraft={taskDraft} setTaskDraft={actions.setTaskDraft} onFilter={actions.changeFilter} onApply={actions.applySearch} onReset={actions.resetFilters} onRefresh={actions.loadJobs} loading={jobsState.loading} />
     <NoKeysNotice hasKeys={Boolean(keys.length)} state={jobsState} />
     <SelectionBar count={selectedRows.length} downloadCount={downloadableRows.length} deleteCount={deletableRows.length} busy={Boolean(working)} onDownload={actions.downloadSelected} onDelete={actions.confirmBulkDelete} onClear={actions.clearSelected} />

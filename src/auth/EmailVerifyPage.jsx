@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { Button } from "@appica/ui-react/button";
 import { authApi } from "../api/auth";
 import { persistAuthResponse } from "../api/session";
-import { AuthCard, AuthLayout } from "./AuthLayout";
-import { AuthField, AuthNotice, SubmitButton, TextInput } from "./AuthControls";
+import { useLocale } from "../console/i18n";
+import {
+  AppicaAuthCard,
+  AppicaAuthField,
+  AppicaAuthLayout,
+  AppicaAuthNotice,
+  AppicaSubmitButton,
+  AppicaTextInput,
+} from "./AppicaAuth";
 import { getErrorMessage } from "./authUtils";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { usePublicSettings } from "./usePublicSettings";
@@ -18,6 +26,7 @@ function getRegisterData() {
 
 export function EmailVerifyPage() {
   const navigate = useNavigate();
+  const { locale, t } = useLocale();
   const data = useMemo(getRegisterData, []);
   const { settings, loading: settingsLoading, error: settingsError, retry } = usePublicSettings();
   const [code, setCode] = useState("");
@@ -30,6 +39,10 @@ export function EmailVerifyPage() {
   const handleTurnstileToken = useCallback((token) => setTurnstileToken(token), []);
 
   useEffect(() => {
+    setError("");
+  }, [locale]);
+
+  useEffect(() => {
     if (countdown <= 0) return undefined;
     const timer = window.setInterval(() => setCountdown((value) => Math.max(0, value - 1)), 1000);
     return () => window.clearInterval(timer);
@@ -37,7 +50,7 @@ export function EmailVerifyPage() {
 
   const handleVerify = async (event) => {
     event.preventDefault();
-    if (!/^\d{6}$/.test(code) || !data) return setError("Enter the six-digit verification code.");
+    if (!/^\d{6}$/.test(code) || !data) return setError(t("auth.verify.invalidCode"));
     setLoading(true);
     setError("");
     try {
@@ -46,7 +59,7 @@ export function EmailVerifyPage() {
       sessionStorage.removeItem("register_data");
       navigate("/keys", { replace: true });
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "Email verification failed."));
+      setError(getErrorMessage(requestError, t("auth.verify.failed"), t));
     } finally {
       setLoading(false);
     }
@@ -64,7 +77,7 @@ export function EmailVerifyPage() {
       setTurnstileToken("");
       setTurnstileReset((value) => value + 1);
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "We couldn't resend the code."));
+      setError(getErrorMessage(requestError, t("auth.verify.resendFailed"), t));
       setTurnstileToken("");
       setTurnstileReset((value) => value + 1);
     } finally {
@@ -73,21 +86,21 @@ export function EmailVerifyPage() {
   };
 
   return (
-    <AuthLayout>
-      <AuthCard kicker="Verify your email" title="Check your inbox" description={data ? `We sent a six-digit code to ${data.email}.` : "Your registration session is missing or expired."} footer={<Link to="/register">Back to registration</Link>}>
-        {!data ? <AuthNotice tone="error">Start registration again to request a new code.</AuthNotice> : (
-          <form className="auth-form" onSubmit={handleVerify}>
-            <AuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error}</AuthNotice>
-            {settingsError && <button className="auth-link-button" type="button" onClick={retry}>Retry loading settings</button>}
-            <AuthField label="Verification code">
-              <TextInput className="auth-code-input" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" autoFocus />
-            </AuthField>
-            <SubmitButton loading={loading} loadingLabel="Verifying…" disabled={code.length !== 6}>Verify and create account</SubmitButton>
+    <AppicaAuthLayout>
+      <AppicaAuthCard kicker={t("auth.verify.kicker")} title={t("auth.verify.title")} description={data ? t("auth.verify.description", { email: data.email }) : t("auth.verify.missingDescription")} footer={<Link to="/register">{t("auth.verify.backToRegistration")}</Link>}>
+        {!data ? <AppicaAuthNotice tone="error">{t("auth.verify.restart")}</AppicaAuthNotice> : (
+          <form className="flex flex-col gap-5" onSubmit={handleVerify}>
+            <AppicaAuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error}</AppicaAuthNotice>
+            {settingsError && <Button type="button" variant="ghost" onClick={retry}>{t("auth.common.retrySettings")}</Button>}
+            <AppicaAuthField label={t("auth.verify.code")}>
+              <AppicaTextInput value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" autoFocus />
+            </AppicaAuthField>
+            <AppicaSubmitButton loading={loading} loadingLabel={t("auth.totp.verifying")} disabled={code.length !== 6}>{t("auth.verify.submit")}</AppicaSubmitButton>
             <TurnstileWidget enabled={settings?.turnstile_enabled && countdown === 0} siteKey={settings?.turnstile_site_key} onToken={handleTurnstileToken} resetKey={turnstileReset} />
-            <button className="auth-link-button" type="button" onClick={resend} disabled={settingsLoading || Boolean(settingsError) || countdown > 0 || sending || (settings?.turnstile_enabled && !turnstileToken)}>{countdown > 0 ? `Resend in ${countdown}s` : sending ? "Sending…" : "Resend code"}</button>
+            <Button type="button" variant="ghost" onClick={resend} disabled={settingsLoading || Boolean(settingsError) || countdown > 0 || sending || (settings?.turnstile_enabled && !turnstileToken)}>{countdown > 0 ? t("auth.verify.resendIn", { seconds: countdown }) : sending ? t("auth.verify.sending") : t("auth.verify.resend")}</Button>
           </form>
         )}
-      </AuthCard>
-    </AuthLayout>
+      </AppicaAuthCard>
+    </AppicaAuthLayout>
   );
 }

@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@import "@appica/ui-react/styles.css";
+
+@source "../node_modules/@appica/ui-react/dist";
+@source "./**/*.{js,jsx}";
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/Geist-Variable-Latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Geist Fallback";
+  src: local("Arial");
+  ascent-override: 95.94%;
+  descent-override: 28.16%;
+  line-gap-override: 0%;
+  size-adjust: 104.76%;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/GeistMono-Variable-Latin.woff2") format("woff2");
+}
+
+@theme inline {
+  --font-sans: var(--wayx-font-sans);
+  --font-mono: var(--wayx-font-mono);
+}
+
+:root,
+.light {
+  --wayx-font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --wayx-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-sans: var(--wayx-font-sans);
+  --font-mono: var(--wayx-font-mono);
+}
+
+html[data-console-theme] {
+  color-scheme: light;
+  font-family: var(--wayx-font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] body,
+html[data-console-theme] button,
+html[data-console-theme] input,
+html[data-console-theme] textarea,
+html[data-console-theme] select {
+  font-family: var(--wayx-font-sans);
+}
+
+html[data-console-theme="dark"] {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* The library's muted border matches the muted surface in both themes, which
+   makes nested cards and controls disappear. Promote every outline by one
+   visual tier while keeping muted, default, and strong borders distinct. */
+html[data-console-theme="light"] {
+  --border-muted: color-mix(in oklab, var(--foreground-intense) 10%, var(--background));
+  --border: color-mix(in oklab, var(--foreground-intense) 15%, var(--background));
+  --border-strong: color-mix(in oklab, var(--foreground-intense) 23%, var(--background));
+  --border-overlay: color-mix(in oklab, var(--foreground-intense) 17%, var(--background));
+  --focus-ring-input: var(--border-strong);
+}
+
+html[data-console-theme="dark"] {
+  --border-muted: color-mix(in oklab, var(--foreground-intense) 18%, var(--background));
+  --border: color-mix(in oklab, var(--foreground-intense) 26%, var(--background));
+  --border-strong: color-mix(in oklab, var(--foreground-intense) 38%, var(--background));
+  --border-overlay: color-mix(in oklab, var(--foreground-intense) 28%, var(--background));
+  --focus-ring-input: var(--border-strong);
+}
+
+/* Pill tabs use a bright indicator by default. Keep selected segments within
+   the dark surface hierarchy so chart, filter, and view switches stay calm. */
+.dark [data-slot="tabs-list"].bg-background-muted > [data-slot="tabs-indicator"] {
+  border: var(--border-width) solid var(--border-strong);
+  background: var(--background-strong);
+  box-shadow: none;
+}
+
+.dark [data-slot="tabs-list"].bg-background-muted > [data-slot="tabs-trigger"][data-active] {
+  color: var(--foreground-intense);
+}
+
+/* Align Dark-mode primary button fills with the warm WayX logo. Keep these
+   aliases local so non-button primary accents preserve their original roles. */
+.dark :where(button, a, [role="button"]).bg-primary {
+  --primary: var(--warning);
+  --primary-muted: var(--warning-emphasis);
+  --primary-foreground: var(--warning-foreground);
+  --focus-ring-primary: var(--focus-ring-warning);
+}
+
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]) {
+  color: var(--foreground);
+  caret-color: var(--foreground);
+  font-family: var(--font-sans);
+  font-feature-settings: inherit;
+  font-size: var(--text-base);
+  font-variation-settings: inherit;
+  font-weight: var(--font-weight-normal);
+  letter-spacing: inherit;
+  line-height: var(--text-base--line-height);
+}
+
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill,
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill:hover,
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill:focus,
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill:active {
+  -webkit-text-fill-color: var(--foreground);
+  caret-color: var(--foreground);
+  box-shadow: 0 0 0 100vmax var(--background) inset;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--text-base--line-height);
+}
+
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-webkit-autofill::first-line {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-normal);
+  letter-spacing: inherit;
+  line-height: var(--text-base--line-height);
+}
+
+.appica-auth :is([data-slot="input"], [data-slot="autocomplete-input-field"]):-internal-autofill-previewed {
+  opacity: 0 !important;
+}

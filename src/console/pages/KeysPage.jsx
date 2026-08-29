@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Skeleton } from "@appica/ui-react/skeleton";
+import { Toggle as AppicaToggle } from "@appica/ui-react/toggle";
+import { ToggleGroup } from "@appica/ui-react/toggle-group";
+import { useSearchParams } from "react-router";
 import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, ConfirmDialog, CopyButton, DataTable, EmptyState, ErrorState, Field, IconButton, LineChart, Modal, Page, Pagination, Panel, ProgressBar, SelectInput, Spinner, StatusBadge, TextArea, TextInput, Toggle } from "../UI";
+import { Button, ConfirmDialog, CopyButton, DataTable, EmptyState, ErrorState, Field, IconButton, InlineButton, LineChart, Modal, Page, Pagination, Panel, ProgressBar, SelectInput, StatusBadge, TableSkeleton, TextArea, TextInput, Toggle } from "../UI";
 import { formatTokenMillions, maskKey, statusLabel } from "../utils";
 import { ColumnPicker, useHiddenColumns } from "../components/ConsoleControls";
 import { GroupSelect } from "../components/GroupSelect";
@@ -75,11 +79,11 @@ function endpointItems(settings, defaultLabel) {
 }
 
 function EndpointPopover({ settings }) {
-  const { t } = useLocale();
-  if (!settings) return <div className="console-endpoint-popover" role="status" aria-label={t("common.loading")}><span>{t("keys.endpoints")}</span><div className="console-endpoint-placeholder console-skeleton" aria-hidden="true" /></div>;
+  const { t, locale } = useLocale();
   const defaultLabel = t("keys.endpointDefault");
+  if (!settings) return <section className="console-endpoint-popover" role="status" aria-label={t("common.loading")}><header><strong>{t("keys.endpoints")}</strong><span><Skeleton className="console-endpoint-count-placeholder" /> {locale === "zh" ? "个可用" : "available"}</span></header><div className="console-endpoint-grid"><div className="console-endpoint-item" aria-hidden="true"><b>{defaultLabel}</b><code><Skeleton className="console-endpoint-value-placeholder" /></code><span className="console-endpoint-action-placeholder"><Icon name="copy" size={16} /></span><span className="console-endpoint-action-placeholder"><Icon name="pulse" size={16} /></span></div></div></section>;
   const items = endpointItems(settings, defaultLabel);
-  return <div className="console-endpoint-popover"><span>{t("keys.endpoints")}</span>{items.map((item) => <div key={item.endpoint} title={item.description || item.endpoint}><b>{item.name}{item.primary && item.name !== defaultLabel && <small>{defaultLabel}</small>}</b><code>{item.endpoint}</code><CopyButton value={item.endpoint} /><a href={`https://www.tcptest.cn/http/${encodeURIComponent(item.endpoint)}`} target="_blank" rel="noreferrer" aria-label={t("keys.endpointSpeed")}><Icon name="pulse" size={16} /></a></div>)}</div>;
+  return <section className="console-endpoint-popover"><header><strong>{t("keys.endpoints")}</strong><span>{items.length} {locale === "zh" ? "个可用" : "available"}</span></header><div className="console-endpoint-grid">{items.map((item) => <div className="console-endpoint-item" key={item.endpoint} title={item.description || item.endpoint}><b>{item.name}{item.primary && item.name !== defaultLabel && <small>{defaultLabel}</small>}</b><code title={item.endpoint}>{item.endpoint}</code><CopyButton value={item.endpoint} /><a href={`https://www.tcptest.cn/http/${encodeURIComponent(item.endpoint)}`} target="_blank" rel="noreferrer" aria-label={t("keys.endpointSpeed")} title={t("keys.endpointSpeed")}><Icon name="pulse" size={16} /><span>{t("keys.endpointSpeed")}</span></a></div>)}</div></section>;
 }
 
 function resetCountdown(value, locale) {
@@ -103,13 +107,13 @@ function UsageCell({ row, stats, formatCurrency, locale }) {
 function RateWindow({ label, used, limit, resetAt, formatCurrency, locale }) {
   if (!Number(limit)) return null;
   const percent = Number(used || 0) / Number(limit) * 100;
-  return <div><span><b>{label}</b><strong>{formatCurrency(used)} / {formatCurrency(limit)}</strong></span><ProgressBar value={percent} tone={percent >= 100 ? "danger" : percent >= 80 ? "warning" : "primary"} />{resetAt && <small>↻ {resetCountdown(resetAt, locale)}</small>}</div>;
+  return <div><span><b>{label}</b><strong>{formatCurrency(used)} / {formatCurrency(limit)}</strong></span><ProgressBar value={percent} tone={percent >= 100 ? "danger" : percent >= 80 ? "warning" : "primary"} />{resetAt && <small><Icon name="refresh" size={12} />{resetCountdown(resetAt, locale)}</small>}</div>;
 }
 
 function RateLimitCell({ row, onReset, formatCurrency, locale }) {
   const active = row.rate_limit_5h || row.rate_limit_1d || row.rate_limit_7d;
   if (!active) return <span className="console-muted">—</span>;
-  return <div className="console-rate-windows"><RateWindow label="5h" used={row.usage_5h} limit={row.rate_limit_5h} resetAt={row.reset_5h_at} formatCurrency={formatCurrency} locale={locale} /><RateWindow label="1d" used={row.usage_1d} limit={row.rate_limit_1d} resetAt={row.reset_1d_at} formatCurrency={formatCurrency} locale={locale} /><RateWindow label="7d" used={row.usage_7d} limit={row.rate_limit_7d} resetAt={row.reset_7d_at} formatCurrency={formatCurrency} locale={locale} />{Boolean(row.usage_5h || row.usage_1d || row.usage_7d) && <button type="button" onClick={onReset}><Icon name="reset" size={12} />{locale === "zh" ? "重置用量" : "Reset usage"}</button>}</div>;
+  return <div className="console-rate-windows"><RateWindow label="5h" used={row.usage_5h} limit={row.rate_limit_5h} resetAt={row.reset_5h_at} formatCurrency={formatCurrency} locale={locale} /><RateWindow label="1d" used={row.usage_1d} limit={row.rate_limit_1d} resetAt={row.reset_1d_at} formatCurrency={formatCurrency} locale={locale} /><RateWindow label="7d" used={row.usage_7d} limit={row.rate_limit_7d} resetAt={row.reset_7d_at} formatCurrency={formatCurrency} locale={locale} />{Boolean(row.usage_5h || row.usage_1d || row.usage_7d) && <InlineButton icon="reset" onClick={onReset}>{locale === "zh" ? "重置用量" : "Reset usage"}</InlineButton>}</div>;
 }
 
 function SettingBlock({ title, enabled, onToggle, children }) {
@@ -139,12 +143,12 @@ function QuotaSetting({ form, toggle, set, editing, selectedKey, onResetQuota, f
 }
 
 function RateLimitSetting({ form, toggle, set, editing, selectedKey, onResetRate, formatCurrency, locale, t }) {
-  return <SettingBlock title={keyText(locale, "周期限流", "Rolling spend limits")} enabled={form.enable_rate_limit} onToggle={toggle("enable_rate_limit")}><div className="console-form-grid console-form-grid--3"><Field label={t("keys.formRate5h")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_5h} onChange={set("rate_limit_5h")} /></Field><Field label={t("keys.formRate1d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_1d} onChange={set("rate_limit_1d")} /></Field><Field label={t("keys.formRate7d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_7d} onChange={set("rate_limit_7d")} /></Field></div>{editing && <div className="console-edit-rate-preview"><RateLimitCell row={selectedKey} onReset={onResetRate} formatCurrency={formatCurrency} locale={locale} /></div>}</SettingBlock>;
+  return <SettingBlock title={keyText(locale, "周期限额", "Rolling spend limits")} enabled={form.enable_rate_limit} onToggle={toggle("enable_rate_limit")}><div className="console-form-grid console-form-grid--3"><Field label={t("keys.formRate5h")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_5h} onChange={set("rate_limit_5h")} /></Field><Field label={t("keys.formRate1d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_1d} onChange={set("rate_limit_1d")} /></Field><Field label={t("keys.formRate7d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_7d} onChange={set("rate_limit_7d")} /></Field></div>{editing && <div className="console-edit-rate-preview"><RateLimitCell row={selectedKey} onReset={onResetRate} formatCurrency={formatCurrency} locale={locale} /></div>}</SettingBlock>;
 }
 
 function ExpirationSetting({ form, setForm, toggle, pickExpiry, locale, t }) {
   const presets = [["7", "7 days", "7 天"], ["30", "30 days", "30 天"], ["90", "90 days", "90 天"], ["custom", "Custom", "自定义"]];
-  return <SettingBlock title={keyText(locale, "到期时间", "Expiration")} enabled={form.enable_expiration} onToggle={toggle("enable_expiration")}><div className="console-expiry-presets">{presets.map(([value, en, zh]) => <button type="button" key={value} className={form.expiration_preset === value ? "is-active" : ""} onClick={() => pickExpiry(value)}>{keyText(locale, zh, en)}</button>)}</div><Field label={t("keys.formExpiry")}><TextInput type="datetime-local" value={form.expiration_date} onChange={(event) => setForm((current) => ({ ...current, expiration_preset: "custom", expiration_date: event.target.value }))} /></Field></SettingBlock>;
+  return <SettingBlock title={keyText(locale, "到期时间", "Expiration")} enabled={form.enable_expiration} onToggle={toggle("enable_expiration")}><ToggleGroup value={[form.expiration_preset]} className="console-expiry-presets">{presets.map(([value, en, zh]) => <AppicaToggle type="button" value={value} key={value} className={form.expiration_preset === value ? "is-active" : ""} onPressedChange={(pressed) => pressed && pickExpiry(value)}>{keyText(locale, zh, en)}</AppicaToggle>)}</ToggleGroup><Field label={t("keys.formExpiry")}><TextInput type="datetime-local" value={form.expiration_date} onChange={(event) => setForm((current) => ({ ...current, expiration_preset: "custom", expiration_date: event.target.value }))} /></Field></SettingBlock>;
 }
 
 function KeyForm({ form, setForm, groups, rates, editing, selectedKey, onResetQuota, onResetRate }) {
@@ -159,7 +163,7 @@ function UsageDetail({ apiKey }) {
   const { locale, formatCurrency, formatNumber } = useLocale();
   const [state, setState] = useState({ loading: true, error: "", items: [] });
   useEffect(() => { let active = true; keysApi.getDailyUsage(apiKey.id, 30).then((result) => active && setState({ loading: false, error: "", items: result.items || [] })).catch((error) => active && setState({ loading: false, error: error.message, items: [] })); return () => { active = false; }; }, [apiKey.id]);
-  if (state.loading) return <Spinner />;
+  if (state.loading) return <div className="console-detail-stack console-key-usage-skeleton" aria-hidden="true"><div className="console-detail-summary">{Array.from({ length: 2 }, (_, index) => <div key={index}><Skeleton /><Skeleton /></div>)}</div><Skeleton /></div>;
   if (state.error) return <ErrorState message={state.error} />;
   return <div className="console-detail-stack"><div className="console-detail-summary"><div><span>{locale === "zh" ? "累计消费" : "Total spend"}</span><strong>{formatCurrency(state.items.reduce((sum, item) => sum + Number(item.actual_cost || 0), 0))}</strong></div><div><span>Token</span><strong>{formatTokenMillions(state.items.reduce((sum, item) => sum + Number(item.total_tokens || 0), 0))}</strong></div></div><LineChart data={state.items} valueKey="total_tokens" /></div>;
 }
@@ -186,6 +190,27 @@ function keyFormWarning(form, locale) {
   return "";
 }
 
+function keySortValue(row, key) {
+  if (key === "current_concurrency") return Number(row.current_concurrency) || 0;
+  if (["expires_at", "last_used_at", "created_at"].includes(key)) return row[key] ? new Date(row[key]).getTime() : null;
+  return String(row[key] ?? "").toLocaleLowerCase();
+}
+
+function sortedKeyRows(items, sort) {
+  const direction = sort.order === "asc" ? 1 : -1;
+  return [...items].sort((left, right) => {
+    const leftValue = keySortValue(left, sort.key);
+    const rightValue = keySortValue(right, sort.key);
+    if (leftValue === rightValue) return 0;
+    if (leftValue === null) return 1;
+    if (rightValue === null) return -1;
+    const comparison = typeof leftValue === "number"
+      ? leftValue - rightValue
+      : leftValue.localeCompare(rightValue, undefined, { numeric: true, sensitivity: "base" });
+    return comparison * direction;
+  });
+}
+
 function shouldOmitStatus(editor, form) {
   return ["expired", "quota_exhausted"].includes(editor.item?.status) && form.status !== "active";
 }
@@ -195,15 +220,16 @@ async function persistKey(editor, payload) {
 }
 
 function KeysTableContent({ state, columns, result, sort, setSort, paging, setPaging, load, openCreate, locale, t }) {
-  if (state.loading) return <Spinner />;
-  if (state.error) return <ErrorState message={state.error} onRetry={load} />;
+  if (state.loading && !result.items.length) return <TableSkeleton columns={columns.length} className="console-keys-table-skeleton" />;
+  if (state.error && !result.items.length) return <ErrorState message={state.error} onRetry={load} />;
   const empty = <EmptyState icon="key" title={keyText(locale, "还没有 API 密钥", "No API keys yet")} action={<Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button>} />;
-  return <><DataTable className="console-keys-table" columns={columns} rows={result.items} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} empty={empty} /><Pagination page={paging.page} pageSize={paging.pageSize} total={result.total} pages={result.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
+  const rows = sortedKeyRows(result.items, sort);
+  return <><DataTable className="console-keys-table" columns={columns} rows={rows} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} empty={empty} /><Pagination page={paging.page} pageSize={paging.pageSize} total={result.total} pages={result.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 }
 
 function KeysTablePanel({ query, setQuery, setPaging, groups, settings, load, state, allColumns, hidden, toggleColumn, openCreate, columns, result, sort, setSort, paging, locale, t }) {
   const updateQuery = (key, value) => { setQuery((current) => ({ ...current, [key]: value })); setPaging((current) => ({ ...current, page: 1 })); };
-  return <Panel><div className="console-table-page-toolbar"><div className="console-key-filter-stack"><div className="console-filter-row"><Field label={t("common.search")} className="is-wide"><TextInput value={query.search} onChange={(event) => updateQuery("search", event.target.value)} placeholder={keyText(locale, "名称或密钥", "Name or key")} /></Field><Field label={t("keys.group")}><SelectInput value={query.group_id} onChange={(event) => updateQuery("group_id", event.target.value)}><option value="">{keyText(locale, "全部分组", "All groups")}</option><option value="0">{keyText(locale, "无分组", "No group")}</option>{groups.map((group) => <option value={group.id} key={group.id}>{group.name}</option>)}</SelectInput></Field><Field label={t("common.status")}><SelectInput value={query.status} onChange={(event) => updateQuery("status", event.target.value)}><option value="">{t("common.all")}</option><option value="active">{t("common.active")}</option><option value="inactive">{t("common.inactive")}</option><option value="quota_exhausted">{keyText(locale, "额度已用尽", "Quota exhausted")}</option><option value="expired">{keyText(locale, "已过期", "Expired")}</option></SelectInput></Field></div><EndpointPopover settings={settings} /></div><div className="console-table-actions"><Button icon="refresh" onClick={load} disabled={state.loading}>{t("common.refresh")}</Button><ColumnPicker columns={allColumns} hidden={hidden} onToggle={toggleColumn} alwaysVisible={["name", "actions"]} /><Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button></div></div><KeysTableContent state={state} columns={columns} result={result} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} load={load} openCreate={openCreate} locale={locale} t={t} /></Panel>;
+  return <><Panel className="console-endpoint-panel"><EndpointPopover settings={settings} /></Panel><Panel className="console-keys-panel"><div className="console-table-page-toolbar"><div className="console-filter-row"><Field label={t("common.search")} className="is-wide"><div className="console-filter-search"><Icon name="search" size={16} /><TextInput value={query.search} onChange={(event) => updateQuery("search", event.target.value)} placeholder={keyText(locale, "名称或密钥", "Name or key")} /></div></Field><Field label={t("keys.group")}><SelectInput value={query.group_id} onChange={(event) => updateQuery("group_id", event.target.value)}><option value="">{keyText(locale, "全部分组", "All groups")}</option><option value="0">{keyText(locale, "无分组", "No group")}</option>{groups.map((group) => <option value={group.id} key={group.id}>{group.name}</option>)}</SelectInput></Field><Field label={t("common.status")}><SelectInput value={query.status} onChange={(event) => updateQuery("status", event.target.value)}><option value="">{t("common.all")}</option><option value="active">{t("common.active")}</option><option value="inactive">{t("common.inactive")}</option><option value="quota_exhausted">{keyText(locale, "额度已用尽", "Quota exhausted")}</option><option value="expired">{keyText(locale, "已过期", "Expired")}</option></SelectInput></Field></div><div className="console-table-actions"><Button icon="refresh" onClick={load} loading={state.loading}>{t("common.refresh")}</Button><ColumnPicker columns={allColumns} hidden={hidden} onToggle={toggleColumn} alwaysVisible={["name", "actions"]} /><Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button></div></div><KeysTableContent state={state} columns={columns} result={result} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} load={load} openCreate={openCreate} locale={locale} t={t} /></Panel></>;
 }
 
 function KeyEditorDialog({ editor, setEditor, busy, submit, form, setForm, groups, rates, setDialog, locale, t }) {
@@ -231,6 +257,7 @@ function CreatedKeyDialog({ createdKey, setCreatedKey, t }) {
 export function KeysPage() {
   const { t, locale, formatCurrency, formatDate } = useLocale();
   const { notify, settings } = useConsole();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState({ search: "", status: "", group_id: "" });
   const [paging, setPaging] = useState({ page: 1, pageSize: 20 });
   const [sort, setSort] = useState({ key: "created_at", order: "desc" });
@@ -238,6 +265,7 @@ export function KeysPage() {
   const [usageStats, setUsageStats] = useState({});
   const [groups, setGroups] = useState([]);
   const [rates, setRates] = useState({});
+  const [groupsReady, setGroupsReady] = useState(false);
   const [state, setState] = useState({ loading: true, error: "" });
   const [editor, setEditor] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -263,9 +291,17 @@ export function KeysPage() {
   }, [paging, query, sort]);
 
   useEffect(() => { load(); return () => requestRef.current?.abort(); }, [load]);
-  useEffect(() => { let active = true; Promise.allSettled([groupsApi.available(), groupsApi.rates()]).then(([groupResult, rateResult]) => { if (!active) return; const groupData = groupResult.value; setGroups(Array.isArray(groupData) ? groupData : groupData?.items || []); setRates(rateResult.value?.rates || rateResult.value || {}); }); return () => { active = false; }; }, []);
+  useEffect(() => { let active = true; Promise.allSettled([groupsApi.available(), groupsApi.rates()]).then(([groupResult, rateResult]) => { if (!active) return; const groupData = groupResult.value; setGroups(Array.isArray(groupData) ? groupData : groupData?.items || []); setRates(rateResult.value?.rates || rateResult.value || {}); setGroupsReady(true); }); return () => { active = false; }; }, []);
 
-  const openCreate = () => { setForm({ ...emptyForm, group_id: groups[0]?.id || "", expiration_date: expiryDate(30) }); setEditor({ type: "create" }); };
+  const openCreate = useCallback(() => { setForm({ ...emptyForm, name: "plus", group_id: groups[0]?.id || "", expiration_date: expiryDate(30) }); setEditor({ type: "create" }); }, [groups]);
+  const createRequested = searchParams.get("create") === "1";
+  useEffect(() => {
+    if (!createRequested || !groupsReady || editor) return;
+    openCreate();
+    const next = new URLSearchParams(searchParams);
+    next.delete("create");
+    setSearchParams(next, { replace: true });
+  }, [createRequested, editor, groupsReady, openCreate, searchParams, setSearchParams]);
   const openEdit = (item) => { setForm(formForKey(item)); setEditor({ type: "edit", item }); };
   const submit = async () => {
     const warning = keyFormWarning(form, locale);
@@ -291,11 +327,11 @@ export function KeysPage() {
     { key: "usage", label: locale === "zh" ? "用量" : "Usage", render: (row) => <UsageCell row={row} stats={usageStats} formatCurrency={formatCurrency} locale={locale} /> },
     { key: "rate_limit", label: locale === "zh" ? "周期限额" : "Rate limits", render: (row) => <RateLimitCell row={row} onReset={() => setDialog({ type: "resetRate", item: row })} formatCurrency={formatCurrency} locale={locale} /> },
     { key: "expires_at", label: t("keys.expires"), sortable: true, render: (row) => <span className={row.expires_at && new Date(row.expires_at) < new Date() ? "console-danger-text" : ""}>{row.expires_at ? formatDate(row.expires_at) : t("common.never")}</span> },
-    { key: "status", label: t("common.status"), sortable: true, render: (row) => <StatusBadge status={row.status} label={statusLabel(row.status, locale)} /> },
+    { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={row.status} label={statusLabel(row.status, locale)} /> },
     { key: "last_used_at", label: t("keys.lastUsed"), sortable: true, render: (row) => row.last_used_at ? formatDate(row.last_used_at) : "—" },
     { key: "last_used_ip", label: locale === "zh" ? "最近 IP" : "Last used IP", render: (row) => row.last_used_ip || "—" },
     { key: "created_at", label: locale === "zh" ? "创建时间" : "Created", sortable: true, render: (row) => <span>{formatDate(row.created_at)}</span> },
-    { key: "actions", label: t("common.actions"), align: "right", render: (row) => <div className="console-key-actions"><button className="console-key-use-action" type="button" data-walkthrough="use-key" aria-label={locale === "zh" ? "使用密钥" : "Use key"} title={locale === "zh" ? "使用密钥" : "Use key"} onClick={() => setDialog({ type: "use", item: row })}><Icon name="terminal" size={15} /><span>{locale === "zh" ? "使用密钥" : "Use key"}</span></button>{settings?.hide_ccs_import_button !== true && <button type="button" aria-label="CC Switch" title="CC Switch" onClick={() => row.group?.platform === "antigravity" ? setDialog({ type: "ccs", item: row }) : importCcs(row)}><Icon name="upload" size={15} /><span>CC Switch</span></button>}<IconButton icon="edit" label={t("common.edit")} onClick={() => openEdit(row)} /><IconButton icon={row.status === "active" ? "pause" : "play"} label={t("keys.toggle")} onClick={() => updateKey(row, { status: row.status === "active" ? "inactive" : "active" })} /><IconButton icon="trash" label={t("common.delete")} onClick={() => setDialog({ type: "delete", item: row })} /></div> },
+    { key: "actions", label: t("common.actions"), align: "right", render: (row) => <div className="console-key-actions"><InlineButton className="console-key-use-action" variant="soft" icon="terminal" data-walkthrough="use-key" aria-label={locale === "zh" ? "使用密钥" : "Use key"} title={locale === "zh" ? "使用密钥" : "Use key"} onClick={() => setDialog({ type: "use", item: row })}>{locale === "zh" ? "使用密钥" : "Use key"}</InlineButton>{settings?.hide_ccs_import_button !== true && <InlineButton className="console-key-cc-switch-action" icon="upload" aria-label="CC Switch" title="CC Switch" onClick={() => row.group?.platform === "antigravity" ? setDialog({ type: "ccs", item: row }) : importCcs(row)}>CC Switch</InlineButton>}<IconButton icon="edit" label={t("common.edit")} onClick={() => openEdit(row)} /><IconButton icon={row.status === "active" ? "pause" : "play"} label={t("keys.toggle")} onClick={() => updateKey(row, { status: row.status === "active" ? "inactive" : "active" })} /><IconButton icon="trash" label={t("common.delete")} onClick={() => setDialog({ type: "delete", item: row })} /></div> },
   ], [formatCurrency, formatDate, groups, locale, rates, settings, t, usageStats]);
   const columns = allColumns.filter((column) => ["name", "actions"].includes(column.key) || !hidden.has(column.key));
 

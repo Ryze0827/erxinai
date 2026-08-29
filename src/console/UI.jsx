@@ -1,5 +1,60 @@
-import { Children, isValidElement, useEffect, useId, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { Children, isValidElement, useMemo } from "react";
+import { Badge as AppicaBadge } from "@appica/ui-react/badge";
+import { Button as AppicaButton } from "@appica/ui-react/button";
+import { buttonVariants as appicaButtonVariants } from "@appica/ui-react/button";
+import { Card as AppicaCard } from "@appica/ui-react/card";
+import { CardHeader as AppicaCardHeader } from "@appica/ui-react/card";
+import { CardTitle as AppicaCardTitle } from "@appica/ui-react/card";
+import { Alert } from "@appica/ui-react/alert";
+import { AlertAction } from "@appica/ui-react/alert";
+import { AlertIcon } from "@appica/ui-react/alert";
+import { AlertTitle } from "@appica/ui-react/alert";
+import { AlertDialog } from "@appica/ui-react/alert-dialog";
+import { AlertDialogClose } from "@appica/ui-react/alert-dialog";
+import { AlertDialogContent } from "@appica/ui-react/alert-dialog";
+import { AlertDialogDescription } from "@appica/ui-react/alert-dialog";
+import { AlertDialogFooter } from "@appica/ui-react/alert-dialog";
+import { AlertDialogHeader } from "@appica/ui-react/alert-dialog";
+import { AlertDialogTitle } from "@appica/ui-react/alert-dialog";
+import { CopyButton as AppicaCopyButton } from "@appica/ui-react/copy-button";
+import { Dialog } from "@appica/ui-react/dialog";
+import { DialogBody } from "@appica/ui-react/dialog";
+import { DialogContent } from "@appica/ui-react/dialog";
+import { DialogDescription } from "@appica/ui-react/dialog";
+import { DialogFooter } from "@appica/ui-react/dialog";
+import { DialogHeader } from "@appica/ui-react/dialog";
+import { DialogTitle } from "@appica/ui-react/dialog";
+import { Input as AppicaInput } from "@appica/ui-react/input";
+import { Field as AppicaField } from "@appica/ui-react/field";
+import { FieldDescription as AppicaFieldDescription } from "@appica/ui-react/field";
+import { FieldError as AppicaFieldError } from "@appica/ui-react/field";
+import { FieldLabel as AppicaFieldLabel } from "@appica/ui-react/field";
+import { Pagination as AppicaPagination } from "@appica/ui-react/pagination";
+import { PaginationEllipsis as AppicaPaginationEllipsis } from "@appica/ui-react/pagination";
+import { PaginationItem as AppicaPaginationItem } from "@appica/ui-react/pagination";
+import { PaginationLink as AppicaPaginationLink } from "@appica/ui-react/pagination";
+import { PaginationList as AppicaPaginationList } from "@appica/ui-react/pagination";
+import { Progress as AppicaProgress } from "@appica/ui-react/progress";
+import { Select as AppicaSelect } from "@appica/ui-react/select";
+import { SelectContent as AppicaSelectContent } from "@appica/ui-react/select";
+import { SelectItem as AppicaSelectItem } from "@appica/ui-react/select";
+import { SelectTrigger as AppicaSelectTrigger } from "@appica/ui-react/select";
+import { SelectValue as AppicaSelectValue } from "@appica/ui-react/select";
+import { Spinner as AppicaSpinner } from "@appica/ui-react/spinner";
+import { Skeleton as AppicaSkeleton } from "@appica/ui-react/skeleton";
+import { Switch as AppicaSwitch } from "@appica/ui-react/switch";
+import { Table as AppicaTable } from "@appica/ui-react/table";
+import { TableBody as AppicaTableBody } from "@appica/ui-react/table";
+import { TableCell as AppicaTableCell } from "@appica/ui-react/table";
+import { TableHead as AppicaTableHead } from "@appica/ui-react/table";
+import { TableHeader as AppicaTableHeader } from "@appica/ui-react/table";
+import { TableRow as AppicaTableRow } from "@appica/ui-react/table";
+import { Textarea as AppicaTextarea } from "@appica/ui-react/textarea";
+import { Tooltip as AppicaTooltip } from "@appica/ui-react/tooltip";
+import { TooltipContent as AppicaTooltipContent } from "@appica/ui-react/tooltip";
+import { TooltipProvider as AppicaTooltipProvider } from "@appica/ui-react/tooltip";
+import { TooltipTrigger as AppicaTooltipTrigger } from "@appica/ui-react/tooltip";
+import { Toaster as AppicaToaster } from "@appica/ui-react/toast";
 import { Icon } from "./Icon";
 import { useConsole } from "./ConsoleContext";
 import { useLocale } from "./i18n";
@@ -23,46 +78,45 @@ export function Page({ title, actions, children, className = "" }) {
 
 export function Panel({ title, eyebrow, actions, children, className = "", ...props }) {
   return (
-    <section className={`console-panel ${className}`} {...props}>
-      {(title || actions) && <div className="console-panel-head"><div>{eyebrow && <span>{eyebrow}</span>}{title && <h2>{title}</h2>}</div>{actions}</div>}
+    <AppicaCard frame={false} inset={false} render={<section />} className={`console-panel ${className}`} {...props}>
+      {(title || actions) && <AppicaCardHeader className="console-panel-head"><div>{eyebrow && <span>{eyebrow}</span>}{title && <AppicaCardTitle render={<h2 />}>{title}</AppicaCardTitle>}</div>{actions}</AppicaCardHeader>}
       {children}
-    </section>
+    </AppicaCard>
   );
 }
 
-function pointerPressProps(props) {
-  const { onPointerDown, onPointerUp, onPointerCancel, onPointerLeave, onBlur, ...rest } = props;
-  const clear = (event, handler) => {
-    delete event.currentTarget.dataset.pointerPressed;
-    handler?.(event);
-  };
-  return {
-    ...rest,
-    onPointerDown: (event) => {
-      if (!event.currentTarget.disabled && (event.pointerType !== "mouse" || event.button === 0)) event.currentTarget.dataset.pointerPressed = "true";
-      onPointerDown?.(event);
-    },
-    onPointerUp: (event) => clear(event, onPointerUp),
-    onPointerCancel: (event) => clear(event, onPointerCancel),
-    onPointerLeave: (event) => clear(event, onPointerLeave),
-    onBlur: (event) => clear(event, onBlur),
-  };
+const buttonVariants = {
+  danger: "destructive",
+  ghost: "ghost",
+  primary: "primary",
+  secondary: "outline",
+};
+
+export function Button({ variant = "secondary", icon, loading = false, disabled = false, className = "", children, ...props }) {
+  const spinning = loading && icon === "refresh";
+  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size="md" className={className} disabled={disabled || loading} aria-busy={loading || undefined} {...props}>{icon && <Icon name={icon} size={18} data-icon="start" className={spinning ? "animate-spin motion-reduce:animate-none" : ""} />}{children}</AppicaButton>;
 }
 
-export function Button({ variant = "secondary", icon, className = "", children, ...props }) {
-  return <button type="button" className={`console-button console-button--${variant} ${className}`} {...pointerPressProps(props)}>{icon && <Icon name={icon} size={17} />}{children}</button>;
+export function buttonLinkClass({ variant = "secondary", size = "md", className = "" } = {}) {
+  const resolvedVariant = buttonVariants[variant] || variant;
+  return `${appicaButtonVariants({ variant: resolvedVariant, size })} ${className}`.trim();
 }
 
-export function IconButton({ icon, label, className = "", ...props }) {
-  return <button type="button" className={`console-icon-button ${className}`} aria-label={label} title={label} {...pointerPressProps(props)}><Icon name={icon} size={18} /></button>;
+export function IconButton({ icon, label, loading = false, disabled = false, variant = "secondary", size = "icon-md", className = "", ...props }) {
+  const spinning = loading && icon === "refresh";
+  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size={size} className={`console-icon-button ${className}`} aria-label={label} title={label} disabled={disabled || loading} aria-busy={loading || undefined} {...props}><Icon name={icon} size={18} className={spinning ? "animate-spin motion-reduce:animate-none" : ""} /></AppicaButton>;
+}
+
+export function InlineButton({ variant = "ghost", size = "sm", icon, className = "", children, ...props }) {
+  return <AppicaButton type="button" variant={buttonVariants[variant] || variant} size={size} className={`console-inline-button ${className}`} {...props}>{icon && <Icon name={icon} data-icon="start" />}{children}</AppicaButton>;
 }
 
 export function Field({ label, hint, error, className = "", children }) {
-  return <label className={`console-field ${className}`}><span>{label}</span>{children}{error && <small className="console-field-error">{error}</small>}{hint && !error && <small>{hint}</small>}</label>;
+  return <AppicaField className={`min-w-0 ${className}`.trim()} invalid={Boolean(error)}>{label && <AppicaFieldLabel>{label}</AppicaFieldLabel>}{children}{error && <AppicaFieldError match>{error}</AppicaFieldError>}{hint && !error && <AppicaFieldDescription>{hint}</AppicaFieldDescription>}</AppicaField>;
 }
 
 export function TextInput({ className = "", ...props }) {
-  return <input className={`console-input ${className}`} {...props} />;
+  return <AppicaInput variant="outline" inputSize="md" className={className} {...props} />;
 }
 
 function selectOptionText(children) {
@@ -81,183 +135,42 @@ function selectOptions(children) {
   }));
 }
 
-function selectMenuPosition(rect, optionCount, searchable) {
-  const margin = 8;
-  const gap = 5;
-  const viewportRight = Math.max(margin, window.innerWidth - margin);
-  const left = Math.min(Math.max(margin, rect.left), viewportRight);
-  const availableWidth = Math.max(0, viewportRight - left);
-  const width = Math.min(Math.max(200, rect.width), availableWidth);
-  const estimatedHeight = Math.min(360, Math.max(72, optionCount * 39 + (searchable ? 58 : 12)));
-  const below = window.innerHeight - rect.bottom - gap - margin;
-  const above = rect.top - gap - margin;
-  const opensAbove = below < estimatedHeight && above > below;
-  return {
-    left,
-    width,
-    maxHeight: Math.max(84, Math.min(360, opensAbove ? above : below)),
-    top: opensAbove ? "auto" : rect.bottom + gap,
-    bottom: opensAbove ? window.innerHeight - rect.top + gap : "auto",
-  };
-}
-
-export function SelectInput({ children, className = "", value = "", onChange, disabled = false, searchable = "auto", name, id, ...props }) {
+export function SelectInput({ children, className = "", value = "", onChange, disabled = false, searchable: _searchable = "auto", name, id, ...props }) {
   const { locale } = useLocale();
   const options = useMemo(() => selectOptions(children), [children]);
   const selectedValue = String(value ?? "");
-  const selected = options.find((option) => option.value === selectedValue);
-  const shouldSearch = searchable === true || (searchable === "auto" && options.length > 5);
-  const reactId = useId();
-  const menuId = `console-select-${reactId}`;
-  const rootRef = useRef(null);
-  const triggerRef = useRef(null);
-  const menuRef = useRef(null);
-  const searchRef = useRef(null);
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [focused, setFocused] = useState(-1);
-  const [position, setPosition] = useState(null);
-  const filtered = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase();
-    return normalized ? options.filter((option) => option.label.toLocaleLowerCase().includes(normalized)) : options;
-  }, [options, query]);
-  const focusedOptionId = open && focused >= 0 ? `${menuId}-option-${focused}` : undefined;
-
-  const updatePosition = () => {
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (rect) setPosition(selectMenuPosition(rect, filtered.length, shouldSearch));
-  };
-  const close = () => {
-    setOpen(false);
-    setQuery("");
-    setFocused(-1);
-    setPosition(null);
-  };
-  const firstEnabled = (items, start = 0, direction = 1) => {
-    if (!items.length) return -1;
-    for (let offset = 0; offset < items.length; offset += 1) {
-      const index = (start + offset * direction + items.length * 2) % items.length;
-      if (!items[index].disabled) return index;
-    }
-    return -1;
-  };
-  const move = (direction) => {
-    const start = focused < 0 ? (direction > 0 ? 0 : filtered.length - 1) : focused + direction;
-    setFocused(firstEnabled(filtered, start, direction));
-  };
-  const moveToEdge = (edge) => setFocused(firstEnabled(filtered, edge === "start" ? 0 : filtered.length - 1, edge === "start" ? 1 : -1));
-  const select = (option) => {
-    if (!option || option.disabled) return;
-    const target = { value: option.value, name };
+  const change = (next) => {
+    const selectedOption = options.find((option) => option.value === String(next ?? ""));
+    if (!selectedOption || selectedOption.disabled) return;
+    const target = { value: selectedOption.value, name };
     onChange?.({ target, currentTarget: target });
-    close();
-    window.requestAnimationFrame(() => triggerRef.current?.focus());
   };
-
-  useEffect(() => {
-    if (!open) return undefined;
-    updatePosition();
-    const selectedIndex = filtered.findIndex((option) => option.value === selectedValue && !option.disabled);
-    setFocused(selectedIndex >= 0 ? selectedIndex : firstEnabled(filtered));
-    const handlePointerDown = (event) => {
-      if (!rootRef.current?.contains(event.target) && !menuRef.current?.contains(event.target)) close();
-    };
-    const handleViewport = () => updatePosition();
-    document.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("resize", handleViewport);
-    window.addEventListener("scroll", handleViewport, true);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("resize", handleViewport);
-      window.removeEventListener("scroll", handleViewport, true);
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open || !position) return;
-    window.requestAnimationFrame(() => (shouldSearch ? searchRef.current : menuRef.current)?.focus());
-  }, [open, position, shouldSearch]);
-
-  useEffect(() => {
-    if (!open) return;
-    updatePosition();
-    setFocused((current) => {
-      if (current >= 0 && current < filtered.length && !filtered[current].disabled) return current;
-      const selectedIndex = filtered.findIndex((option) => option.value === selectedValue && !option.disabled);
-      return selectedIndex >= 0 ? selectedIndex : firstEnabled(filtered);
-    });
-  }, [filtered, open, selectedValue, shouldSearch]);
-
-  useEffect(() => {
-    if (!open || focused < 0) return;
-    menuRef.current?.querySelector(".console-select-option.is-focused")?.scrollIntoView({ block: "nearest" });
-  }, [focused, open]);
-
-  const handleTriggerKeyDown = (event) => {
-    if (["ArrowDown", "ArrowUp", "Enter", " "].includes(event.key)) {
-      event.preventDefault();
-      if (!open) setOpen(true);
-      else if (event.key === "ArrowDown") move(1);
-      else if (event.key === "ArrowUp") move(-1);
-    } else if (open && (event.key === "Home" || event.key === "End")) {
-      event.preventDefault();
-      moveToEdge(event.key === "Home" ? "start" : "end");
-    } else if (event.key === "Escape" && open) {
-      event.preventDefault();
-      close();
-    }
-  };
-  const handleMenuKeyDown = (event) => {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      move(event.key === "ArrowDown" ? 1 : -1);
-    } else if (event.key === "Home" || event.key === "End") {
-      event.preventDefault();
-      moveToEdge(event.key === "Home" ? "start" : "end");
-    } else if (event.key === "Enter" && focused >= 0) {
-      event.preventDefault();
-      select(filtered[focused]);
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      close();
-      triggerRef.current?.focus();
-    } else if (event.key === "Tab") close();
-  };
-  const menu = open && position && createPortal(
-    <div
-      id={menuId}
-      className="console-group-menu console-select-menu"
-      ref={menuRef}
-      style={{ left: position.left, width: position.width, maxHeight: position.maxHeight, top: position.top, bottom: position.bottom, "--console-popover-origin": position.top === "auto" ? "bottom left" : "top left" }}
-      role="listbox"
-      tabIndex={-1}
-      aria-label={props["aria-label"]}
-      aria-activedescendant={focusedOptionId}
-      onKeyDown={handleMenuKeyDown}
-    >
-      {shouldSearch && <div className="console-select-search"><Icon name="search" size={15} /><input ref={searchRef} value={query} onChange={(event) => { setQuery(event.target.value); setFocused(-1); }} placeholder={locale === "zh" ? "搜索选项" : "Search options"} aria-label={locale === "zh" ? "搜索选项" : "Search options"} aria-controls={menuId} aria-activedescendant={focusedOptionId} /></div>}
-      <div className="console-select-options">
-        {filtered.map((option, index) => <button id={`${menuId}-option-${index}`} key={option.key} type="button" role="option" aria-selected={option.value === selectedValue} aria-disabled={option.disabled || undefined} disabled={option.disabled} className={`console-select-option ${option.value === selectedValue ? "is-selected" : ""} ${focused === index ? "is-focused" : ""}`} onMouseEnter={() => !option.disabled && setFocused(index)} onClick={() => select(option)}><span>{option.label}</span>{option.value === selectedValue && <Icon name="check" size={15} />}</button>)}
-        {!filtered.length && <p className="console-select-empty">{locale === "zh" ? "没有匹配选项" : "No matching options"}</p>}
-      </div>
-    </div>,
-    document.body,
-  );
-
-  return <div className={`console-select-root ${className}`} ref={rootRef}><button ref={triggerRef} id={id} type="button" role="combobox" className={`console-input console-select console-select-trigger ${open ? "is-open" : ""}`} disabled={disabled} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? menuId : undefined} aria-activedescendant={focusedOptionId} aria-label={props["aria-label"]} aria-describedby={props["aria-describedby"]} onClick={() => open ? close() : setOpen(true)} onKeyDown={handleTriggerKeyDown}><span>{selected?.label || (locale === "zh" ? "请选择" : "Select an option")}</span><Icon name="chevronDown" size={15} /></button>{menu}</div>;
+  return <AppicaSelect items={options} value={selectedValue || null} onValueChange={change} disabled={disabled} size="md" variant="outline" alignItemWithTrigger={false}>
+    <AppicaSelectTrigger id={id} className={className} aria-label={props["aria-label"]} aria-describedby={props["aria-describedby"]}>
+      <AppicaSelectValue placeholder={locale === "zh" ? "请选择" : "Select an option"}>{(currentValue) => options.find((option) => option.value === String(currentValue ?? ""))?.label || (locale === "zh" ? "请选择" : "Select an option")}</AppicaSelectValue>
+    </AppicaSelectTrigger>
+    <AppicaSelectContent>
+      {options.map((option) => <AppicaSelectItem key={option.key} value={option.value} disabled={option.disabled}>{option.label}</AppicaSelectItem>)}
+    </AppicaSelectContent>
+  </AppicaSelect>;
 }
 
 export function TextArea({ className = "", ...props }) {
-  return <textarea className={`console-input console-textarea ${className}`} {...props} />;
+  return <AppicaTextarea variant="outline" inputSize="md" className={className} {...props} />;
 }
 
 export function Toggle({ checked, onChange, label, ariaLabel, disabled }) {
-  return <label className="console-toggle"><input type="checkbox" checked={checked} onChange={onChange} disabled={disabled} aria-label={ariaLabel || label || undefined} /><i /><span>{label}</span></label>;
+  return <label className="console-toggle"><AppicaSwitch checked={checked} onCheckedChange={(next) => onChange?.({ target: { checked: next }, currentTarget: { checked: next } })} disabled={disabled} aria-label={ariaLabel || label || undefined} size="md" /><span>{label}</span></label>;
 }
 
 export function Spinner({ label }) {
   const { t } = useLocale();
-  return <div className="console-loading" role="status"><i /><span>{label || t("common.loading")}</span></div>;
+  const loadingLabel = label || t("common.loading");
+  return <div className="console-loading" role="status"><AppicaSpinner variant="dots" aria-label={loadingLabel} /><span>{loadingLabel}</span></div>;
+}
+
+export function Skeleton({ className = "", ...props }) {
+  return <AppicaSkeleton className={`console-skeleton ${className}`} {...props} />;
 }
 
 export function EmptyState({ icon = "info", title, description, action }) {
@@ -267,7 +180,7 @@ export function EmptyState({ icon = "info", title, description, action }) {
 
 export function ErrorState({ message, onRetry }) {
   const { t } = useLocale();
-  return <div className="console-empty console-empty--error"><span><Icon name="warning" size={24} /></span><h3>{message || t("common.loadFailed")}</h3>{onRetry && <Button onClick={onRetry}>{t("common.retry")}</Button>}</div>;
+  return <Alert variant="error" layout="inline" className="console-empty console-empty--error"><AlertIcon><Icon name="warning" size={24} /></AlertIcon><AlertTitle as="h3">{message || t("common.loadFailed")}</AlertTitle>{onRetry && <AlertAction><Button onClick={onRetry}>{t("common.retry")}</Button></AlertAction>}</Alert>;
 }
 
 const statusTone = {
@@ -277,108 +190,58 @@ const statusTone = {
   failed: "danger", refund_failed: "danger", error: "danger", disabled: "danger", quota_exhausted: "danger", refunded: "info", partially_refunded: "info",
 };
 
-export function StatusBadge({ status, label }) {
+export function StatusBadge({ status, label, icon, size = "md", className = "" }) {
   const normalized = String(status || "unknown").toLowerCase();
-  return <span className={`console-status console-status--${statusTone[normalized] || "neutral"}`}><i />{label || normalized.replaceAll("_", " ")}</span>;
+  const tone = statusTone[normalized] || "neutral";
+  return <AppicaBadge variant="soft" size={size} className={`console-status-badge is-${tone} ${className}`.trim()}>{icon && <Icon name={icon} data-icon="start" aria-hidden="true" />}{label || normalized.replaceAll("_", " ")}</AppicaBadge>;
 }
 
 export function ProgressBar({ value, tone = "primary" }) {
   const width = Math.max(0, Math.min(100, Number(value) || 0));
-  return <div className="console-progress"><i className={`console-progress--${tone}`} style={{ width: `${width}%` }} /></div>;
-}
-
-const modalStack = [];
-let savedBodyOverflow = "";
-
-function addModal(id) {
-  if (!modalStack.length) {
-    savedBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-  }
-  modalStack.push(id);
-  return modalStack.length - 1;
-}
-
-function removeModal(id) {
-  const index = modalStack.lastIndexOf(id);
-  if (index >= 0) modalStack.splice(index, 1);
-  if (!modalStack.length) document.body.style.overflow = savedBodyOverflow;
-}
-
-function topModalIs(id) {
-  return modalStack.at(-1) === id;
-}
-
-function focusableElements(root) {
-  if (!root) return [];
-  return [...root.querySelectorAll('a[href], button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])')].filter((element) => !element.hidden && element.getAttribute("aria-hidden") !== "true");
-}
-
-function trapModalFocus(event, root) {
-  if (event.key !== "Tab") return;
-  const items = focusableElements(root);
-  if (!items.length) { event.preventDefault(); root?.focus(); return; }
-  const first = items[0];
-  const last = items.at(-1);
-  if (!root?.contains(document.activeElement)) { event.preventDefault(); (event.shiftKey ? last : first).focus(); }
-  else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  const colors = { danger: "var(--console-danger)", info: "var(--console-info)", primary: "var(--console-primary)", success: "var(--console-success)", warning: "var(--console-warning)" };
+  return <AppicaProgress className={`console-progress console-progress--${tone}`} value={width} thickness={6} indicatorColor={colors[tone] || colors.primary} />;
 }
 
 export function Modal({ open, title, description, children, footer, onClose, size = "medium" }) {
   const { t } = useLocale();
-  const reactId = useId();
-  const modalId = useRef(`console-modal-${reactId}`).current;
-  const titleId = `${modalId}-title`;
-  const descriptionId = `${modalId}-description`;
-  const dialogRef = useRef(null);
-  const closeRef = useRef(onClose);
-  const [depth, setDepth] = useState(0);
-  closeRef.current = onClose;
-  useEffect(() => {
-    if (!open) return undefined;
-    const previousFocus = document.activeElement;
-    setDepth(addModal(modalId));
-    const focusTimer = window.requestAnimationFrame(() => {
-      const first = focusableElements(dialogRef.current)[0];
-      (first || dialogRef.current)?.focus();
-    });
-    const onKeyDown = (event) => {
-      if (!topModalIs(modalId)) return;
-      if (event.key === "Escape") { event.preventDefault(); closeRef.current?.(); return; }
-      trapModalFocus(event, dialogRef.current);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.cancelAnimationFrame(focusTimer);
-      document.removeEventListener("keydown", onKeyDown);
-      removeModal(modalId);
-      if (previousFocus?.isConnected) previousFocus.focus();
-    };
-  }, [modalId, open]);
-  if (!open) return null;
-  return createPortal(
-    <div className="console-modal-layer" role="presentation" style={{ zIndex: 120 + depth }} onMouseDown={(event) => event.target === event.currentTarget && topModalIs(modalId) && closeRef.current?.()}>
-      <div ref={dialogRef} className={`console-modal console-modal--${size}`} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={description ? descriptionId : undefined} tabIndex="-1">
-        <div className="console-modal-head"><div><h2 id={titleId}>{title}</h2>{description && <p id={descriptionId}>{description}</p>}</div><IconButton icon="close" label={t("common.close")} onClick={onClose} /></div>
-        <div className="console-modal-body">{children}</div>
-        {footer && <div className="console-modal-footer">{footer}</div>}
+  return <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose?.()}>
+    <DialogContent closeLabel={t("common.close")} className={`console-modal--${size}`}>
+      <div className="console-modal-content">
+        <DialogHeader className="console-modal-head"><div><DialogTitle>{title}</DialogTitle>{description && <DialogDescription>{description}</DialogDescription>}</div></DialogHeader>
+        <DialogBody className="console-modal-body">{children}</DialogBody>
+        {footer && <DialogFooter className="console-modal-footer">{footer}</DialogFooter>}
       </div>
-    </div>,
-    document.body,
-  );
+    </DialogContent>
+  </Dialog>;
 }
 
 export function ConfirmDialog({ open, title, description, confirmLabel, tone = "danger", busy, onConfirm, onClose }) {
   const { t } = useLocale();
-  return <Modal open={open} title={title} description={description} onClose={onClose} size="small" footer={<><Button onClick={onClose} disabled={busy}>{t("common.cancel")}</Button><Button variant={tone} onClick={onConfirm} disabled={busy}>{confirmLabel || t("common.confirm")}</Button></>}><div className="console-confirm-icon"><Icon name="warning" size={28} /></div></Modal>;
+  return <AlertDialog open={open} onOpenChange={(nextOpen) => !nextOpen && !busy && onClose?.()}><AlertDialogContent aria-busy={busy}><AlertDialogHeader><AlertDialogTitle>{title}</AlertDialogTitle>{description && <AlertDialogDescription>{description}</AlertDialogDescription>}</AlertDialogHeader><AlertDialogFooter><AlertDialogClose render={<AppicaButton type="button" variant="outline" size="md" />} disabled={busy}>{t("common.cancel")}</AlertDialogClose><AppicaButton type="button" variant={buttonVariants[tone] || tone} size="md" onClick={onConfirm} disabled={busy}>{confirmLabel || t("common.confirm")}</AppicaButton></AlertDialogFooter></AlertDialogContent></AlertDialog>;
+}
+
+function paginationItems(page, totalPages) {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+  const candidates = [1, 2, page - 1, page, page + 1, totalPages - 1, totalPages]
+    .filter((value) => value >= 1 && value <= totalPages)
+    .sort((left, right) => left - right);
+  return [...new Set(candidates)].reduce((items, value, index, values) => {
+    if (index && value - values[index - 1] > 1) items.push(`ellipsis-${value}`);
+    items.push(value);
+    return items;
+  }, []);
 }
 
 export function Pagination({ page = 1, pageSize = 20, total = 0, pages, onPageChange, onPageSizeChange }) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const totalPages = Math.max(1, pages || Math.ceil(total / pageSize));
-  if (total <= pageSize && totalPages <= 1) return null;
-  return <div className="console-pagination"><span>{t("common.page", { page, pages: totalPages })}</span><div>{onPageSizeChange && <SelectInput value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))}><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option></SelectInput>}<Button onClick={() => onPageChange(page - 1)} disabled={page <= 1}>{t("common.previous")}</Button><Button onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}>{t("common.next")}</Button></div></div>;
+  if (!total) return null;
+  const start = (page - 1) * pageSize + 1;
+  const end = Math.min(total, page * pageSize);
+  const range = locale === "zh" ? `${start}–${end} / 共 ${total}` : `${start}–${end} of ${total}`;
+  const items = paginationItems(page, totalPages);
+  const pageButton = (target, label, icon, disabled = false) => <AppicaPaginationLink render={<button type="button" />} disabled={disabled} aria-label={label} onClick={() => onPageChange(target)}><Icon name={icon} size={16} /></AppicaPaginationLink>;
+  return <div className="console-pagination"><span>{range}</span><div>{onPageSizeChange && <SelectInput value={pageSize} searchable={false} aria-label={locale === "zh" ? "每页条数" : "Rows per page"} onChange={(event) => onPageSizeChange(Number(event.target.value))}>{[10, 20, 50, 100].map((size) => <option value={size} key={size}>{locale === "zh" ? `${size} 条 / 页` : `${size} per page`}</option>)}</SelectInput>}<AppicaPagination size="md"><AppicaPaginationList><AppicaPaginationItem>{pageButton(page - 1, t("common.previous"), "chevronLeft", page <= 1)}</AppicaPaginationItem>{items.map((item) => <AppicaPaginationItem key={item}>{typeof item === "number" ? <AppicaPaginationLink render={<button type="button" />} active={item === page} onClick={() => onPageChange(item)}>{item}</AppicaPaginationLink> : <AppicaPaginationEllipsis />}</AppicaPaginationItem>)}<AppicaPaginationItem>{pageButton(page + 1, t("common.next"), "chevronRight", page >= totalPages)}</AppicaPaginationItem></AppicaPaginationList></AppicaPagination></div></div>;
 }
 
 function mobileColumnLabel(column) {
@@ -397,47 +260,48 @@ function rowHasInteractiveTarget(event) {
   return interactive && interactive !== event.currentTarget;
 }
 
-function TableHeader({ column, sortKey, sortOrder, onSort }) {
+export function TruncatedText({ value, render = <span />, className = "", multiline = false }) {
+  const text = value === null || value === undefined || value === "" ? "—" : String(value);
+  const truncateClass = `console-table-truncate ${multiline ? "console-table-truncate--multiline" : ""} ${className}`.trim();
+  return <AppicaTooltipProvider><AppicaTooltip><AppicaTooltipTrigger render={render} className={truncateClass}>{text}</AppicaTooltipTrigger><AppicaTooltipContent arrow={false} className="console-table-value-tooltip">{text}</AppicaTooltipContent></AppicaTooltip></AppicaTooltipProvider>;
+}
+
+function ConsoleTableHeader({ column, sortKey, sortOrder, onSort }) {
   const sortable = Boolean(column.sortable && onSort);
   const active = sortable && sortKey === column.key;
   const direction = active && sortOrder === "asc" ? "ascending" : active ? "descending" : "none";
   const icon = active && sortOrder === "asc" ? "arrowUp" : "arrowDown";
-  return <th data-column={column.key} className={column.align ? `is-${column.align}` : ""} aria-sort={sortable ? direction : undefined}>{sortable ? <button type="button" className={active ? "is-sorted" : ""} onClick={() => onSort(column.key, active && sortOrder === "asc" ? "desc" : "asc")}><span>{column.label}</span><Icon name={icon} size={13} /></button> : <span className="console-table-header-content">{column.label}</span>}</th>;
+  return <AppicaTableHead data-column={column.key} className={column.align ? `is-${column.align}` : ""} aria-sort={sortable ? direction : undefined}>{sortable ? <AppicaButton type="button" variant="ghost" size="sm" className={`console-table-sort-button ${active ? "is-sorted" : ""}`} onClick={() => onSort(column.key, active && sortOrder === "asc" ? "desc" : "asc")}><span>{column.label}</span><Icon name={icon} size={13} /></AppicaButton> : <span>{column.label}</span>}</AppicaTableHead>;
 }
 
-function TableRow({ row, index, rowKey, columns, onRowClick, onHover }) {
+function ConsoleTableRow({ row, index, rowKey, columns, onRowClick }) {
   const click = (event) => {
     if (!rowHasInteractiveTarget(event)) onRowClick?.(row);
   };
-  return <tr key={row[rowKey] ?? index} onPointerEnter={(event) => onHover(event.currentTarget)} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <td key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : row[column.key] ?? "—"}</td>)}</tr>;
+  return <AppicaTableRow key={row[rowKey] ?? index} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <AppicaTableCell key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : <TruncatedText value={row[column.key]} />}</AppicaTableCell>)}</AppicaTableRow>;
 }
 
-export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "" }) {
-  const wrapRef = useRef(null);
-  const tableRef = useRef(null);
-  const hoverRef = useRef(null);
+export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "", hoverableRows = true }) {
   if (!rows?.length) return empty || <EmptyState />;
-  const clearHover = () => {
-    if (hoverRef.current) hoverRef.current.style.opacity = "0";
-  };
-  const hoverRow = (row) => {
-    const wrap = wrapRef.current;
-    const table = tableRef.current;
-    const hover = hoverRef.current;
-    if (!wrap || !table || !hover || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    const wrapRect = wrap.getBoundingClientRect();
-    const rowRect = row.getBoundingClientRect();
-    hover.style.width = `${Math.max(table.scrollWidth, wrap.clientWidth)}px`;
-    hover.style.height = `${rowRect.height}px`;
-    hover.style.transform = `translate3d(0, ${rowRect.top - wrapRect.top + wrap.scrollTop}px, 0)`;
-    hover.style.opacity = "1";
-  };
   return (
-    <div className={`console-table-wrap ${className}`} ref={wrapRef} onPointerLeave={clearHover} onScroll={clearHover}>
-      <span className="console-table-hover" ref={hoverRef} aria-hidden="true" />
-      <table className="console-table" ref={tableRef}><thead><tr>{columns.map((column) => <TableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</tr></thead><tbody>{rows.map((row, index) => <TableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} onHover={hoverRow} />)}</tbody></table>
+    <div className={`console-table-wrap ${className}`}>
+      <AppicaTable className="console-table" size="sm" borderStyle="none" hoverableRows={hoverableRows}><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} />)}</AppicaTableBody></AppicaTable>
     </div>
   );
+}
+
+export function TableSkeleton({ columns = 6, rows = 6, className = "", pagination = true }) {
+  const columnItems = Array.from({ length: columns }, (_, index) => index);
+  const rowItems = Array.from({ length: rows }, (_, index) => index);
+  return <div className={`console-table-skeleton ${className}`} aria-hidden="true">
+    <div className="console-table-wrap">
+      <AppicaTable className="console-table" size="sm" borderStyle="none">
+        <AppicaTableHeader><AppicaTableRow>{columnItems.map((column) => <AppicaTableHead key={column}><AppicaSkeleton /></AppicaTableHead>)}</AppicaTableRow></AppicaTableHeader>
+        <AppicaTableBody>{rowItems.map((row) => <AppicaTableRow key={row}>{columnItems.map((column) => <AppicaTableCell key={column}><AppicaSkeleton /></AppicaTableCell>)}</AppicaTableRow>)}</AppicaTableBody>
+      </AppicaTable>
+    </div>
+    {pagination && <div className="console-pagination console-table-skeleton-pagination"><AppicaSkeleton /><div><AppicaSkeleton /><AppicaSkeleton /></div></div>}
+  </div>;
 }
 
 const chartTop = 26;
@@ -489,8 +353,8 @@ export function LineChart({ data = [], valueKey = "total_tokens", labelKey = "da
 }
 
 const themeMeta = {
-  light: { icon: "sun", en: "Light theme", zh: "浅色模式" },
-  dark: { icon: "moon", en: "Dark theme", zh: "深色模式" },
+  light: { icon: "sunHigh", en: "Switch to dark theme", zh: "切换至深色模式" },
+  dark: { icon: "moonStars", en: "Switch to light theme", zh: "切换至浅色模式" },
 };
 
 export function ThemeToggle({ className = "" }) {
@@ -504,21 +368,7 @@ export function ThemeToggle({ className = "" }) {
 export function CopyButton({ value, label, copiedLabel, className = "" }) {
   const { t } = useLocale();
   const { notify } = useConsole();
-  const [copied, setCopied] = useState(false);
-  const timerRef = useRef(null);
-  useEffect(() => () => window.clearTimeout(timerRef.current), []);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(String(value || ""));
-      setCopied(true);
-      notify("success", copiedLabel || t("common.copied"), 1800);
-      window.clearTimeout(timerRef.current);
-      timerRef.current = window.setTimeout(() => setCopied(false), 1800);
-    } catch {
-      notify("error", t("common.copyFailed"));
-    }
-  };
-  return <button className={`console-copy ${className}`} type="button" onClick={copy}><Icon name={copied ? "check" : "copy"} size={15} />{label && <span>{copied ? copiedLabel || t("common.copied") : label}</span>}</button>;
+  return <AppicaCopyButton className={`console-copy ${className}`} value={String(value || "")} label={label || t("common.copy")} copiedLabel={copiedLabel || t("common.copied")} size={label ? "sm" : "icon-sm"} onCopy={() => notify("success", copiedLabel || t("common.copied"), 1800)} onCopyError={() => notify("error", t("common.copyFailed"))}>{label}</AppicaCopyButton>;
 }
 
 export function StatCard({ label, value, meta, icon = "chart", tone = "blue", className = "" }) {
@@ -526,10 +376,9 @@ export function StatCard({ label, value, meta, icon = "chart", tone = "blue", cl
 }
 
 export function StatCardSkeleton({ tone = "blue" }) {
-  return <div className={`console-stat console-stat--${tone} console-skeleton console-stat-skeleton`} aria-hidden="true"><div><span /><strong /><small /></div><i /></div>;
+  return <div className={`console-stat console-stat--${tone} console-stat-skeleton`} aria-hidden="true"><div><AppicaSkeleton /><AppicaSkeleton /><AppicaSkeleton /></div><AppicaSkeleton /></div>;
 }
 
 export function ToastViewport() {
-  const { toasts, dismissToast } = useConsole();
-  return <div className="console-toasts" aria-live="polite">{toasts.map((toast) => <button key={toast.id} className={`console-toast console-toast--${toast.type}`} onClick={() => dismissToast(toast.id)}><Icon name={toast.type === "success" ? "check" : toast.type === "warning" ? "warning" : toast.type === "error" ? "warning" : "info"} size={18} /><span>{toast.message}</span><Icon name="close" size={14} /></button>)}</div>;
+  return <AppicaToaster className="console-appica-toasts" position="bottom-right" progress timeout={4200} />;
 }

@@ -70,10 +70,9 @@ npm run preview  # 在本地预览生产构建
 ├── src/
 │   ├── App.jsx                      # 首页行为和应用路由
 │   ├── api/                         # API 客户端、认证接口和 Token 存储
-│   ├── auth/                        # 认证页面、通用控件和 OAuth 状态机
-│   ├── gatewayDemos.js              # AI 中转交互演示
-│   ├── landing-page.html            # 首页主体 HTML
-│   └── *.css                        # 页面和组件样式
+│   ├── auth/                        # Appica 认证页面和 OAuth 状态机
+│   ├── console/                     # 登录后控制台页面与 Appica 通用组件
+│   └── landing/                     # Appica 公共首页
 ├── public/assets/                   # 本地字体和图片
 └── vite.config.mjs                  # Vite 配置
 ```

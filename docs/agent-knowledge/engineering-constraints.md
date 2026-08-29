@@ -2,40 +2,49 @@
 
 ## Hard Constraints
 
-- Constraint: Load `css/system.css` exactly once through `src/styles.css`; declare `halo, base, components` layer order before landing styles.
-  - Evidence: `src/cascade.css`, `src/main.jsx`, and `src/styles.css`.
-  - Impact: Changing import count or layer order can leak Halo's global reset and generic component selectors into the landing page.
-- Constraint: Preserve the independent landing and authentication visual systems when changing console UI.
-  - Evidence: `AGENTS.md` and the approved Halo console design.
-  - Impact: Console styling must remain under `.console-*` roots or a lower-priority cascade layer.
-- Constraint: Preserve light, dark, and system console theme preferences; dark maps exactly to Halo tokens.
-  - Evidence: `AGENTS.md`, `DESIGN.md`, `src/console/theme.js`, and `src/console/console.css`.
-  - Impact: New console surfaces need semantic token usage and must work in both resolved themes.
+- Constraint: Load Tailwind CSS v4 and Appica's stylesheet exactly once through `src/appica.css`.
+  - Evidence: `AGENTS.md`, `src/appica.css`, and `src/main.jsx`.
+  - Impact: Duplicate framework imports or a second global style entry can change component precedence and reintroduce visual overrides.
+- Constraint: Keep `@source "../node_modules/@appica/ui-react/dist"` relative to `src/appica.css`.
+  - Evidence: `AGENTS.md` and `src/appica.css`.
+  - Impact: Removing or mis-resolving this source causes Appica component classes to be omitted silently.
+- Constraint: Use Appica components, icons, and semantic role tokens before product-owned implementations.
+  - Evidence: `AGENTS.md`, `src/auth/AppicaAuth.jsx`, `src/console/UI.jsx`, and `src/console/Icon.jsx`.
+  - Impact: Product CSS should focus on layout, data visualization, and application-specific composition instead of restyling Appica primitives.
+- Constraint: Preserve light, dark, and system console theme preferences through Appica's role tokens.
+  - Evidence: `src/appica.css`, `src/console/appica.css`, and `src/console/theme.js`.
+  - Impact: New surfaces must use semantic tokens and remain legible in every resolved theme.
 
 ## Prohibited Changes
 
-- Prohibited action: Add unscoped, unlayered design-system component rules that collide with landing or authentication selectors.
-  - Reason: The application deliberately ships multiple independent visual systems.
-  - Evidence: `src/cascade.css`, `src/landing.css`, `src/auth.css`, and `css/system.css`.
+- Prohibited action: Add another global reset, legacy design-system stylesheet, or broad selector that restyles Appica primitives.
+  - Reason: Appica is the single component and token baseline for landing, authentication, and console routes.
+  - Evidence: `src/main.jsx`, `src/appica.css`, and the Appica production-component audit completed on 2026-08-14.
+- Prohibited action: Hand-roll a control or icon that Appica already provides.
+  - Reason: Native components preserve accessibility, interaction states, and theme behavior consistently.
+  - Evidence: `AGENTS.md` and the component imports under `src/`.
 
 ## Project Exceptions
 
-- Exception: Light console mode retains the existing WayX palette instead of deriving a new Halo light palette.
-  - Applicable scope: Console-owned surfaces only.
-  - Evidence: Approved design decision in `docs/superpowers/specs/2026-07-16-halo-console-design.md`.
+- Exception: Product-specific layout, charts, status-history graphics, and visually hidden semantic tables remain application-owned.
+  - Applicable scope: Console composition and data visualization only.
+  - Evidence: `src/console/appica.css` and `src/console/pages/MonitorPage.jsx`.
+- Exception: Native file inputs may remain visually hidden when an Appica button provides the visible trigger.
+  - Applicable scope: Avatar and image upload flows.
+  - Evidence: `src/console/pages/ProfilePage.jsx` and `src/console/pages/ImageStudioPage.jsx`.
 
 ## Verification Requirements
 
-- Required checks: Confirm one `system.css` import, no unintended landing/auth diffs, and clean CSS/static diffs.
-- Pre-release verification: Browser-check representative console surfaces in light, dark, and system preferences at desktop and mobile widths.
-- Special regression scope: `/`, all authentication routes, sidebar collapse/drawer behavior, dense tables, modals/popovers, and payment/key-usage surfaces.
+- Required checks: Confirm one Appica/Tailwind global entry, resolvable imports, valid CSS, no legacy stylesheet references, and clean static diffs.
+- Pre-release verification: Browser-check representative landing, authentication, and console routes in light, dark, and system preferences at desktop and mobile widths.
+- Special regression scope: `/`, authentication routes, sidebar collapse/drawer behavior, dense tables, menus/dialogs, redemption, monitoring, payment, and image-generation surfaces.
 
 ## Captured Constraints
 
-- constraint: Flat console cards and panels use tiered surfaces plus 1px borders; ambient shadows are reserved for floating surfaces.
-- evidence: Halo elevation rules and the implemented panel/popover/modal mapping.
-- evidence_ref: `DESIGN.md`; `src/console/console.css`
-- impact: Avoid gradients and drop shadows on new flat console components.
+- constraint: Flat cards and panels use semantic surfaces and borders; ambient shadows are reserved for floating surfaces.
+- evidence: Appica role tokens and the implemented panel/popover/modal mapping.
+- evidence_ref: `src/appica.css`; `src/console/appica.css`
+- impact: Avoid gradients and decorative shadows on new flat console components.
 - confidence: High.
-- source_task: Halo console design-system integration (2026-07-16).
-- follow_up: Review new primitives against `html/preview.html`.
+- source_task: Appica production-component and legacy-style audit (2026-08-14).
+- follow_up: Review new primitives against Appica documentation and representative browser routes.
