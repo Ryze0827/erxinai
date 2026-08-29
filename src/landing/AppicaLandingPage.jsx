@@ -87,7 +87,6 @@ import {
   Rocket,
   Search,
   ShoppingCart,
-  ShoppingCartPlus,
   StarFilled,
   SunHigh,
   TextDirectionRtl,
@@ -277,28 +276,28 @@ function ShowcaseCard({ className = "", contentClassName = "", children }) {
   );
 }
 
-function ProductCard() {
+function ImageGenerationCard() {
   const { t } = useLocale();
-  const [size, setSize] = useState("2");
+  const [outputCount, setOutputCount] = useState("2");
   const [favorite, setFavorite] = useState(false);
   return (
     <ShowcaseCard className="order-2 min-[85rem]:h-[45%]" contentClassName="flex flex-col">
       <div className="relative h-34 overflow-hidden rounded-lg">
         <img className="absolute inset-0 size-full object-cover" src="/assets/wayx/landing/nimbus-runner.webp" alt={t("landing.product.imageAlt")} />
         <Badge className="absolute start-2 top-2" variant="light" size="sm">{t("landing.product.badge")}</Badge>
-        <Toggle className={buttonVariants({ variant: "light", size: "icon-sm", className: "absolute! inset-e-2 top-2" })} pressed={favorite} onPressedChange={setFavorite} aria-label={t("landing.audio.favorite")}><Heart className="in-data-pressed:hidden" /><HeartFilled className="hidden in-data-pressed:block" /></Toggle>
+        <Toggle className={buttonVariants({ variant: "light", size: "icon-sm", className: "absolute! inset-e-2 top-2" })} pressed={favorite} onPressedChange={setFavorite} aria-label={t("landing.product.favorite")}><Heart className="in-data-pressed:hidden" /><HeartFilled className="hidden in-data-pressed:block" /></Toggle>
       </div>
       <div className="mt-3 flex items-start justify-between gap-3">
         <div><h3 className="text-foreground-intense text-sm font-medium">{t("landing.product.title")}</h3><p className="text-foreground-muted text-xs">{t("landing.product.subtitle")}</p></div>
         <div className="text-end"><div className="text-foreground-intense font-semibold tabular-nums">{t("landing.product.price")}</div><s className="text-foreground-muted text-xs tabular-nums">{t("landing.product.previousPrice")}</s></div>
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">
-        <ToggleGroup className="flex gap-1" value={[size]} onValueChange={(value) => value[0] && setSize(value[0])} aria-label={t("landing.product.modeAria")}>
-          {[1, 2, 3, 4].map((value) => <Toggle className={`${buttonVariants({ variant: "outline", size: "icon-sm" })} text-xs ${value === 4 ? "max-sm:hidden" : ""}`} key={value} value={String(value)} aria-label={t("landing.product.priorityAria", { value })}>{value}</Toggle>)}
+        <ToggleGroup className="flex gap-1" value={[outputCount]} onValueChange={(value) => value[0] && setOutputCount(value[0])} aria-label={t("landing.product.countAria")}>
+          {[1, 2, 3, 4].map((value) => <Toggle className={`${buttonVariants({ variant: "outline", size: "icon-sm" })} text-xs ${value === 4 ? "max-sm:hidden" : ""}`} key={value} value={String(value)} aria-label={t("landing.product.countOptionAria", { value })}>{value}</Toggle>)}
         </ToggleGroup>
-        <NumberField className="w-24" variant="soft" size="sm" min={1} defaultValue={1} aria-label={t("landing.product.retriesAria")} />
+        <NumberField className="w-24" variant="soft" size="sm" min={1} defaultValue={1} aria-label={t("landing.product.batchesAria")} />
       </div>
-      <div className="mt-auto pt-4"><Button className="w-full" variant="primary" size="sm"><ShoppingCartPlus data-icon="start" />{t("landing.product.send")}</Button></div>
+      <div className="mt-auto pt-4"><Button className="w-full" variant="primary" size="sm"><FileAi data-icon="start" />{t("landing.product.send")}</Button></div>
     </ShowcaseCard>
   );
 }
@@ -509,7 +508,7 @@ function ShowcaseGallery() {
       </div>
       <div className="appica-showcase-grid appica-scroll-row relative flex gap-3 overflow-x-auto px-4 pb-6 md:px-6">
         <div className="appica-showcase-column appica-showcase-column-extra"><AssistantCard /><ModelSettingsCard /></div>
-        <div className="appica-showcase-column"><ProductCard /><CommandCard /></div>
+        <div className="appica-showcase-column"><ImageGenerationCard /><CommandCard /></div>
         <div className="appica-showcase-column"><AudioCard /><OrderCard /></div>
         <div className="appica-showcase-column"><RevenueCard /><TeamMembersCard className="order-7 min-[85rem]:flex-1" /></div>
         <div className="appica-showcase-column"><TransactionsCard /><RatingCard /></div>
