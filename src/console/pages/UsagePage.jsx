@@ -7,10 +7,9 @@ import { TableCell as AppicaTableCell } from "@appica/ui-react/table";
 import { TableHead as AppicaTableHead } from "@appica/ui-react/table";
 import { TableHeader as AppicaTableHeader } from "@appica/ui-react/table";
 import { TableRow as AppicaTableRow } from "@appica/ui-react/table";
-import { Tooltip } from "@appica/ui-react/tooltip";
-import { TooltipContent } from "@appica/ui-react/tooltip";
-import { TooltipProvider } from "@appica/ui-react/tooltip";
-import { TooltipTrigger } from "@appica/ui-react/tooltip";
+import { Popover } from "@appica/ui-react/popover";
+import { PopoverContent } from "@appica/ui-react/popover";
+import { PopoverTrigger } from "@appica/ui-react/popover";
 import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { GroupBadge } from "../GroupBadge";
@@ -243,7 +242,7 @@ export function CostCell({ row, formatNumber, locale }) {
     style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 6, maximumFractionDigits: 6,
   });
   const label = locale === "zh" ? "查看费用明细" : "View cost breakdown";
-  return <div className="console-cost-cell"><div className="console-cost-main"><strong>{formatCost(row.actual_cost)}</strong>{row.long_context_billing_applied && <i>x2</i>}<TooltipProvider><Tooltip><TooltipTrigger render={<InlineButton variant="ghost" size="icon-sm" className="console-cost-detail-trigger" aria-label={label} />}><Icon name="info" size={12} /></TooltipTrigger><TooltipContent side="left" align="center" arrow={false} className="console-cost-tooltip"><CostTooltip row={row} formatCost={formatCost} locale={locale} /></TooltipContent></Tooltip></TooltipProvider></div></div>;
+  return <div className="console-cost-cell"><div className="console-cost-main"><strong>{formatCost(row.actual_cost)}</strong>{row.long_context_billing_applied && <i>x2</i>}<Popover><PopoverTrigger openOnHover render={<InlineButton variant="ghost" size="icon-sm" className="console-cost-detail-trigger" aria-label={label} />}><Icon name="info" size={12} /></PopoverTrigger><PopoverContent side="left" align="center" arrow={false} className="console-cost-tooltip"><CostTooltip row={row} formatCost={formatCost} locale={locale} /></PopoverContent></Popover></div></div>;
 }
 
 function latencyLabel(value) {
