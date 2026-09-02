@@ -4856,13 +4856,17 @@ html[data-console-theme] .console-tour-capture {
   pointer-events: auto;
 }
 
+html[data-console-theme] .console-tour-layer.is-pending .console-tour-capture {
+  background: var(--console-tour-overlay);
+}
+
 html[data-console-theme] .console-tour-spotlight {
   position: fixed;
   z-index: 1;
   border: var(--border-width) solid var(--primary);
   border-radius: var(--radius-lg);
   box-shadow:
-    0 0 0 100vmax var(--console-tour-overlay),
+    0 0 0 calc(100vmax / var(--console-scale, 1)) var(--console-tour-overlay),
     0 0 0 calc(var(--spacing) * 1.5) color-mix(in oklab, var(--primary) 18%, transparent),
     var(--shadow-lg);
   pointer-events: none;

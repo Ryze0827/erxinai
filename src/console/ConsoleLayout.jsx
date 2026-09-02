@@ -337,7 +337,6 @@ function Walkthrough({ setMobileOpen }) {
     if (window.innerWidth <= 980) setMobileOpen(normalized < 2);
     setStep(normalized);
     setOpen(true);
-    setTarget(null);
     if (next.path && location.pathname !== next.path) navigate(next.path);
   };
 
@@ -349,7 +348,7 @@ function Walkthrough({ setMobileOpen }) {
     const locate = () => {
       const primary = visibleWalkthroughTarget(current.target);
       const element = primary || (allowFallback ? visibleWalkthroughTarget(current.fallback) : null);
-      if (!element) { setTarget(null); return; }
+      if (!element) return;
       if (element !== previousElement) {
         previousElement = element;
         element.scrollIntoView({ block: "center", inline: "nearest", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
@@ -398,7 +397,7 @@ function Walkthrough({ setMobileOpen }) {
 
   const position = walkthroughCardPosition(target);
   const description = step === 3 && target?.fallback ? t("walkthrough.useKeyFallback") : t(current.description);
-  const layer = open && targetReady ? createPortal(<div className="console-tour-layer"><div className="console-tour-capture" aria-hidden="true" /><div className="console-tour-spotlight" style={{ top: target.top, left: target.left, width: target.width, height: target.height }} aria-hidden="true" /><section ref={cardRef} className="console-tour-card" style={position} role="dialog" aria-modal="true" aria-label={t("walkthrough.title")} tabIndex="-1"><header><span>{t("walkthrough.step", { current: step + 1, total: walkthroughSteps.length })}</span><IconButton icon="close" label={t("common.close")} onClick={close} /></header><div className="console-tour-progress" aria-hidden="true">{walkthroughSteps.map((item, index) => <i className={`${index === step ? "is-active" : ""} ${index < step ? "is-complete" : ""}`} key={item.title} />)}</div><div className="console-tour-content"><i><Icon name={current.icon} size={23} /></i><div><h2>{t(current.title)}</h2><p>{description}</p></div></div><footer>{step > 0 ? <Button icon="chevronsLeft" onClick={() => showStep(step - 1)}>{t("walkthrough.previous")}</Button> : <Button onClick={close}>{t("walkthrough.skip")}</Button>}{step < walkthroughSteps.length - 1 ? <Button variant="primary" icon="chevronRight" onClick={() => showStep(step + 1)}>{t("walkthrough.next")}</Button> : <Button variant="primary" icon="check" onClick={close}>{t("walkthrough.finish")}</Button>}</footer></section></div>, document.body) : null;
+  const layer = open ? createPortal(<div className={`console-tour-layer ${targetReady ? "is-ready" : "is-pending"}`}><div className="console-tour-capture" aria-hidden="true" />{targetReady && <div className="console-tour-spotlight" style={{ top: target.top, left: target.left, width: target.width, height: target.height }} aria-hidden="true" />}{targetReady && <section ref={cardRef} className="console-tour-card" style={position} role="dialog" aria-modal="true" aria-label={t("walkthrough.title")} tabIndex="-1"><header><span>{t("walkthrough.step", { current: step + 1, total: walkthroughSteps.length })}</span><IconButton icon="close" label={t("common.close")} onClick={close} /></header><div className="console-tour-progress" aria-hidden="true">{walkthroughSteps.map((item, index) => <i className={`${index === step ? "is-active" : ""} ${index < step ? "is-complete" : ""}`} key={item.title} />)}</div><div className="console-tour-content"><i><Icon name={current.icon} size={23} /></i><div><h2>{t(current.title)}</h2><p>{description}</p></div></div><footer>{step > 0 ? <Button icon="chevronsLeft" onClick={() => showStep(step - 1)}>{t("walkthrough.previous")}</Button> : <Button onClick={close}>{t("walkthrough.skip")}</Button>}{step < walkthroughSteps.length - 1 ? <Button variant="primary" icon="chevronRight" onClick={() => showStep(step + 1)}>{t("walkthrough.next")}</Button> : <Button variant="primary" icon="check" onClick={close}>{t("walkthrough.finish")}</Button>}</footer></section>}</div>, document.body) : null;
 
   return <><InlineButton className="console-header-link console-walkthrough-trigger" icon="walkthrough" onClick={() => showStep(0)} aria-haspopup="dialog" aria-expanded={open} title={t("walkthrough.trigger")}>{t("walkthrough.trigger")}</InlineButton>{layer}</>;
 }
