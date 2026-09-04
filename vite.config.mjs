@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const proxyTarget = env.VITE_DEV_API_PROXY_TARGET || "http://127.0.0.1:8080";
+  const wayxProxyTarget = env.VITE_DEV_WAYX_PROXY_TARGET || "http://127.0.0.1:8090";
   const imageProxyTarget = env.VITE_DEV_IMAGE_PROXY_TARGET || "https://image.aiwayxx.com";
   return {
     optimizeDeps: {
@@ -14,6 +15,10 @@ export default defineConfig(({ mode }) => {
       host: "0.0.0.0",
       allowedHosts: ["terminal.local"],
       proxy: {
+        "/wayx": {
+          target: wayxProxyTarget,
+          changeOrigin: true,
+        },
         "/api": {
           target: proxyTarget,
           changeOrigin: true,

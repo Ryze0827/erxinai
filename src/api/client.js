@@ -7,6 +7,7 @@ import {
 } from "./session";
 
 const API_BASE_URL = normalizeBaseURL(import.meta.env.VITE_API_BASE_URL || "/api/v1");
+const WAYX_API_BASE_URL = normalizeBaseURL(import.meta.env.VITE_WAYX_API_BASE_URL || "/wayx");
 const DEFAULT_LOCALE = "en";
 const DEFAULT_TIMEOUT_MS = 60_000;
 let refreshPromise = null;
@@ -22,17 +23,25 @@ export class ApiError extends Error {
 function normalizeBaseURL(value) {
   const normalized = String(value).trim().replace(/\/+$/, "");
   if (normalized.startsWith("/") && !normalized.startsWith("//")) return normalized;
-  if (normalized.startsWith("//")) throw new Error("VITE_API_BASE_URL cannot be protocol-relative.");
+  if (normalized.startsWith("//")) throw new Error("API base URLs cannot be protocol-relative.");
   if (!/^https?:\/\//i.test(normalized)) return `/${normalized}`;
   const url = new URL(normalized);
   const localHosts = ["localhost", "127.0.0.1", "[::1]"];
   if (url.protocol === "https:" || (url.protocol === "http:" && localHosts.includes(window.location.hostname) && localHosts.includes(url.hostname))) return normalized;
-  throw new Error("VITE_API_BASE_URL must use HTTPS outside local development.");
+  throw new Error("API base URLs must use HTTPS outside local development.");
+}
+
+function buildServiceUrl(baseURL, path) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${baseURL}${normalizedPath}`;
 }
 
 export function buildApiUrl(path) {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${API_BASE_URL}${normalizedPath}`;
+  return buildServiceUrl(API_BASE_URL, path);
+}
+
+export function buildWayxUrl(path) {
+  return buildServiceUrl(WAYX_API_BASE_URL, path);
 }
 
 export function buildGatewayUrl(path) {
@@ -108,7 +117,7 @@ async function readResponse(response, responseType = "json") {
 function unwrapResponse(response, payload) {
   const isEnvelope = payload && typeof payload === "object" && "code" in payload;
   if (response.ok && (!isEnvelope || payload.code === 0)) return isEnvelope ? payload.data : payload;
-  const backendMessage = payload?.error?.message || payload?.message || "";
+  const backendMessage = payload?.error?.message || payload?.message || payload?.detail || "";
   const sanitizedMessage = typeof backendMessage === "string"
     ? backendMessage.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim().slice(0, 300)
     : "";
@@ -148,9 +157,9 @@ async function fetchWithTimeout(url, init, sourceSignal, timeoutMs = DEFAULT_TIM
   }
 }
 
-async function fetchJSON(path, options) {
+async function fetchJSON(path, options, baseURL = API_BASE_URL) {
   const method = options.method || "GET";
-  const url = appendQuery(buildApiUrl(path), options.query, method);
+  const url = appendQuery(buildServiceUrl(baseURL, path), options.query, method);
   const body = options.body === undefined || options.rawBody || options.body instanceof FormData
     ? options.body
     : JSON.stringify(options.body);
@@ -198,20 +207,28 @@ export async function refreshAuthSession() {
   }
 }
 
-export async function apiRequest(path, options = {}) {
+async function serviceRequest(baseURL, path, options = {}) {
   try {
-    const { response, payload } = await fetchJSON(path, options);
+    const { response, payload } = await fetchJSON(path, options, baseURL);
     if (response.status !== 401 || !getRefreshToken() || !isRefreshableRequest(path, options)) {
       return unwrapResponse(response, payload);
     }
     await refreshAuthSession();
-    const retried = await fetchJSON(path, { ...options, skipRefresh: true });
+    const retried = await fetchJSON(path, { ...options, skipRefresh: true }, baseURL);
     return unwrapResponse(retried.response, retried.payload);
   } catch (error) {
     if (error?.name === "AbortError") throw error;
     if (error instanceof ApiError) throw error;
     throw new ApiError("Network error. Please check your connection.", { status: 0, cause: error });
   }
+}
+
+export function apiRequest(path, options = {}) {
+  return serviceRequest(API_BASE_URL, path, options);
+}
+
+export function wayxRequest(path, options = {}) {
+  return serviceRequest(WAYX_API_BASE_URL, path, options);
 }
 
 export async function gatewayRequest(path, options = {}) {

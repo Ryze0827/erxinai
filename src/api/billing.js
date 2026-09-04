@@ -42,6 +42,4 @@ export const paymentApi = {
     skipAuth: true,
     skipRefresh: true,
   }),
-  refund: (id, reason) => apiRequest(`/payment/orders/${id}/refund-request`, { method: "POST", body: { reason } }),
-  refundableProviders: () => apiRequest("/payment/orders/refund-eligible-providers"),
 };

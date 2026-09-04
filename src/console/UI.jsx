@@ -185,7 +185,7 @@ export function ErrorState({ message, onRetry }) {
 
 const statusTone = {
   active: "success", completed: "success", paid: "success", operational: "success", success: "success",
-  pending: "warning", created: "warning", waiting: "warning", processing: "warning", recharging: "warning", indexing: "warning", processing_results: "warning", settling: "warning", refund_requested: "warning", refunding: "warning", refund_pending: "warning", degraded: "warning", queued: "warning", running: "warning",
+  pending: "warning", created: "warning", waiting: "warning", processing: "warning", review_required: "warning", recharging: "warning", indexing: "warning", processing_results: "warning", settling: "warning", refund_requested: "warning", refunding: "warning", refund_pending: "warning", degraded: "warning", queued: "warning", running: "warning",
   inactive: "neutral", expired: "neutral", cancelled: "neutral", suspended: "neutral",
   failed: "danger", refund_failed: "danger", error: "danger", disabled: "danger", quota_exhausted: "danger", refunded: "info", partially_refunded: "info",
 };
