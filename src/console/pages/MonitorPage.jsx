@@ -293,7 +293,7 @@ export function MonitorPage() {
   const [search, setSearch] = useState("");
   const [windowDays, setWindowDays] = useState(7);
   const [filter, setFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("availability");
+  const [sortBy, setSortBy] = useState("status");
   const [details, setDetails] = useState({});
   const [refreshing, setRefreshing] = useState(false);
   const [listVersion, setListVersion] = useState(0);

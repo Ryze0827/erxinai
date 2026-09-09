@@ -217,6 +217,8 @@ export function DashboardPage() {
   const { user, refreshUser, settings } = useConsole();
   const simpleMode = user?.run_mode === "simple";
   const [range] = useState({ start_date: dateInput(-29), end_date: dateInput() });
+  const [modelDistributionRange] = useState({ start_date: dateInput(-6), end_date: dateInput() });
+  const [modelPreferenceRange] = useState({ start_date: dateInput(-2), end_date: dateInput() });
   const [data, setData] = useState({ stats: null, models: [], trend: [] });
   const [activity, setActivity] = useState({ loading: true, error: "", items: [] });
   const [tokenView, setTokenView] = useState("bar");
@@ -230,23 +232,29 @@ export function DashboardPage() {
   const loadRequestRef = useRef(0);
   const activityRequestRef = useRef(0);
 
-  const loadModelPreferences = useCallback(async (models, request = loadRequestRef.current) => {
-    const topModels = topRequestedModels(models);
+  const loadModelPreferences = useCallback(async (request = loadRequestRef.current) => {
     if (mountedRef.current && request === loadRequestRef.current) setModelPreferences({ loading: true, error: "", items: [] });
-    if (topModels.length === 0) {
-      if (mountedRef.current && request === loadRequestRef.current) setModelPreferences({ loading: false, error: "", items: [] });
-      return;
+    try {
+      const response = await usageApi.dashboardModels(modelPreferenceRange);
+      if (!mountedRef.current || request !== loadRequestRef.current) return;
+      const topModels = topRequestedModels(response?.models);
+      if (topModels.length === 0) {
+        setModelPreferences({ loading: false, error: "", items: [] });
+        return;
+      }
+      const results = await Promise.allSettled(topModels.map((model) => usageApi.dashboardTrend({ ...modelPreferenceRange, granularity: "hour", model: model.model })));
+      if (!mountedRef.current || request !== loadRequestRef.current) return;
+      const items = topModels.map((model, index) => {
+        const result = results[index];
+        if (result.status === "rejected") return { model: model.model, requests: Number(model.requests || 0), window: null, unavailable: true };
+        const hours = preferenceHours(result.value?.trend);
+        return { model: model.model, requests: hours.reduce((sum, value) => sum + value, 0), window: shortestPreferenceWindow(hours), unavailable: false };
+      });
+      setModelPreferences({ loading: false, error: items.every((item) => item.unavailable) ? LOAD_FAILED_ERROR : "", items });
+    } catch (preferenceError) {
+      if (mountedRef.current && request === loadRequestRef.current) setModelPreferences({ loading: false, error: preferenceError.message || LOAD_FAILED_ERROR, items: [] });
     }
-    const results = await Promise.allSettled(topModels.map((model) => usageApi.dashboardTrend({ ...range, granularity: "hour", model: model.model })));
-    if (!mountedRef.current || request !== loadRequestRef.current) return;
-    const items = topModels.map((model, index) => {
-      const result = results[index];
-      if (result.status === "rejected") return { model: model.model, requests: Number(model.requests || 0), window: null, unavailable: true };
-      const hours = preferenceHours(result.value?.trend);
-      return { model: model.model, requests: hours.reduce((sum, value) => sum + value, 0), window: shortestPreferenceWindow(hours), unavailable: false };
-    });
-    setModelPreferences({ loading: false, error: items.every((item) => item.unavailable) ? LOAD_FAILED_ERROR : "", items });
-  }, [range]);
+  }, [modelPreferenceRange]);
 
   const load = useCallback(async () => {
     const request = ++loadRequestRef.current;
@@ -256,7 +264,7 @@ export function DashboardPage() {
     const query = { ...range, granularity: "day" };
     try {
       const results = await Promise.allSettled([
-        refreshUser(), usageApi.dashboardStats(), usageApi.dashboardModels(query),
+        refreshUser(), usageApi.dashboardStats(), usageApi.dashboardModels(modelDistributionRange),
         usageApi.dashboardTrend(query),
       ]);
       const stats = settledValue(results[1], null);
@@ -272,8 +280,7 @@ export function DashboardPage() {
         models: results[2].status === "rejected" ? results[2].reason?.message || LOAD_FAILED_ERROR : "",
         trend: results[3].status === "rejected" ? results[3].reason?.message || LOAD_FAILED_ERROR : "",
       });
-      if (results[2].status === "fulfilled") loadModelPreferences(results[2].value?.models || [], request);
-      else setModelPreferences({ loading: false, error: results[2].reason?.message || LOAD_FAILED_ERROR, items: [] });
+      loadModelPreferences(request);
     } catch (loadError) {
       if (mountedRef.current && request === loadRequestRef.current) setError(loadError.message || LOAD_FAILED_ERROR);
     } finally {
@@ -281,7 +288,7 @@ export function DashboardPage() {
         if (initial) setLoading(false);
       }
     }
-  }, [loadModelPreferences, range, refreshUser]);
+  }, [loadModelPreferences, modelDistributionRange, range, refreshUser]);
 
   const loadActivity = useCallback(async (signal) => {
     const request = ++activityRequestRef.current;
@@ -323,6 +330,7 @@ export function DashboardPage() {
   const yesterdayRequests = sectionErrors.trend ? null : Number(yesterdayTrend?.requests ?? 0);
   const yesterdayActual = sectionErrors.trend ? null : Number(yesterdayTrend?.actual_cost ?? 0);
   const totalTrendTokens = data.trend.reduce((sum, item) => sum + Number(item.total_tokens || item.input_tokens || 0) + (item.total_tokens ? 0 : Number(item.output_tokens || 0) + Number(item.cache_creation_tokens || 0) + Number(item.cache_read_tokens || 0)), 0);
+  const totalModelTokens = data.models.reduce((sum, item) => sum + Number(item.total_tokens || 0), 0);
   const greetingDate = new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(new Date());
   const tokenUsageActions = <TokenUsageViewToggle value={tokenView} onChange={setTokenView} t={t} />;
   const tokenUsageRangeLabel = tokenView === "heatmap" ? t("dashboard.lastYear") : locale === "zh" ? "近 30 天" : "Last 30 days";
@@ -340,8 +348,8 @@ export function DashboardPage() {
     </section>
     <div className="console-dashboard-chart-grid">
       {tokenView === "heatmap" ? <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel}><TokenActivity items={activity.items} loading={activity.loading} error={localizedLoadError(activity.error, t)} formatDate={formatDate} formatNumber={formatNumber} formatCurrency={formatCurrency} locale={locale} onRetry={() => loadActivity()} t={t} /></UsageTrendChart> : sectionErrors.trend ? <Panel className="console-trend console-dashboard-section-error" title={locale === "zh" ? "Token 用量" : "Token usage"} actions={tokenUsageActions}><ErrorState message={localizedLoadError(sectionErrors.trend, t)} onRetry={() => load()} /></Panel> : <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel} />}
-      {sectionErrors.models ? <Panel className="console-dashboard-model-distribution console-dashboard-section-error" title={t("dashboard.models")}><ErrorState message={localizedLoadError(sectionErrors.models, t)} onRetry={() => load()} /></Panel> : <DistributionChart className="console-dashboard-model-distribution" title={t("dashboard.models")} rangeLabel={locale === "zh" ? "近 30 天" : "Last 30 days"} data={data.models} nameKey="model" limit={4} showMetricTabs={false} actualOnly itemLabel={t("usage.model")} tokenLabel="Token" centerValue={formatTokenMillions(totalTrendTokens)} centerLabel={locale === "zh" ? "近 30 天 Token" : "Tokens · 30 days"} />}
+      {sectionErrors.models ? <Panel className="console-dashboard-model-distribution console-dashboard-section-error" title={t("dashboard.models")}><ErrorState message={localizedLoadError(sectionErrors.models, t)} onRetry={() => load()} /></Panel> : <DistributionChart className="console-dashboard-model-distribution" title={t("dashboard.models")} rangeLabel={locale === "zh" ? "近 7 天" : "Last 7 days"} data={data.models} nameKey="model" limit={4} showMetricTabs={false} actualOnly itemLabel={t("usage.model")} tokenLabel="Token" centerValue={formatTokenMillions(totalModelTokens)} centerLabel={locale === "zh" ? "近 7 天 Token" : "Tokens · 7 days"} />}
     </div>
-    <div className="console-dashboard-insight-grid console-dashboard-insight-grid--single"><ModelPreferencePanel items={modelPreferences.items} loading={modelPreferences.loading} error={modelPreferences.error} formatNumber={formatNumber} onRetry={() => loadModelPreferences(data.models)} t={t} /></div>
+    <div className="console-dashboard-insight-grid console-dashboard-insight-grid--single"><ModelPreferencePanel items={modelPreferences.items} loading={modelPreferences.loading} error={modelPreferences.error} formatNumber={formatNumber} onRetry={() => loadModelPreferences()} t={t} /></div>
   </Page>;
 }
