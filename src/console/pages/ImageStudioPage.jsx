@@ -26,7 +26,7 @@ const IMAGE_PLATFORMS = new Set(["openai", "gemini", "antigravity"]);
 const SIZE_OPTIONS = ["1K", "2K", "4K"];
 const ASPECT_OPTIONS = ["auto", "1:1", "3:4", "9:16", "4:3", "16:9"];
 const PLATFORM_PRESETS = {
-  openai: { label: "OpenAI", defaultModel: "gpt-image-2.5", models: ["gpt-image-2", "gpt-image-2.5"], countLocked: false },
+  openai: { label: "OpenAI", defaultModel: "gpt-image-2.5-flare", models: ["gpt-image-2", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst"], countLocked: false },
   gemini: { label: "Gemini", defaultModel: "gemini-3.1-flash-image", models: ["gemini-3.1-flash-image", "gemini-2.5-flash-image", "gemini-3-pro-image"], countLocked: true },
   antigravity: { label: "Antigravity", defaultModel: "gemini-3.1-flash-image", models: ["gemini-3.1-flash-image", "gemini-2.5-flash-image", "gemini-3-pro-image"], countLocked: true },
 };
