@@ -8,6 +8,7 @@ import { readCachedBranding, resolveBranding } from "../branding";
 import { Icon } from "./Icon";
 
 const ConsoleContext = createContext(null);
+const USER_REFRESH_INTERVAL_MS = 60 * 1000;
 
 export function resolveFeature(settings, key, mode = "opt-in") {
   const value = settings?.[key];
@@ -38,6 +39,14 @@ function ConsoleProviderValue({ children }) {
     setUser(nextUser);
     return nextUser;
   }, []);
+
+  useEffect(() => {
+    if (!user || !getAccessToken()) return undefined;
+    const interval = window.setInterval(() => {
+      refreshUser().catch(() => undefined);
+    }, USER_REFRESH_INTERVAL_MS);
+    return () => window.clearInterval(interval);
+  }, [refreshUser, Boolean(user)]);
 
   const updateUser = useCallback((nextUser) => {
     setStoredUser(nextUser);
