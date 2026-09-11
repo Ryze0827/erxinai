@@ -4864,10 +4864,19 @@ html[data-console-theme] [data-slot="button"].console-walkthrough-trigger {
   background: var(--primary-subtle);
 }
 
+html[data-console-theme] [data-slot="button"].console-walkthrough-trigger::before {
+  background: var(--primary-subtle);
+}
+
 html[data-console-theme] [data-slot="button"].console-walkthrough-trigger:hover {
   border-color: var(--primary);
   color: var(--foreground-intense);
   background: color-mix(in oklab, var(--primary-subtle) 82%, var(--primary) 18%);
+}
+
+html[data-console-theme] [data-slot="button"].console-walkthrough-trigger:hover::before {
+  background: color-mix(in oklab, var(--primary-subtle) 82%, var(--primary) 18%);
+  opacity: 1;
 }
 
 html[data-console-theme] .console-tour-layer {
