@@ -12,9 +12,10 @@ import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 import { NATIVE_CUSTOM_PAGE, nativeCustomPageRoute } from "../nativeCustomPages";
-import { Button, ErrorState, InlineButton, Page, Panel, TruncatedText } from "../UI";
+import { Button, ErrorState, InlineButton, Modal, Page, Panel, TruncatedText, buttonLinkClass } from "../UI";
 import { CompactTabs } from "../components/ConsoleControls";
 import { DistributionChart, UsageTrendChart } from "../components/UsageCharts";
+import { NotificationsCard } from "./ProfilePage";
 import { dateInput, formatDuration, formatTokenMillions, formatTokenMillionsFixed } from "../utils";
 
 const TOKEN_ACTIVITY_DAY_COUNT = 365;
@@ -222,6 +223,7 @@ export function DashboardPage() {
   const [data, setData] = useState({ stats: null, models: [], trend: [] });
   const [activity, setActivity] = useState({ loading: true, error: "", items: [] });
   const [tokenView, setTokenView] = useState("bar");
+  const [balanceNotificationOpen, setBalanceNotificationOpen] = useState(false);
   const [modelPreferences, setModelPreferences] = useState({ loading: true, error: "", items: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -344,12 +346,13 @@ export function DashboardPage() {
       <DashboardMetric icon="gauge" label={locale === "zh" ? "实时吞吐" : "Real-time throughput"} value={formatNumber(stats.rpm, { maximumFractionDigits: 0 })} unit="RPM" tone="throughput" />
       <DashboardMetric icon="hourglass" label={t("dashboard.latency")} value={formatDuration(stats.average_duration_ms)} tone="latency" />
       <DashboardMetric icon="pulse" label="TPM" value={formatTokenMillionsFixed(stats.tpm)} tone="tpm" />
-      <DashboardMetric icon="clock" label={t("dashboard.balanceRunway")} value={runwayValue} unit={runwayUnit} tone="runway"><div className="console-dashboard-saved"><small>{t("dashboard.balanceRunwayBasis")}</small></div></DashboardMetric>
+      <DashboardMetric icon="clock" label={t("dashboard.balanceRunway")} value={runwayValue} unit={runwayUnit} tone="runway"><div className="console-dashboard-saved"><small>{t("dashboard.balanceRunwayBasis")}</small><button className={buttonLinkClass({ variant: "ghost", size: "sm", className: "console-dashboard-notification-link" })} type="button" onClick={async () => { await refreshUser(); setBalanceNotificationOpen(true); }}><Icon name="bell" size={15} /><span>{t("profile.notifications")}</span></button></div></DashboardMetric>
     </section>
     <div className="console-dashboard-chart-grid">
       {tokenView === "heatmap" ? <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel}><TokenActivity items={activity.items} loading={activity.loading} error={localizedLoadError(activity.error, t)} formatDate={formatDate} formatNumber={formatNumber} formatCurrency={formatCurrency} locale={locale} onRetry={() => loadActivity()} t={t} /></UsageTrendChart> : sectionErrors.trend ? <Panel className="console-trend console-dashboard-section-error" title={locale === "zh" ? "Token 用量" : "Token usage"} actions={tokenUsageActions}><ErrorState message={localizedLoadError(sectionErrors.trend, t)} onRetry={() => load()} /></Panel> : <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel} />}
       {sectionErrors.models ? <Panel className="console-dashboard-model-distribution console-dashboard-section-error" title={t("dashboard.models")}><ErrorState message={localizedLoadError(sectionErrors.models, t)} onRetry={() => load()} /></Panel> : <DistributionChart className="console-dashboard-model-distribution" title={t("dashboard.models")} rangeLabel={locale === "zh" ? "近 7 天" : "Last 7 days"} data={data.models} nameKey="model" limit={4} showMetricTabs={false} actualOnly itemLabel={t("usage.model")} tokenLabel="Token" centerValue={formatTokenMillions(totalModelTokens)} centerLabel={locale === "zh" ? "近 7 天 Token" : "Tokens · 7 days"} />}
     </div>
     <div className="console-dashboard-insight-grid console-dashboard-insight-grid--single"><ModelPreferencePanel items={modelPreferences.items} loading={modelPreferences.loading} error={modelPreferences.error} formatNumber={formatNumber} onRetry={() => loadModelPreferences()} t={t} /></div>
+    <Modal open={balanceNotificationOpen} title={t("profile.notifications")} onClose={() => setBalanceNotificationOpen(false)} size="large"><NotificationsCard /></Modal>
   </Page>;
 }

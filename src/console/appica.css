@@ -5571,6 +5571,18 @@ html[data-console-theme] .console-dashboard-saved strong {
   font-size: var(--text-lg);
 }
 
+html[data-console-theme] .console-dashboard-notification-link {
+  flex: none;
+  gap: 0.25rem;
+  padding-inline: 0.5rem;
+  color: var(--info-strong);
+  font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-dashboard-notification-link:hover {
+  color: var(--info-emphasis);
+}
+
 html[data-console-theme] .console-dashboard-chart-grid {
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   align-items: stretch;
