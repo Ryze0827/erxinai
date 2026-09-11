@@ -327,6 +327,13 @@ export function DashboardPage() {
   const runwayDays = Number.isFinite(balance) && averageDailyCost > 0 ? Math.max(0, balance) / averageDailyCost : null;
   const runwayValue = runwayDays == null ? "—" : formatNumber(Math.min(runwayDays, 999), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const runwayUnit = runwayDays == null ? undefined : `${runwayDays > 999 ? "+" : ""}${t("dashboard.balanceRunwayDays")}`;
+  const recentCacheTrends = sectionErrors.trend ? [] : data.trend.filter((item) => {
+    const date = String(item.date || "").slice(0, 10);
+    return date >= dateInput(-2) && date <= dateInput();
+  });
+  const recentCacheTokens = recentCacheTrends.reduce((total, item) => total + (Number(item.cache_read_tokens) || 0), 0);
+  const recentInputTokens = recentCacheTrends.reduce((total, item) => total + (Number(item.input_tokens) || 0) + (Number(item.cache_creation_tokens) || 0) + (Number(item.cache_read_tokens) || 0), 0);
+  const recentCacheRate = recentInputTokens > 0 ? recentCacheTokens / recentInputTokens * 100 : null;
   const yesterdayTrend = sectionErrors.trend ? null : data.trend.find((item) => String(item.date || "").slice(0, 10) === dateInput(-1));
   const yesterdayTokens = sectionErrors.trend ? null : Number(yesterdayTrend?.total_tokens ?? 0);
   const yesterdayRequests = sectionErrors.trend ? null : Number(yesterdayTrend?.requests ?? 0);
@@ -345,7 +352,7 @@ export function DashboardPage() {
       <DashboardMetric icon="wallet" label={locale === "zh" ? "今日实际费用" : "Today's actual spend"} value={formatNumber(todayActual, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 4, maximumFractionDigits: 4 })} tone="actual"><MetricDelta current={todayActual} previous={yesterdayActual} previousLabel={locale === "zh" ? "昨日 · " : "Yesterday · "} formatPrevious={formatCurrency} /></DashboardMetric>
       <DashboardMetric icon="gauge" label={locale === "zh" ? "实时吞吐" : "Real-time throughput"} value={formatNumber(stats.rpm, { maximumFractionDigits: 0 })} unit="RPM" tone="throughput" />
       <DashboardMetric icon="hourglass" label={t("dashboard.latency")} value={formatDuration(stats.average_duration_ms)} tone="latency" />
-      <DashboardMetric icon="pulse" label="TPM" value={formatTokenMillionsFixed(stats.tpm)} tone="tpm" />
+      <DashboardMetric icon="pulse" label={locale === "zh" ? "近 3 天平均缓存率" : "3-day average cache rate"} value={recentCacheRate == null ? "—" : formatNumber(recentCacheRate, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} unit={recentCacheRate == null ? undefined : "%"} tone="tpm" />
       <DashboardMetric icon="clock" label={t("dashboard.balanceRunway")} value={runwayValue} unit={runwayUnit} tone="runway"><div className="console-dashboard-saved"><small>{t("dashboard.balanceRunwayBasis")}</small><button className={buttonLinkClass({ variant: "ghost", size: "sm", className: "console-dashboard-notification-link" })} type="button" onClick={async () => { await refreshUser(); setBalanceNotificationOpen(true); }}><Icon name="bell" size={15} /><span>{t("profile.notifications")}</span></button></div></DashboardMetric>
     </section>
     <div className="console-dashboard-chart-grid">
