@@ -8,7 +8,7 @@ import { DropdownMenuContent } from "@appica/ui-react/dropdown-menu";
 import { DropdownMenuItem } from "@appica/ui-react/dropdown-menu";
 import { DropdownMenuTrigger } from "@appica/ui-react/dropdown-menu";
 import { Spinner } from "@appica/ui-react/spinner";
-import { imageGenerationApi, keysApi } from "../../api";
+import { groupsApi, imageGenerationApi, keysApi } from "../../api";
 import { GroupBadge } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useConsole } from "../ConsoleContext";
@@ -38,9 +38,11 @@ const OPENAI_SIZES = {
 
 const copy = {
   en: {
+    createKey: "Quick create image key", createKeyHint: "Choose an available image group. The new key will be selected automatically. It has no spending limit or expiry by default; advanced settings are available on the API keys page.", createKeySubmit: "Create and use", defaultKeyName: "Image Studio", imageGroup: "Image group", noImageGroups: "No available image groups", noImageGroupsBody: "Contact an administrator to enable an image group for your account.", groupsLoadFailed: "Unable to load image groups.", createKeyFailed: "Unable to create the image key.", keyReady: "Image key created and selected.",
     controls: "Configuration", apiKey: "Available API key", noKeyOption: "Create a key for a ‘生图’ group", parameters: "Generation settings", reset: "Restore defaults", model: "Recommended model", quality: "Quality", count: "Images", aspect: "Aspect ratio", workspace: "Creation workspace", emptyTitle: "What would you like to create?", emptyBody: "Describe an image, optionally attach multiple references, and keep refining the generated result in the same session.", promptPlaceholder: "Describe or edit an image", upload: "Upload reference images", imageTool: "Image", useLast: "Recent results", selectRecent: "Select one of the 3 latest results", recentItem: "Recent result {index}", submit: "Generate", submitting: "Generating", localReference: "Local upload", clipboardReference: "Clipboard image", generatedReference: "Generated result", clearReference: "Remove reference image", promptRole: "Prompt", resultRole: "Result", thinking: "Creating your image", thinkingBody: "The model is processing the prompt and image settings.", purePrompt: "Text to image", withReference: "{count} reference image(s)", duration: "Duration {value}", continueEdit: "Continue editing", download: "Download", preview: "Preview image", previewTitle: "Generated image preview", noKeysTitle: "No key for a ‘生图’ group", noKeysBody: "Create an active API key for an image-enabled group whose name contains ‘生图’. Image requests remain disabled until one is available.", loadFailed: "Unable to load eligible API keys.", invalidFile: "Choose PNG, JPEG, or WebP images up to 10 MB each and 50 MB total.", noLatest: "There is no generated image in this session yet.", referenceReady: "Added {count} reference image(s).", referenceLimit: "You can attach up to 16 reference images.", referenceFailed: "Some images could not be loaded as references.", chooseKey: "Create and select a key for a ‘生图’ group first.", enterPrompt: "Enter an image prompt.", enterModel: "Enter a model name.", requestSent: "The image request has been sent.", completed: "Generated {count} image(s).", noImage: "The request completed, but no image was returned.", failed: "Image generation failed", remaining: "{amount} remaining", groupEnabled: "Image generation enabled", retry: "Retry", reminderTitle: "Friendly reminder", reminderBody: "This page does not save history. Please save image files promptly; all session data is discarded when you leave this page.",
   },
   zh: {
+    createKey: "快捷创建生图密钥", createKeyHint: "选择可用的生图分组，创建后将自动选中。密钥默认不限额、不过期，可在 API 密钥页调整高级设置。", createKeySubmit: "创建并使用", defaultKeyName: "生图工作台", imageGroup: "生图分组", noImageGroups: "暂无可用生图分组", noImageGroupsBody: "请联系管理员为当前账户开通生图分组。", groupsLoadFailed: "无法加载生图分组。", createKeyFailed: "创建生图密钥失败。", keyReady: "生图密钥已创建并自动选中。",
     controls: "配置", apiKey: "可用 API 密钥", noKeyOption: "请创建生图分组的密钥", parameters: "生成参数", reset: "恢复推荐", model: "推荐模型", quality: "清晰度", count: "张数", aspect: "宽高比", workspace: "创作区", emptyTitle: "今天想创作什么？", emptyBody: "描述画面，可选上传多张参考图，并在当前会话中继续修改生成结果。", promptPlaceholder: "描述图片或输入修改要求", upload: "上传参考图", imageTool: "图片", useLast: "引用最近结果", selectRecent: "选择最近 3 张结果中的一张", recentItem: "最近结果 {index}", submit: "开始生成", submitting: "生成中", localReference: "本地上传", clipboardReference: "剪贴板图片", generatedReference: "来自生成结果", clearReference: "移除参考图", promptRole: "提示词", resultRole: "结果", thinking: "正在创作图片", thinkingBody: "模型正在处理提示词与图片参数，请稍候。", purePrompt: "纯文生图", withReference: "已附带 {count} 张参考图", duration: "耗时 {value}", continueEdit: "继续修改", download: "下载", preview: "预览图片", previewTitle: "生成图片预览", noKeysTitle: "暂无生图分组的密钥", noKeysBody: "请先为名称包含“生图”的生图分组创建已启用密钥。创建完成前无法发送生图请求。", loadFailed: "无法加载可用 API 密钥。", invalidFile: "请选择 PNG、JPEG 或 WebP 图片，单张不超过 10 MB、总计不超过 50 MB。", noLatest: "当前会话还没有可引用的生成图片。", referenceReady: "已添加 {count} 张参考图。", referenceLimit: "最多可添加 16 张参考图。", referenceFailed: "部分图片暂时无法作为参考图读取。", chooseKey: "请先创建并选择生图分组的密钥。", enterPrompt: "请输入图片提示词。", enterModel: "请输入模型名称。", requestSent: "生图请求已发送。", completed: "已生成 {count} 张图片。", noImage: "请求已完成，但没有返回图片。", failed: "图片生成失败", remaining: "剩余 {amount}", groupEnabled: "分组已开启生图", retry: "重试", reminderTitle: "温馨提示", reminderBody: "本页面不保存历史数据，图片资料请及时保存，离开本页面自动作废。",
   },
 };
@@ -83,12 +85,16 @@ function savePreferences(key, form) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
 }
 
+function isImageGroup(group) {
+  return group?.allow_image_generation === true && IMAGE_PLATFORMS.has(group.platform) && String(group.name || "").includes(IMAGE_GROUP_NAME);
+}
+
 async function eligibleImageKeys(signal) {
   const keys = [];
   let page = 1;
   while (!signal.aborted) {
     const response = await keysApi.list(page, 100, { status: "active", sort_by: "created_at", sort_order: "desc" }, signal);
-    keys.push(...(response.items || []).filter((key) => key.status === "active" && key.group?.allow_image_generation === true && IMAGE_PLATFORMS.has(key.group?.platform) && String(key.group?.name || "").includes(IMAGE_GROUP_NAME)));
+    keys.push(...(response.items || []).filter((key) => key.status === "active" && isImageGroup(key.group)));
     if (page >= Number(response.pages || 1)) break;
     page += 1;
   }
@@ -202,6 +208,53 @@ function StudioMessage({ message, copy: c, now, onPreview, onReference }) {
   return <article className={`console-image-message is-${message.role}`}><header><strong>{message.role === "user" ? c.promptRole : c.resultRole}</strong>{duration && <span>{duration}</span>}</header><Panel className={`console-image-message-card ${message.status === "error" ? "is-error" : ""}`}><div className="console-panel-body">{message.status === "pending" ? <StudioThinking copy={c} startedAt={message.startedAt} now={now} /> : <><StudioMessageReferences references={message.references} label={c.withReference.replace("{count}", String(message.references?.length || 0))} /><p>{message.text}</p>{message.images?.length > 0 && <div className="console-image-results">{message.images.map((image, index) => <figure key={`${message.id}-${index}`}><Button variant="ghost" className="console-image-result-preview" onClick={() => onPreview(image.url)} aria-label={c.preview}><img src={image.url} alt={`${c.resultRole} ${index + 1}`} loading="lazy" /></Button><figcaption><Button icon="edit" onClick={() => onReference(image.url)}>{c.continueEdit}</Button><a className={buttonLinkClass()} href={image.url} download={`generated-${message.id}-${index + 1}.png`} target="_blank" rel="noreferrer"><Icon name="download" size={17} />{c.download}</a></figcaption></figure>)}</div>}{message.meta?.length > 0 && <small>{message.meta.join(" · ")}</small>}</>}</div></Panel></article>;
 }
 
+function CreateImageKeyModal({ copy: c, onClose, onCreated }) {
+  const { t } = useLocale();
+  const [state, setState] = useState({ loading: true, error: "", groups: [] });
+  const [loadVersion, setLoadVersion] = useState(0);
+  const [name, setName] = useState(c.defaultKeyName);
+  const [groupId, setGroupId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const creatingRef = useRef(false);
+  const group = state.groups.find((item) => String(item.id) === groupId);
+
+  useEffect(() => {
+    let active = true;
+    setState({ loading: true, error: "", groups: [] });
+    groupsApi.available().then((response) => {
+      if (!active) return;
+      const groups = (Array.isArray(response) ? response : response?.items || []).filter(isImageGroup);
+      setState({ loading: false, error: "", groups });
+      setGroupId(String(groups[0]?.id || ""));
+    }).catch((error) => {
+      if (active) setState({ loading: false, error: error.message || c.groupsLoadFailed, groups: [] });
+    });
+    return () => { active = false; };
+  }, [loadVersion, c.groupsLoadFailed]);
+
+  const close = () => { if (!creatingRef.current) onClose(); };
+  const submit = async (event) => {
+    event.preventDefault();
+    if (creatingRef.current || !name.trim() || !group) return;
+    creatingRef.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const key = await keysApi.create({ name: name.trim(), group_id: group.id });
+      onCreated({ ...key, group: key.group || group });
+    } catch (error) {
+      setError(error.message || c.createKeyFailed);
+    } finally {
+      creatingRef.current = false;
+      setBusy(false);
+    }
+  };
+
+  const footer = <><Button onClick={close} disabled={busy}>{t("common.cancel")}</Button><Button type="submit" form="console-create-image-key" variant="primary" icon="plus" loading={busy} disabled={state.loading || Boolean(state.error) || !group || !name.trim()}>{busy ? t("common.loading") : c.createKeySubmit}</Button></>;
+  return <Modal open title={c.createKey} description={c.createKeyHint} onClose={close} footer={footer}>{state.loading ? <Spinner variant="dots" aria-label={t("common.loading")} /> : state.error ? <ErrorState message={state.error} onRetry={() => setLoadVersion((value) => value + 1)} /> : !state.groups.length ? <EmptyState icon="key" title={c.noImageGroups} description={c.noImageGroupsBody} /> : <form id="console-create-image-key" className="console-detail-stack" onSubmit={submit}><Field label={t("keys.formName")}><TextInput value={name} onChange={(event) => setName(event.target.value)} disabled={busy} required autoFocus /></Field><Field label={c.imageGroup}><SelectInput value={groupId} onChange={(event) => setGroupId(event.target.value)} disabled={busy}>{state.groups.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</SelectInput></Field>{error && <Alert variant="error"><AlertDescription>{error}</AlertDescription></Alert>}</form>}</Modal>;
+}
+
 function StudioControls({ copy: c, keys, state, form, selectedKey, preset, disabled, onKeyChange, onChange, onReset, onRetry }) {
   const { formatCurrency } = useLocale();
   const quota = remainingQuota(selectedKey);
@@ -215,6 +268,7 @@ export function ImageStudioPage() {
   const [keysState, setKeysState] = useState({ loading: true, error: "", items: [] });
   const [loadVersion, setLoadVersion] = useState(0);
   const [form, setForm] = useState(() => formForKey(null));
+  const [createKeyOpen, setCreateKeyOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [references, setReferences] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -279,6 +333,12 @@ export function ImageStudioPage() {
   const changeForm = (name, value) => setForm((current) => ({ ...current, [name]: value }));
   const changeKey = (keyId) => setForm(formForKey(keysState.items.find((key) => String(key.id) === String(keyId)) || null));
   const resetForm = () => selectedKey && setForm(formForKey(selectedKey, true));
+  const keyCreated = (key) => {
+    setKeysState((current) => ({ loading: false, error: "", items: [key, ...current.items.filter((item) => item.id !== key.id)] }));
+    setForm(formForKey(key));
+    setCreateKeyOpen(false);
+    notify("success", c.keyReady);
+  };
   const attachReferenceFiles = async (files, hint) => {
     const images = Array.from(files);
     if (!images.length) { notify("error", c.invalidFile); return; }
@@ -372,5 +432,5 @@ export function ImageStudioPage() {
     formRef.current?.requestSubmit();
   };
 
-  return <Page title={c.workspace} className="console-image-studio-page"><div className="console-image-studio-layout"><StudioControls copy={c} keys={keysState.items} state={keysState} form={form} selectedKey={selectedKey} preset={preset} disabled={submitting} onKeyChange={changeKey} onChange={changeForm} onReset={resetForm} onRetry={() => setLoadVersion((value) => value + 1)} /><Panel title={c.workspace} className="console-image-workspace"><div className="console-image-thread" ref={threadRef}>{keysState.loading && !messages.length ? <div className="console-image-thread-loading" role="status"><Spinner variant="dots" aria-label={c.workspace} /></div> : !messages.length ? <EmptyState icon="image" title={keysState.items.length ? c.emptyTitle : c.noKeysTitle} description={keysState.items.length ? c.emptyBody : c.noKeysBody} /> : <div className="console-image-message-list">{messages.map((message) => <StudioMessage key={message.id} message={message} copy={c} now={now} onPreview={setPreview} onReference={(url) => void useReference(url)} />)}</div>}</div><form className="console-image-composer" ref={formRef} onSubmit={submit}>{references.length > 0 && <div className="console-image-reference-list">{references.map((reference) => <div className="console-image-reference" key={reference.id}><img src={reference.dataUrl} alt={reference.name} /><div><strong>{reference.name}</strong><span>{reference.hint}</span></div><IconButton icon="close" label={c.clearReference} onClick={() => removeReference(reference.id)} /></div>)}</div>}<TextArea id="console-image-studio-prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} onKeyDown={promptKeyDown} onPaste={pasteImage} placeholder={c.promptPlaceholder} rows="3" maxLength={4000} disabled={!selectedKey || submitting} /><div className="console-image-composer-actions"><div><input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={selectFile} disabled={!selectedKey || submitting} /><Button icon="plus" onClick={() => fileRef.current?.click()} disabled={!selectedKey || submitting}>{c.imageTool}</Button><SelectInput className="console-image-aspect" value={form.aspectRatio} onChange={(event) => changeForm("aspectRatio", event.target.value)} disabled={!selectedKey || submitting}>{ASPECT_OPTIONS.map((value) => <option key={value} value={value}>{value === "auto" ? "Auto" : value}</option>)}</SelectInput></div><div><RecentResultPicker images={recentImages} copy={c} disabled={!selectedKey || submitting} onSelect={(url) => void useReference(url)} /><Button type="submit" variant="primary" icon="arrowUp" disabled={!selectedKey || submitting}>{submitting ? c.submitting : c.submit}</Button></div></div></form></Panel></div><Modal open={Boolean(preview)} title={c.previewTitle} onClose={() => setPreview("")} size="large">{preview && <div className="console-image-preview"><img src={preview} alt={c.previewTitle} /><a className={buttonLinkClass({ variant: "primary" })} href={preview} download="generated-image.png" target="_blank" rel="noopener noreferrer"><Icon name="download" size={17} />{c.download}</a></div>}</Modal></Page>;
+  return <Page title={c.workspace} className="console-image-studio-page"><div className="console-image-studio-layout"><StudioControls copy={c} keys={keysState.items} state={keysState} form={form} selectedKey={selectedKey} preset={preset} disabled={submitting} onKeyChange={changeKey} onChange={changeForm} onReset={resetForm} onRetry={() => setLoadVersion((value) => value + 1)} /><Panel title={c.workspace} className="console-image-workspace"><div className="console-image-thread" ref={threadRef}>{keysState.loading && !messages.length ? <div className="console-image-thread-loading" role="status"><Spinner variant="dots" aria-label={c.workspace} /></div> : !messages.length ? <EmptyState icon="image" title={keysState.items.length ? c.emptyTitle : c.noKeysTitle} description={keysState.items.length ? c.emptyBody : c.noKeysBody} action={!keysState.error && !keysState.items.length ? <Button variant="primary" icon="plus" onClick={() => setCreateKeyOpen(true)}>{c.createKey}</Button> : undefined} /> : <div className="console-image-message-list">{messages.map((message) => <StudioMessage key={message.id} message={message} copy={c} now={now} onPreview={setPreview} onReference={(url) => void useReference(url)} />)}</div>}</div><form className="console-image-composer" ref={formRef} onSubmit={submit}>{references.length > 0 && <div className="console-image-reference-list">{references.map((reference) => <div className="console-image-reference" key={reference.id}><img src={reference.dataUrl} alt={reference.name} /><div><strong>{reference.name}</strong><span>{reference.hint}</span></div><IconButton icon="close" label={c.clearReference} onClick={() => removeReference(reference.id)} /></div>)}</div>}<TextArea id="console-image-studio-prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} onKeyDown={promptKeyDown} onPaste={pasteImage} placeholder={c.promptPlaceholder} rows="3" maxLength={4000} disabled={!selectedKey || submitting} /><div className="console-image-composer-actions"><div><input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={selectFile} disabled={!selectedKey || submitting} /><Button icon="plus" onClick={() => fileRef.current?.click()} disabled={!selectedKey || submitting}>{c.imageTool}</Button><SelectInput className="console-image-aspect" value={form.aspectRatio} onChange={(event) => changeForm("aspectRatio", event.target.value)} disabled={!selectedKey || submitting}>{ASPECT_OPTIONS.map((value) => <option key={value} value={value}>{value === "auto" ? "Auto" : value}</option>)}</SelectInput></div><div><RecentResultPicker images={recentImages} copy={c} disabled={!selectedKey || submitting} onSelect={(url) => void useReference(url)} /><Button type="submit" variant="primary" icon="arrowUp" disabled={!selectedKey || submitting}>{submitting ? c.submitting : c.submit}</Button></div></div></form></Panel></div>{createKeyOpen && <CreateImageKeyModal copy={c} onClose={() => setCreateKeyOpen(false)} onCreated={keyCreated} />}<Modal open={Boolean(preview)} title={c.previewTitle} onClose={() => setPreview("")} size="large">{preview && <div className="console-image-preview"><img src={preview} alt={c.previewTitle} /><a className={buttonLinkClass({ variant: "primary" })} href={preview} download="generated-image.png" target="_blank" rel="noopener noreferrer"><Icon name="download" size={17} />{c.download}</a></div>}</Modal></Page>;
 }
