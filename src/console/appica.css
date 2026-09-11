@@ -9021,14 +9021,20 @@ html[data-console-theme] .console-config-file footer {
     flex: none;
   }
 
-  html[data-console-theme] .console-header-left strong,
-  html[data-console-theme] .console-balance-value {
+  html[data-console-theme] .console-header-left strong {
     display: none;
   }
 
+  html[data-console-theme] .console-balance-value {
+    display: block;
+    max-width: 5rem;
+    font-size: var(--text-sm);
+  }
+
   html[data-console-theme] .console-balance-link {
-    width: 2.5rem;
-    padding-inline: 0;
+    width: auto;
+    min-width: 0;
+    padding-inline: 0.625rem;
     justify-content: center;
   }
 }
