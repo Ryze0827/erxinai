@@ -317,11 +317,11 @@ function UsageFilterPanel({ tab, filters, errorFilters, options, modelOptions, e
   return <Panel className="console-usage-filter-panel"><div className="console-filter-action-layout">{filtersNode}<Button className="console-usage-reset" icon="reset" onClick={reset}>{localized(locale, "重置", "Reset")}</Button></div></Panel>;
 }
 
-function UsageTabs({ enabled, tab, setTab, errorCount, locale, t }) {
+function UsageTabs({ enabled, tab, setTab, locale, t }) {
   if (!enabled) return null;
   const items = [
     { value: "usage", label: localized(locale, "用量记录", "Usage records") },
-    { value: "errors", label: <>{t("usage.errors")}{errorCount > 0 && <b>{errorCount}</b>}</> },
+    { value: "errors", label: t("usage.errors") },
   ];
   return <CompactTabs value={tab} items={items} onChange={setTab} className="console-usage-tabs" label={localized(locale, "用量类型", "Usage type")} />;
 }
@@ -466,5 +466,5 @@ export function UsagePage() {
   const currentHidden = tab === "errors" ? errorHidden : usageHidden;
 
   const closeDetail = () => { detailControllerRef.current?.abort(); detailRef.current = null; setDetail(null); };
-  return <Page title={t("usage.title")} className="console-usage-page"><UsageToolbar filters={filters} changeRange={changeRange} currentColumns={currentColumns} currentHidden={currentHidden} loadUsage={loadUsage} loadErrors={loadErrors} tab={tab} state={state} exportCsv={exportCsv} exporting={exporting} locale={locale} t={t} /><UsageStats stats={data.stats} loading={state.chartsLoading} /><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageFilterPanel tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} locale={locale} t={t} /><UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} errorCount={errors.total} locale={locale} t={t} /><RecordsPanel tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div><UsageChartsPanel data={data} loading={state.chartsLoading} locale={locale} /></div><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
+  return <Page title={t("usage.title")} className="console-usage-page"><UsageToolbar filters={filters} changeRange={changeRange} currentColumns={currentColumns} currentHidden={currentHidden} loadUsage={loadUsage} loadErrors={loadErrors} tab={tab} state={state} exportCsv={exportCsv} exporting={exporting} locale={locale} t={t} /><UsageStats stats={data.stats} loading={state.chartsLoading} /><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageFilterPanel tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} locale={locale} t={t} /><UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} /><RecordsPanel tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div><UsageChartsPanel data={data} loading={state.chartsLoading} locale={locale} /></div><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
 }
