@@ -141,7 +141,7 @@ function TokenCell({ row, locale }) {
   const output = row.output_tokens ?? 0;
   const cacheRead = `${numeric(row.cache_read_tokens) / 1_000}k`;
   const title = `${labels.input}: ${input}\n${labels.output}: ${output}\n${labels.write}: ${formatTokenMillions(row.cache_creation_tokens)} (5m ${formatTokenMillions(row.cache_creation_5m_tokens)}, 1h ${formatTokenMillions(row.cache_creation_1h_tokens)})\n${labels.read}: ${cacheRead}`;
-  return <div className="console-token-cell" title={title}><div><span className="is-input" aria-label={`${labels.input}: ${input}`}><Icon name="arrowDown" size={16} />{input}</span><span className="is-output" aria-label={`${labels.output}: ${output}`}><Icon name="arrowUp" size={16} />{output}</span><span className="is-read" aria-label={`${labels.read}: ${cacheRead}`}><Icon name="eye" size={16} />{cacheRead}</span><span className="is-write" aria-label={`${labels.write}: ${formatTokenMillions(row.cache_creation_tokens)}`}><Icon name="edit" size={16} />{formatTokenMillions(row.cache_creation_tokens)}</span></div></div>;
+  return <div className="console-token-cell" title={title}><div><span className="is-input" aria-label={`${labels.input}: ${input}`}><Icon name="arrowDown" size={16} />{input}</span><span className="is-output" aria-label={`${labels.output}: ${output}`}><Icon name="arrowUp" size={16} />{output}</span><span className="is-read" aria-label={`${labels.read}: ${cacheRead}`}><Icon name="eye" size={16} />{cacheRead}</span></div></div>;
 }
 
 function numeric(value) {
@@ -152,6 +152,15 @@ function numeric(value) {
 function formatMultiplier(value) {
   const number = Number(value);
   return (Number.isFinite(number) ? number : 1).toFixed(4).replace(/\.?0+$/, "");
+}
+
+function serviceTierLabel(value) {
+  const tier = String(value || "").trim().toLowerCase();
+  if (tier === "priority" || tier === "fast") return "Fast";
+  if (tier === "ultrafast") return "Ultrafast";
+  if (tier === "flex") return "Flex";
+  if (!tier || tier === "default" || tier === "standard") return "Standard";
+  return tier;
 }
 
 function formatTokenPrice(cost, tokens) {
@@ -197,13 +206,13 @@ function CostTooltip({ row, formatCost, locale }) {
     inputPrice: "输入单价", outputPrice: "输出单价", imageInputPrice: "图片输入单价", imageOutputPrice: "图片输出单价", perMillion: "/ 1M Token",
     cacheCreation: "缓存创建费用", cacheRead: "缓存读取费用", unitPrice: "单次价格", imageUnitPrice: "单张价格", imageTotalPrice: "图片总价",
     imageCount: "图片张数", imageBillingSize: "计费尺寸", imageInputSize: "输入尺寸", imageOutputSize: "输出尺寸", imageSource: "尺寸来源", imageBreakdown: "尺寸明细",
-    rate: "倍率", original: "原始", billed: "用户扣费", imageUnit: "张", unknown: "未知", notRecorded: "未记录",
+    serviceTier: "服务档位", rate: "倍率", original: "原始", billed: "用户扣费", imageUnit: "张", unknown: "未知", notRecorded: "未记录",
   } : {
     title: "Cost breakdown", inputCost: "Input cost", outputCost: "Output cost", imageInputCost: "Image input cost", imageOutputCost: "Image output cost",
     inputPrice: "Input price", outputPrice: "Output price", imageInputPrice: "Image input price", imageOutputPrice: "Image output price", perMillion: "/ 1M tokens",
     cacheCreation: "Cache creation cost", cacheRead: "Cache read cost", unitPrice: "Per-request price", imageUnitPrice: "Per-image price", imageTotalPrice: "Image total price",
     imageCount: "Image count", imageBillingSize: "Billing size", imageInputSize: "Input size", imageOutputSize: "Output size", imageSource: "Size source", imageBreakdown: "Size breakdown",
-    rate: "Rate", original: "Original", billed: "User billed", imageUnit: " images", unknown: "Unknown", notRecorded: "Not recorded",
+    serviceTier: "Service tier", rate: "Rate", original: "Original", billed: "User billed", imageUnit: " images", unknown: "Unknown", notRecorded: "Not recorded",
   };
   const billingSize = row.image_size || labels.notRecorded;
 
@@ -233,6 +242,7 @@ function CostTooltip({ row, formatCost, locale }) {
         {numeric(row.cache_read_cost) > 0 && <CostTooltipRow label={labels.cacheRead} value={formatCost(row.cache_read_cost)} />}
       </div>
       <div className="console-cost-tooltip-summary">
+        <CostTooltipRow label={labels.serviceTier} value={serviceTierLabel(row.service_tier)} />
         <CostTooltipRow label={labels.rate} value={`${formatMultiplier(row.rate_multiplier ?? 1)}x`} tone="rate" />
         <CostTooltipRow label={labels.original} value={formatCost(row.total_cost)} />
         <CostTooltipRow label={labels.billed} value={formatCost(row.actual_cost)} tone="billed" />

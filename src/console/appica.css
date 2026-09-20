@@ -1846,8 +1846,8 @@ html[data-console-theme] .console-keys-panel .console-pagination {
 }
 
 html[data-console-theme] .console-keys-page .console-table {
-  min-width: 94rem;
-  table-layout: fixed;
+  min-width: 100%;
+  table-layout: auto;
   padding: 0;
   border: 0;
 }
@@ -1865,18 +1865,43 @@ html[data-console-theme] .console-keys-page .console-table td {
   font-size: var(--text-sm);
 }
 
-html[data-console-theme] .console-keys-page .console-table th[data-column="name"] { width: 9rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="key"] { width: 12rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="group"] { width: 16rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="current_concurrency"] { width: 7.5rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="usage"] { width: 9rem; }
+html[data-console-theme] .console-keys-page .console-table th[data-column="name"] { width: 10%; }
+html[data-console-theme] .console-keys-page .console-table th[data-column="key"] { width: 14%; }
+html[data-console-theme] .console-keys-page .console-table th[data-column="group"] { width: auto; }
+html[data-console-theme] .console-keys-page .console-table th[data-column="expires_at"],
+html[data-console-theme] .console-keys-page .console-table th[data-column="actions"] { width: 1%; }
 html[data-console-theme] .console-keys-page .console-table th[data-column="rate_limit"] { width: 12rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="expires_at"] { width: 8rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="status"] { width: 7.5rem; }
 html[data-console-theme] .console-keys-page .console-table th[data-column="last_used_at"] { width: 9rem; }
 html[data-console-theme] .console-keys-page .console-table th[data-column="last_used_ip"] { width: 8.5rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="created_at"] { width: 11.5rem; }
-html[data-console-theme] .console-keys-page .console-table th[data-column="actions"] { width: 21rem; }
+
+html[data-console-theme] .console-keys-page .console-table :is(th, td)[data-column="current_concurrency"] {
+  width: 7.5rem;
+  min-width: 7.5rem;
+}
+
+html[data-console-theme] .console-keys-page .console-table :is(th, td)[data-column="usage"] {
+  width: 8.5rem;
+  min-width: 8.5rem;
+}
+
+html[data-console-theme] .console-keys-page .console-table :is(th, td)[data-column="status"] {
+  width: 6.5rem;
+  min-width: 6.5rem;
+}
+
+html[data-console-theme] .console-keys-page .console-table :is(th, td)[data-column="created_at"] {
+  width: 14rem;
+  min-width: 14rem;
+}
+
+html[data-console-theme] .console-keys-page .console-code {
+  min-width: 11rem;
+}
+
+html[data-console-theme] .console-keys-page .console-group-trigger {
+  min-width: 13rem;
+  max-width: 24rem;
+}
 
 @media (min-width: 64.0625rem) {
   html[data-console-theme] .console-keys-page {
@@ -1928,6 +1953,7 @@ html[data-console-theme] .console-key-title {
 }
 
 html[data-console-theme] .console-key-title strong {
+  max-width: 16rem;
   overflow: hidden;
   color: var(--foreground-intense);
   font-size: var(--text-sm);
@@ -2244,7 +2270,7 @@ html[data-console-theme] .console-key-usage {
 
 html[data-console-theme] .console-key-usage > div {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: max-content max-content;
   align-items: center;
   gap: 0.5rem;
   margin: 0;
@@ -2282,11 +2308,12 @@ html[data-console-theme] .console-rate-windows small {
 
 html[data-console-theme] .console-key-actions {
   display: flex;
-  width: 100%;
+  width: max-content;
   min-width: 0;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 0.375rem;
+  white-space: nowrap;
 }
 
 html[data-console-theme] .console-key-actions > [data-slot="button"] {
@@ -6914,10 +6941,6 @@ html[data-console-theme] .console-token-cell .is-output svg {
 
 html[data-console-theme] .console-token-cell .is-read svg {
   color: var(--console-chart-3);
-}
-
-html[data-console-theme] .console-token-cell .is-write svg {
-  color: var(--console-chart-4);
 }
 
 html[data-console-theme] .console-cost-cell,
