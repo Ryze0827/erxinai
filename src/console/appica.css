@@ -8835,7 +8835,7 @@ html[data-console-theme] .console-use-step .console-tool-grid > label {
   display: grid;
   min-width: 0;
   min-height: 4.25rem;
-  grid-template-columns: 1.25rem minmax(0, 1fr) 1.25rem;
+  grid-template-columns: 2rem minmax(0, 1fr) 1.25rem;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem;
@@ -8849,6 +8849,13 @@ html[data-console-theme] .console-use-step .console-tool-grid > label {
 html[data-console-theme] .console-use-step .console-tool-grid > label:hover {
   border-color: var(--border-strong);
   background: var(--background-subtle);
+}
+
+html[data-console-theme] .console-tool-icon {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
 }
 
 html[data-console-theme] .console-use-step .console-tool-grid > label.is-active {
