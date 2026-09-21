@@ -45,6 +45,26 @@ export function scoredSuccessRate(metrics, health) {
   return errorRate == null ? null : 100 - errorRate;
 }
 
+// User rankings omit health and redact counts. A positive server rank indicates
+// traffic; rank 0 is the appended self row with no traffic in the selected window.
+export function buildMonitorRankingRows(items) {
+  return items.map((item, index) => {
+    const rank = metricNumber(item.rank);
+    const metrics = rank > 0 ? item.metrics || {} : {};
+    const errorRate = metricNumber(metrics.error_rate);
+    const cacheRate = metricNumber(metrics.cache_rate);
+    return {
+      key: item.is_self ? "self" : "rank:" + (rank ?? index),
+      rank,
+      isSelf: item.is_self === true,
+      label: typeof item.display_label === "string" ? item.display_label : "",
+      metrics,
+      successRate: errorRate == null ? null : Math.max(0, 1 - errorRate) * 100,
+      cacheRate: cacheRate == null ? null : Math.min(1, cacheRate) * 100,
+    };
+  });
+}
+
 export function buildMonitorRows(items, groups, rates, mode, range, details = {}) {
   return items.map((item) => {
     const group = matchingGroup(item, groups, mode);

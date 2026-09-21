@@ -15,7 +15,7 @@ import { UsagePage } from "./console/pages/UsagePage";
 import { SubscriptionsPage } from "./console/pages/SubscriptionsPage";
 import { RedeemPage } from "./console/pages/RedeemPage";
 import { ChannelsPage } from "./console/pages/ChannelsPage";
-import { MonitorPage } from "./console/pages/MonitorPage";
+import { MonitorPage, UserRankingPage } from "./console/pages/MonitorPage";
 import { AffiliatePage } from "./console/pages/AffiliatePage";
 import { ProfilePage } from "./console/pages/ProfilePage";
 import { BatchImagesPage } from "./console/pages/BatchImagesPage";
@@ -62,6 +62,7 @@ export function App() {
           <Route path="/affiliate" element={<ConsoleRoute standardOnly feature="affiliate_enabled"><AffiliatePage /></ConsoleRoute>} />
           <Route path="/available-channels" element={<ConsoleRoute standardOnly feature="available_channels_enabled"><ChannelsPage /></ConsoleRoute>} />
           <Route path="/monitor" element={<ConsoleRoute feature="channel_monitor_enabled" mode="opt-out"><MonitorPage /></ConsoleRoute>} />
+          <Route path="/user-ranking" element={<ConsoleRoute feature="channel_monitor_enabled" mode="opt-out"><UserRankingPage /></ConsoleRoute>} />
           <Route path="/profile" element={<ConsoleRoute><ProfilePage /></ConsoleRoute>} />
           <Route path="/image-studio" element={<ConsoleRoute><ImageStudioPage /></ConsoleRoute>} />
           <Route path="/image-api-docs" element={<ConsoleRoute><ImageApiDocsPage /></ConsoleRoute>} />

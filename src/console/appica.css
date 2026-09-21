@@ -9924,12 +9924,23 @@ html[data-console-theme] .console-group-trend-missing { fill: var(--background-m
 html[data-console-theme] .console-group-trend-incident { fill: none; stroke-width: 3; stroke-linecap: round; opacity: 0.2; }
 html[data-console-theme] .console-group-trend-primary { fill: none; stroke: var(--console-monitor-healthy); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 html[data-console-theme] .console-group-trend-secondary { fill: none; stroke: var(--console-monitor-secondary); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }
-html[data-console-theme] .console-group-trend-hit { fill: none; stroke: transparent; stroke-width: 12; pointer-events: stroke; }
+html[data-console-theme] .console-group-trend-plot { position: relative; }
+html[data-console-theme] .console-group-trend-targets { position: absolute; inset: 0; }
+html[data-console-theme] .console-group-trend-target { position: absolute; top: 0; bottom: 0; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: crosshair; }
+html[data-console-theme] .console-group-trend-target:focus-visible { outline: var(--border-width) solid var(--border-strong); outline-offset: 0; }
+html[data-console-theme] .console-group-trend-guide { fill: none; stroke: var(--border-strong); stroke-width: 1; stroke-dasharray: 2 3; }
+html[data-console-theme] [data-slot="tooltip-content"].console-group-trend-tooltip { display: grid; gap: 0.5rem; max-width: calc(100vw - 2rem); padding: 0.75rem; border: var(--border-width) solid var(--border-muted); border-radius: var(--radius-md); background: var(--background); color: var(--foreground-strong); font-size: var(--text-xs); pointer-events: none; transition: none; animation: none; opacity: 1; scale: 1; }
+html[data-console-theme] .console-group-trend-tooltip > time { display: block; padding-bottom: 0.4rem; border-bottom: var(--border-width) solid var(--border-muted); color: var(--foreground-muted); font-variant-numeric: tabular-nums; }
+html[data-console-theme] .console-group-trend-tooltip-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+html[data-console-theme] .console-group-trend-tooltip-row > span { display: inline-flex; align-items: center; gap: 0.4rem; }
+html[data-console-theme] .console-group-trend-tooltip-row i { width: 0.75rem; flex: none; border-top: calc(var(--border-width) * 2) solid var(--success-emphasis); }
+html[data-console-theme] .console-group-trend-tooltip-row.is-secondary i { border-color: var(--info-emphasis); border-top-style: dashed; }
+html[data-console-theme] .console-group-trend-tooltip-row strong { color: var(--foreground-intense); font-variant-numeric: tabular-nums; white-space: nowrap; }
 html[data-console-theme] .console-group-trend-marker { fill: none; stroke-width: 4; stroke-linecap: round; opacity: 0; pointer-events: none; }
 html[data-console-theme] .console-group-trend-marker.is-latency { stroke: var(--console-monitor-healthy); }
 html[data-console-theme] .console-group-trend-marker.is-secondary { stroke: var(--console-monitor-secondary); }
 html[data-console-theme] .console-group-trend-marker.is-boundary { opacity: 1; }
-html[data-console-theme] .console-group-trend-point:hover .console-group-trend-marker { opacity: 1; stroke-width: 6; }
+html[data-console-theme] .console-group-trend-point.is-active .console-group-trend-marker { opacity: 1; stroke-width: 6; }
 html[data-console-theme] .console-group-trend-legend { display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; margin-bottom: 0.5rem; color: var(--foreground-strong); font-size: var(--text-sm); font-weight: 500; }
 html[data-console-theme] .console-group-trend-legend > span { display: inline-flex; align-items: center; gap: 0.5rem; }
 html[data-console-theme] .console-group-trend-legend > span::before { display: block; flex: none; width: 1.5rem; border-top: calc(var(--border-width) * 2) solid var(--console-monitor-healthy); content: ""; }
@@ -9946,6 +9957,16 @@ html[data-console-theme] .console-group-notice { padding: 0.75rem 1.25rem; margi
 html[data-console-theme] .console-group-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.875rem 1.25rem; border-top: var(--border-width) solid var(--border-muted); color: var(--foreground-subtle); font-size: var(--text-xs); }
 html[data-console-theme] .console-group-definitions { display: grid; gap: 0.3rem; padding: 0.75rem 1.25rem; color: var(--foreground-muted); font-size: var(--text-xs); }
 html[data-console-theme] .console-group-definitions p { margin: 0; }
+html[data-console-theme] .console-monitor-ranking h2 { margin: 0; color: var(--foreground-intense); font-size: var(--text-base); font-weight: 650; }
+html[data-console-theme] .console-ranking-table { min-width: 52rem; border: 0; padding: 0; border-radius: 0; }
+html[data-console-theme] .console-ranking-table > thead > tr > th { color: var(--foreground-muted); background: var(--background-subtle); font-size: var(--text-xs); white-space: nowrap; border-radius: 0; }
+html[data-console-theme] .console-ranking-table > tbody > tr > td { padding: 1rem; border-color: var(--border-muted); border-radius: 0; }
+html[data-console-theme] .console-ranking-table > tbody > .console-ranking-self { background: var(--console-selection-surface); }
+html[data-console-theme] .console-ranking-user { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; min-width: 8rem; }
+html[data-console-theme] .console-ranking-user strong { color: var(--foreground-intense); overflow-wrap: anywhere; }
+html[data-console-theme] .console-ranking-value { color: var(--foreground-strong); font-variant-numeric: tabular-nums; white-space: nowrap; }
+html[data-console-theme] .console-group-ttft.is-unrated .console-group-latency-value strong { color: var(--foreground-intense); }
+html[data-console-theme] .console-ranking-refresh-error { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; background: var(--warning-muted); color: var(--warning-strong); font-size: var(--text-xs); }
 @media (max-width: 64rem) {
   html[data-console-theme] .console-group-board-header { align-items: flex-start; flex-direction: column; }
   html[data-console-theme] .console-group-updated { width: 100%; justify-content: space-between; }

@@ -95,6 +95,7 @@ const workspaceNav = [
   { path: "/usage", key: "nav.usage", icon: "usageChart", standardOnly: true },
   { path: "/available-channels", key: "nav.channels", icon: "channelNetwork", feature: "available", standardOnly: true },
   { path: "/monitor", key: "nav.monitor", icon: "serverHealth", feature: "monitor" },
+  { path: "/user-ranking", key: "nav.userRanking", icon: "usageChart", feature: "userRanking" },
 ];
 
 const accountNav = [
@@ -121,6 +122,7 @@ const featureDefinitions = {
 
 function itemEnabled(item, settings, simpleMode, batchEnabled) {
   if (item.standardOnly && simpleMode) return false;
+  if (item.feature === "userRanking") return resolveFeature(settings, "channel_monitor_enabled", "opt-out") && settings?.channel_monitor_mode === "v2" && settings?.channel_monitor_hide_user_ranking !== true;
   if (item.feature === "batch") return batchEnabled;
   const definition = featureDefinitions[item.feature];
   return definition ? resolveFeature(settings, definition[0], definition[1]) : true;
