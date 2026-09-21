@@ -9874,8 +9874,10 @@ html[data-console-theme] .console-group-col-state { width: 12rem; }
 html[data-console-theme] .console-group-col-ttft { width: 13rem; }
 html[data-console-theme] .console-group-col-throughput { width: 8rem; }
 html[data-console-theme] .console-group-col-ring { width: 7rem; }
-html[data-console-theme] .console-group-col-details { width: 5rem; }
-html[data-console-theme] .console-group-status-table > tbody > tr > .console-group-trend-cell { padding-inline: 1.5rem; }
+html[data-console-theme] .console-group-col-details { width: 8rem; }
+html[data-console-theme] .console-group-status-table > tbody > tr > .console-group-trend-cell { padding-inline: 1.5rem 0.5rem; }
+html[data-console-theme] .console-group-status-table > thead > tr > th:last-child,
+html[data-console-theme] .console-group-status-table > tbody > tr > td:last-child:not([colspan]) { padding-inline-start: 0.5rem; }
 html[data-console-theme] .console-group-status-table > thead > tr > .console-group-centered-heading { text-align: center; }
 html[data-console-theme] .console-group-status-table.has-throughput { min-width: 84rem; }
 html[data-console-theme] .console-group-throughput { color: var(--foreground-intense); font-size: var(--text-sm); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -9920,7 +9922,6 @@ html[data-console-theme] .console-group-trend { min-width: 0; }
 html[data-console-theme] .console-group-trend svg { display: block; width: 100%; height: 5rem; overflow: visible; }
 html[data-console-theme] .console-group-trend svg path { vector-effect: non-scaling-stroke; }
 html[data-console-theme] .console-group-trend-grid { fill: none; stroke: var(--border-muted); stroke-width: 0.75; stroke-dasharray: 2 5; opacity: 0.6; }
-html[data-console-theme] .console-group-trend-missing { fill: var(--background-muted); opacity: 0.6; }
 html[data-console-theme] .console-group-trend-incident { fill: none; stroke-width: 3; stroke-linecap: round; opacity: 0.2; }
 html[data-console-theme] .console-group-trend-primary { fill: none; stroke: var(--console-monitor-healthy); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 html[data-console-theme] .console-group-trend-secondary { fill: none; stroke: var(--console-monitor-secondary); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }

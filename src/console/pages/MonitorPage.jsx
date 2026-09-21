@@ -96,10 +96,11 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   const [activeTime, setActiveTime] = useState(null);
   const geometry = trendGeometry(timeline, mode === "v2" ? coverage : undefined);
   const validPoints = geometry.points.filter((point) => point.latency != null || point.secondary != null);
+  const lastVisiblePoint = validPoints.at(-1);
   if (!geometry.points.length) return <div className="console-group-trend-empty">{localized(locale, "暂无延迟数据", "No latency data")}</div>;
   const flat = ["latency", "secondary"].every((field) => new Set(validPoints.map((point) => point[field]).filter((value) => value != null)).size <= 1);
   const seconds = geometry.bucketSeconds;
-  const bucketLabel = seconds == null ? localized(locale, "汇总粒度未知", "Unknown interval") : seconds < 3600 ? seconds / 60 + localized(locale, "分钟汇总", "-minute buckets") : seconds < 86400 ? seconds / 3600 + localized(locale, "小时汇总", "-hour buckets") : seconds / 86400 + localized(locale, "天汇总", "-day buckets");
+  const bucketLabel = seconds == null ? localized(locale, "数据点粒度未知", "Unknown point interval") : localized(locale, "每点 ", "Each point: ") + (seconds < 3600 ? seconds / 60 + localized(locale, " 分钟", " minutes") : seconds < 86400 ? seconds / 3600 + localized(locale, " 小时", " hours") : seconds / 86400 + localized(locale, " 天", " days"));
   const primary = mode === "v2" ? localized(locale, "平均首字延迟", "Average TTFT") : localized(locale, "探测延迟", "Probe latency");
   const secondary = mode === "v2" ? localized(locale, "P95（分桶估算）", "P95 (bucket estimate)") : "Ping";
   return <TooltipProvider delay={0} closeDelay={0}><div className="console-group-trend">
@@ -108,7 +109,6 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
     <svg viewBox="0 0 280 56" preserveAspectRatio="none" role="img" aria-label={primary + " / " + secondary + " · " + dateLabel(geometry.startTime, locale) + " — " + dateLabel(geometry.endTime, locale)}>
       <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--console-monitor-healthy)" stopOpacity=".16" /><stop offset="100%" stopColor="var(--console-monitor-healthy)" stopOpacity="0" /></linearGradient></defs>
       <path className="console-group-trend-grid" d="M4,7 H276 M4,28 H276 M4,49 H276" />
-      {geometry.points.filter((point) => point.latency == null && point.secondary == null && point.width > 0).map((point) => <rect key={point.time} x={point.x} y="4" width={point.width} height="48" className="console-group-trend-missing" />)}
       {geometry.points.filter((point) => ["failed", "degraded"].includes(point.tone)).map((point, index) => <path key={index} d={`M${point.x},5 V51`} className="console-group-trend-incident" stroke={toneColor[point.tone]} />)}
       <path d={geometry.primaryArea} fill={`url(#${fillId})`} />
       <path className="console-group-trend-secondary" d={geometry.secondary} />
@@ -141,7 +141,7 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
       </Tooltip>;
     })}</div>
     </div>
-    <div className="console-group-trend-dates"><time>{dateLabel(geometry.startTime, locale)}</time><time>{dateLabel(geometry.endTime, locale)}</time></div>
+    <div className="console-group-trend-dates" style={{ marginInlineStart: 4 / 280 * 100 + "%", marginInlineEnd: (280 - (lastVisiblePoint?.x ?? 276)) / 280 * 100 + "%" }}><time>{dateLabel(geometry.startTime, locale)}</time><time>{dateLabel(lastVisiblePoint?.time || geometry.endTime, locale)}</time></div>
     {mode === "v2" && <div className="console-group-trend-note">{bucketLabel} · {validPoints.length}/{geometry.points.length} {localized(locale, "个区间有数据", "intervals with data")}{validPoints.length < 3 ? " · " + localized(locale, "数据较少", "Limited history") : flat ? " · " + localized(locale, "各点数值相同", "Values unchanged") : ""}</div>}
   </div></TooltipProvider>;
 }
@@ -195,7 +195,7 @@ function StatusRow({ row, mode, showThroughput, range, locale, formatNumber, lab
           <TableCell><MetricRing value={mode === "v2" ? row.cacheRate : row.availability} accessibleLabel={row.name + " · " + labels[showThroughput ? 5 : 4]} label={mode === "v2" ? range : localized(locale, "探测可用率", "Probe uptime")} tone={mode === "v2" ? monitorTone(row.source.health?.cache) : "operational"} /></TableCell>
           <TableCell>{mode === "v2" ? <MetricRing value={row.successRate} accessibleLabel={row.name + " · " + labels[showThroughput ? 6 : 5]} label={range} tone={monitorTone(row.source.health?.error_rate)} /> : <strong className="console-group-ping">{duration(row.ping, formatNumber)}</strong>}</TableCell>
           <TableCell className="console-group-trend-cell"><Trend timeline={row.timeline} mode={mode} coverage={coverage} locale={locale} formatNumber={formatNumber} /></TableCell>
-          <TableCell><Button size="sm" aria-expanded={expanded} aria-controls={"monitor-detail-" + row.key} aria-label={row.name + " · " + localized(locale, "模型详情", "Model details")} onClick={() => setExpanded((current) => !current)}>{expanded ? localized(locale, "收起", "Collapse") : localized(locale, "查看", "View")}</Button></TableCell>
+          <TableCell><Button size="sm" aria-expanded={expanded} aria-controls={"monitor-detail-" + row.key} aria-label={row.name + " · " + localized(locale, "模型详情", "Model details")} onClick={() => setExpanded((current) => !current)}>{expanded ? localized(locale, "收起", "Collapse") : localized(locale, "展开", "Expand")}</Button></TableCell>
         </TableRow>
         {expanded && <TableRow><TableCell colSpan={labels.length} id={"monitor-detail-" + row.key}><ModelDetails row={row} detail={detail} mode={mode} showThroughput={showThroughput} locale={locale} formatNumber={formatNumber} onRetry={() => setDetailVersion((current) => current + 1)} /></TableCell></TableRow>}
   </>;
@@ -340,7 +340,7 @@ export function MonitorPage() {
       </div>}
       {!settingsError && ((state.loading && noData) || settingsLoading) ? <div className="console-group-loading" role="status" aria-label={t("common.loading")}>{Array.from({ length: 6 }, (_, index) => <Skeleton className="h-20 w-full" key={index} />)}</div> : visible.length ? <StatusTable rows={visible} mode={mode} showThroughput={showThroughput} range={range} locale={locale} formatNumber={formatNumber} updatedAt={state.updatedAt} coverage={state.coverage} /> : !state.error && !settingsError && <EmptyState icon="pulse" description={localized(locale, "暂无符合条件的监控数据。", "No monitoring data matches these filters.")} />}
       {showThroughput && <div className="console-group-definitions"><p>{localized(locale, "每秒 Token：所选窗口内的总吞吐量（TPM ÷ 60，含输入、输出及缓存 Token）。", "Tokens/sec: total throughput in the selected window (TPM ÷ 60, including input, output and cache tokens).")}</p></div>}
-      <footer className="console-group-footer"><span>{visible.length} {scope}</span><span>{mode === "v2" ? localized(locale, "— 表示样本不足或暂无数据 · 灰色区间无首字延迟数据 · 趋势纵轴按行缩放", "— indicates insufficient samples or no data · Gray intervals have no TTFT data · Each trend has its own scale") : localized(locale, "可用率来自主动探测 · 趋势为最近最多 60 次探测", "Uptime is based on probes · Trends show up to 60 recent probes")}</span></footer>
+      <footer className="console-group-footer"><span>{visible.length} {scope}</span><span>{mode === "v2" ? localized(locale, "— 表示样本不足或暂无数据 · 趋势纵轴按行缩放", "— indicates insufficient samples or no data · Each trend has its own scale") : localized(locale, "可用率来自主动探测 · 趋势为最近最多 60 次探测", "Uptime is based on probes · Trends show up to 60 recent probes")}</span></footer>
     </Panel>
   </Page>;
 }
