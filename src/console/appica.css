@@ -9971,6 +9971,45 @@ html[data-console-theme] .console-ranking-user strong { color: var(--foreground-
 html[data-console-theme] .console-ranking-value { color: var(--foreground-strong); font-variant-numeric: tabular-nums; white-space: nowrap; }
 html[data-console-theme] .console-group-ttft.is-unrated .console-group-latency-value strong { color: var(--foreground-intense); }
 html[data-console-theme] .console-ranking-refresh-error { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; background: var(--warning-muted); color: var(--warning-strong); font-size: var(--text-xs); }
+/* Color separates metrics from health, while warning and failure retain priority. */
+html[data-console-theme] .console-group-status-page .console-group-board-header {
+  background: linear-gradient(110deg, color-mix(in oklab, var(--info-emphasis) 8%, var(--background)), var(--background) 65%);
+  border-top: calc(var(--border-width) * 3) solid color-mix(in oklab, var(--info-emphasis) 50%, var(--border-muted));
+}
+html[data-console-theme] .console-group-summary {
+  background: linear-gradient(100deg, color-mix(in oklab, var(--success-emphasis) 5%, var(--background)), var(--background) 55%);
+}
+html[data-console-theme] .console-group-summary > .console-monitor-tone {
+  padding-block: 0.65rem;
+  padding-inline-end: 1rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--console-monitor-accent) 11%, var(--background));
+}
+html[data-console-theme] .console-group-summary > .console-monitor-tone > small { color: var(--console-monitor-ink); }
+html[data-console-theme] .console-group-rate { color: var(--info-intense); }
+html[data-console-theme] .console-monitor-tone[data-metric="cache"][data-tone="operational"] {
+  --console-monitor-accent: var(--console-monitor-secondary);
+  --console-monitor-ink: color-mix(in oklab, var(--info-intense) 75%, var(--foreground-strong));
+}
+html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td {
+  background: color-mix(in oklab, var(--info-emphasis) 3%, var(--background));
+}
+html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td:first-child {
+  border-inline-start: calc(var(--border-width) * 3) solid var(--foreground-subtle);
+}
+html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row[data-tone="operational"] > td:first-child { border-inline-start-color: var(--console-monitor-healthy); }
+html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row[data-tone="degraded"] > td:first-child { border-inline-start-color: var(--console-monitor-warning); }
+html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row[data-tone="failed"] > td:first-child { border-inline-start-color: var(--console-monitor-critical); }
+html[data-console-theme] .console-group-identity > span {
+  justify-self: start;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  color: var(--info-intense);
+  background: color-mix(in oklab, var(--info-emphasis) 9%, var(--background));
+}
+html[data-console-theme] .console-group-details h3 { display: flex; align-items: center; gap: 0.5rem; color: var(--info-intense); }
+html[data-console-theme] .console-group-details h3::before { content: ""; width: 0.2rem; height: 0.9rem; border-radius: var(--radius-full); background: var(--console-monitor-secondary); }
+html[data-console-theme] .console-group-details [data-slot="table-head"] { background: color-mix(in oklab, var(--info-emphasis) 6%, var(--background)); }
 @media (max-width: 64rem) {
   html[data-console-theme] .console-group-board-header { align-items: flex-start; flex-direction: column; }
   html[data-console-theme] .console-group-updated { width: 100%; justify-content: space-between; }
