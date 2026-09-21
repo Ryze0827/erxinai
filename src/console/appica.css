@@ -9925,6 +9925,9 @@ html[data-console-theme] .console-group-trend-grid { fill: none; stroke: var(--b
 html[data-console-theme] .console-group-trend-incident { fill: none; stroke-width: 3; stroke-linecap: round; opacity: 0.2; }
 html[data-console-theme] .console-group-trend-primary { fill: none; stroke: var(--console-monitor-healthy); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 html[data-console-theme] .console-group-trend-secondary { fill: none; stroke: var(--console-monitor-secondary); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }
+html[data-console-theme] .console-group-trend-chart { padding-inline-start: 4.5rem; }
+html[data-console-theme] .console-group-trend-axis { position: absolute; inset-block: 0; inset-inline-end: 100%; width: 4.5rem; color: var(--foreground-muted); font-size: 0.6rem; font-variant-numeric: tabular-nums; pointer-events: none; }
+html[data-console-theme] .console-group-trend-axis > span { position: absolute; inset-inline-end: 0.5rem; transform: translateY(-50%); white-space: nowrap; }
 html[data-console-theme] .console-group-trend-plot { position: relative; }
 html[data-console-theme] .console-group-trend-targets { position: absolute; inset: 0; }
 html[data-console-theme] .console-group-trend-target { position: absolute; top: 0; bottom: 0; padding: 0; border: 0; border-radius: 0; background: transparent; cursor: crosshair; }

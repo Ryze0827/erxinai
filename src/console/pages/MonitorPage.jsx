@@ -105,7 +105,9 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   const secondary = mode === "v2" ? localized(locale, "P95（分桶估算）", "P95 (bucket estimate)") : "Ping";
   return <TooltipProvider delay={0} closeDelay={0}><div className="console-group-trend">
     <div className="console-group-trend-legend"><span>{primary}</span><span>{secondary}</span></div>
+    <div className="console-group-trend-chart">
     <div className="console-group-trend-plot">
+    <div className="console-group-trend-axis" aria-label={localized(locale, "延迟刻度（毫秒）", "Latency scale (milliseconds)")}>{[1, 0.5, 0].map((ratio) => <span key={ratio} style={{ top: (49 - ratio * 42) / 56 * 100 + "%" }}>{validPoints.length ? formatNumber(geometry.max * ratio, { maximumFractionDigits: 1 }) + " ms" : "—"}</span>)}</div>
     <svg viewBox="0 0 280 56" preserveAspectRatio="none" role="img" aria-label={primary + " / " + secondary + " · " + dateLabel(geometry.startTime, locale) + " — " + dateLabel(geometry.endTime, locale)}>
       <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--console-monitor-healthy)" stopOpacity=".16" /><stop offset="100%" stopColor="var(--console-monitor-healthy)" stopOpacity="0" /></linearGradient></defs>
       <path className="console-group-trend-grid" d="M4,7 H276 M4,28 H276 M4,49 H276" />
@@ -142,6 +144,7 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
     })}</div>
     </div>
     <div className="console-group-trend-dates" style={{ marginInlineStart: 4 / 280 * 100 + "%", marginInlineEnd: (280 - (lastVisiblePoint?.x ?? 276)) / 280 * 100 + "%" }}><time>{dateLabel(geometry.startTime, locale)}</time><time>{dateLabel(lastVisiblePoint?.time || geometry.endTime, locale)}</time></div>
+    </div>
     {mode === "v2" && <div className="console-group-trend-note">{bucketLabel} · {validPoints.length}/{geometry.points.length} {localized(locale, "个区间有数据", "intervals with data")}{validPoints.length < 3 ? " · " + localized(locale, "数据较少", "Limited history") : flat ? " · " + localized(locale, "各点数值相同", "Values unchanged") : ""}</div>}
   </div></TooltipProvider>;
 }
