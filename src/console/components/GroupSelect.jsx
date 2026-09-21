@@ -3,7 +3,7 @@ import { SelectContent } from "@appica/ui-react/select";
 import { SelectItem } from "@appica/ui-react/select";
 import { SelectTrigger } from "@appica/ui-react/select";
 import { SelectValue } from "@appica/ui-react/select";
-import { GroupBadge } from "../GroupBadge";
+import { GroupBadge, PlatformMark } from "../GroupBadge";
 import { useLocale } from "../i18n";
 
 function rateFor(group, rates) {
@@ -13,6 +13,10 @@ function rateFor(group, rates) {
 
 function optionValue(group) {
   return group ? String(group.id) : "";
+}
+
+function originalRateFor(group) {
+  return Number(group.original_rate_multiplier ?? group.rate_multiplier ?? 1);
 }
 
 const EMPTY_OPTION_VALUE = "__empty_group__";
@@ -28,8 +32,8 @@ function optionLabel(group, locale) {
 function OptionContent({ group, rates, locale }) {
   if (!group) return <span>{optionLabel(group, locale)}</span>;
   const rate = rateFor(group, rates);
-  const original = Number(group.rate_multiplier || 1);
-  return <div className="console-group-option-content"><div className="console-group-option-identity"><GroupBadge name={group.name} platform={group.platform} />{group.description && <p>{group.description}</p>}</div><div className="console-group-rates">{rate !== original && <del>{original}×</del>}{group.subscription_type === "subscription" && <small>SUB</small>}<strong>{rate}×</strong></div></div>;
+  const original = originalRateFor(group);
+  return <div className="console-group-option-content"><div className="console-group-option-identity"><span className="console-group-option-name"><PlatformMark platform={group.platform} /><strong>{group.name}</strong></span>{group.description && <p>{group.description}</p>}</div><div className="console-group-rates">{group.subscription_type === "subscription" && <small>SUB</small>}{Number(rate) < original && <del>{original}×</del>}<strong>{rate}×</strong></div></div>;
 }
 
 export function GroupSelect({ value, groups = [], rates = {}, onChange, allowEmpty = false, compact = false }) {
@@ -42,5 +46,5 @@ export function GroupSelect({ value, groups = [], rates = {}, onChange, allowEmp
     onChange(next === EMPTY_OPTION_VALUE ? "" : String(next));
   };
   const selectedValue = selected ? optionValue(selected) : allowEmpty && String(value ?? "") === "" ? EMPTY_OPTION_VALUE : null;
-  return <div className={`console-group-select ${compact ? "is-compact" : ""}`}><Select value={selectedValue} onValueChange={select} size={compact ? "sm" : "md"} variant="outline" alignItemWithTrigger={false}><SelectTrigger className="console-group-trigger" aria-label={locale === "zh" ? "选择 API 分组" : "Choose API group"}><SelectValue placeholder={triggerLabel}>{selected ? <GroupBadge name={selected.name} platform={selected.platform} detail={`${rateFor(selected, rates)}×`} originalDetail={Number(rateFor(selected, rates)) < Number(selected.original_rate_multiplier || selected.rate_multiplier || 1) ? `${Number(selected.original_rate_multiplier || selected.rate_multiplier || 1)}×` : undefined} /> : allowEmpty && selectedValue === EMPTY_OPTION_VALUE ? optionLabel(null, locale) : triggerLabel}</SelectValue></SelectTrigger><SelectContent>{options.map((group) => <SelectItem className="console-group-option" value={selectValue(group)} key={optionValue(group) || "empty"}><OptionContent group={group} rates={rates} locale={locale} /></SelectItem>)}</SelectContent></Select></div>;
+  return <div className={`console-group-select ${compact ? "is-compact" : ""}`}><Select value={selectedValue} onValueChange={select} size={compact ? "sm" : "md"} variant="outline" alignItemWithTrigger={false}><SelectTrigger className="console-group-trigger" aria-label={locale === "zh" ? "选择 API 分组" : "Choose API group"}><SelectValue placeholder={triggerLabel}>{selected ? <GroupBadge name={selected.name} platform={selected.platform} detail={`${rateFor(selected, rates)}×`} originalDetail={Number(rateFor(selected, rates)) < originalRateFor(selected) ? `${originalRateFor(selected)}×` : undefined} /> : allowEmpty && selectedValue === EMPTY_OPTION_VALUE ? optionLabel(null, locale) : triggerLabel}</SelectValue></SelectTrigger><SelectContent className="console-group-menu">{options.map((group) => <SelectItem className="console-group-option" data-current={selectValue(group) === selectedValue || undefined} title={group ? [group.name, group.description].filter(Boolean).join(" · ") : undefined} value={selectValue(group)} key={optionValue(group) || "empty"}><OptionContent group={group} rates={rates} locale={locale} /></SelectItem>)}</SelectContent></Select></div>;
 }

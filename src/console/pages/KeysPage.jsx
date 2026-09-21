@@ -98,6 +98,15 @@ function resetCountdown(value, locale) {
   return `${minutes}m`;
 }
 
+function KeyCreatedTime({ value, locale }) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "—";
+  const language = locale === "zh" ? "zh-CN" : "en-US";
+  const day = new Intl.DateTimeFormat("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  return <time className="console-key-created" dateTime={date.toISOString()}><span>{day}</span><small>{new Intl.DateTimeFormat(language, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date)}</small></time>;
+}
+
 function UsageCell({ row, stats, formatCurrency, locale }) {
   const usage = stats?.[row.id] || stats?.[String(row.id)] || {};
   const percent = Number(row.quota) ? Number(row.quota_used || 0) / Number(row.quota) * 100 : 0;
@@ -330,7 +339,7 @@ export function KeysPage() {
     { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={row.status} label={statusLabel(row.status, locale)} /> },
     { key: "last_used_at", label: t("keys.lastUsed"), sortable: true, render: (row) => row.last_used_at ? formatDate(row.last_used_at) : "—" },
     { key: "last_used_ip", label: locale === "zh" ? "最近 IP" : "Last used IP", render: (row) => row.last_used_ip || "—" },
-    { key: "created_at", label: locale === "zh" ? "创建时间" : "Created", sortable: true, render: (row) => <span>{formatDate(row.created_at)}</span> },
+    { key: "created_at", label: locale === "zh" ? "创建时间" : "Created", sortable: true, render: (row) => <KeyCreatedTime value={row.created_at} locale={locale} /> },
     { key: "actions", label: t("common.actions"), render: (row) => <div className="console-key-actions"><InlineButton className="console-key-use-action" variant="soft" icon="terminal" data-walkthrough="use-key" aria-label={locale === "zh" ? "使用密钥" : "Use key"} title={locale === "zh" ? "使用密钥" : "Use key"} onClick={() => setDialog({ type: "use", item: row })}>{locale === "zh" ? "使用密钥" : "Use key"}</InlineButton>{settings?.hide_ccs_import_button !== true && <InlineButton className="console-key-cc-switch-action" icon="upload" aria-label="CC Switch" title="CC Switch" onClick={() => row.group?.platform === "antigravity" ? setDialog({ type: "ccs", item: row }) : importCcs(row)}>CC Switch</InlineButton>}<IconButton icon="edit" label={t("common.edit")} onClick={() => openEdit(row)} /><IconButton icon={row.status === "active" ? "pause" : "play"} label={t("keys.toggle")} onClick={() => updateKey(row, { status: row.status === "active" ? "inactive" : "active" })} /><IconButton icon="trash" label={t("common.delete")} onClick={() => setDialog({ type: "delete", item: row })} /></div> },
   ], [formatCurrency, formatDate, groups, locale, rates, settings, t, usageStats]);
   const columns = allColumns.filter((column) => ["name", "actions"].includes(column.key) || !hidden.has(column.key));

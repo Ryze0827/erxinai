@@ -98,7 +98,7 @@ export function InvoicePage() {
       : <><DataTable className="console-invoice-orders-table" columns={columns} rows={state.items} empty={<EmptyState icon="order" title={t("invoice.emptyTitle")} description={t("invoice.emptyDescription")} />} /><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 
   return <Page title={t("invoice.title")} className="console-invoice-page">
-    <Alert variant="primary" className="console-invoice-intro" role="note">
+    <Alert variant="info" className="console-invoice-intro" role="note">
       <AlertIcon><Icon name="orderReceipt" /></AlertIcon>
       <AlertTitle as="h2">{t("invoice.introTitle")}</AlertTitle>
       <AlertDescription>{t("invoice.introDescription")}</AlertDescription>
@@ -109,7 +109,7 @@ export function InvoicePage() {
         <Field label={t("invoice.email")} hint={t("invoice.emailHint")}>
           <TextInput type="email" autoComplete="email" required value={email} placeholder={t("invoice.emailPlaceholder")} onChange={(event) => setEmail(event.target.value)} />
         </Field>
-        <div className="console-invoice-selection" aria-live="polite">
+        <div className="console-invoice-selection" data-selected={selectedOrders.length > 0} aria-live="polite">
           <span>{t("invoice.selectedSummary", { count: selectedOrders.length })}</span>
           <strong>{formatUsd(selectedAmount)}</strong>
           <small>{t("invoice.selectedAmount")}</small>

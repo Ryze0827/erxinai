@@ -1,9 +1,5 @@
 import {
-  BrandClaude,
   BrandGoogleGemini,
-  BrandOpenai,
-  BrandX,
-  Cloud,
   World,
 } from "@appica/icons-react";
 import { Badge } from "@appica/ui-react/badge";
@@ -15,6 +11,14 @@ const platformAliases = {
   xai: "grok",
 };
 
+// Reuse the provider artwork displayed on the landing page.
+const platformArtwork = {
+  anthropic: "/assets/img/hero-claude-53b6104287.webp",
+  openai: "/assets/img/hero-codex-52fd8a0726.webp",
+  grok: "/assets/img/hero-grok-8f7563399d.webp",
+  antigravity: "/assets/img/hero-antigravity-c8c6175360.webp",
+};
+
 function platformTone(platform) {
   const value = String(platform || "").trim().toLowerCase();
   return platformAliases[value] || value || "default";
@@ -22,14 +26,9 @@ function platformTone(platform) {
 
 export function PlatformMark({ platform }) {
   const tone = platformTone(platform);
-  const marks = {
-    anthropic: BrandClaude,
-    openai: BrandOpenai,
-    gemini: BrandGoogleGemini,
-    antigravity: Cloud,
-    grok: BrandX,
-  };
-  const Mark = marks[tone] || World;
+  const artwork = platformArtwork[tone];
+  if (artwork) return <img src={artwork} alt="" aria-hidden="true" data-platform={tone} className="console-platform-artwork" />;
+  const Mark = tone === "gemini" ? BrandGoogleGemini : World;
   return <Mark aria-hidden="true" data-platform={tone} />;
 }
 

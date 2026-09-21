@@ -356,7 +356,7 @@ function IdentityCard() {
 function TotpSummary({ status, locale, t, onBegin }) {
   const heading = locale === "zh" ? "双因素身份验证" : "Two-factor authentication";
   const description = status.enabled ? (locale === "zh" ? "你的账户已受到身份验证器动态代码保护。" : "Your account is protected with authenticator codes.") : (locale === "zh" ? "启用身份验证器动态代码保护你的账户。" : "Protect your account with rotating authenticator codes.");
-  return <Panel title={locale === "zh" ? "账户保护" : "Account protection"} className="console-profile-protection"><div className="console-panel-body console-security-card"><span><Icon name="shield" size={27} /></span><div><strong>{heading}<StatusBadge status={status.enabled ? "active" : "inactive"} label={status.enabled ? "ON" : "OFF"} /></strong><p>{description}</p></div><Button variant={status.enabled ? "danger" : "primary"} onClick={() => onBegin(status.enabled ? "disable" : "setup")}>{status.enabled ? t("profile.disable2fa") : t("profile.setup2fa")}</Button></div></Panel>;
+  return <Panel title={locale === "zh" ? "账户保护" : "Account protection"} className="console-profile-protection"><div className="console-panel-body console-security-card" data-enabled={Boolean(status.enabled)}><span><Icon name="shield" size={27} /></span><div><strong>{heading}<StatusBadge status={status.enabled ? "active" : "inactive"} label={status.enabled ? "ON" : "OFF"} /></strong><p>{description}</p></div><Button variant={status.enabled ? "danger" : "primary"} onClick={() => onBegin(status.enabled ? "disable" : "setup")}>{status.enabled ? t("profile.disable2fa") : t("profile.setup2fa")}</Button></div></Panel>;
 }
 
 function TotpVerification({ flow, form, setForm, onSendCode, t }) {
