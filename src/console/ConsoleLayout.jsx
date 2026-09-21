@@ -95,7 +95,7 @@ const workspaceNav = [
   { path: "/usage", key: "nav.usage", icon: "usageChart", standardOnly: true },
   { path: "/available-channels", key: "nav.channels", icon: "channelNetwork", feature: "available", standardOnly: true },
   { path: "/monitor", key: "nav.monitor", icon: "serverHealth", feature: "monitor" },
-  { path: "/user-ranking", key: "nav.userRanking", icon: "usageChart", feature: "userRanking" },
+  { path: "/user-ranking", key: "nav.userRanking", icon: "usageChart", feature: "userRanking", sidebarHidden: true },
 ];
 
 const accountNav = [
@@ -445,10 +445,10 @@ export function ConsoleLayout({ children }) {
   const simpleMode = user?.run_mode === "simple";
   const customItems = (settings?.custom_menu_items || []).filter((item) => item.visibility === "user").sort((a, b) => a.sort_order - b.sort_order).flatMap((item) => { const kind = nativeCustomPageKind(item); const markdown = item.page_slug || String(item.url || "").startsWith("md:"); return nativeCustomPageRoute(kind) || !markdown ? [] : [{ path: `/custom/${item.id}`, label: item.label, icon: nativeCustomPageIcon(kind) }]; });
   const overviewItems = overviewNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled));
-  const workspaceItems = workspaceNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled));
+  const workspaceItems = workspaceNav.filter((item) => !item.sidebarHidden && itemEnabled(item, settings, simpleMode, batchEnabled));
   const personalItems = accountNav.filter((item) => !item.sidebarHidden && itemEnabled(item, settings, simpleMode, batchEnabled));
   const toolItems = [...toolsNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...customItems];
-  const allItems = [...overviewItems, ...workspaceItems, ...accountNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...toolItems];
+  const allItems = [...overviewItems, ...workspaceNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...accountNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...toolItems];
   const title = pageTitle(location.pathname, allItems, t);
   const logo = DEFAULT_SITE_LOGO;
   const siteName = branding?.siteName || DEFAULT_SITE_NAME;
