@@ -6824,18 +6824,18 @@ html[data-console-theme] .console-usage-records-panel .console-table {
 
 html[data-console-theme] .console-usage-records-panel .console-table th,
 html[data-console-theme] .console-usage-records-panel .console-table td {
-  padding: 0.875rem 0.75rem;
+  padding: 0.65rem 0.75rem;
 }
 
 html[data-console-theme] .console-usage-records-panel .console-table td {
-  height: 5.5rem;
+  height: 4.25rem;
 }
 
 /* Record rows contain several tooltip-backed values. Skip painting rows outside
    the viewport while preserving their fixed layout height during page scroll. */
 html[data-console-theme] .console-usage-records-panel .console-table tbody tr {
   content-visibility: auto;
-  contain-intrinsic-block-size: 5.5rem;
+  contain-intrinsic-block-size: 4.25rem;
 }
 
 html[data-console-theme] .console-usage-records-panel .console-table td:not(:has(button, a, input, select, textarea, [role="button"])) {
@@ -6867,7 +6867,7 @@ html[data-console-theme] .console-usage-records-panel [data-column="cost"] {
 }
 
 html[data-console-theme] .console-usage-records-panel [data-column="tokens"] {
-  width: 12rem;
+  width: 18rem;
 }
 
 html[data-console-theme] .console-usage-records-panel [data-column="ip_address"] {
@@ -10243,3 +10243,45 @@ html[data-console-theme] .console-redeem-entry form [data-slot="button"][type="s
   background: color-mix(in oklab, var(--info-emphasis) 14%, var(--background));
 }
 html[data-console-theme] .console-redeem-entry form [data-slot="button"][type="submit"]:hover:not(:disabled) { background: color-mix(in oklab, var(--info-emphasis) 22%, var(--background)); }
+
+/* Usage ledger: compact rows with explicit metric labels. */
+html[data-console-theme] .console-usage-filters.has-billing-popover { grid-template-columns: repeat(4, minmax(0, 1fr)) auto; align-items: end; }
+html[data-console-theme] [data-slot="button"].console-usage-more-filters { white-space: nowrap; gap: 0.4rem; }
+html[data-console-theme] .console-usage-billing-popover { display: grid; gap: 1rem; width: min(22rem, calc(100vw - 2rem)); padding: 1rem; }
+html[data-console-theme] .console-usage-billing-popover > strong { color: var(--foreground-intense); font-size: var(--text-sm); }
+html[data-console-theme] .console-usage-record-tools { flex-wrap: wrap; gap: 0.75rem; justify-content: space-between; }
+html[data-console-theme] .console-usage-record-tools .console-ip-toolbar { margin-inline-start: auto; }
+html[data-console-theme] .console-usage-records-panel .console-table tbody tr + tr > td { border-top: var(--border-width) solid color-mix(in oklab, var(--border-muted) 65%, transparent); }
+html[data-console-theme] .console-usage-records-panel .console-table tbody tr:hover > td { background: color-mix(in oklab, var(--info-emphasis) 4%, var(--background)); }
+html[data-console-theme] .console-usage-records-panel :is(.console-usage-time, .console-usage-key-endpoint, .console-usage-model-group, .console-usage-type-billing) { gap: 0.25rem; }
+html[data-console-theme] .console-usage-time { font-variant-numeric: tabular-nums; }
+html[data-console-theme] .console-usage-page .console-token-cell > div { grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; max-width: 15.5rem; gap: 0.5rem; }
+html[data-console-theme] .console-usage-page .console-token-cell > div > span { display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; font-size: var(--text-sm); color: var(--foreground-intense); }
+html[data-console-theme] .console-usage-page .console-token-cell small { font-size: var(--text-xs); color: var(--foreground-muted); }
+html[data-console-theme] .console-usage-page .console-token-cell b { font-weight: 650; font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+html[data-console-theme] .console-usage-page .console-token-cell .is-read b { color: color-mix(in oklab, var(--info-intense) 70%, var(--foreground-strong)); }
+html[data-console-theme] .console-usage-page .console-latency { display: grid; width: 100%; max-width: 7.5rem; gap: 0.3rem; --response-ink: var(--foreground-muted); --response-accent: var(--foreground-subtle); }
+html[data-console-theme] .console-usage-page .console-latency[data-response="normal"] { --response-ink: color-mix(in oklab, var(--success-intense) 75%, var(--foreground-strong)); --response-accent: var(--success-emphasis); }
+html[data-console-theme] .console-usage-page .console-latency[data-response="moderate"] { --response-ink: color-mix(in oklab, var(--warning-intense) 75%, var(--foreground-strong)); --response-accent: var(--warning-emphasis); }
+html[data-console-theme] .console-usage-page .console-latency[data-response="slow"] { --response-ink: color-mix(in oklab, var(--error-intense) 75%, var(--foreground-strong)); --response-accent: var(--error-emphasis); }
+html[data-console-theme] .console-usage-page .console-latency > span { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; font-weight: 400; }
+html[data-console-theme] .console-usage-page .console-latency > .console-latency-primary { padding: 0.25rem 0.4rem; border-radius: var(--radius-sm); background: color-mix(in oklab, var(--response-accent) 9%, var(--background)); color: var(--response-ink); }
+html[data-console-theme] .console-usage-page .console-latency-primary b { font-size: var(--text-base); font-weight: 700; }
+html[data-console-theme] .console-usage-page .console-latency-primary small { color: inherit; font-size: var(--text-xs); }
+html[data-console-theme] .console-usage-page .console-latency > .console-latency-total { padding-inline: 0.4rem; color: var(--foreground-muted); font-size: var(--text-xs); }
+html[data-console-theme] .console-usage-page .console-latency-total b { font-weight: 500; }
+html[data-console-theme] .console-usage-page .console-latency-total small { font-size: inherit; }
+html[data-console-theme] .console-usage-page .console-cost-main { display: grid; grid-template-columns: max-content 1.5rem; justify-content: start; gap: 0.25rem; text-align: start; }
+html[data-console-theme] .console-usage-page .console-cost-main > strong { grid-column: 1; grid-row: 1; }
+html[data-console-theme] .console-usage-page .console-cost-main > i { grid-column: 1; grid-row: 2; justify-self: start; }
+html[data-console-theme] .console-usage-page .console-cost-main > .console-cost-detail-trigger { grid-column: 2; grid-row: 1; }
+html[data-console-theme] .console-usage-page .console-cost-cell strong { color: color-mix(in oklab, var(--warning-intense) 60%, var(--foreground-strong)); font-size: var(--text-sm); }
+html[data-console-theme] .console-usage-page [data-slot="button"].console-cost-detail-trigger { color: var(--foreground-muted); }
+@media (max-width: 64rem) {
+  html[data-console-theme] .console-usage-filters.has-billing-popover { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 36rem) {
+  html[data-console-theme] .console-usage-filters.has-billing-popover { grid-template-columns: minmax(0, 1fr); }
+}
+
+html[data-console-theme] .console-usage-records-panel .console-table th[data-column="cost"] { text-align: start; }
