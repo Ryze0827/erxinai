@@ -807,7 +807,7 @@ const dictionaries = {
     "nav.keys": "API 密钥",
     "nav.batch": "批量图片",
     "imageStudio.title": "图片工作台",
-    "imageDocs.title": "生图API文档",
+    "imageDocs.title": "生图 API 文档",
     "videoWorkflow.title": "视频工作流",
     "nav.usage": "用量记录",
     "nav.channels": "可用渠道",

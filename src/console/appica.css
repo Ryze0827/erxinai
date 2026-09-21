@@ -149,16 +149,17 @@ html[data-console-theme] [data-slot="navigation-link"].console-nav-link:hover {
 }
 
 html[data-console-theme] [data-slot="navigation-link"].console-nav-link:hover svg {
-  color: var(--secondary-emphasis);
+  color: inherit;
 }
 
 html[data-console-theme] [data-slot="navigation-link"].console-nav-link.is-active {
-  color: var(--foreground-intense);
-  background: color-mix(in oklab, var(--secondary-muted) 34%, var(--background));
+  color: var(--info-intense);
+  font-weight: 600;
+  background: color-mix(in oklab, var(--info-emphasis) 10%, var(--background));
 }
 
 html[data-console-theme] [data-slot="navigation-link"].console-nav-link.is-active svg {
-  color: var(--secondary-emphasis);
+  color: inherit;
 }
 
 html[data-console-theme] [data-slot="navigation-link"].console-nav-link.is-active::before {
@@ -418,7 +419,7 @@ html[data-console-theme] .console-payment-method-selected {
 html[data-console-theme] .console-tool-grid > label {
   display: grid;
   min-height: 3.875rem;
-  grid-template-columns: 1.25rem minmax(0, 1fr) 1rem;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
   align-items: center;
   gap: 0.5625rem;
   padding: 0.5625rem 0.625rem;
@@ -772,6 +773,17 @@ html[data-console-theme] [data-slot="navigation-link"].console-nav-link {
   gap: 0.625rem;
   padding-inline: 0.75rem;
   text-align: start;
+}
+
+html[data-console-theme] .console-nav-section--store [data-slot="navigation-link"].console-nav-link {
+  grid-template-columns: 1.25rem minmax(0, 1fr) 1rem;
+}
+
+html[data-console-theme] [data-slot="navigation-link"].console-nav-link > [data-icon="start"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  justify-self: center;
+  color: inherit;
 }
 
 html[data-console-theme] [data-slot="navigation-link"].console-nav-link > span {
