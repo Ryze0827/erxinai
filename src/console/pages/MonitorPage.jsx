@@ -98,9 +98,6 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   const validPoints = geometry.points.filter((point) => point.latency != null || point.secondary != null);
   const lastVisiblePoint = validPoints.at(-1);
   if (!geometry.points.length) return <div className="console-group-trend-empty">{localized(locale, "暂无延迟数据", "No latency data")}</div>;
-  const flat = ["latency", "secondary"].every((field) => new Set(validPoints.map((point) => point[field]).filter((value) => value != null)).size <= 1);
-  const seconds = geometry.bucketSeconds;
-  const bucketLabel = seconds == null ? localized(locale, "数据点粒度未知", "Unknown point interval") : localized(locale, "每点 ", "Each point: ") + (seconds < 3600 ? seconds / 60 + localized(locale, " 分钟", " minutes") : seconds < 86400 ? seconds / 3600 + localized(locale, " 小时", " hours") : seconds / 86400 + localized(locale, " 天", " days"));
   const primary = mode === "v2" ? localized(locale, "平均首字延迟", "Average TTFT") : localized(locale, "探测延迟", "Probe latency");
   const secondary = mode === "v2" ? localized(locale, "P95（分桶估算）", "P95 (bucket estimate)") : "Ping";
   return <TooltipProvider delay={0} closeDelay={0}><div className="console-group-trend">
@@ -145,7 +142,6 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
     </div>
     <div className="console-group-trend-dates" style={{ marginInlineStart: 4 / 280 * 100 + "%", marginInlineEnd: (280 - (lastVisiblePoint?.x ?? 276)) / 280 * 100 + "%" }}><time>{dateLabel(geometry.startTime, locale)}</time><time>{dateLabel(lastVisiblePoint?.time || geometry.endTime, locale)}</time></div>
     </div>
-    {mode === "v2" && <div className="console-group-trend-note">{bucketLabel} · {validPoints.length}/{geometry.points.length} {localized(locale, "个区间有数据", "intervals with data")}{validPoints.length < 3 ? " · " + localized(locale, "数据较少", "Limited history") : flat ? " · " + localized(locale, "各点数值相同", "Values unchanged") : ""}</div>}
   </div></TooltipProvider>;
 }
 
@@ -172,7 +168,7 @@ function ModelDetails({ row, detail, mode, showThroughput, locale, formatNumber,
 }
 
 function StatusRow({ row, mode, showThroughput, range, locale, formatNumber, labels, updatedAt, coverage }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [detail, setDetail] = useState(null);
   const [detailVersion, setDetailVersion] = useState(0);
   const { id, group_id: groupId } = row.source;

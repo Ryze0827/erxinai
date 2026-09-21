@@ -10008,7 +10008,6 @@ html[data-console-theme] .console-group-trend-legend > span { display: inline-fl
 html[data-console-theme] .console-group-trend-legend > span::before { display: block; flex: none; width: 1.5rem; border-top: calc(var(--border-width) * 2) solid var(--console-monitor-healthy); content: ""; }
 html[data-console-theme] .console-group-trend-legend > span:last-child::before { border-color: var(--console-monitor-secondary); border-top-style: dashed; }
 html[data-console-theme] .console-group-trend-dates { display: flex; justify-content: space-between; gap: 0.65rem; margin-top: 0.4rem; color: var(--foreground-muted); font-size: 0.65rem; }
-html[data-console-theme] .console-group-trend-note { margin-top: 0.35rem; color: var(--foreground-subtle); font-size: 0.6rem; }
 html[data-console-theme] .console-group-trend-empty { display: grid; place-items: center; min-height: 5rem; color: var(--foreground-subtle); font-size: var(--text-xs); }
 html[data-console-theme] .console-group-details { padding: 0.5rem; }
 html[data-console-theme] .console-group-details h3 { margin: 0 0 0.75rem; color: var(--foreground-strong); font-size: var(--text-sm); }
@@ -10052,12 +10051,14 @@ html[data-console-theme] .console-monitor-tone[data-metric="cache"][data-tone="o
 html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td {
   background: color-mix(in oklab, var(--info-emphasis) 3%, var(--background));
 }
+html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row { --group-row-tint: var(--foreground-subtle); }
+html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row[data-tone="operational"] { --group-row-tint: var(--console-monitor-healthy); }
+html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row[data-tone="degraded"] { --group-row-tint: var(--console-monitor-warning); }
+html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row[data-tone="failed"] { --group-row-tint: var(--console-monitor-critical); }
 html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td:first-child {
-  border-inline-start: calc(var(--border-width) * 3) solid var(--foreground-subtle);
+  border-inline-start: 0;
+  background: linear-gradient(to right, color-mix(in oklab, var(--group-row-tint) 12%, transparent), transparent 90%), color-mix(in oklab, var(--info-emphasis) 3%, var(--background));
 }
-html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row[data-tone="operational"] > td:first-child { border-inline-start-color: var(--console-monitor-healthy); }
-html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row[data-tone="degraded"] > td:first-child { border-inline-start-color: var(--console-monitor-warning); }
-html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row[data-tone="failed"] > td:first-child { border-inline-start-color: var(--console-monitor-critical); }
 html[data-console-theme] .console-group-identity > span {
   justify-self: start;
   padding: 0.15rem 0.45rem;
@@ -10081,3 +10082,152 @@ html[data-console-theme] .console-group-details [data-slot="table-head"] { backg
   html[data-console-theme] .console-group-toolbar-line > [data-slot="input"] { width: 100%; }
   html[data-console-theme] .console-group-refresh { margin-inline-start: 0; }
 }
+
+/* Image API reference: color follows each section's purpose. */
+html[data-console-theme] .console-image-docs-page {
+  --image-doc-accent: var(--info-emphasis);
+  --image-doc-ink: var(--info-intense);
+}
+html[data-console-theme] .console-image-docs-page .is-response {
+  --image-doc-accent: var(--success-emphasis);
+  --image-doc-ink: var(--success-intense);
+}
+html[data-console-theme] .console-image-doc-summary:nth-child(2) {
+  --image-doc-accent: var(--warning-emphasis);
+  --image-doc-ink: var(--warning-intense);
+}
+html[data-console-theme] .console-image-doc-summary:nth-child(3) {
+  --image-doc-accent: var(--error-emphasis);
+  --image-doc-ink: var(--error-intense);
+}
+html[data-console-theme] .console-image-docs-page :is(.console-image-runbook-step, .console-image-doc-summary) {
+  border-color: color-mix(in oklab, var(--image-doc-accent) 20%, var(--border-muted));
+  background: linear-gradient(180deg, color-mix(in oklab, var(--image-doc-accent) 5%, var(--background)), var(--background) 9rem);
+}
+html[data-console-theme] .console-image-runbook-step > header > b,
+html[data-console-theme] .console-image-doc-summary > [data-slot="card-content"] > header > b {
+  color: var(--image-doc-ink);
+  background: color-mix(in oklab, var(--image-doc-accent) 13%, var(--background));
+}
+html[data-console-theme] .console-image-runbook-step h3,
+html[data-console-theme] .console-image-doc-summary > [data-slot="card-content"] > header > h3 { color: var(--image-doc-ink); }
+html[data-console-theme] .console-image-doc-runbook-head > div > span {
+  color: var(--info-intense);
+  background: color-mix(in oklab, var(--info-emphasis) 9%, var(--background));
+}
+html[data-console-theme] .console-image-doc-runbook-head > a { color: var(--info-intense); }
+html[data-console-theme] .console-image-runbook-endpoint {
+  border-color: color-mix(in oklab, var(--info-emphasis) 25%, var(--border-muted));
+  background: color-mix(in oklab, var(--info-emphasis) 6%, var(--background));
+}
+html[data-console-theme] .console-image-runbook-endpoint > span {
+  color: var(--success-intense);
+  background: color-mix(in oklab, var(--success-emphasis) 13%, var(--background));
+}
+html[data-console-theme] .console-image-docs-page :is(.console-image-runbook-request, .console-image-code) pre {
+  border-color: color-mix(in oklab, var(--image-doc-accent) 20%, var(--border-muted));
+  background: color-mix(in oklab, var(--image-doc-accent) 4%, var(--background-subtle));
+}
+html[data-console-theme] .console-image-docs-page .console-image-doc-table th {
+  color: var(--image-doc-ink);
+  background: color-mix(in oklab, var(--image-doc-accent) 8%, var(--background));
+}
+html[data-console-theme] .console-image-docs-page .console-image-doc-table code { color: var(--image-doc-ink); }
+html[data-console-theme] .console-image-runbook-step aside > svg { color: var(--image-doc-ink); flex-shrink: 0; }
+html[data-console-theme] .console-image-runbook-step aside.console-image-doc-notice {
+  color: var(--warning-intense);
+  border-inline-start: calc(var(--border-width) * 3) solid var(--warning-emphasis);
+  background: color-mix(in oklab, var(--warning-emphasis) 7%, var(--background));
+  border-radius: var(--radius-sm);
+  padding: 0.65rem;
+}
+html[data-console-theme] .console-image-runbook-step aside.console-image-doc-notice > svg { color: inherit; }
+html[data-console-theme] .console-image-doc-errors > div > b {
+  align-self: start;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  color: var(--error-intense);
+  background: color-mix(in oklab, var(--error-emphasis) 9%, var(--background));
+}
+html[data-console-theme] .console-image-doc-errors > .is-tone-3 > b {
+  color: var(--warning-intense);
+  background: color-mix(in oklab, var(--warning-emphasis) 11%, var(--background));
+}
+
+/* Referral and redemption: earnings, invitations and benefit types. */
+html[data-console-theme] :is(.console-affiliate-page, .console-redeem-page) {
+  --benefit-accent: var(--info-emphasis);
+  --benefit-ink: var(--info-intense);
+}
+html[data-console-theme] .console-affiliate-balance {
+  border-color: color-mix(in oklab, var(--success-emphasis) 20%, var(--border-muted));
+  background: linear-gradient(160deg, color-mix(in oklab, var(--success-emphasis) 7%, var(--background)), var(--background) 18rem);
+}
+html[data-console-theme] :is(.console-affiliate-balance-value, .console-affiliate-rebate) { color: var(--success-intense); }
+html[data-console-theme] :is(.console-affiliate-share, .console-redeem-entry) {
+  border-color: color-mix(in oklab, var(--info-emphasis) 20%, var(--border-muted));
+  background: linear-gradient(150deg, color-mix(in oklab, var(--info-emphasis) 6%, var(--background)), var(--background) 20rem);
+}
+html[data-console-theme] .console-affiliate-links label > div {
+  border-color: color-mix(in oklab, var(--info-emphasis) 24%, var(--border-muted));
+  background: color-mix(in oklab, var(--info-emphasis) 5%, var(--background));
+}
+html[data-console-theme] .console-affiliate-links code { color: var(--info-intense); }
+html[data-console-theme] .console-affiliate-metrics > .is-amber,
+html[data-console-theme] .console-redeem-info-list > .is-tone-4,
+html[data-console-theme] .console-redeem-summary-metrics > div:nth-child(5) {
+  --benefit-accent: var(--warning-emphasis);
+  --benefit-ink: var(--warning-intense);
+}
+html[data-console-theme] .console-affiliate-metrics > .is-green,
+html[data-console-theme] .console-affiliate-steps > div:last-child,
+html[data-console-theme] .console-redeem-info-list > .is-tone-1,
+html[data-console-theme] .console-redeem-history-list > .is-balance,
+html[data-console-theme] .console-redeem-summary-metrics > div:nth-child(1),
+html[data-console-theme] .console-redeem-summary-metrics > div:nth-child(3) {
+  --benefit-accent: var(--success-emphasis);
+  --benefit-ink: var(--success-intense);
+}
+html[data-console-theme] .console-redeem-info-list > .is-tone-3,
+html[data-console-theme] .console-redeem-history-list > .is-subscription,
+html[data-console-theme] .console-redeem-summary-metrics > div:nth-child(4) {
+  --benefit-accent: var(--secondary-emphasis);
+  --benefit-ink: var(--secondary-intense);
+}
+html[data-console-theme] .console-affiliate-metrics i,
+html[data-console-theme] .console-affiliate-steps > div > b,
+html[data-console-theme] .console-redeem-info-list > div > i,
+html[data-console-theme] .console-redeem-history-list > div > i {
+  color: var(--benefit-ink);
+  background: color-mix(in oklab, var(--benefit-accent) 11%, var(--background));
+  border-radius: var(--radius-md);
+}
+html[data-console-theme] .console-affiliate-metrics b,
+html[data-console-theme] .console-affiliate-steps > div > i,
+html[data-console-theme] .console-redeem-history-list > div > b,
+html[data-console-theme] .console-redeem-summary-metrics strong { color: var(--benefit-ink); }
+html[data-console-theme] .console-redeem-history-list > div > b[data-negative] { color: var(--error-intense); }
+html[data-console-theme] .console-redeem-summary-metrics > div {
+  background: linear-gradient(120deg, color-mix(in oklab, var(--benefit-accent) 7%, var(--background)), var(--background));
+  border-radius: var(--radius-md);
+}
+html[data-console-theme] :is(.console-affiliate-invitees-head, .console-redeem-history-head) {
+  background: linear-gradient(110deg, color-mix(in oklab, var(--info-emphasis) 5%, var(--background)), var(--background));
+}
+html[data-console-theme] .console-redeem-history-head > b {
+  color: var(--info-intense);
+  background: color-mix(in oklab, var(--info-emphasis) 10%, var(--background));
+}
+html[data-console-theme] .console-redeem-security { color: var(--info-intense); }
+html[data-console-theme] .console-affiliate-balance .console-panel-body > [data-slot="button"]:not(:disabled) {
+  color: var(--success-intense);
+  border-color: color-mix(in oklab, var(--success-emphasis) 40%, var(--border-muted));
+  background: color-mix(in oklab, var(--success-emphasis) 14%, var(--background));
+}
+html[data-console-theme] .console-affiliate-balance .console-panel-body > [data-slot="button"]:hover:not(:disabled) { background: color-mix(in oklab, var(--success-emphasis) 22%, var(--background)); }
+html[data-console-theme] .console-redeem-entry form [data-slot="button"][type="submit"]:not(:disabled) {
+  color: var(--info-intense);
+  border-color: color-mix(in oklab, var(--info-emphasis) 40%, var(--border-muted));
+  background: color-mix(in oklab, var(--info-emphasis) 14%, var(--background));
+}
+html[data-console-theme] .console-redeem-entry form [data-slot="button"][type="submit"]:hover:not(:disabled) { background: color-mix(in oklab, var(--info-emphasis) 22%, var(--background)); }
