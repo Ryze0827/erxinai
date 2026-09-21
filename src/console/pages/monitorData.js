@@ -62,12 +62,12 @@ export function buildMonitorRows(items, groups, rates, mode, range, details = {}
     if (mode === "v2") return {
       ...base,
       tone: monitorTone(item.health?.overall),
-      latency: metricNumber(item.metrics?.ttft?.p50_ms),
+      latency: metricNumber(item.metrics?.ttft?.avg_ms),
       p95: metricNumber(item.metrics?.ttft?.p95_ms),
       cacheRate: metricRate(item.metrics, item.health, "cache_rate"),
       successRate: scoredSuccessRate(item.metrics, item.health),
       models: [],
-      timeline: (item.buckets || []).map((point) => ({ time: point.bucket_start, latency: metricNumber(point.metrics?.ttft?.p50_ms), secondary: metricNumber(point.metrics?.ttft?.p95_ms), tone: monitorTone(point.health?.overall) })),
+      timeline: (item.buckets || []).map((point) => ({ time: point.bucket_start, latency: metricNumber(point.metrics?.ttft?.avg_ms), secondary: metricNumber(point.metrics?.ttft?.p95_ms), tone: monitorTone(point.health?.overall) })),
     };
     const model = details[item.id]?.models?.find((entry) => entry.model === item.primary_model);
     const availability = range === "7d" ? item.availability_7d : model?.[`availability_${range}`];

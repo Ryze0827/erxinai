@@ -45,6 +45,10 @@ function duration(value, formatNumber) {
   return value == null ? "—" : formatNumber(value, { maximumFractionDigits: 0 }) + " ms";
 }
 
+function estimatedDuration(value, formatNumber) {
+  return value == null ? "—" : "≤ " + duration(value, formatNumber);
+}
+
 function ThroughputMetric({ tpm, locale, formatNumber }) {
   const value = tokensPerSecond(tpm);
   return <strong className="console-group-throughput" title={value == null ? undefined : formatNumber(value, { maximumFractionDigits: 2 }) + " Token/s"}>{value == null ? "—" : value < 1000 ? formatNumber(value, { maximumFractionDigits: 2 }) : formatCompact(value)}<small>{value == null ? "" : localized(locale, " Token/秒", " Token/s")}</small></strong>;
@@ -64,8 +68,8 @@ function MetricRing({ value, label, accessibleLabel = label, tone = "operational
 }
 
 function TtftMetric({ metrics, health, locale, formatNumber }) {
-  const value = metricNumber(metrics?.p50_ms);
-  const tone = value == null ? "unknown" : monitorTone(health?.ttft);
+  const value = metricNumber(metrics?.avg_ms);
+  const tone = monitorTone(health?.ttft);
   const score = tone === "unknown" ? null : metricNumber(health?.ttft_score);
   const label = {
     operational: localized(locale, "快", "Fast"),
@@ -73,11 +77,12 @@ function TtftMetric({ metrics, health, locale, formatNumber }) {
     failed: localized(locale, "慢", "Slow"),
     unknown: localized(locale, "未知", "Unknown"),
   }[tone];
-  const scoreLabel = localized(locale, "首字响应评分", "TTFT score");
+  const scoreLabel = localized(locale, "首字响应评分（后端分位数口径）", "TTFT score (backend percentile basis)");
+  const ratingLabel = localized(locale, "评级：", "Rating: ") + label;
   return <div className="console-group-latency console-group-ttft console-monitor-tone" data-tone={tone}>
-    <div className="console-group-latency-value"><strong>{duration(value, formatNumber)}</strong><StatusBadge size="sm" status={tone === "operational" ? "active" : tone === "unknown" ? "inactive" : tone} label={label} /></div>
+    <div className="console-group-latency-value"><strong>{duration(value, formatNumber)}</strong><span title={scoreLabel}><StatusBadge size="sm" status={tone === "operational" ? "active" : tone === "unknown" ? "inactive" : tone} label={ratingLabel} /></span></div>
     {score == null ? <div className="console-group-latency-track" aria-label={scoreLabel + " · —"} /> : <Progress thickness={4} value={Math.min(100, score)} indicatorColor="var(--console-monitor-accent)" aria-label={scoreLabel} aria-valuetext={score.toFixed(1) + "/100 · " + label} />}
-    <div className="console-group-ttft-secondary"><small>{localized(locale, "平均", "AVG")} · {duration(metricNumber(metrics?.avg_ms), formatNumber)}</small><small>P90 · {duration(metricNumber(metrics?.p90_ms), formatNumber)}</small></div>
+    <div className="console-group-ttft-secondary" title={localized(locale, "分位数以直方图桶上限估算，不是精确测量值。", "Percentiles are estimated using histogram bucket upper bounds, not exact measurements.")}><small>P50 · {estimatedDuration(metricNumber(metrics?.p50_ms), formatNumber)}</small><small>P90 · {estimatedDuration(metricNumber(metrics?.p90_ms), formatNumber)}</small><small className="console-group-ttft-estimate">{localized(locale, "分桶估算", "Bucket estimates")}</small></div>
   </div>;
 }
 
@@ -89,8 +94,8 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   const flat = ["latency", "secondary"].every((field) => new Set(validPoints.map((point) => point[field]).filter((value) => value != null)).size <= 1);
   const seconds = geometry.bucketSeconds;
   const bucketLabel = seconds == null ? localized(locale, "汇总粒度未知", "Unknown interval") : seconds < 3600 ? seconds / 60 + localized(locale, "分钟汇总", "-minute buckets") : seconds < 86400 ? seconds / 3600 + localized(locale, "小时汇总", "-hour buckets") : seconds / 86400 + localized(locale, "天汇总", "-day buckets");
-  const primary = mode === "v2" ? "TTFT P50" : localized(locale, "探测延迟", "Probe latency");
-  const secondary = mode === "v2" ? "P95" : "Ping";
+  const primary = mode === "v2" ? localized(locale, "平均首字延迟", "Average TTFT") : localized(locale, "探测延迟", "Probe latency");
+  const secondary = mode === "v2" ? localized(locale, "P95（分桶估算）", "P95 (bucket estimate)") : "Ping";
   return <div className="console-group-trend">
     <div className="console-group-trend-legend"><span>{primary}</span><span>{secondary}</span></div>
     <svg viewBox="0 0 280 56" preserveAspectRatio="none" role="img" aria-label={primary + " / " + secondary + " · " + dateLabel(geometry.startTime, locale) + " — " + dateLabel(geometry.endTime, locale)}>
@@ -103,7 +108,7 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
       <path className="console-group-trend-primary" d={geometry.primary} />
       {geometry.points.map((point, index) => {
         if (point.latency == null && point.secondary == null) return null;
-        const pointLabel = dateLabel(point.time, locale) + " · " + primary + " " + duration(point.latency, formatNumber) + " · " + secondary + " " + duration(point.secondary, formatNumber);
+        const pointLabel = dateLabel(point.time, locale) + " · " + primary + " " + duration(point.latency, formatNumber) + " · " + secondary + " " + (mode === "v2" ? estimatedDuration(point.secondary, formatNumber) : duration(point.secondary, formatNumber));
         return <g key={point.time} className="console-group-trend-point">
           <title>{pointLabel}</title>
           <path className="console-group-trend-hit" d={`M${point.x},4 V52`} />
@@ -132,7 +137,7 @@ function ModelDetails({ row, detail, mode, showThroughput, locale, formatNumber,
   return <div className="console-group-details" aria-busy={detail.loading}><h3>{localized(locale, "模型详情", "Model details")}</h3>
     {detail.error && <div role="status" className="console-group-detail-refresh-error"><span>{localized(locale, "刷新失败，保留上次数据。", "Refresh failed. Showing previous data.")}</span><Button size="sm" onClick={onRetry}>{localized(locale, "重试", "Retry")}</Button></div>}
     {!models.length ? <EmptyState description={localized(locale, "暂无模型详情", "No model details")} /> : <Table size="sm" borderStyle="solid" aria-label={row.name + " · " + localized(locale, "模型详情", "Model details")}><TableHeader><TableRow>
-      {[localized(locale, "模型", "Model"), localized(locale, "状态", "Status"), mode === "v2" ? "TTFT P50" : localized(locale, "最新延迟", "Latest latency"), ...(showThroughput ? [localized(locale, "每秒 Token", "Tokens/sec")] : []), mode === "v2" ? localized(locale, "计分成功率", "Scored success rate") : localized(locale, "7天可用率", "7d uptime"), mode === "v2" ? localized(locale, "读缓存占比", "Cache read share") : localized(locale, "15天 / 30天可用率", "15d / 30d uptime")].map((label) => <TableHead key={label}>{label}</TableHead>)}
+      {[localized(locale, "模型", "Model"), localized(locale, "状态", "Status"), mode === "v2" ? localized(locale, "平均首字延迟", "Average TTFT") : localized(locale, "最新延迟", "Latest latency"), ...(showThroughput ? [localized(locale, "每秒 Token", "Tokens/sec")] : []), mode === "v2" ? localized(locale, "计分成功率", "Scored success rate") : localized(locale, "7天可用率", "7d uptime"), mode === "v2" ? localized(locale, "读缓存占比", "Cache read share") : localized(locale, "15天 / 30天可用率", "15d / 30d uptime")].map((label) => <TableHead key={label}>{label}</TableHead>)}
     </TableRow></TableHeader><TableBody>{models.map((model) => {
       const percent = (value) => metricNumber(value) == null ? "—" : Number(value).toFixed(1) + "%";
       const success = mode === "v2" ? scoredSuccessRate(model.metrics, model.health) : model.availability_7d;
@@ -176,7 +181,7 @@ function StatusRow({ row, mode, showThroughput, range, locale, formatNumber, lab
 }
 
 function StatusTable({ rows, mode, showThroughput, range, locale, formatNumber, updatedAt, coverage }) {
-  const labels = [localized(locale, "分组", "Group"), localized(locale, "倍率", "Multiplier"), localized(locale, "状态 / 模型", "Status / models"), mode === "v2" ? "TTFT P50" : localized(locale, "最新探测延迟", "Latest probe latency"), ...(showThroughput ? [localized(locale, "每秒 Token", "Tokens/sec")] : []), mode === "v2" ? localized(locale, "读缓存占比", "Cache read share") : range + " " + localized(locale, "可用率", "uptime"), mode === "v2" ? localized(locale, "计分成功率", "Scored success rate") : "Ping", mode === "v2" ? localized(locale, "首字延迟趋势", "TTFT trend") : localized(locale, "最近探测趋势", "Recent probes"), localized(locale, "详情", "Details")];
+  const labels = [localized(locale, "分组", "Group"), localized(locale, "倍率", "Multiplier"), localized(locale, "状态 / 模型", "Status / models"), mode === "v2" ? localized(locale, "平均首字延迟", "Average TTFT") : localized(locale, "最新探测延迟", "Latest probe latency"), ...(showThroughput ? [localized(locale, "每秒 Token", "Tokens/sec")] : []), mode === "v2" ? localized(locale, "读缓存占比", "Cache read share") : range + " " + localized(locale, "可用率", "uptime"), mode === "v2" ? localized(locale, "计分成功率", "Scored success rate") : "Ping", mode === "v2" ? localized(locale, "首字延迟趋势", "TTFT trend") : localized(locale, "最近探测趋势", "Recent probes"), localized(locale, "详情", "Details")];
   return <div className="console-group-table-scroll" tabIndex={0} role="region" aria-label={localized(locale, "分组状态表，可横向滚动", "Group status table, scroll horizontally")}>
     <Table size="sm" borderStyle="solid" className={"console-group-status-table" + (showThroughput ? " has-throughput" : "")} aria-label={localized(locale, "分组状态", "Group status")}>
       <colgroup>
@@ -259,7 +264,7 @@ export function MonitorPage() {
   const rows = useMemo(() => state.context === context ? buildMonitorRows(state.items, state.groups, state.rates, mode, range, state.details) : [], [state, mode, range, context]);
   const counts = rows.reduce((result, row) => { result[row.tone] += 1; return result; }, { operational: 0, degraded: 0, failed: 0, unknown: 0 });
   const query = search.trim().toLowerCase();
-  const sortOptions = [{ value: "status", label: localized(locale, "状态", "Status") }, { value: "rate", label: localized(locale, "倍率 ↑", "Multiplier ↑") }, { value: "latency", label: mode === "v2" ? localized(locale, "首字 P50 ↑", "TTFT P50 ↑") : localized(locale, "延迟 ↑", "Latency ↑") }, ...(mode === "v2" ? [{ value: "cacheRate", label: localized(locale, "读缓存占比 ↓", "Cache read share ↓") }, { value: "successRate", label: localized(locale, "计分成功率 ↓", "Scored success rate ↓") }] : [{ value: "availability", label: localized(locale, "可用率 ↓", "Uptime ↓") }])];
+  const sortOptions = [{ value: "status", label: localized(locale, "状态", "Status") }, { value: "rate", label: localized(locale, "倍率 ↑", "Multiplier ↑") }, { value: "latency", label: mode === "v2" ? localized(locale, "平均首字延迟 ↑", "Average TTFT ↑") : localized(locale, "延迟 ↑", "Latency ↑") }, ...(mode === "v2" ? [{ value: "cacheRate", label: localized(locale, "读缓存占比 ↓", "Cache read share ↓") }, { value: "successRate", label: localized(locale, "计分成功率 ↓", "Scored success rate ↓") }] : [{ value: "availability", label: localized(locale, "可用率 ↓", "Uptime ↓") }])];
   const visible = sortMonitorRows(rows.filter((row) => (filter === "all" || row.tone === filter) && (!query || [row.name, row.platform, row.description, ...row.models.map((model) => model.model)].join(" ").toLowerCase().includes(query))), sortOptions.some((option) => option.value === sort) ? sort : "status");
 
   const scope = mode === "v2" ? localized(locale, "分组 / 平台", "Groups / platforms") : localized(locale, "监控线路", "Monitored endpoints");
@@ -268,7 +273,7 @@ export function MonitorPage() {
   const refreshStatus = state.error ? "failed" : noData || !refresh.auto ? "inactive" : "active";
   return <Page title={t("monitor.title")} className="console-monitor-page console-group-status-page">
     <Panel className="console-group-status-board">
-      <header className="console-group-board-header"><div><StatusBadge size="sm" status={settingsError ? "failed" : refreshStatus} label={settingsError ? localized(locale, "配置加载失败", "Settings unavailable") : statusText} /><p>{mode === "v2" ? localized(locale, "基于实际请求，对比分组的首字延迟 P50、读缓存占比与计分成功率。", "Compare groups by first-token P50, cache read share and scored success rate.") : localized(locale, "查看各线路的主动探测状态、延迟与历史可用率。", "View endpoint probe status, latency and historical uptime.")}</p></div><div className="console-group-updated"><span>{mode === "v2" ? localized(locale, "数据截至", "Data through") : localized(locale, "更新", "Updated")} {dateLabel(mode === "v2" ? state.coverage?.data_through : state.updatedAt, locale)}</span><Button icon="refresh" loading={state.loading || settingsLoading} onClick={() => load()}>{t("common.refresh")}</Button></div></header>
+      <header className="console-group-board-header"><div><StatusBadge size="sm" status={settingsError ? "failed" : refreshStatus} label={settingsError ? localized(locale, "配置加载失败", "Settings unavailable") : statusText} /><p>{mode === "v2" ? localized(locale, "基于实际请求，对比分组的平均首字延迟、读缓存占比与计分成功率。", "Compare groups by average first-token latency, cache read share and scored success rate.") : localized(locale, "查看各线路的主动探测状态、延迟与历史可用率。", "View endpoint probe status, latency and historical uptime.")}</p></div><div className="console-group-updated"><span>{mode === "v2" ? localized(locale, "数据截至", "Data through") : localized(locale, "更新", "Updated")} {dateLabel(mode === "v2" ? state.coverage?.data_through : state.updatedAt, locale)}</span><Button icon="refresh" loading={state.loading || settingsLoading} onClick={() => load()}>{t("common.refresh")}</Button></div></header>
       <div className="console-group-summary"><div className="console-group-summary-ring"><MetricRing value={noData ? null : counts.operational / rows.length * 100} label={mode === "v2" ? localized(locale, "健康分组占比", "Healthy group share") : localized(locale, "正常占比", "Healthy share")} /></div><div className="console-group-summary-total"><small>{scope}</small><strong>{noData && state.loading ? "—" : rows.length}</strong></div><div className="console-monitor-tone" data-tone="operational"><small>{localized(locale, "正常", "Healthy")}</small><strong>{counts.operational}</strong></div><div className="console-monitor-tone" data-tone={counts.failed ? "failed" : counts.degraded ? "degraded" : "unknown"}><small>{localized(locale, "警告 / 异常", "Warning / incident")}</small><strong>{counts.degraded + counts.failed}</strong></div><div className="console-monitor-tone" data-tone="unknown"><small>{localized(locale, "未知", "Unknown")}</small><strong>{counts.unknown}</strong></div><div className="console-group-status-legend">{Object.keys(counts).map((tone) => <span key={tone} style={{ color: toneColor[tone] }}><i />{toneLabel(tone, locale)}</span>)}</div></div>
       <div className="console-group-toolbar">
         <div className="console-group-toolbar-line"><span>{mode === "v2" ? localized(locale, "时间窗口", "Time range") : localized(locale, "可用率窗口", "Uptime window")}</span><CompactTabs value={range} onChange={setRange} label={localized(locale, "时间窗口", "Time range")} items={MONITOR_RANGES[mode].map((value) => ({ value, label: value }))} /><span>{localized(locale, "排序", "Sort")}</span><SelectInput aria-label={localized(locale, "排序", "Sort")} value={sortOptions.some((option) => option.value === sort) ? sort : "status"} onChange={(event) => setSort(event.target.value)}>{sortOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</SelectInput><div className="console-group-refresh"><SelectInput aria-label={localized(locale, "自动刷新", "Auto refresh")} value={refresh.auto ? String(refresh.seconds) : "off"} onChange={(event) => setRefresh({ auto: event.target.value !== "off", seconds: Number(event.target.value) || 30 })}><option value="off">{localized(locale, "暂停刷新", "Pause refresh")}</option>{[30, 60, 120].map((value) => <option key={value} value={value}>{value}s {localized(locale, "自动刷新", "auto refresh")}</option>)}</SelectInput></div></div>
@@ -278,6 +283,7 @@ export function MonitorPage() {
       {state.notice && <p className="console-group-notice" role="status">{state.notice}</p>}
       {state.coverage?.coverage_complete === false && <p className="console-group-notice">{localized(locale, "历史数据尚未覆盖完整窗口，当前仅展示已汇总的数据。", "History does not cover the full window yet. Only aggregated data is shown.")}</p>}
       {mode === "v2" && <div className="console-group-definitions">
+        <p>{localized(locale, "平均首字延迟按所选窗口内的实际样本计算；趋势主线为各区间平均值。P50 / P90 / P95 为分桶上限估算，评级与评分沿用后端分位数口径。", "Average TTFT uses actual samples in the selected window; the primary trend shows each interval’s average. P50 / P90 / P95 are histogram upper-bound estimates; ratings and scores follow backend percentiles.")}</p>
         <p>{localized(locale, "计分成功率 = 1 − 计分错误率，配置中忽略的错误不计入失败；读缓存占比按输入侧 Token 计算。", "Scored success rate = 1 − scored error rate; configured ignored errors do not count as failures. Cache read share is measured over input-side tokens.")}</p>
         <p>{localized(locale, "健康分组占比按分组 / 平台组合计数，并非请求成功率。分组汇总包含未列出的模型流量；详情仅展示当前分组的模型。", "Healthy group share counts group/platform combinations, not requests. Group totals include unlisted model traffic; model details are scoped to each group.")}</p>
       </div>}
