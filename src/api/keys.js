@@ -13,6 +13,6 @@ export const keysApi = {
 };
 
 export const groupsApi = {
-  available: () => apiRequest("/groups/available"),
-  rates: () => apiRequest("/groups/rates"),
+  available: (signal) => apiRequest("/groups/available", { signal }),
+  rates: (signal) => apiRequest("/groups/rates", { signal }),
 };

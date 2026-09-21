@@ -1,409 +1,289 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Table as AppicaTable } from "@appica/ui-react/table";
-import { TableBody as AppicaTableBody } from "@appica/ui-react/table";
-import { TableCell as AppicaTableCell } from "@appica/ui-react/table";
-import { TableHead as AppicaTableHead } from "@appica/ui-react/table";
-import { TableHeader as AppicaTableHeader } from "@appica/ui-react/table";
-import { TableRow as AppicaTableRow } from "@appica/ui-react/table";
-import { monitorApi } from "../../api";
-import { PlatformMark } from "../GroupBadge";
-import { Icon } from "../Icon";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Table } from "@appica/ui-react/table";
+import { TableBody } from "@appica/ui-react/table";
+import { TableCell } from "@appica/ui-react/table";
+import { TableHead } from "@appica/ui-react/table";
+import { TableHeader } from "@appica/ui-react/table";
+import { TableRow } from "@appica/ui-react/table";
+import { Progress } from "@appica/ui-react/progress";
+import { ProgressValue } from "@appica/ui-react/progress";
+import { groupsApi, monitorApi } from "../../api";
+import { useConsole } from "../ConsoleContext";
 import { useLocale } from "../i18n";
-import { Button, EmptyState, ErrorState, IconButton, Page, Panel, SelectInput, Skeleton, Spinner, StatusBadge, TextInput } from "../UI";
+import { formatCompact } from "../utils";
+import { Button, EmptyState, ErrorState, Page, Panel, SelectInput, Skeleton, StatusBadge, TextInput } from "../UI";
 import { CompactTabs } from "../components/ConsoleControls";
+import { MONITOR_RANGES, buildMonitorRows, metricNumber, metricRate, monitorTone, scoredSuccessRate, sortMonitorRows, tokensPerSecond, trendGeometry } from "./monitorData.js";
 
-const MONITOR_REFRESH_KEY = "sentence_monitor_refresh";
-const MONITOR_WINDOWS = [7, 15, 30, 90];
-const MONITOR_FILTERS = ["all", "operational", "degraded", "failed"];
-const MONITOR_LATENCY_DANGER_MS = 5000;
-const MONITOR_STATUS_ORDER = { operational: 0, degraded: 1, failed: 2, unknown: 3 };
+const REFRESH_KEY = "sentence_monitor_refresh";
+const toneColor = { operational: "var(--console-monitor-healthy)", degraded: "var(--console-monitor-warning)", failed: "var(--console-monitor-critical)", unknown: "var(--foreground-subtle)" };
+const localized = (locale, zh, en) => locale === "zh" ? zh : en;
+const listItems = (data) => Array.isArray(data) ? data : data?.items || [];
+const visibleModels = (data) => listItems(data).filter((item) => item.model !== "__other__");
 
 function storedRefresh() {
   try {
-    const value = JSON.parse(localStorage.getItem(MONITOR_REFRESH_KEY));
+    const value = JSON.parse(localStorage.getItem(REFRESH_KEY));
     return { auto: value?.auto !== false, seconds: [30, 60, 120].includes(value?.seconds) ? value.seconds : 30 };
-  } catch {
-    return { auto: true, seconds: 30 };
-  }
+  } catch { return { auto: true, seconds: 30 }; }
 }
 
-function monitorTone(status) {
-  const value = String(status || "unknown").toLowerCase();
-  if (["operational", "success", "active", "completed"].includes(value)) return "operational";
-  if (["degraded", "warning", "pending", "running"].includes(value)) return "degraded";
-  if (["failed", "error", "inactive", "suspended"].includes(value)) return "failed";
-  return "unknown";
+function toneLabel(tone, locale) {
+  return {
+    operational: localized(locale, "正常", "Healthy"),
+    degraded: localized(locale, "警告", "Warning"),
+    failed: localized(locale, "异常", "Incident"),
+    unknown: localized(locale, "未知", "Unknown"),
+  }[tone];
 }
 
-function metricDuration(value, formatNumber) {
-  const milliseconds = Number(value);
-  return milliseconds > 0 ? `${formatNumber(milliseconds, { maximumFractionDigits: 0 })} ms` : "—";
+function Status({ tone, locale }) {
+  return <StatusBadge size="sm" status={tone === "operational" ? "active" : tone === "unknown" ? "inactive" : tone} label={toneLabel(tone, locale)} />;
 }
 
-function monitorStatusLabel(tone, locale) {
-  const labels = {
-    operational: locale === "zh" ? "正常" : "Healthy",
-    degraded: locale === "zh" ? "警告" : "Warning",
-    failed: locale === "zh" ? "异常" : "Incident",
-    unknown: locale === "zh" ? "未知" : "Unknown",
-  };
-  return labels[tone];
+function duration(value, formatNumber) {
+  return value == null ? "—" : formatNumber(value, { maximumFractionDigits: 0 }) + " ms";
 }
 
-function MonitorStatusBadge({ tone, label }) {
-  const icon = { operational: "circleCheck", degraded: "warning", failed: "warning", unknown: "info" }[tone] || "info";
-  const status = { operational: "active", degraded: "degraded", failed: "failed", unknown: "inactive" }[tone] || "inactive";
-  return <StatusBadge status={status} label={label} icon={icon} size="sm" />;
+function ThroughputMetric({ tpm, locale, formatNumber }) {
+  const value = tokensPerSecond(tpm);
+  return <strong className="console-group-throughput" title={value == null ? undefined : formatNumber(value, { maximumFractionDigits: 2 }) + " Token/s"}>{value == null ? "—" : value < 1000 ? formatNumber(value, { maximumFractionDigits: 2 }) : formatCompact(value)}<small>{value == null ? "" : localized(locale, " Token/秒", " Token/s")}</small></strong>;
 }
 
-function latestCheck(item) {
-  return item.timeline?.[0]?.checked_at || item.last_checked_at || item.updated_at;
+function dateLabel(value, locale) {
+  if (!value || !Number.isFinite(Date.parse(value))) return "—";
+  return new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en-US", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
-function checkAgeLabel(value, locale, now = Date.now()) {
-  const checkedAt = new Date(value).getTime();
-  if (!Number.isFinite(checkedAt)) return "—";
-  const seconds = Math.max(0, Math.floor((now - checkedAt) / 1000));
-  return locale === "zh" ? `${seconds} 秒前` : `${seconds} seconds ago`;
+function MetricRing({ value, label, accessibleLabel = label, tone = "operational" }) {
+  const percentage = value == null ? "—" : String(Number(value.toFixed(1)));
+  return <div className="console-group-ring-wrap console-monitor-tone" data-tone={value == null ? "unknown" : tone}>
+    {value == null ? <div className="console-group-missing-ring" aria-label={accessibleLabel + ": —"}>—</div> : <Progress variant="circular" className="console-group-ring" size={56} thickness={6} value={value} indicatorColor="var(--console-monitor-accent)" aria-label={accessibleLabel}><ProgressValue>{() => <span className="console-group-ring-number">{percentage}<span className="console-group-ring-unit">%</span></span>}</ProgressValue></Progress>}
+    <small>{label}</small>
+  </div>;
 }
 
-function RelativeCheckTime({ value, locale }) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!value) return undefined;
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, [value]);
-  return checkAgeLabel(value, locale, now);
+function TtftMetric({ metrics, health, locale, formatNumber }) {
+  const value = metricNumber(metrics?.p50_ms);
+  const tone = value == null ? "unknown" : monitorTone(health?.ttft);
+  const score = tone === "unknown" ? null : metricNumber(health?.ttft_score);
+  const label = {
+    operational: localized(locale, "快", "Fast"),
+    degraded: localized(locale, "中", "Moderate"),
+    failed: localized(locale, "慢", "Slow"),
+    unknown: localized(locale, "未知", "Unknown"),
+  }[tone];
+  const scoreLabel = localized(locale, "首字响应评分", "TTFT score");
+  return <div className="console-group-latency console-group-ttft console-monitor-tone" data-tone={tone}>
+    <div className="console-group-latency-value"><strong>{duration(value, formatNumber)}</strong><StatusBadge size="sm" status={tone === "operational" ? "active" : tone === "unknown" ? "inactive" : tone} label={label} /></div>
+    {score == null ? <div className="console-group-latency-track" aria-label={scoreLabel + " · —"} /> : <Progress thickness={4} value={Math.min(100, score)} indicatorColor="var(--console-monitor-accent)" aria-label={scoreLabel} aria-valuetext={score.toFixed(1) + "/100 · " + label} />}
+    <div className="console-group-ttft-secondary"><small>{localized(locale, "平均", "AVG")} · {duration(metricNumber(metrics?.avg_ms), formatNumber)}</small><small>P90 · {duration(metricNumber(metrics?.p90_ms), formatNumber)}</small></div>
+  </div>;
 }
 
-function itemRequests(item) {
-  return Number(item.today_requests ?? item.requests_today ?? item.request_count_today) || 0;
-}
-
-function itemPing(item) {
-  return item.primary_ping_latency_ms ?? item.primary_ping_ms ?? item.ping_latency_ms ?? item.ping_ms;
-}
-
-function Sparkline({ timeline = [], days, locale, compact = false }) {
-  const recent = timeline.slice(0, 48);
-  const counts = recent.reduce((result, point) => {
-    result[monitorTone(point.status)] += 1;
-    return result;
-  }, { operational: 0, degraded: 0, failed: 0, unknown: 0 });
-  const label = locale === "zh"
-    ? `${days} 天状态历史：正常 ${counts.operational}，警告 ${counts.degraded}，异常 ${counts.failed}，未知 ${counts.unknown}`
-    : `${days}-day status history: ${counts.operational} healthy, ${counts.degraded} warning, ${counts.failed} incident, ${counts.unknown} unknown`;
-  return (
-    <div className={`console-monitor-timeline ${compact ? "is-compact" : ""}`} role="img" aria-label={label}>
-      <div className="console-uptime-line" aria-hidden="true">
-        {recent.map((point, index) => <i key={`${point.checked_at}-${index}`} className={`is-${monitorTone(point.status)}`} />)}
-      </div>
-      {!compact && <div><span>{locale === "zh" ? "现在" : "Now"}</span><span>{recent.length} {locale === "zh" ? "个数据点" : "data points"}</span><span>{locale === "zh" ? "过去" : "Past"}</span></div>}
-    </div>
-  );
-}
-
-function countByStatus(items) {
-  return items.reduce((counts, item) => {
-    const tone = monitorTone(item.primary_status);
-    counts[tone] = (counts[tone] || 0) + 1;
-    return counts;
-  }, { operational: 0, degraded: 0, failed: 0, unknown: 0 });
-}
-
-function average(values) {
-  const filtered = values.filter((value) => Number.isFinite(value) && value > 0);
-  return filtered.length ? filtered.reduce((sum, value) => sum + value, 0) / filtered.length : 0;
-}
-
-function windowAvailability(item, days, details) {
-  if (days === 7) return item.availability_7d;
-  const model = details[item.id]?.models?.find((entry) => entry.model === item.primary_model);
-  return model?.[`availability_${days}d`] ?? item[`availability_${days}d`] ?? item.availability_7d;
-}
-
-function compareMonitorItems(left, right, sortBy, windowDays, details) {
-  if (sortBy === "status") {
-    const statusDifference = MONITOR_STATUS_ORDER[monitorTone(left.primary_status)] - MONITOR_STATUS_ORDER[monitorTone(right.primary_status)];
-    if (statusDifference) return statusDifference;
-  }
-  const rightAvailability = Number(windowAvailability(right, windowDays, details)) || 0;
-  const leftAvailability = Number(windowAvailability(left, windowDays, details)) || 0;
-  return rightAvailability - leftAvailability;
-}
-
-function MonitorToolbar({ windowDays, setWindowDays, filter, setFilter, counts, refresh, setRefresh, loading, onRefresh, search, setSearch, locale }) {
-  const filterLabels = {
-    all: locale === "zh" ? "全部" : "All",
-    operational: locale === "zh" ? "正常" : "Healthy",
-    degraded: locale === "zh" ? "警告" : "Warning",
-    failed: locale === "zh" ? "异常" : "Incident",
-  };
-  const refreshValue = refresh.auto ? String(refresh.seconds) : "off";
-  const windowTabs = MONITOR_WINDOWS.map((days) => ({ value: String(days), label: `${days} ${locale === "zh" ? "天" : "days"}` }));
-  const statusTabs = MONITOR_FILTERS.map((value) => ({ value, label: <span className={`console-monitor-status-label is-${value}`}>{filterLabels[value]} <b>{value === "all" ? counts.total : counts[value]}</b></span> }));
-  const updateRefresh = (event) => {
-    const seconds = Number(event.target.value);
-    setRefresh({ auto: seconds > 0, seconds: seconds || 60 });
-  };
-
-  return (
-    <section className="console-monitor-toolbar" aria-label={locale === "zh" ? "渠道筛选" : "Channel filters"}>
-      <div className="console-monitor-toolbar-main">
-        <CompactTabs value={String(windowDays)} items={windowTabs} label={locale === "zh" ? "时间窗口" : "Time window"} className="console-monitor-window-tabs" onChange={(value) => setWindowDays(Number(value))} />
-        <i className="console-monitor-toolbar-divider" />
-        <CompactTabs value={filter} items={statusTabs} label={locale === "zh" ? "分组状态" : "Group status"} className="console-monitor-status-tabs" onChange={setFilter} />
-      </div>
-      <div className="console-monitor-refresh-actions">
-        <label className="console-monitor-search"><Icon name="search" size={17} /><TextInput value={search} onChange={(event) => setSearch(event.target.value)} placeholder={locale === "zh" ? "搜索渠道" : "Search channels"} /></label>
-        <label className={`console-monitor-auto-refresh ${refresh.auto ? "is-active" : ""}`}>
-          <Icon name="refresh" size={17} />
-          <span>{locale === "zh" ? "自动刷新" : "Auto refresh"}</span>
-          <SelectInput aria-label={locale === "zh" ? "自动刷新间隔" : "Auto refresh interval"} value={refreshValue} onChange={updateRefresh}>
-            <option value="off">{locale === "zh" ? "已暂停" : "Paused"}</option>
-            <option value="30">30s</option>
-            <option value="60">60s</option>
-            <option value="120">120s</option>
-          </SelectInput>
-        </label>
-        <Button className="console-monitor-manual-refresh" icon="refresh" onClick={() => onRefresh()} loading={loading}>{locale === "zh" ? "刷新" : "Refresh"}</Button>
-      </div>
-    </section>
-  );
-}
-
-function MonitorOverview({ items, counts, windowDays, details, locale, formatNumber }) {
-  const availability = average(items.map((item) => Number(windowAvailability(item, windowDays, details))));
-  const latency = average(items.map((item) => Number(item.primary_latency_ms)));
-  const requests = items.reduce((sum, item) => sum + itemRequests(item), 0);
-  const metrics = [
-    { icon: "channel", label: locale === "zh" ? "渠道总数" : "Total channels", value: formatNumber(items.length), meta: locale === "zh" ? "实时监控中" : "Monitored live", tone: "channels" },
-    { icon: "shield", label: locale === "zh" ? "可用渠道" : "Available", value: formatNumber(counts.operational), meta: `${counts.degraded} ${locale === "zh" ? "警告" : "warning"}`, tone: "available" },
-    { icon: "chart", label: locale === "zh" ? "平均可用率" : "Avg. availability", value: `${availability.toFixed(2)}%`, meta: `${windowDays}${locale === "zh" ? " 天窗口" : "d window"}`, tone: "availability" },
-    { icon: "pulse", label: locale === "zh" ? "平均延迟" : "Avg. latency", value: metricDuration(latency, formatNumber), meta: locale === "zh" ? "全渠道均值" : "Across all channels", tone: latency > MONITOR_LATENCY_DANGER_MS ? "danger" : "latency" },
-    { icon: "chart", label: locale === "zh" ? "今日请求数" : "Requests today", value: formatNumber(requests), meta: locale === "zh" ? "今日累计" : "Cumulative today", tone: "requests" },
-  ];
-
-  return <section className="console-monitor-overview">{metrics.map((metric) => <div className={`console-monitor-overview-item is-${metric.tone}`} key={metric.label}><i><Icon name={metric.icon} size={22} /></i><div><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.meta}</small></div></div>)}</section>;
-}
-
-function MonitorListItem({ item, selected, windowDays, details, locale, formatNumber, onSelect }) {
-  const tone = monitorTone(item.primary_status);
-  const availability = Number(windowAvailability(item, windowDays, details)) || 0;
-  const provider = item.provider || item.group_name || "AI";
-  return <Button variant="ghost" className={`console-monitor-list-item is-${tone} ${selected ? "is-selected" : ""}`} onClick={() => onSelect(item)}><i className="console-monitor-provider-mark console-platform-surface"><PlatformMark platform={provider} /></i><span className="console-monitor-list-identity"><strong>{item.name}</strong><small>{provider} <b>•</b> {item.primary_model || item.group_name || "—"}</small></span><span className="console-monitor-list-status"><b><i />{monitorStatusLabel(tone, locale)}</b></span><span className="console-monitor-list-latency"><strong>{metricDuration(item.primary_latency_ms, formatNumber)}</strong></span><span className="console-monitor-list-window"><strong>{availability.toFixed(2)}%</strong></span><Sparkline timeline={item.timeline} days={windowDays} locale={locale} compact /></Button>;
-}
-
-function availabilityValue(item, days) {
-  const value = Number(item?.[`availability_${days}d`]);
-  return Number.isFinite(value) ? `${value.toFixed(2)}%` : "—";
-}
-
-function MonitorInspector({ item, detail, windowDays, locale, formatNumber }) {
-  if (!item) return <Panel className="console-monitor-inspector"><EmptyState icon="channel" /></Panel>;
-  const detailMatches = detail?.sourceId === item.id;
-  const resolved = detailMatches ? detail?.item || item : item;
-  const tone = monitorTone(resolved.primary_status || item.primary_status);
-  const timeline = resolved.timeline || item.timeline || [];
-  const models = detailMatches ? resolved.models || [] : [];
-  const provider = resolved.provider || resolved.group_name || item.provider || "AI";
-  const availability = Number(resolved[`availability_${windowDays}d`] ?? resolved.availability_7d ?? item.availability_7d) || 0;
-  const modelContent = models.length ? (
-    <div className="console-monitor-models-table">
-      <AppicaTable size="sm" borderStyle="none">
-        <AppicaTableHeader>
-          <AppicaTableRow>
-            <AppicaTableHead>{locale === "zh" ? "模型" : "Model"}</AppicaTableHead>
-            <AppicaTableHead>{locale === "zh" ? "最新状态" : "Latest status"}</AppicaTableHead>
-            <AppicaTableHead>7d</AppicaTableHead>
-            <AppicaTableHead>15d</AppicaTableHead>
-            <AppicaTableHead>30d</AppicaTableHead>
-            <AppicaTableHead>{locale === "zh" ? "平均延迟" : "Avg latency 7d"}</AppicaTableHead>
-          </AppicaTableRow>
-        </AppicaTableHeader>
-        <AppicaTableBody>
-          {models.map((model) => {
-            const modelTone = monitorTone(model.latest_status);
-            return <AppicaTableRow key={model.model}>
-              <AppicaTableCell data-label={locale === "zh" ? "模型" : "Model"}><strong>{model.model}</strong></AppicaTableCell>
-              <AppicaTableCell data-label={locale === "zh" ? "最新状态" : "Latest status"}><MonitorStatusBadge tone={modelTone} label={monitorStatusLabel(modelTone, locale)} /></AppicaTableCell>
-              <AppicaTableCell data-label="7d">{availabilityValue(model, 7)}</AppicaTableCell>
-              <AppicaTableCell data-label="15d">{availabilityValue(model, 15)}</AppicaTableCell>
-              <AppicaTableCell data-label="30d">{availabilityValue(model, 30)}</AppicaTableCell>
-              <AppicaTableCell data-label={locale === "zh" ? "平均延迟" : "Avg latency 7d"}>{metricDuration(model.avg_latency_7d_ms, formatNumber)}</AppicaTableCell>
-            </AppicaTableRow>;
+function Trend({ timeline, mode, coverage, locale, formatNumber }) {
+  const fillId = useId();
+  const geometry = trendGeometry(timeline, mode === "v2" ? coverage : undefined);
+  const validPoints = geometry.points.filter((point) => point.latency != null || point.secondary != null);
+  if (!geometry.points.length) return <div className="console-group-trend-empty">{localized(locale, "暂无延迟数据", "No latency data")}</div>;
+  const flat = ["latency", "secondary"].every((field) => new Set(validPoints.map((point) => point[field]).filter((value) => value != null)).size <= 1);
+  const seconds = geometry.bucketSeconds;
+  const bucketLabel = seconds == null ? localized(locale, "汇总粒度未知", "Unknown interval") : seconds < 3600 ? seconds / 60 + localized(locale, "分钟汇总", "-minute buckets") : seconds < 86400 ? seconds / 3600 + localized(locale, "小时汇总", "-hour buckets") : seconds / 86400 + localized(locale, "天汇总", "-day buckets");
+  const primary = mode === "v2" ? "TTFT P50" : localized(locale, "探测延迟", "Probe latency");
+  const secondary = mode === "v2" ? "P95" : "Ping";
+  return <div className="console-group-trend">
+    <div className="console-group-trend-legend"><span>{primary}</span><span>{secondary}</span></div>
+    <svg viewBox="0 0 280 56" preserveAspectRatio="none" role="img" aria-label={primary + " / " + secondary + " · " + dateLabel(geometry.startTime, locale) + " — " + dateLabel(geometry.endTime, locale)}>
+      <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--console-monitor-healthy)" stopOpacity=".16" /><stop offset="100%" stopColor="var(--console-monitor-healthy)" stopOpacity="0" /></linearGradient></defs>
+      <path className="console-group-trend-grid" d="M4,7 H276 M4,28 H276 M4,49 H276" />
+      {geometry.points.filter((point) => point.latency == null && point.secondary == null && point.width > 0).map((point) => <rect key={point.time} x={point.x} y="4" width={point.width} height="48" className="console-group-trend-missing"><title>{dateLabel(point.time, locale) + " · " + localized(locale, "暂无首字延迟数据", "No TTFT data")}</title></rect>)}
+      {geometry.points.filter((point) => ["failed", "degraded"].includes(point.tone)).map((point, index) => <path key={index} d={`M${point.x},5 V51`} className="console-group-trend-incident" stroke={toneColor[point.tone]} />)}
+      <path d={geometry.primaryArea} fill={`url(#${fillId})`} />
+      <path className="console-group-trend-secondary" d={geometry.secondary} />
+      <path className="console-group-trend-primary" d={geometry.primary} />
+      {geometry.points.map((point, index) => {
+        if (point.latency == null && point.secondary == null) return null;
+        const pointLabel = dateLabel(point.time, locale) + " · " + primary + " " + duration(point.latency, formatNumber) + " · " + secondary + " " + duration(point.secondary, formatNumber);
+        return <g key={point.time} className="console-group-trend-point">
+          <title>{pointLabel}</title>
+          <path className="console-group-trend-hit" d={`M${point.x},4 V52`} />
+          {["latency", "secondary"].map((field) => {
+            if (point[field] == null) return null;
+            const boundary = geometry.points[index - 1]?.[field] == null || geometry.points[index + 1]?.[field] == null;
+            return <path key={field} className={"console-group-trend-marker is-" + field + (boundary ? " is-boundary" : "")} d={`M${point.x},${49 - point[field] / geometry.max * 42} h0.001`} />;
           })}
-        </AppicaTableBody>
-      </AppicaTable>
-    </div>
-  ) : detailMatches && detail?.error ? <ErrorState message={detail.error} /> : !detailMatches || detail?.loading ? <Spinner label={locale === "zh" ? "正在读取详情" : "Loading details"} /> : <EmptyState />;
-  return (
-    <Panel className={`console-monitor-inspector is-${tone}`}>
-      <header className="console-monitor-inspector-head">
-        <i className="console-monitor-provider-mark console-platform-surface"><PlatformMark platform={provider} /></i>
-        <div><h2>{item.name}</h2><p>{provider} <b>•</b> {item.primary_model || item.group_name || "—"}</p></div>
-        <span className="console-monitor-inspector-check"><small>{locale === "zh" ? "检查于" : "Checked"}</small><strong><RelativeCheckTime value={latestCheck(resolved)} locale={locale} /></strong></span>
-      </header>
-      <div className="console-monitor-inspector-metrics">
-        <div className={Number(item.primary_latency_ms) > MONITOR_LATENCY_DANGER_MS ? "is-danger" : tone === "degraded" ? "is-warning" : "is-success"}>
-          <span>{locale === "zh" ? "延迟" : "Latency"}</span><strong>{metricDuration(item.primary_latency_ms, formatNumber)}</strong>
-          {tone !== "operational" && <small><Icon name="warning" size={13} />{locale === "zh" ? "检测到间歇性延迟" : "Intermittent latency detected"}</small>}
-        </div>
-        <div><span>Ping</span><strong>{metricDuration(itemPing(item), formatNumber)}</strong></div>
-        <div className="is-success"><span>{windowDays}{locale === "zh" ? " 天可用率" : "-day availability"}</span><strong>{availability.toFixed(2)}%</strong></div>
-      </div>
-      <div className="console-monitor-history">
-        <header>
-          <h3>{locale === "zh" ? "状态历史" : "Status history"}</h3>
-          <div><span className="is-operational">{locale === "zh" ? "正常" : "Healthy"}</span><span className="is-degraded">{locale === "zh" ? "警告" : "Warning"}</span><span className="is-failed">{locale === "zh" ? "异常" : "Incident"}</span><span className="is-unknown">{locale === "zh" ? "未知" : "Unknown"}</span></div>
-        </header>
-        <Sparkline timeline={timeline} days={windowDays} locale={locale} />
-      </div>
-      <div className="console-monitor-availability">
-        <h3>{locale === "zh" ? "分窗口可用率" : "Availability by window"}</h3>
-        <div>{[7, 15, 30].map((days) => <span key={days}><small>{days} {locale === "zh" ? "天" : "days"}</small><strong>{availabilityValue(resolved, days)}</strong></span>)}</div>
-      </div>
-      <div className="console-monitor-models" aria-busy={detailMatches && detail?.loading ? "true" : undefined}>
-        <h3>{locale === "zh" ? "模型健康度" : "Model health"}</h3>
-        {modelContent}
-      </div>
-    </Panel>
-  );
+        </g>;
+      })}
+    </svg>
+    <div className="console-group-trend-dates"><time>{dateLabel(geometry.startTime, locale)}</time><time>{dateLabel(geometry.endTime, locale)}</time></div>
+    {mode === "v2" && <div className="console-group-trend-note">{bucketLabel} · {validPoints.length}/{geometry.points.length} {localized(locale, "个区间有数据", "intervals with data")}{validPoints.length < 3 ? " · " + localized(locale, "数据较少", "Limited history") : flat ? " · " + localized(locale, "各点数值相同", "Values unchanged") : ""}</div>}
+  </div>;
 }
 
-function MonitorLoading({ locale }) {
-  return <><section className="console-monitor-overview" aria-label={locale === "zh" ? "正在加载渠道概览" : "Loading channel overview"}>{Array.from({ length: 5 }, (_, index) => <div className="console-monitor-overview-item" key={index}><Skeleton className="size-10" /><div className="flex flex-1 flex-col items-end gap-2"><Skeleton className="h-3 w-20" /><Skeleton className="h-6 w-14" /><Skeleton className="h-2 w-16" /></div></div>)}</section><div className="console-monitor-master-detail"><Panel className="console-monitor-master"><div className="console-panel-body flex flex-col gap-3"><Skeleton className="h-5 w-24" />{Array.from({ length: 6 }, (_, index) => <Skeleton className="h-14 w-full" key={index} />)}</div></Panel><Panel className="console-monitor-inspector"><div className="console-panel-body flex flex-col gap-4"><Skeleton className="h-8 w-2/3" /><Skeleton className="h-64 w-full" /></div></Panel></div></>;
+function ModelTags({ models, locale, loaded }) {
+  if (!models.length) return <small className="console-group-muted">{loaded ? localized(locale, "暂无模型数据", "No model data") : localized(locale, "展开查看模型", "Expand for models")}</small>;
+  return <div className="console-group-models">{models.slice(0, 4).map((model) => <span key={model.model} className="console-monitor-tone" data-tone={monitorTone(model.status || model.health?.overall)} title={model.model + " · " + toneLabel(monitorTone(model.status || model.health?.overall), locale)}>{model.model}</span>)}{models.length > 4 && <small>+{models.length - 4}</small>}</div>;
 }
 
-function MonitorContent({ state, locale, load, items, counts, windowDays, details, formatNumber, selectedId, onSelect, detail, sortBy, setSortBy }) {
-  if (state.loading) return <MonitorLoading locale={locale} />;
-  if (state.error) return <Panel><ErrorState message={state.error} onRetry={load} /></Panel>;
-  if (!state.items.length) return <Panel><EmptyState icon="pulse" /></Panel>;
-  const selectedItem = items.find((item) => item.id === selectedId) || items[0];
-  return <><MonitorOverview items={state.items} counts={counts} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} /><div className="console-monitor-master-detail"><Panel className="console-monitor-master"><header><h2>{locale === "zh" ? "渠道" : "Channels"}</h2><SelectInput className="console-monitor-sort" value={sortBy} onChange={(event) => setSortBy(event.target.value)} aria-label={locale === "zh" ? "渠道排序方式" : "Channel sort order"}><option value="availability">{locale === "zh" ? "按可用率排序" : "Sort by availability"}</option><option value="status">{locale === "zh" ? "按状态排序" : "Sort by status"}</option></SelectInput></header>{items.length ? <div className="console-monitor-master-list">{items.map((item) => <MonitorListItem key={item.id} item={item} selected={item.id === selectedItem?.id} windowDays={windowDays} details={details} locale={locale} formatNumber={formatNumber} onSelect={onSelect} />)}</div> : <EmptyState icon="filter" description={locale === "zh" ? "当前筛选条件下没有渠道。" : "No channels match this filter."} />}<footer><span>{items.length} {locale === "zh" ? "个渠道" : "channels"}</span><div><IconButton icon="chevronRight" label={locale === "zh" ? "上一页" : "Previous page"} disabled /><b>1</b><IconButton icon="chevronRight" label={locale === "zh" ? "下一页" : "Next page"} disabled /></div></footer></Panel><MonitorInspector item={selectedItem} detail={detail} windowDays={windowDays} locale={locale} formatNumber={formatNumber} /></div></>;
+function ModelDetails({ row, detail, mode, showThroughput, locale, formatNumber, onRetry }) {
+  if (!detail || (detail.loading && !detail.data)) return <div className="console-group-detail-loading" role="status"><Skeleton className="h-6 w-full" /><span>{localized(locale, "正在加载模型详情…", "Loading model details…")}</span></div>;
+  if (detail.error && !detail.data) return <ErrorState message={detail.error} onRetry={onRetry} />;
+  const models = mode === "v2" ? visibleModels(detail.data) : detail.data?.models || [];
+  return <div className="console-group-details" aria-busy={detail.loading}><h3>{localized(locale, "模型详情", "Model details")}</h3>
+    {detail.error && <div role="status" className="console-group-detail-refresh-error"><span>{localized(locale, "刷新失败，保留上次数据。", "Refresh failed. Showing previous data.")}</span><Button size="sm" onClick={onRetry}>{localized(locale, "重试", "Retry")}</Button></div>}
+    {!models.length ? <EmptyState description={localized(locale, "暂无模型详情", "No model details")} /> : <Table size="sm" borderStyle="solid" aria-label={row.name + " · " + localized(locale, "模型详情", "Model details")}><TableHeader><TableRow>
+      {[localized(locale, "模型", "Model"), localized(locale, "状态", "Status"), mode === "v2" ? "TTFT P50" : localized(locale, "最新延迟", "Latest latency"), ...(showThroughput ? [localized(locale, "每秒 Token", "Tokens/sec")] : []), mode === "v2" ? localized(locale, "计分成功率", "Scored success rate") : localized(locale, "7天可用率", "7d uptime"), mode === "v2" ? localized(locale, "读缓存占比", "Cache read share") : localized(locale, "15天 / 30天可用率", "15d / 30d uptime")].map((label) => <TableHead key={label}>{label}</TableHead>)}
+    </TableRow></TableHeader><TableBody>{models.map((model) => {
+      const percent = (value) => metricNumber(value) == null ? "—" : Number(value).toFixed(1) + "%";
+      const success = mode === "v2" ? scoredSuccessRate(model.metrics, model.health) : model.availability_7d;
+      const cache = metricRate(model.metrics, model.health, "cache_rate");
+      return <TableRow key={(model.platform || "") + model.model}><TableCell>{model.model}</TableCell><TableCell><Status tone={monitorTone(mode === "v2" ? model.health?.overall : model.latest_status)} locale={locale} /></TableCell><TableCell>{mode === "v2" ? <TtftMetric metrics={model.metrics?.ttft} health={model.health} locale={locale} formatNumber={formatNumber} /> : duration(metricNumber(model.latest_latency_ms), formatNumber)}</TableCell>{showThroughput && <TableCell><ThroughputMetric tpm={model.metrics?.tpm} locale={locale} formatNumber={formatNumber} /></TableCell>}<TableCell>{mode === "v2" ? <span className="console-group-detail-rate console-monitor-tone" data-tone={success == null ? "unknown" : monitorTone(model.health?.error_rate)}>{percent(success)}</span> : percent(success)}</TableCell><TableCell>{mode === "v2" ? <span className="console-group-detail-rate console-monitor-tone" data-tone={cache == null ? "unknown" : monitorTone(model.health?.cache)}>{percent(cache)}</span> : percent(model.availability_15d) + " / " + percent(model.availability_30d)}</TableCell></TableRow>;
+    })}</TableBody></Table>}
+  </div>;
+}
+
+function StatusRow({ row, mode, showThroughput, range, locale, formatNumber, labels, updatedAt, coverage }) {
+  const [expanded, setExpanded] = useState(true);
+  const [detail, setDetail] = useState(null);
+  const [detailVersion, setDetailVersion] = useState(0);
+  const { id, group_id: groupId } = row.source;
+  const platform = row.platform;
+  const description = row.description?.trim();
+  const showDescription = description && ![row.name, platform].some((value) => value?.trim().toLowerCase() === description.toLowerCase());
+  useEffect(() => {
+    if (!expanded) return undefined;
+    const controller = new AbortController();
+    setDetail((current) => ({ ...current, loading: true, error: "" }));
+    const request = mode === "v2" ? monitorApi.models({ range, group_id: groupId, platform }, controller.signal) : monitorApi.status(id, controller.signal);
+    request.then((data) => { if (!controller.signal.aborted) setDetail({ data, loading: false }); }).catch((error) => { if (!controller.signal.aborted) setDetail((current) => ({ ...current, error: error.message, loading: false })); });
+    return () => controller.abort();
+  }, [expanded, mode, range, id, groupId, platform, updatedAt, detailVersion]);
+
+  return <>
+        <TableRow highlighted={expanded}>
+          <TableCell><div className="console-group-identity"><strong title={row.name}>{row.name}</strong>{showDescription && <small title={description}>{description}</small>}<span>{row.platform}{row.group?.is_exclusive ? " · " + localized(locale, "专属", "Private") : ""}{row.group?.subscription_type === "subscription" ? " · SUB" : ""}</span></div></TableCell>
+          <TableCell><strong className="console-group-rate">{row.rate == null ? "—" : formatNumber(row.rate, { maximumFractionDigits: 4 }) + "×"}</strong>{row.originalRate != null && row.rate !== row.originalRate && <del className="console-group-original-rate">{row.originalRate}×</del>}</TableCell>
+          <TableCell><div className="console-group-state"><Status tone={row.tone} locale={locale} /><ModelTags models={row.models.length ? row.models : mode === "v2" ? visibleModels(detail?.data) : []} locale={locale} loaded={Boolean(detail?.data)} /></div></TableCell>
+          <TableCell>{mode === "v2" ? <TtftMetric metrics={row.source.metrics?.ttft} health={row.source.health} locale={locale} formatNumber={formatNumber} /> : <div className="console-group-latency"><strong>{duration(row.latency, formatNumber)}</strong><small>{localized(locale, "主模型最近一次探测", "Latest primary-model probe")}</small></div>}</TableCell>
+          {showThroughput && <TableCell><ThroughputMetric tpm={row.source.metrics?.tpm} locale={locale} formatNumber={formatNumber} /></TableCell>}
+          <TableCell><MetricRing value={mode === "v2" ? row.cacheRate : row.availability} accessibleLabel={row.name + " · " + labels[showThroughput ? 5 : 4]} label={mode === "v2" ? range : localized(locale, "探测可用率", "Probe uptime")} tone={mode === "v2" ? monitorTone(row.source.health?.cache) : "operational"} /></TableCell>
+          <TableCell>{mode === "v2" ? <MetricRing value={row.successRate} accessibleLabel={row.name + " · " + labels[showThroughput ? 6 : 5]} label={range} tone={monitorTone(row.source.health?.error_rate)} /> : <strong className="console-group-ping">{duration(row.ping, formatNumber)}</strong>}</TableCell>
+          <TableCell className="console-group-trend-cell"><Trend timeline={row.timeline} mode={mode} coverage={coverage} locale={locale} formatNumber={formatNumber} /></TableCell>
+          <TableCell><Button size="sm" aria-expanded={expanded} aria-controls={"monitor-detail-" + row.key} aria-label={row.name + " · " + localized(locale, "模型详情", "Model details")} onClick={() => setExpanded((current) => !current)}>{expanded ? localized(locale, "收起", "Collapse") : localized(locale, "查看", "View")}</Button></TableCell>
+        </TableRow>
+        {expanded && <TableRow><TableCell colSpan={labels.length} id={"monitor-detail-" + row.key}><ModelDetails row={row} detail={detail} mode={mode} showThroughput={showThroughput} locale={locale} formatNumber={formatNumber} onRetry={() => setDetailVersion((current) => current + 1)} /></TableCell></TableRow>}
+  </>;
+}
+
+function StatusTable({ rows, mode, showThroughput, range, locale, formatNumber, updatedAt, coverage }) {
+  const labels = [localized(locale, "分组", "Group"), localized(locale, "倍率", "Multiplier"), localized(locale, "状态 / 模型", "Status / models"), mode === "v2" ? "TTFT P50" : localized(locale, "最新探测延迟", "Latest probe latency"), ...(showThroughput ? [localized(locale, "每秒 Token", "Tokens/sec")] : []), mode === "v2" ? localized(locale, "读缓存占比", "Cache read share") : range + " " + localized(locale, "可用率", "uptime"), mode === "v2" ? localized(locale, "计分成功率", "Scored success rate") : "Ping", mode === "v2" ? localized(locale, "首字延迟趋势", "TTFT trend") : localized(locale, "最近探测趋势", "Recent probes"), localized(locale, "详情", "Details")];
+  return <div className="console-group-table-scroll" tabIndex={0} role="region" aria-label={localized(locale, "分组状态表，可横向滚动", "Group status table, scroll horizontally")}>
+    <Table size="sm" borderStyle="solid" className={"console-group-status-table" + (showThroughput ? " has-throughput" : "")} aria-label={localized(locale, "分组状态", "Group status")}>
+      <colgroup>
+        <col className="console-group-col-identity" /><col className="console-group-col-rate" /><col className="console-group-col-state" /><col className="console-group-col-ttft" />
+        {showThroughput && <col className="console-group-col-throughput" />}
+        <col className="console-group-col-ring" /><col className="console-group-col-ring" /><col /><col className="console-group-col-details" />
+      </colgroup>
+      <TableHeader><TableRow>{labels.map((label, index) => <TableHead key={label} scope="col" className={[showThroughput ? 5 : 4, showThroughput ? 6 : 5].includes(index) ? "console-group-centered-heading" : undefined}>{label}</TableHead>)}</TableRow></TableHeader>
+      <TableBody>{rows.map((row) => <StatusRow key={row.key} row={row} mode={mode} showThroughput={showThroughput} range={range} locale={locale} formatNumber={formatNumber} labels={labels} updatedAt={updatedAt} coverage={coverage} />)}</TableBody>
+    </Table>
+  </div>;
 }
 
 export function MonitorPage() {
   const { t, locale, formatNumber } = useLocale();
-  const [state, setState] = useState({ loading: true, error: "", items: [] });
+  const { settings, settingsLoading, settingsError, retrySettings } = useConsole();
+  const mode = settings?.channel_monitor_mode === "v2" ? "v2" : "v1";
+  const showThroughput = mode === "v2" && settings?.channel_monitor_hide_throughput !== true;
+  const [rangeChoice, setRange] = useState("");
+  const range = MONITOR_RANGES[mode].includes(rangeChoice) ? rangeChoice : mode === "v2" ? "90m" : "7d";
   const [refresh, setRefresh] = useState(storedRefresh);
-  const [detail, setDetail] = useState(null);
-  const [selectedId, setSelectedId] = useState(null);
-  const [search, setSearch] = useState("");
-  const [windowDays, setWindowDays] = useState(7);
+  const [state, setState] = useState({ loading: true, items: [], groups: [], rates: {}, details: {}, error: "", notice: "", updatedAt: "", coverage: null, context: "" });
   const [filter, setFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("status");
-  const [details, setDetails] = useState({});
-  const [refreshing, setRefreshing] = useState(false);
-  const [listVersion, setListVersion] = useState(0);
+  const [sort, setSort] = useState("status");
+  const [search, setSearch] = useState("");
   const requestRef = useRef(null);
   const loadingRef = useRef(false);
-  const detailRef = useRef(null);
-  const detailsRef = useRef(null);
-  const loadedListVersionRef = useRef(0);
+  const context = mode + ":" + range;
+
   const load = useCallback(async (silent = false) => {
-    if (silent && (document.hidden || loadingRef.current)) return;
-    if (!silent) {
-      setRefreshing(true);
-      setState((current) => current.items.length ? { ...current, loading: false, error: "" } : { ...current, loading: true, error: "" });
-    }
+    if (settingsLoading || settingsError || (silent && (document.hidden || loadingRef.current))) return;
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
     loadingRef.current = true;
+    setState((current) => ({ ...current, loading: true, error: "", notice: "" }));
     try {
-      const data = await monitorApi.list(controller.signal);
-      if (requestRef.current === controller) {
-        const nextItems = Array.isArray(data) ? data : data?.items || [];
-        setDetail((current) => {
-          if (!current?.sourceId) return current;
-          const nextItem = nextItems.find((item) => item.id === current.sourceId);
-          return nextItem ? { ...current, item: { ...current.item, ...nextItem, ...(current.item?.models ? { models: current.item.models } : {}) } } : current;
+      const [monitors, groups, rates] = await Promise.allSettled([
+        mode === "v2" ? monitorApi.matrix({ range, group_by: "platform_group" }, controller.signal) : monitorApi.list(controller.signal),
+        groupsApi.available(controller.signal), groupsApi.rates(controller.signal),
+      ]);
+      if (controller.signal.aborted) return;
+      if (monitors.status === "rejected") throw monitors.reason;
+      const items = listItems(monitors.value);
+      let details = {};
+      let detailFailed = false;
+      if (mode === "v1" && range !== "7d") {
+        // Bound concurrency for installations with many monitored endpoints.
+        const queue = items.slice();
+        const workers = Array.from({ length: Math.min(4, queue.length) }, async () => {
+          while (queue.length && !controller.signal.aborted) {
+            const item = queue.shift();
+            try { details[item.id] = await monitorApi.status(item.id, controller.signal); } catch { detailFailed = true; }
+          }
         });
-        setState({ loading: false, error: "", items: nextItems });
-        setListVersion((version) => version + 1);
+        await Promise.all(workers);
       }
+      if (controller.signal.aborted) return;
+      const notices = [];
+      if (groups.status === "rejected" || rates.status === "rejected") notices.push(localized(locale, "部分分组倍率暂时无法获取。", "Some group multipliers could not be loaded."));
+      if (detailFailed) notices.push(localized(locale, "部分窗口可用率加载失败，已显示为 —。", "Some uptime values could not be loaded and are shown as —."));
+      setState({ loading: false, items, groups: groups.status === "fulfilled" ? listItems(groups.value) : [], rates: rates.status === "fulfilled" ? rates.value : null, details, error: "", notice: notices.join(" "), updatedAt: new Date().toISOString(), coverage: monitors.value?.coverage || null, context: mode + ":" + range });
     } catch (error) {
-      if (error.name !== "AbortError" && !silent) setState((current) => ({ ...current, loading: false, error: error.message }));
+      if (!controller.signal.aborted) setState((current) => ({ ...current, loading: false, error: error.message }));
     } finally {
-      if (requestRef.current === controller) {
-        loadingRef.current = false;
-        if (!silent) setRefreshing(false);
-      }
+      if (requestRef.current === controller) loadingRef.current = false;
     }
-  }, []);
+  }, [mode, range, locale, settingsLoading, settingsError]);
+
   useEffect(() => { load(); return () => requestRef.current?.abort(); }, [load]);
   useEffect(() => {
-    localStorage.setItem(MONITOR_REFRESH_KEY, JSON.stringify(refresh));
+    try { localStorage.setItem(REFRESH_KEY, JSON.stringify(refresh)); } catch { /* Storage may be disabled. */ }
     if (!refresh.auto) return undefined;
-    const onVisibility = () => !document.hidden && load(true);
     const timer = window.setInterval(() => load(true), refresh.seconds * 1000);
+    const onVisibility = () => { if (!document.hidden) load(true); };
     document.addEventListener("visibilitychange", onVisibility);
     return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisibility); };
   }, [load, refresh]);
-  useEffect(() => {
-    if (windowDays === 7 || !state.items.length) return undefined;
-    const request = Symbol("monitor-windows");
-    detailsRef.current = request;
-    Promise.allSettled(state.items.map((item) => monitorApi.status(item.id))).then((results) => {
-      if (detailsRef.current !== request) return;
-      const next = {};
-      results.forEach((result, index) => { if (result.status === "fulfilled") next[state.items[index].id] = result.value; });
-      setDetails(next);
-    });
-    return () => { if (detailsRef.current === request) detailsRef.current = null; };
-  }, [state.items, windowDays]);
-  const selectItem = useCallback(async (item) => {
-    const request = Symbol("monitor-detail");
-    detailRef.current = request;
-    setSelectedId(item.id);
-    setDetail((current) => {
-      const previousItem = current?.sourceId === item.id ? current.item : null;
-      return {
-        loading: true,
-        item: previousItem ? { ...previousItem, ...item, ...(previousItem.models ? { models: previousItem.models } : {}) } : item,
-        sourceId: item.id,
-      };
-    });
-    try {
-      const full = await monitorApi.status(item.id);
-      if (detailRef.current === request) {
-        setDetails((current) => ({ ...current, [item.id]: full }));
-        setDetail((current) => {
-          const previousItem = current?.sourceId === item.id ? current.item : null;
-          const nextItem = { ...(previousItem || {}), ...item, ...full };
-          return {
-            loading: false,
-            item: full?.models === undefined && previousItem?.models ? { ...nextItem, models: previousItem.models } : nextItem,
-            sourceId: item.id,
-          };
-        });
-      }
-    } catch (error) {
-      if (detailRef.current === request) {
-        setDetail((current) => ({ loading: false, item: current?.sourceId === item.id ? { ...current.item, ...item } : item, sourceId: item.id, error: error.message }));
-      }
-    }
-  }, []);
-  const statusCounts = countByStatus(state.items);
-  const counts = { ...statusCounts, total: state.items.length };
-  const filteredItems = state.items
-    .filter((item) => (filter === "all" || monitorTone(item.primary_status) === filter) && (!search.trim() || `${item.name || ""} ${item.provider || ""} ${item.primary_model || ""}`.toLowerCase().includes(search.trim().toLowerCase())))
-    .sort((left, right) => compareMonitorItems(left, right, sortBy, windowDays, details));
-  const selectedItem = filteredItems.find((item) => item.id === selectedId) || filteredItems[0];
-  useEffect(() => {
-    if (!selectedItem) return;
-    if (loadedListVersionRef.current !== listVersion || detail?.sourceId !== selectedItem.id) {
-      loadedListVersionRef.current = listVersion;
-      selectItem(selectedItem);
-    }
-  }, [detail?.sourceId, listVersion, selectItem, selectedItem]);
 
-  return (
-    <Page title={t("monitor.title")} className="console-monitor-page">
-      <MonitorToolbar windowDays={windowDays} setWindowDays={setWindowDays} filter={filter} setFilter={setFilter} counts={counts} refresh={refresh} setRefresh={setRefresh} loading={state.loading || refreshing} onRefresh={load} search={search} setSearch={setSearch} locale={locale} />
-      <MonitorContent state={state} locale={locale} load={load} items={filteredItems} counts={counts} windowDays={windowDays} details={details} formatNumber={formatNumber} selectedId={selectedId} onSelect={selectItem} detail={detail} sortBy={sortBy} setSortBy={setSortBy} />
-    </Page>
-  );
+  const rows = useMemo(() => state.context === context ? buildMonitorRows(state.items, state.groups, state.rates, mode, range, state.details) : [], [state, mode, range, context]);
+  const counts = rows.reduce((result, row) => { result[row.tone] += 1; return result; }, { operational: 0, degraded: 0, failed: 0, unknown: 0 });
+  const query = search.trim().toLowerCase();
+  const sortOptions = [{ value: "status", label: localized(locale, "状态", "Status") }, { value: "rate", label: localized(locale, "倍率 ↑", "Multiplier ↑") }, { value: "latency", label: mode === "v2" ? localized(locale, "首字 P50 ↑", "TTFT P50 ↑") : localized(locale, "延迟 ↑", "Latency ↑") }, ...(mode === "v2" ? [{ value: "cacheRate", label: localized(locale, "读缓存占比 ↓", "Cache read share ↓") }, { value: "successRate", label: localized(locale, "计分成功率 ↓", "Scored success rate ↓") }] : [{ value: "availability", label: localized(locale, "可用率 ↓", "Uptime ↓") }])];
+  const visible = sortMonitorRows(rows.filter((row) => (filter === "all" || row.tone === filter) && (!query || [row.name, row.platform, row.description, ...row.models.map((model) => model.model)].join(" ").toLowerCase().includes(query))), sortOptions.some((option) => option.value === sort) ? sort : "status");
+
+  const scope = mode === "v2" ? localized(locale, "分组 / 平台", "Groups / platforms") : localized(locale, "监控线路", "Monitored endpoints");
+  const noData = !rows.length;
+  const statusText = settingsLoading || (state.loading && noData) ? localized(locale, "加载中", "Loading") : state.error ? localized(locale, "刷新失败", "Refresh failed") : noData ? localized(locale, "暂无监控数据", "No monitoring data") : refresh.auto ? localized(locale, "自动刷新中", "Auto refresh on") : localized(locale, "已暂停刷新", "Refresh paused");
+  const refreshStatus = state.error ? "failed" : noData || !refresh.auto ? "inactive" : "active";
+  return <Page title={t("monitor.title")} className="console-monitor-page console-group-status-page">
+    <Panel className="console-group-status-board">
+      <header className="console-group-board-header"><div><StatusBadge size="sm" status={settingsError ? "failed" : refreshStatus} label={settingsError ? localized(locale, "配置加载失败", "Settings unavailable") : statusText} /><p>{mode === "v2" ? localized(locale, "基于实际请求，对比分组的首字延迟 P50、读缓存占比与计分成功率。", "Compare groups by first-token P50, cache read share and scored success rate.") : localized(locale, "查看各线路的主动探测状态、延迟与历史可用率。", "View endpoint probe status, latency and historical uptime.")}</p></div><div className="console-group-updated"><span>{mode === "v2" ? localized(locale, "数据截至", "Data through") : localized(locale, "更新", "Updated")} {dateLabel(mode === "v2" ? state.coverage?.data_through : state.updatedAt, locale)}</span><Button icon="refresh" loading={state.loading || settingsLoading} onClick={() => load()}>{t("common.refresh")}</Button></div></header>
+      <div className="console-group-summary"><div className="console-group-summary-ring"><MetricRing value={noData ? null : counts.operational / rows.length * 100} label={mode === "v2" ? localized(locale, "健康分组占比", "Healthy group share") : localized(locale, "正常占比", "Healthy share")} /></div><div className="console-group-summary-total"><small>{scope}</small><strong>{noData && state.loading ? "—" : rows.length}</strong></div><div className="console-monitor-tone" data-tone="operational"><small>{localized(locale, "正常", "Healthy")}</small><strong>{counts.operational}</strong></div><div className="console-monitor-tone" data-tone={counts.failed ? "failed" : counts.degraded ? "degraded" : "unknown"}><small>{localized(locale, "警告 / 异常", "Warning / incident")}</small><strong>{counts.degraded + counts.failed}</strong></div><div className="console-monitor-tone" data-tone="unknown"><small>{localized(locale, "未知", "Unknown")}</small><strong>{counts.unknown}</strong></div><div className="console-group-status-legend">{Object.keys(counts).map((tone) => <span key={tone} style={{ color: toneColor[tone] }}><i />{toneLabel(tone, locale)}</span>)}</div></div>
+      <div className="console-group-toolbar">
+        <div className="console-group-toolbar-line"><span>{mode === "v2" ? localized(locale, "时间窗口", "Time range") : localized(locale, "可用率窗口", "Uptime window")}</span><CompactTabs value={range} onChange={setRange} label={localized(locale, "时间窗口", "Time range")} items={MONITOR_RANGES[mode].map((value) => ({ value, label: value }))} /><span>{localized(locale, "排序", "Sort")}</span><SelectInput aria-label={localized(locale, "排序", "Sort")} value={sortOptions.some((option) => option.value === sort) ? sort : "status"} onChange={(event) => setSort(event.target.value)}>{sortOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</SelectInput><div className="console-group-refresh"><SelectInput aria-label={localized(locale, "自动刷新", "Auto refresh")} value={refresh.auto ? String(refresh.seconds) : "off"} onChange={(event) => setRefresh({ auto: event.target.value !== "off", seconds: Number(event.target.value) || 30 })}><option value="off">{localized(locale, "暂停刷新", "Pause refresh")}</option>{[30, 60, 120].map((value) => <option key={value} value={value}>{value}s {localized(locale, "自动刷新", "auto refresh")}</option>)}</SelectInput></div></div>
+        <div className="console-group-toolbar-line"><CompactTabs value={filter} onChange={setFilter} label={localized(locale, "状态筛选", "Status filter")} items={[{ value: "all", label: localized(locale, "全部", "All") + " " + rows.length }, ...Object.keys(counts).map((tone) => ({ value: tone, label: toneLabel(tone, locale) + " " + counts[tone] }))]} /><TextInput aria-label={localized(locale, "搜索分组或平台", "Search groups or platforms")} placeholder={localized(locale, "搜索分组或平台…", "Search groups or platforms…")} value={search} onChange={(event) => setSearch(event.target.value)} /></div>
+      </div>
+      {settingsError ? <ErrorState message={settingsError} onRetry={retrySettings} /> : state.error && <ErrorState message={state.error} onRetry={() => load()} />}
+      {state.notice && <p className="console-group-notice" role="status">{state.notice}</p>}
+      {state.coverage?.coverage_complete === false && <p className="console-group-notice">{localized(locale, "历史数据尚未覆盖完整窗口，当前仅展示已汇总的数据。", "History does not cover the full window yet. Only aggregated data is shown.")}</p>}
+      {mode === "v2" && <div className="console-group-definitions">
+        <p>{localized(locale, "计分成功率 = 1 − 计分错误率，配置中忽略的错误不计入失败；读缓存占比按输入侧 Token 计算。", "Scored success rate = 1 − scored error rate; configured ignored errors do not count as failures. Cache read share is measured over input-side tokens.")}</p>
+        <p>{localized(locale, "健康分组占比按分组 / 平台组合计数，并非请求成功率。分组汇总包含未列出的模型流量；详情仅展示当前分组的模型。", "Healthy group share counts group/platform combinations, not requests. Group totals include unlisted model traffic; model details are scoped to each group.")}</p>
+      </div>}
+      {!settingsError && ((state.loading && noData) || settingsLoading) ? <div className="console-group-loading" role="status" aria-label={t("common.loading")}>{Array.from({ length: 6 }, (_, index) => <Skeleton className="h-20 w-full" key={index} />)}</div> : visible.length ? <StatusTable rows={visible} mode={mode} showThroughput={showThroughput} range={range} locale={locale} formatNumber={formatNumber} updatedAt={state.updatedAt} coverage={state.coverage} /> : !state.error && !settingsError && <EmptyState icon="pulse" description={localized(locale, "暂无符合条件的监控数据。", "No monitoring data matches these filters.")} />}
+      {showThroughput && <div className="console-group-definitions"><p>{localized(locale, "每秒 Token：所选窗口内的总吞吐量（TPM ÷ 60，含输入、输出及缓存 Token）。", "Tokens/sec: total throughput in the selected window (TPM ÷ 60, including input, output and cache tokens).")}</p></div>}
+      <footer className="console-group-footer"><span>{visible.length} {scope}</span><span>{mode === "v2" ? localized(locale, "— 表示样本不足或暂无数据 · 灰色区间无首字延迟数据 · 趋势纵轴按行缩放", "— indicates insufficient samples or no data · Gray intervals have no TTFT data · Each trend has its own scale") : localized(locale, "可用率来自主动探测 · 趋势为最近最多 60 次探测", "Uptime is based on probes · Trends show up to 60 recent probes")}</span></footer>
+    </Panel>
+  </Page>;
 }
