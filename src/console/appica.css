@@ -4805,6 +4805,64 @@ html[data-console-theme] .console-purchase-history {
   text-decoration: none;
 }
 
+/* Top-up colors: balance, spending, selection and confirmation. */
+html[data-console-theme] .console-purchase-balance .console-purchase-overview {
+  background: linear-gradient(110deg, color-mix(in oklab, var(--success-emphasis) 7%, var(--background)), var(--background) 55%);
+  border-color: color-mix(in oklab, var(--success-emphasis) 18%, var(--border-muted));
+}
+html[data-console-theme] .console-purchase-overview-icon {
+  color: var(--success-intense);
+  background: color-mix(in oklab, var(--success-emphasis) 12%, var(--background));
+}
+html[data-console-theme] .console-purchase-overview-copy strong { color: var(--success-intense); }
+html[data-console-theme] .console-purchase-overview-metric {
+  --purchase-metric-accent: var(--info-emphasis);
+  --purchase-metric-ink: var(--info-intense);
+  background: color-mix(in oklab, var(--purchase-metric-accent) 7%, var(--background));
+  border-color: color-mix(in oklab, var(--purchase-metric-accent) 20%, var(--border-muted));
+}
+html[data-console-theme] .console-purchase-overview-metric:nth-child(2) { --purchase-metric-accent: var(--warning-emphasis); --purchase-metric-ink: var(--warning-intense); }
+html[data-console-theme] .console-purchase-overview-metric:nth-child(3) { --purchase-metric-accent: var(--success-emphasis); --purchase-metric-ink: var(--success-intense); }
+html[data-console-theme] .console-purchase-overview-metric strong { color: var(--purchase-metric-ink); }
+html[data-console-theme] .console-purchase-step {
+  --purchase-step-accent: var(--info-emphasis);
+  --purchase-step-ink: var(--info-intense);
+  border-top-color: color-mix(in oklab, var(--purchase-step-accent) 40%, var(--border-muted));
+  background: linear-gradient(180deg, color-mix(in oklab, var(--purchase-step-accent) 3%, var(--background)), var(--background) 8rem);
+}
+html[data-console-theme] .console-purchase-step.is-review { --purchase-step-accent: var(--success-emphasis); --purchase-step-ink: var(--success-intense); }
+html[data-console-theme] .console-purchase-step-title > span {
+  color: var(--purchase-step-ink);
+  background: color-mix(in oklab, var(--purchase-step-accent) 12%, var(--background));
+}
+html[data-console-theme] .console-purchase-progress i { color: var(--info-intense); background: color-mix(in oklab, var(--info-emphasis) 10%, var(--background)); }
+html[data-console-theme] .console-purchase-progress > span:last-child i { color: var(--success-intense); background: color-mix(in oklab, var(--success-emphasis) 10%, var(--background)); }
+html[data-console-theme] .console-purchase-progress > span::after { background: color-mix(in oklab, var(--info-emphasis) 18%, var(--border-muted)); }
+html[data-console-theme] .console-purchase-amounts [data-slot="toggle"]:hover:not(:disabled) { color: var(--info-intense); border-color: var(--info-emphasis); background: color-mix(in oklab, var(--info-emphasis) 5%, var(--background)); }
+html[data-console-theme] .console-purchase-amounts [data-slot="toggle"][data-pressed],
+html[data-console-theme] .console-purchase-amounts [data-slot="toggle"].is-selected {
+  color: var(--info-intense);
+  border-color: var(--info-emphasis);
+  background: color-mix(in oklab, var(--info-emphasis) 13%, var(--background));
+}
+html[data-console-theme] .console-purchase-amount-check { color: var(--info-intense); }
+html[data-console-theme] .console-purchase-review > div:last-child {
+  padding: 0.75rem;
+  border: var(--border-width) solid color-mix(in oklab, var(--success-emphasis) 22%, var(--border-muted));
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--success-emphasis) 8%, var(--background));
+}
+html[data-console-theme] .console-purchase-review > div:last-child :is(dt, dd) { color: var(--success-intense); }
+html[data-console-theme] .console-purchase-review > div:last-child dd { font-size: var(--text-lg); }
+html[data-console-theme] .console-purchase-page .console-purchase-balance [data-slot="button"].console-purchase-submit {
+  color: var(--info-intense);
+  border-color: color-mix(in oklab, var(--info-emphasis) 45%, var(--border-muted));
+  background: color-mix(in oklab, var(--info-emphasis) 15%, var(--background));
+}
+html[data-console-theme] .console-purchase-page .console-purchase-balance [data-slot="button"].console-purchase-submit:hover:not(:disabled) { background: color-mix(in oklab, var(--info-emphasis) 23%, var(--background)); }
+html[data-console-theme] .console-purchase-history { color: var(--info-intense); }
+html[data-console-theme] .console-purchase-history:hover { text-decoration: underline; }
+
 html[data-console-theme] .console-muted {
   color: var(--foreground-muted);
 }
