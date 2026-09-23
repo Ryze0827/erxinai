@@ -201,6 +201,13 @@ function announcementContent(item) {
     .replace(/\\r\\n|\\n|\\r/g, "\n");
 }
 
+function AnnouncementBody({ content }) {
+  return <div className="console-announcement-content">{content.trim().split(/\n\s*\n/).map((paragraph, index) => <div className="console-announcement-paragraph" key={index}>{paragraph.split("\n").map((line, lineIndex) => {
+    const numbered = line.match(/^\s*(\d+[、．]|\d+[.)](?=\s))\s*(.*)$/);
+    return numbered ? <p className="console-announcement-item" key={lineIndex}><span className="console-announcement-number">{numbered[1]}</span><span>{numbered[2]}</span></p> : <p key={lineIndex}>{line}</p>;
+  })}</div>)}</div>;
+}
+
 function SiteAnnouncementBar() {
   const { t } = useLocale();
   const message = "GPT分组按充值金额，调低倍率/开通专线，详情见历史公告";
@@ -261,7 +268,7 @@ function AnnouncementMenu() {
     if (current) await markRead(current);
   };
 
-  return <div className="console-popover-wrap"><Popover open={open} onOpenChange={setOpen}><PopoverTrigger render={<IconButton icon="bell" label={t("announcement.title")} />} />{unread > 0 && <b className="console-notification-dot">{unread > 9 ? "9+" : unread}</b>}<PopoverContent arrow={false} align="end" className="console-popover console-announcements"><div className="console-popover-head"><strong>{t("announcement.title")}</strong><IconButton icon="refresh" label={t("common.refresh")} onClick={load} loading={loading} /></div>{!loaded ? <Spinner /> : !items.length ? <EmptyState title={t("announcement.empty")} /> : <div className="console-announcement-list">{items.map((item) => <InlineButton key={item.id} className={item.is_read || item.read_at ? "is-read" : ""} onClick={() => { shownPopupIds.current.add(item.id); setPopup(item); setOpen(false); }}><span><strong>{item.title}</strong><p>{announcementContent(item)}</p><small>{formatDate(item.created_at)}</small></span></InlineButton>)}</div>}</PopoverContent></Popover><Modal open={Boolean(popup)} title={popup?.title || t("announcement.title")} description={popup?.created_at ? formatDate(popup.created_at) : ""} onClose={closePopup} footer={<Button variant="primary" icon="check" onClick={closePopup}>{t("common.confirm")}</Button>}><div className="console-markdown console-announcement-content">{announcementContent(popup)}</div></Modal></div>;
+  return <div className="console-popover-wrap"><Popover open={open} onOpenChange={setOpen}><PopoverTrigger render={<IconButton icon="bell" label={t("announcement.title")} />} />{unread > 0 && <b className="console-notification-dot">{unread > 9 ? "9+" : unread}</b>}<PopoverContent arrow={false} align="end" className="console-popover console-announcements"><div className="console-popover-head"><strong>{t("announcement.title")}</strong><IconButton icon="refresh" label={t("common.refresh")} onClick={load} loading={loading} /></div>{!loaded ? <Spinner /> : !items.length ? <EmptyState title={t("announcement.empty")} /> : <div className="console-announcement-list">{items.map((item) => <InlineButton key={item.id} className={item.is_read || item.read_at ? "is-read" : ""} onClick={() => { shownPopupIds.current.add(item.id); setPopup(item); setOpen(false); }}><span><strong>{item.title}</strong><p>{announcementContent(item)}</p><small>{formatDate(item.created_at)}</small></span></InlineButton>)}</div>}</PopoverContent></Popover><Modal className="console-announcement-modal" open={Boolean(popup)} title={popup?.title || t("announcement.title")} description={popup?.created_at ? formatDate(popup.created_at) : ""} onClose={closePopup} footer={<Button variant="primary" icon="check" onClick={closePopup}>{t("common.confirm")}</Button>}><AnnouncementBody content={announcementContent(popup)} /></Modal></div>;
 }
 
 const walkthroughSteps = [

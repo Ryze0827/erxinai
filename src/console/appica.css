@@ -637,8 +637,77 @@ html[data-console-theme] .console-announcement-list > [data-slot="button"]:not(.
 }
 
 html[data-console-theme] .console-announcement-content {
+  display: grid;
+  gap: 1.25rem;
+  color: var(--foreground-strong);
+  font-size: var(--text-base);
+  line-height: 1.85;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+
+html[data-console-theme] .console-announcement-paragraph {
+  display: grid;
+  gap: 0.75rem;
+}
+
+html[data-console-theme] .console-announcement-content p {
+  margin: 0;
+}
+
+html[data-console-theme] .console-announcement-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+html[data-console-theme] .console-announcement-number {
+  min-width: 1.5em;
+  color: var(--console-info-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] [data-slot="dialog-popup"].console-announcement-modal {
+  width: min(40rem, calc(100vw - 2rem));
+  max-height: calc(var(--console-viewport-height, 100svh) - 2rem);
+}
+
+html[data-console-theme] .console-announcement-modal [data-slot="dialog-content"] {
+  padding-block: 0;
+}
+
+html[data-console-theme] .console-announcement-modal .console-modal-head {
+  padding: 1.75rem clamp(1.25rem, 4vw, 2rem) 1.25rem;
+  padding-inline-end: 3.5rem;
+  background: linear-gradient(135deg, var(--console-info-surface), var(--background) 75%);
+}
+
+html[data-console-theme] .console-announcement-modal [data-slot="dialog-title"] {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: 1.5;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+html[data-console-theme] .console-announcement-modal [data-slot="dialog-description"] {
+  margin-top: 0.625rem;
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-announcement-modal .console-modal-body {
+  padding: 1.5rem clamp(1.25rem, 4vw, 2rem) 1.75rem;
+  overscroll-behavior: contain;
+}
+
+html[data-console-theme] .console-announcement-modal .console-modal-footer {
+  padding: 1rem clamp(1.25rem, 4vw, 2rem);
 }
 
 html[data-console-theme] .console-header [data-slot="button"].console-header-link {

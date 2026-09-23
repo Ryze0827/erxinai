@@ -202,10 +202,10 @@ export function ProgressBar({ value, tone = "primary" }) {
   return <AppicaProgress className={`console-progress console-progress--${tone}`} value={width} thickness={6} indicatorColor={colors[tone] || colors.primary} />;
 }
 
-export function Modal({ open, title, description, children, footer, onClose, size = "medium" }) {
+export function Modal({ open, title, description, children, footer, onClose, size = "medium", className = "" }) {
   const { t } = useLocale();
   return <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose?.()}>
-    <DialogContent closeLabel={t("common.close")} className={`console-modal--${size}`}>
+    <DialogContent closeLabel={t("common.close")} className={`console-modal--${size} ${className}`.trim()}>
       <div className="console-modal-content">
         <DialogHeader className="console-modal-head"><div><DialogTitle>{title}</DialogTitle>{description && <DialogDescription>{description}</DialogDescription>}</div></DialogHeader>
         <DialogBody className="console-modal-body">{children}</DialogBody>
