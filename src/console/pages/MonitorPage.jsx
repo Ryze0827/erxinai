@@ -98,6 +98,9 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   const geometry = trendGeometry(chartTimeline, mode === "v2" ? coverage : undefined, mode === "v2" ? 12000 : undefined);
   const validPoints = geometry.points.filter((point) => point.latency != null || point.secondary != null);
   const lastVisiblePoint = validPoints.at(-1);
+  const latestField = lastVisiblePoint?.latency != null ? "latency" : "secondary";
+  const latestValue = lastVisiblePoint?.[latestField];
+  const latestY = latestValue == null ? null : 49 - Math.min(geometry.max, Math.max(0, latestValue)) / geometry.max * 42;
   if (!geometry.points.length) return <div className="console-group-trend-empty">{localized(locale, "暂无延迟数据", "No latency data")}</div>;
   const primary = mode === "v2" ? localized(locale, "平均首字延迟", "Average TTFT") : localized(locale, "探测延迟", "Probe latency");
   const secondary = mode === "v2" ? null : "Ping";
@@ -116,8 +119,10 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
       <path className="console-group-trend-primary" d={geometry.primary} />
       {geometry.points.map((point, index) => {
         if (point.latency == null && point.secondary == null) return null;
+        const isLatest = point.time === lastVisiblePoint?.time;
         return <g key={point.time} className={"console-group-trend-point" + (activeTime === point.time ? " is-active" : "")}>
           {activeTime === point.time && <path className="console-group-trend-guide" d={`M${point.x},4 V52`} />}
+          {isLatest && latestValue != null && <circle className="console-group-trend-latest-dot" cx={point.x} cy={latestY} r="1.8" />}
           {["latency", ...(secondary ? ["secondary"] : [])].map((field) => {
             if (point[field] == null) return null;
             const boundary = geometry.points[index - 1]?.[field] == null || geometry.points[index + 1]?.[field] == null;
@@ -127,6 +132,7 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
         </g>;
       })}
     </svg>
+    {lastVisiblePoint && latestValue != null && <div className={"console-group-trend-latest-value" + (lastVisiblePoint.x > 190 ? " is-right" : "")} style={{ left: lastVisiblePoint.x / 280 * 100 + "%", top: latestY / 56 * 100 + "%" }} aria-label={localized(locale, "最新数据点", "Latest data point") + " · " + duration(latestValue, formatNumber)}>{duration(latestValue, formatNumber)}</div>}
     <div className="console-group-trend-targets" role="group" aria-label={localized(locale, "查看各时间点数据", "Inspect trend points")}>{geometry.points.map((point, index) => {
       const left = index === 0 ? 0 : (geometry.points[index - 1].x + point.x) / 2;
       const right = index === geometry.points.length - 1 ? 280 : (point.x + geometry.points[index + 1].x) / 2;
