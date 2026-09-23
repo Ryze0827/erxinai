@@ -10015,6 +10015,7 @@ html[data-console-theme] .console-group-ring-wrap > small { color: var(--foregro
 html[data-console-theme] .console-group-missing-ring { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; color: var(--foreground-subtle); background: var(--background-muted); border-radius: var(--radius-lg); }
 html[data-console-theme] .console-group-trend { min-width: 0; }
 html[data-console-theme] .console-group-trend svg { display: block; width: 100%; height: 5rem; overflow: visible; }
+html[data-console-theme] .console-group-trend.is-ttft svg { height: 7rem; }
 html[data-console-theme] .console-group-trend svg path { vector-effect: non-scaling-stroke; }
 html[data-console-theme] .console-group-trend-grid { fill: none; stroke: var(--border-muted); stroke-width: 0.75; stroke-dasharray: 2 5; opacity: 0.6; }
 html[data-console-theme] .console-group-trend-incident { fill: none; stroke-width: 3; stroke-linecap: round; opacity: 0.2; }

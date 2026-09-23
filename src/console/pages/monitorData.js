@@ -114,7 +114,7 @@ export function sortMonitorRows(rows, sort) {
   });
 }
 
-export function trendGeometry(timeline, coverage) {
+export function trendGeometry(timeline, coverage, fixedMax) {
   let points = timeline.filter((point) => Number.isFinite(Date.parse(point.time))).slice().sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
   const requestedStart = Date.parse(coverage?.requested_start);
   const requestedEnd = Date.parse(coverage?.requested_end || coverage?.data_through);
@@ -131,7 +131,8 @@ export function trendGeometry(timeline, coverage) {
       points.push(byTime.get(time) || { time: new Date(time).toISOString(), latency: null, secondary: null, tone: "unknown" });
     }
   }
-  const max = Math.max(1, ...points.flatMap((point) => [point.latency ?? 0, point.secondary ?? 0]));
+  const max = metricNumber(fixedMax) ?? Math.max(1, ...points.flatMap((point) => [point.latency ?? 0, point.secondary ?? 0]));
+  const yFor = (value) => 49 - Math.min(max, Math.max(0, value)) / max * 42;
   const positioned = points.map((point) => ({
     ...point,
     x: !hasWindow && points.length === 1 ? 140 : 4 + (Date.parse(point.time) - start) / Math.max(1, end - start) * 272,
@@ -143,14 +144,14 @@ export function trendGeometry(timeline, coverage) {
       if (point[field] == null) { connected = false; return ""; }
       const command = connected ? "L" : "M";
       connected = true;
-      return `${command}${point.x.toFixed(2)},${(49 - point[field] / max * 42).toFixed(2)}`;
+      return `${command}${point.x.toFixed(2)},${yFor(point[field]).toFixed(2)}`;
     }).join(" ");
   };
   const areas = [];
   let segment = [];
   const closeArea = () => {
     if (segment.length > 1) {
-      const line = segment.map((point) => `L${point.x.toFixed(2)},${(49 - point.latency / max * 42).toFixed(2)}`).join(" ");
+      const line = segment.map((point) => `L${point.x.toFixed(2)},${yFor(point.latency).toFixed(2)}`).join(" ");
       areas.push(`M${segment[0].x.toFixed(2)},49 ${line} L${segment.at(-1).x.toFixed(2)},49 Z`);
     }
     segment = [];

@@ -94,32 +94,35 @@ function TtftMetric({ metrics, health, locale, formatNumber, showRating = true }
 function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   const fillId = useId();
   const [activeTime, setActiveTime] = useState(null);
-  const geometry = trendGeometry(timeline, mode === "v2" ? coverage : undefined);
+  const chartTimeline = mode === "v2" ? timeline.map(({ secondary, ...point }) => point) : timeline;
+  const geometry = trendGeometry(chartTimeline, mode === "v2" ? coverage : undefined, mode === "v2" ? 12000 : undefined);
   const validPoints = geometry.points.filter((point) => point.latency != null || point.secondary != null);
   const lastVisiblePoint = validPoints.at(-1);
   if (!geometry.points.length) return <div className="console-group-trend-empty">{localized(locale, "暂无延迟数据", "No latency data")}</div>;
   const primary = mode === "v2" ? localized(locale, "平均首字延迟", "Average TTFT") : localized(locale, "探测延迟", "Probe latency");
-  const secondary = mode === "v2" ? localized(locale, "P95（分桶估算）", "P95 (bucket estimate)") : "Ping";
-  return <TooltipProvider delay={0} closeDelay={0}><div className="console-group-trend">
-    <div className="console-group-trend-legend"><span>{primary}</span><span>{secondary}</span></div>
+  const secondary = mode === "v2" ? null : "Ping";
+  const axisRatios = mode === "v2" ? [1, 0.75, 0.5, 0.25, 0] : [1, 0.5, 0];
+  return <TooltipProvider delay={0} closeDelay={0}><div className={`console-group-trend${mode === "v2" ? " is-ttft" : ""}`}>
+    {mode !== "v2" && <div className="console-group-trend-legend"><span>{primary}</span>{secondary && <span>{secondary}</span>}</div>}
     <div className="console-group-trend-chart">
     <div className="console-group-trend-plot">
-    <div className="console-group-trend-axis" aria-label={localized(locale, "延迟刻度（毫秒）", "Latency scale (milliseconds)")}>{[1, 0.5, 0].map((ratio) => <span key={ratio} style={{ top: (49 - ratio * 42) / 56 * 100 + "%" }}>{validPoints.length ? formatNumber(geometry.max * ratio, { maximumFractionDigits: 1 }) + " ms" : "—"}</span>)}</div>
-    <svg viewBox="0 0 280 56" preserveAspectRatio="none" role="img" aria-label={primary + " / " + secondary + " · " + dateLabel(geometry.startTime, locale) + " — " + dateLabel(geometry.endTime, locale)}>
+    <div className="console-group-trend-axis" aria-label={localized(locale, "延迟刻度（毫秒）", "Latency scale (milliseconds)")}>{axisRatios.map((ratio) => <span key={ratio} style={{ top: (49 - ratio * 42) / 56 * 100 + "%" }}>{validPoints.length ? formatNumber(geometry.max * ratio, { maximumFractionDigits: 0 }) + " ms" : "—"}</span>)}</div>
+    <svg viewBox="0 0 280 56" preserveAspectRatio="none" role="img" aria-label={primary + (secondary ? " / " + secondary : "") + " · " + dateLabel(geometry.startTime, locale) + " — " + dateLabel(geometry.endTime, locale)}>
       <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--console-monitor-healthy)" stopOpacity=".16" /><stop offset="100%" stopColor="var(--console-monitor-healthy)" stopOpacity="0" /></linearGradient></defs>
-      <path className="console-group-trend-grid" d="M4,7 H276 M4,28 H276 M4,49 H276" />
+      <path className="console-group-trend-grid" d={axisRatios.map((ratio) => `M4,${(49 - ratio * 42).toFixed(2)} H276`).join(" ")} />
       {geometry.points.filter((point) => ["failed", "degraded"].includes(point.tone)).map((point, index) => <path key={index} d={`M${point.x},5 V51`} className="console-group-trend-incident" stroke={toneColor[point.tone]} />)}
       <path d={geometry.primaryArea} fill={`url(#${fillId})`} />
-      <path className="console-group-trend-secondary" d={geometry.secondary} />
+      {secondary && <path className="console-group-trend-secondary" d={geometry.secondary} />}
       <path className="console-group-trend-primary" d={geometry.primary} />
       {geometry.points.map((point, index) => {
         if (point.latency == null && point.secondary == null) return null;
         return <g key={point.time} className={"console-group-trend-point" + (activeTime === point.time ? " is-active" : "")}>
           {activeTime === point.time && <path className="console-group-trend-guide" d={`M${point.x},4 V52`} />}
-          {["latency", "secondary"].map((field) => {
+          {["latency", ...(secondary ? ["secondary"] : [])].map((field) => {
             if (point[field] == null) return null;
             const boundary = geometry.points[index - 1]?.[field] == null || geometry.points[index + 1]?.[field] == null;
-            return <path key={field} className={"console-group-trend-marker is-" + field + (boundary ? " is-boundary" : "")} d={`M${point.x},${49 - point[field] / geometry.max * 42} h0.001`} />;
+            const value = Math.min(geometry.max, Math.max(0, point[field]));
+            return <path key={field} className={"console-group-trend-marker is-" + field + (boundary ? " is-boundary" : "")} d={`M${point.x},${49 - value / geometry.max * 42} h0.001`} />;
           })}
         </g>;
       })}
@@ -129,13 +132,12 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
       const right = index === geometry.points.length - 1 ? 280 : (point.x + geometry.points[index + 1].x) / 2;
       const time = dateLabel(point.time, locale);
       const average = duration(point.latency, formatNumber);
-      const percentile = mode === "v2" ? estimatedDuration(point.secondary, formatNumber) : duration(point.secondary, formatNumber);
       return <Tooltip key={point.time} disableHoverablePopup onOpenChange={(open) => setActiveTime((current) => open ? point.time : current === point.time ? null : current)}>
-        <TooltipTrigger className="console-group-trend-target" style={{ left: left / 280 * 100 + "%", width: (right - left) / 280 * 100 + "%" }} aria-label={time + " · " + primary + " " + average + " · " + secondary + " " + percentile} />
+        <TooltipTrigger className="console-group-trend-target" style={{ left: left / 280 * 100 + "%", width: (right - left) / 280 * 100 + "%" }} aria-label={time + " · " + primary + " " + average + (secondary ? " · " + secondary + " " + duration(point.secondary, formatNumber) : "")} />
         <TooltipContent arrow={false} side="top" className="console-group-trend-tooltip">
           <time dateTime={point.time}>{time}</time>
           <div className="console-group-trend-tooltip-row"><span><i />{primary}</span><strong>{average}</strong></div>
-          <div className="console-group-trend-tooltip-row is-secondary"><span><i />{secondary}</span><strong>{percentile}</strong></div>
+          {secondary && <div className="console-group-trend-tooltip-row is-secondary"><span><i />{secondary}</span><strong>{duration(point.secondary, formatNumber)}</strong></div>}
         </TooltipContent>
       </Tooltip>;
     })}</div>
@@ -333,13 +335,13 @@ export function MonitorPage() {
       {state.notice && <p className="console-group-notice" role="status">{state.notice}</p>}
       {state.coverage?.coverage_complete === false && <p className="console-group-notice">{localized(locale, "历史数据尚未覆盖完整窗口，当前仅展示已汇总的数据。", "History does not cover the full window yet. Only aggregated data is shown.")}</p>}
       {mode === "v2" && <div className="console-group-definitions">
-        <p>{localized(locale, "平均首字延迟按所选窗口内的实际样本计算；趋势主线为各区间平均值。P50 / P90 / P95 为分桶上限估算，评级与评分沿用后端分位数口径。", "Average TTFT uses actual samples in the selected window; the primary trend shows each interval’s average. P50 / P90 / P95 are histogram upper-bound estimates; ratings and scores follow backend percentiles.")}</p>
+        <p>{localized(locale, "平均首字延迟按所选窗口内的实际样本计算；趋势主线为各区间平均值。P50 / P90 为分桶上限估算，评级与评分沿用后端分位数口径。", "Average TTFT uses actual samples in the selected window; the primary trend shows each interval’s average. P50 / P90 are histogram upper-bound estimates; ratings and scores follow backend percentiles.")}</p>
         <p>{localized(locale, "成功率 = 1 − 计分错误率，配置中忽略的错误不计入失败；缓存率按输入侧 Token 计算。", "Success rate = 1 − scored error rate; configured ignored errors do not count as failures. Cache rate is measured over input-side tokens.")}</p>
         <p>{localized(locale, "健康分组占比按分组 / 平台组合计数，并非请求成功率。分组汇总包含未列出的模型流量；详情仅展示当前分组的模型。", "Healthy group share counts group/platform combinations, not requests. Group totals include unlisted model traffic; model details are scoped to each group.")}</p>
       </div>}
       {!settingsError && ((state.loading && noData) || settingsLoading) ? <div className="console-group-loading" role="status" aria-label={t("common.loading")}>{Array.from({ length: 6 }, (_, index) => <Skeleton className="h-20 w-full" key={index} />)}</div> : visible.length ? <StatusTable rows={visible} mode={mode} showThroughput={showThroughput} range={range} locale={locale} formatNumber={formatNumber} updatedAt={state.updatedAt} coverage={state.coverage} /> : !state.error && !settingsError && <EmptyState icon="pulse" description={localized(locale, "暂无符合条件的监控数据。", "No monitoring data matches these filters.")} />}
       {showThroughput && <div className="console-group-definitions"><p>{localized(locale, "每秒 Token：所选窗口内的总吞吐量（TPM ÷ 60，含输入、输出及缓存 Token）。", "Tokens/sec: total throughput in the selected window (TPM ÷ 60, including input, output and cache tokens).")}</p></div>}
-      <footer className="console-group-footer"><span>{visible.length} {scope}</span><span>{mode === "v2" ? localized(locale, "— 表示样本不足或暂无数据 · 趋势纵轴按行缩放", "— indicates insufficient samples or no data · Each trend has its own scale") : localized(locale, "可用率来自主动探测 · 趋势为最近最多 60 次探测", "Uptime is based on probes · Trends show up to 60 recent probes")}</span></footer>
+      <footer className="console-group-footer"><span>{visible.length} {scope}</span><span>{mode === "v2" ? localized(locale, "— 表示样本不足或暂无数据 · 趋势纵轴固定 0–12000 ms", "— indicates insufficient samples or no data · Trend scale is fixed at 0–12000 ms") : localized(locale, "可用率来自主动探测 · 趋势为最近最多 60 次探测", "Uptime is based on probes · Trends show up to 60 recent probes")}</span></footer>
     </Panel>
   </Page>;
 }
