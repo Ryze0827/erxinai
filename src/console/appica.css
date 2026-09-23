@@ -10115,6 +10115,68 @@ html[data-console-theme] .console-group-details [data-slot="table-head"] { backg
   html[data-console-theme] .console-group-updated { width: 100%; justify-content: space-between; }
   html[data-console-theme] .console-group-summary { flex-wrap: wrap; gap: 1rem; }
   html[data-console-theme] .console-group-summary > div:not(:first-child):not(:last-child) { padding-inline-start: 1rem; }
+
+  /* Reflow the same rows so expansion state and polling survive a resize. */
+  html[data-console-theme] .console-group-responsive-list { overflow: visible; }
+  html[data-console-theme] .console-group-status-table,
+  html[data-console-theme] .console-group-status-table.has-throughput { display: block; width: 100%; min-width: 0; }
+  html[data-console-theme] .console-group-status-table > colgroup { display: none; }
+  html[data-console-theme] .console-group-status-table > thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  html[data-console-theme] .console-group-status-table > tbody { display: block; }
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: start;
+    gap: 1rem;
+    padding: 1rem;
+    border-top: var(--border-width) solid var(--border-muted);
+    background: linear-gradient(135deg, color-mix(in oklab, var(--group-row-tint) 6%, var(--background)), var(--background) 60%);
+  }
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row:first-child { border-top: 0; }
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    white-space: normal;
+  }
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td:first-child { background: transparent; }
+  html[data-console-theme] .console-group-overview-row > td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 0.5rem; color: var(--foreground-muted); font-size: var(--text-xs); }
+  html[data-console-theme] .console-group-overview-row > td[data-column="identity"] { grid-area: 1 / 1 / 2 / 6; }
+  html[data-console-theme] .console-group-overview-row > td[data-column="action"] { grid-area: 1 / 6 / 2 / 7; justify-self: end; }
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td[data-column="state"] { grid-area: 2 / 1 / 3 / 7; padding: 0.65rem 0.75rem; border-radius: var(--radius-sm); background: color-mix(in oklab, var(--info-emphasis) 6%, var(--background)); }
+  html[data-console-theme] .console-group-overview-row > td[data-column="rate"] { grid-area: 3 / 1 / 4 / 3; }
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td[data-column="latency"] { grid-area: 3 / 3 / 4 / 7; padding-inline-start: 1rem; border-inline-start: var(--border-width) solid var(--border-muted); }
+  html[data-console-theme] .console-group-overview-row > td[data-column="cache"] { grid-area: 4 / 1 / 5 / 4; text-align: center; }
+  html[data-console-theme] .console-group-overview-row > td[data-column="success"] { grid-area: 4 / 4 / 5 / 7; text-align: center; }
+  html[data-console-theme] .console-group-overview-row > td[data-column="throughput"] { grid-area: 4 / 1 / 5 / 3; align-self: center; }
+  html[data-console-theme] .console-group-status-table.has-throughput > tbody > .console-group-overview-row > td[data-column="cache"] { grid-column: 3 / 5; }
+  html[data-console-theme] .console-group-status-table.has-throughput > tbody > .console-group-overview-row > td[data-column="success"] { grid-column: 5 / 7; }
+  html[data-console-theme] .console-group-overview-row > td[data-column="trend"] { grid-area: 5 / 1 / 6 / 7; }
+  html[data-console-theme] .console-group-models { flex-direction: row; flex-wrap: wrap; justify-content: flex-end; justify-self: end; }
+  html[data-console-theme] .console-group-identity small { white-space: normal; overflow-wrap: anywhere; }
+  html[data-console-theme] .console-group-overview-row .console-group-ttft { width: 100%; min-width: 0; }
+  html[data-console-theme] .console-group-throughput { white-space: normal; overflow-wrap: anywhere; }
+  html[data-console-theme] .console-group-throughput small { display: block; margin-top: 0.25rem; }
+  html[data-console-theme] .console-group-trend-chart { padding-inline-start: 4rem; }
+  html[data-console-theme] .console-group-trend-axis { width: 4rem; }
+  html[data-console-theme] .console-group-trend.is-ttft svg { height: 8rem; }
+  html[data-console-theme] .console-group-trend-dates { white-space: nowrap; }
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-detail-row { display: block; }
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-detail-row > td { display: block; padding: 0 1.25rem 1.25rem; }
+  html[data-console-theme] .console-group-details { max-width: 100%; overflow-x: auto; }
+  html[data-console-theme] .console-group-details > table { min-width: 40rem; }
+}
+@media (min-width: 40rem) and (max-width: 64rem) {
+  /* Wider mobile screens fit the two rate rings beside the chart. */
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td[data-column="cache"] { grid-area: 4 / 1 / 5 / 2; align-self: center; }
+  html[data-console-theme] .console-group-status-table > tbody > .console-group-overview-row > td[data-column="success"] { grid-area: 4 / 2 / 5 / 3; align-self: center; }
+  html[data-console-theme] .console-group-overview-row > td[data-column="trend"] { grid-area: 4 / 3 / 5 / 7; }
+  html[data-console-theme] .console-group-status-table.has-throughput > tbody > .console-group-overview-row > td[data-column="rate"] { grid-column: 1 / 2; }
+  html[data-console-theme] .console-group-status-table.has-throughput > tbody > .console-group-overview-row > td[data-column="throughput"] { grid-area: 3 / 2 / 4 / 3; align-self: start; }
+  html[data-console-theme] .console-group-status-table.has-throughput > tbody > .console-group-overview-row > td[data-column="cache"] { grid-column: 1 / 2; }
+  html[data-console-theme] .console-group-status-table.has-throughput > tbody > .console-group-overview-row > td[data-column="success"] { grid-column: 2 / 3; }
 }
 @media (max-width: 47.5rem) {
   html[data-console-theme] .console-group-summary { gap: 0.875rem; }
