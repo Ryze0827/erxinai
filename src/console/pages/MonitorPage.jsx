@@ -21,6 +21,8 @@ import { CompactTabs } from "../components/ConsoleControls";
 import { MONITOR_RANGES, buildMonitorRankingRows, buildMonitorRows, metricNumber, metricRate, monitorTone, scoredSuccessRate, sortMonitorRows, tokensPerSecond, trendGeometry } from "./monitorData.js";
 
 const REFRESH_KEY = "sentence_monitor_refresh";
+const TTFT_TREND_WARNING_MS = 10000;
+const TTFT_TREND_TRANSITION_MS = 1000;
 const toneColor = { operational: "var(--console-monitor-healthy)", degraded: "var(--console-monitor-warning)", failed: "var(--console-monitor-critical)", unknown: "var(--foreground-subtle)" };
 const localized = (locale, zh, en) => locale === "zh" ? zh : en;
 const listItems = (data) => Array.isArray(data) ? data : data?.items || [];
@@ -52,6 +54,11 @@ function duration(value, formatNumber) {
 
 function estimatedDuration(value, formatNumber) {
   return value == null ? "—" : "≤ " + duration(value, formatNumber);
+}
+
+function ttftTrendColor(value) {
+  const warning = Math.min(1, Math.max(0, (value - TTFT_TREND_WARNING_MS) / TTFT_TREND_TRANSITION_MS));
+  return `color-mix(in srgb, var(--console-monitor-warning, var(--warning-emphasis)) ${warning * 100}%, var(--console-monitor-healthy, var(--success-emphasis)))`;
 }
 
 function ThroughputMetric({ tpm, locale, formatNumber }) {
@@ -93,6 +100,7 @@ function TtftMetric({ metrics, health, locale, formatNumber, showRating = true }
 
 function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   const fillId = useId();
+  const strokeId = useId();
   const [activeTime, setActiveTime] = useState(null);
   const chartTimeline = mode === "v2" ? timeline.map(({ secondary, ...point }) => point) : timeline;
   const geometry = trendGeometry(chartTimeline, mode === "v2" ? coverage : undefined, mode === "v2" ? 12000 : undefined);
@@ -105,29 +113,43 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   const primary = mode === "v2" ? localized(locale, "平均首字延迟", "Average TTFT") : localized(locale, "探测延迟", "Probe latency");
   const secondary = mode === "v2" ? null : "Ping";
   const axisRatios = mode === "v2" ? [1, 0.75, 0.5, 0.25, 0] : [1, 0.5, 0];
+  // Tie color to the fixed value axis, not each path's bounds. Flat lines and
+  // separate segments must use the same threshold, even across missing data.
+  const warningOffset = 1 - (TTFT_TREND_WARNING_MS + TTFT_TREND_TRANSITION_MS) / geometry.max;
+  const healthyOffset = 1 - TTFT_TREND_WARNING_MS / geometry.max;
   return <TooltipProvider delay={0} closeDelay={0}><div className={`console-group-trend${mode === "v2" ? " is-ttft" : ""}`}>
     {mode !== "v2" && <div className="console-group-trend-legend"><span>{primary}</span>{secondary && <span>{secondary}</span>}</div>}
     <div className="console-group-trend-chart">
     <div className="console-group-trend-plot">
     <div className="console-group-trend-axis" aria-label={localized(locale, "延迟刻度（毫秒）", "Latency scale (milliseconds)")}>{axisRatios.map((ratio) => <span key={ratio} style={{ top: (49 - ratio * 42) / 56 * 100 + "%" }}>{validPoints.length ? formatNumber(geometry.max * ratio, { maximumFractionDigits: 0 }) + " ms" : "—"}</span>)}</div>
     <svg viewBox="0 0 280 56" preserveAspectRatio="none" role="img" aria-label={primary + (secondary ? " / " + secondary : "") + " · " + dateLabel(geometry.startTime, locale) + " — " + dateLabel(geometry.endTime, locale)}>
-      <defs><linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--console-monitor-healthy)" stopOpacity=".16" /><stop offset="100%" stopColor="var(--console-monitor-healthy)" stopOpacity="0" /></linearGradient></defs>
+      <defs>
+        {mode === "v2" && <linearGradient id={strokeId} gradientUnits="userSpaceOnUse" x1="0" y1="7" x2="0" y2="49">
+          <stop offset={warningOffset} stopColor="var(--console-monitor-warning)" />
+          <stop offset={healthyOffset} stopColor="var(--console-monitor-healthy)" />
+        </linearGradient>}
+        {mode === "v2" ? <linearGradient id={fillId} gradientUnits="userSpaceOnUse" x1="0" y1="7" x2="0" y2="49">
+          <stop offset={warningOffset} stopColor="var(--console-monitor-warning)" stopOpacity=".16" />
+          <stop offset={healthyOffset} stopColor="var(--console-monitor-healthy)" stopOpacity=".12" />
+          <stop offset="100%" stopColor="var(--console-monitor-healthy)" stopOpacity="0" />
+        </linearGradient> : <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--console-monitor-healthy)" stopOpacity=".16" /><stop offset="100%" stopColor="var(--console-monitor-healthy)" stopOpacity="0" /></linearGradient>}
+      </defs>
       <path className="console-group-trend-grid" d={axisRatios.map((ratio) => `M4,${(49 - ratio * 42).toFixed(2)} H276`).join(" ")} />
       {geometry.points.filter((point) => ["failed", "degraded"].includes(point.tone)).map((point, index) => <path key={index} d={`M${point.x},5 V51`} className="console-group-trend-incident" stroke={toneColor[point.tone]} />)}
       <path d={geometry.primaryArea} fill={`url(#${fillId})`} />
       {secondary && <path className="console-group-trend-secondary" d={geometry.secondary} />}
-      <path className="console-group-trend-primary" d={geometry.primary} />
+      <path className="console-group-trend-primary" d={geometry.primary} style={mode === "v2" ? { stroke: `url(#${strokeId})` } : undefined} />
       {geometry.points.map((point, index) => {
         if (point.latency == null && point.secondary == null) return null;
         const isLatest = point.time === lastVisiblePoint?.time;
         return <g key={point.time} className={"console-group-trend-point" + (activeTime === point.time ? " is-active" : "")}>
           {activeTime === point.time && <path className="console-group-trend-guide" d={`M${point.x},4 V52`} />}
-          {isLatest && latestValue != null && <circle className="console-group-trend-latest-dot" cx={point.x} cy={latestY} r="1.8" />}
+          {isLatest && latestValue != null && <circle className="console-group-trend-latest-dot" cx={point.x} cy={latestY} r="1.8" style={mode === "v2" ? { stroke: ttftTrendColor(latestValue) } : undefined} />}
           {["latency", ...(secondary ? ["secondary"] : [])].map((field) => {
             if (point[field] == null) return null;
             const boundary = geometry.points[index - 1]?.[field] == null || geometry.points[index + 1]?.[field] == null;
             const value = Math.min(geometry.max, Math.max(0, point[field]));
-            return <path key={field} className={"console-group-trend-marker is-" + field + (boundary ? " is-boundary" : "")} d={`M${point.x},${49 - value / geometry.max * 42} h0.001`} />;
+            return <path key={field} className={"console-group-trend-marker is-" + field + (boundary ? " is-boundary" : "")} d={`M${point.x},${49 - value / geometry.max * 42} h0.001`} style={mode === "v2" ? { stroke: ttftTrendColor(point[field]) } : undefined} />;
           })}
         </g>;
       })}
@@ -142,7 +164,7 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
         <TooltipTrigger className="console-group-trend-target" style={{ left: left / 280 * 100 + "%", width: (right - left) / 280 * 100 + "%" }} aria-label={time + " · " + primary + " " + average + (secondary ? " · " + secondary + " " + duration(point.secondary, formatNumber) : "")} />
         <TooltipContent arrow={false} side="top" className="console-group-trend-tooltip">
           <time dateTime={point.time}>{time}</time>
-          <div className="console-group-trend-tooltip-row"><span><i />{primary}</span><strong>{average}</strong></div>
+          <div className="console-group-trend-tooltip-row"><span><i style={mode === "v2" ? { borderColor: ttftTrendColor(point.latency) } : undefined} />{primary}</span><strong>{average}</strong></div>
           {secondary && <div className="console-group-trend-tooltip-row is-secondary"><span><i />{secondary}</span><strong>{duration(point.secondary, formatNumber)}</strong></div>}
         </TooltipContent>
       </Tooltip>;
