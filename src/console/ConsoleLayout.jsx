@@ -208,13 +208,21 @@ function AnnouncementBody({ content }) {
   })}</div>)}</div>;
 }
 
-function SiteAnnouncementBar() {
+function SiteAnnouncementBar({ onClick }) {
   const { t } = useLocale();
-  const message = "GPT分组按充值金额，调低倍率/开通专线，详情见历史公告";
-  return <div className="console-site-announcement-slot"><Alert layout="inline" role="status" aria-label={t("announcement.title")} className="console-site-announcement"><AlertIcon><Icon name="announcement" size={16} /></AlertIcon><AlertTitle as="p">{message}</AlertTitle></Alert></div>;
+  const message = "GPT分组按充值金额，调低倍率/开通专线，详情查看历史";
+  const activate = (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onClick?.(); } };
+  return <div className="console-site-announcement-slot"><Alert layout="inline" role="button" tabIndex={0} aria-label={t("announcement.title")} className="console-site-announcement" onClick={onClick} onKeyDown={activate}><AlertIcon><Icon name="announcement" size={16} /></AlertIcon><AlertTitle as="p">{message}<span className="console-site-announcement-link">公告</span></AlertTitle></Alert></div>;
 }
 
-function AnnouncementMenu() {
+function effectiveRateAnnouncement(items) {
+  return items.find((item) => {
+    const text = `${item?.title || ""} ${announcementContent(item)}`;
+    return text.includes("倍率") && (text.includes("生效") || text.includes("调整策略"));
+  }) || items.find((item) => String(item?.title || "").includes("倍率"));
+}
+
+function AnnouncementMenu({ openEffectiveRateRequest = 0 }) {
   const { t, formatDate } = useLocale();
   const { notify } = useConsole();
   const [open, setOpen] = useState(false);
@@ -237,14 +245,31 @@ function AnnouncementMenu() {
       const pending = nextItems.filter((item) => item.notify_mode === "popup" && !item.is_read && !item.read_at && !shownPopupIds.current.has(item.id));
       pending.forEach((item) => shownPopupIds.current.add(item.id));
       if (pending.length) setPopupQueue((current) => [...current, ...pending]);
+      return nextItems;
     } catch (error) {
       if (mountedRef.current) notify("error", error.message);
+      return [];
     } finally {
       if (mountedRef.current) setLoading(false);
     }
   };
 
   useEffect(() => { mountedRef.current = true; load(); return () => { mountedRef.current = false; }; }, []);
+  useEffect(() => {
+    if (!openEffectiveRateRequest) return undefined;
+    let active = true;
+    const openEffectiveRate = async () => {
+      const available = loaded ? items : await load();
+      if (!active) return;
+      const target = effectiveRateAnnouncement(available);
+      if (!target) return;
+      shownPopupIds.current.add(target.id);
+      setPopup(target);
+      setOpen(false);
+    };
+    openEffectiveRate();
+    return () => { active = false; };
+  }, [openEffectiveRateRequest]);
   useEffect(() => {
     if (popup || !popupQueue.length) return;
     setPopup(popupQueue[0]);
@@ -415,6 +440,7 @@ function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
   const { t, formatUsd, locale, setLocale } = useLocale();
   const { settings, user } = useConsole();
   const [summary, setSummary] = useState(null);
+  const [openEffectiveRateRequest, setOpenEffectiveRateRequest] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -422,7 +448,7 @@ function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
     return () => { active = false; };
   }, []);
 
-  return <><header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label={t(mobileOpen ? "nav.closeMenu" : "nav.openMenu")} onClick={() => setMobileOpen((value) => !value)} /><strong>{title}</strong></div><div className="console-header-actions" data-sidebar-motion-static>{summary?.active_count > 0 && <Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-subscription-pill" })} to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<Walkthrough setMobileOpen={setMobileOpen} />{safeExternalUrl(settings?.doc_url) && <a className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-header-link" })} href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<InlineButton variant="outline" size="md" className="console-header-language" icon="language" aria-label={t("nav.switchLanguage")} title={t("nav.switchLanguage")} onClick={() => setLocale(locale === "en" ? "zh" : "en")}><span>{t("nav.language")}</span></InlineButton><ThemeToggle className="console-header-preference" /><AnnouncementMenu /><Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-balance-link" })} to="/purchase" aria-label={`${t("nav.purchase")}: ${formatUsd(user?.balance || 0)}`}><Icon name="wallet" size={17} data-icon="start" /><strong className="console-balance-value">{formatUsd(user?.balance || 0)}</strong></Link></div></header><SiteAnnouncementBar /></>;
+  return <><header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label={t(mobileOpen ? "nav.closeMenu" : "nav.openMenu")} onClick={() => setMobileOpen((value) => !value)} /><strong>{title}</strong></div><div className="console-header-actions" data-sidebar-motion-static>{summary?.active_count > 0 && <Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-subscription-pill" })} to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<Walkthrough setMobileOpen={setMobileOpen} />{safeExternalUrl(settings?.doc_url) && <a className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-header-link" })} href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<InlineButton variant="outline" size="md" className="console-header-language" icon="language" aria-label={t("nav.switchLanguage")} title={t("nav.switchLanguage")} onClick={() => setLocale(locale === "en" ? "zh" : "en")}><span>{t("nav.language")}</span></InlineButton><ThemeToggle className="console-header-preference" /><AnnouncementMenu openEffectiveRateRequest={openEffectiveRateRequest} /><Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-balance-link" })} to="/purchase" aria-label={`${t("nav.purchase")}: ${formatUsd(user?.balance || 0)}`}><Icon name="wallet" size={17} data-icon="start" /><strong className="console-balance-value">{formatUsd(user?.balance || 0)}</strong></Link></div></header><SiteAnnouncementBar onClick={() => setOpenEffectiveRateRequest((value) => value + 1)} /></>;
 }
 
 function pageTitle(pathname, items, t) {
