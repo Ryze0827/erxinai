@@ -111,8 +111,9 @@ function ErrorFilters({ filters, setFilter, apiKeys, models, locale }) {
 
 function ModelCell({ row }) {
   const chain = String(row.model_mapping_chain || "").split("→").map((item) => item.trim()).filter(Boolean);
-  if (chain.length > 1) return <div className="console-model-chain">{chain.map((item, index) => <TruncatedText value={`${index > 0 ? "↳ " : ""}${item}`} render={<span />} key={`${item}-${index}`} />)}</div>;
-  return <div className="console-key-name"><TruncatedText value={row.model} render={<strong />} />{row.upstream_model && row.upstream_model !== row.model && <TruncatedText value={`↳ ${row.upstream_model}`} render={<small />} />}</div>;
+  const modelLabel = (value) => value === null || value === undefined || value === "" ? "—" : String(value);
+  if (chain.length > 1) return <div className="console-model-chain">{chain.map((item, index) => <span className="console-table-truncate" key={`${item}-${index}`}>{modelLabel(`${index > 0 ? "↳ " : ""}${item}`)}</span>)}</div>;
+  return <div className="console-key-name"><strong className="console-table-truncate">{modelLabel(row.model)}</strong>{row.upstream_model && row.upstream_model !== row.model && <small className="console-table-truncate">{modelLabel(`↳ ${row.upstream_model}`)}</small>}</div>;
 }
 
 function UsageTimeCell({ value, locale }) {
