@@ -274,13 +274,21 @@ function firstTokenStatus(value) {
   return "normal";
 }
 
+function totalLatencyStatus(value) {
+  if (value == null || value === "" || !Number.isFinite(Number(value)) || Number(value) < 0) return "unknown";
+  if (Number(value) > 180000) return "slow";
+  if (Number(value) > 60000) return "moderate";
+  return "normal";
+}
+
 function LatencyCell({ row, locale }) {
   const status = firstTokenStatus(row.first_token_ms);
+  const totalStatus = totalLatencyStatus(row.duration_ms);
   const first = status === "unknown" ? "—" : latencyLabel(row.first_token_ms);
   const total = latencyLabel(row.duration_ms);
   const labels = locale === "zh" ? { normal: "正常", moderate: "偏慢", slow: "较慢", unknown: "未记录" } : { normal: "Normal", moderate: "Elevated", slow: "Slow", unknown: "No data" };
   const hint = localized(locale, "首 Token 响应参考：≤10s 正常，10–30s 偏慢，>30s 较慢；仅评价响应速度。", "First-token response guide: ≤10s normal, 10–30s elevated, >30s slow; indicates response speed only.");
-  return <div className="console-latency" data-response={status} title={hint}><span className="console-latency-primary" aria-label={localized(locale, "首 Token", "First token") + ": " + first + " · " + labels[status]}><b>{first}</b><small>{labels[status]}</small></span><span className="console-latency-total"><small>{localized(locale, "总耗时", "Total")}</small><b>{total}</b></span></div>;
+  return <div className="console-latency" data-response={status} data-total-response={totalStatus} title={hint}><span className="console-latency-primary" aria-label={localized(locale, "首 Token", "First token") + ": " + first + " · " + labels[status]}><b>{first}</b><small>{labels[status]}</small></span><span className="console-latency-total"><small>{localized(locale, "总耗时", "Total")}</small><b>{total}</b></span></div>;
 }
 
 function ErrorDetail({ item }) {
