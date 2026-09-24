@@ -10397,6 +10397,7 @@ html[data-console-theme] .console-usage-page .console-token-cell small { font-si
 html[data-console-theme] .console-usage-page .console-token-cell b { font-weight: 650; font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
 html[data-console-theme] .console-usage-page .console-token-cell .is-read b { color: color-mix(in oklab, var(--info-intense) 70%, var(--foreground-strong)); }
 html[data-console-theme] .console-usage-page .console-latency { display: grid; width: 100%; max-width: 7.5rem; gap: 0.3rem; --response-ink: var(--foreground-muted); --response-accent: var(--foreground-subtle); }
+html[data-console-theme] .console-usage-page .console-latency[data-response="fast"],
 html[data-console-theme] .console-usage-page .console-latency[data-response="normal"] { --response-ink: color-mix(in oklab, var(--success-intense) 75%, var(--foreground-strong)); --response-accent: var(--success-emphasis); }
 html[data-console-theme] .console-usage-page .console-latency[data-response="moderate"] { --response-ink: color-mix(in oklab, var(--warning-intense) 75%, var(--foreground-strong)); --response-accent: var(--warning-emphasis); }
 html[data-console-theme] .console-usage-page .console-latency[data-response="slow"] { --response-ink: color-mix(in oklab, var(--error-intense) 75%, var(--foreground-strong)); --response-accent: var(--error-emphasis); }
