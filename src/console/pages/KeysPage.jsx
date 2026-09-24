@@ -110,13 +110,15 @@ function KeyCreatedTime({ value, locale }) {
 function UsageCell({ row, stats, formatCurrency, locale }) {
   const usage = stats?.[row.id] || stats?.[String(row.id)] || {};
   const percent = Number(row.quota) ? Number(row.quota_used || 0) / Number(row.quota) * 100 : 0;
-  return <div className="console-key-usage"><div><span>{locale === "zh" ? "今日" : "Today"}</span><strong>{formatCurrency(usage.today_actual_cost || 0)}</strong></div><div><span>{locale === "zh" ? "累计" : "Total"}</span><strong>{formatCurrency(usage.total_actual_cost || 0)}</strong></div>{Number(row.quota) > 0 && <div className="is-quota"><span>{locale === "zh" ? "额度" : "Quota"}</span><strong>{formatCurrency(row.quota_used)} / {formatCurrency(row.quota)}</strong><ProgressBar value={percent} tone={percent >= 90 ? "danger" : "primary"} /></div>}</div>;
+  const tone = percent >= 100 ? "danger" : percent >= 80 ? "warning" : "primary";
+  return <div className="console-key-usage"><div><span>{locale === "zh" ? "今日" : "Today"}</span><strong>{formatCurrency(usage.today_actual_cost || 0)}</strong></div><div><span>{locale === "zh" ? "累计" : "Total"}</span><strong>{formatCurrency(usage.total_actual_cost || 0)}</strong></div>{Number(row.quota) > 0 && <div className="is-quota"><span>{locale === "zh" ? "额度" : "Quota"}</span><strong className="console-key-limit-amount" data-tone={tone}>{formatCurrency(row.quota_used)} / {formatCurrency(row.quota)}</strong><ProgressBar value={percent} tone={tone} /></div>}</div>;
 }
 
 function RateWindow({ label, used, limit, resetAt, formatCurrency, locale }) {
   if (!Number(limit)) return null;
   const percent = Number(used || 0) / Number(limit) * 100;
-  return <div><span><b>{label}</b><strong>{formatCurrency(used)} / {formatCurrency(limit)}</strong></span><ProgressBar value={percent} tone={percent >= 100 ? "danger" : percent >= 80 ? "warning" : "primary"} />{resetAt && <small><Icon name="refresh" size={12} />{resetCountdown(resetAt, locale)}</small>}</div>;
+  const tone = percent >= 100 ? "danger" : percent >= 80 ? "warning" : "primary";
+  return <div><span><b>{label}</b><strong className="console-key-limit-amount" data-tone={tone}>{formatCurrency(used)} / {formatCurrency(limit)}</strong></span><ProgressBar value={percent} tone={tone} />{resetAt && <small><Icon name="refresh" size={12} />{resetCountdown(resetAt, locale)}</small>}</div>;
 }
 
 function RateLimitCell({ row, onReset, formatCurrency, locale }) {

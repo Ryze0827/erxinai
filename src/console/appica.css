@@ -2337,6 +2337,14 @@ html[data-console-theme] .console-key-usage .console-progress {
   margin-top: 0.25rem;
 }
 
+html[data-console-theme] .console-key-limit-amount[data-tone="warning"] {
+  color: var(--warning-emphasis);
+}
+
+html[data-console-theme] .console-key-limit-amount[data-tone="danger"] {
+  color: var(--error-emphasis);
+}
+
 html[data-console-theme] .console-rate-windows {
   display: grid;
   gap: 0.5rem;
