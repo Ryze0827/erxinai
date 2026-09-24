@@ -175,8 +175,8 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   </div></TooltipProvider>;
 }
 
-function ModelTags({ models, locale, loaded }) {
-  if (!models.length) return <small className="console-group-muted">{loaded ? localized(locale, "暂无模型数据", "No model data") : localized(locale, "展开查看模型", "Expand for models")}</small>;
+function ModelTags({ models, locale, loaded, error }) {
+  if (!models.length) return <small className="console-group-muted">{error ? localized(locale, "模型加载失败", "Failed to load models") : loaded ? localized(locale, "暂无模型数据", "No model data") : localized(locale, "正在加载模型…", "Loading models…")}</small>;
   return <div className="console-group-models">{models.slice(0, 4).map((model) => <span key={model.model} className="console-monitor-tone" data-tone={monitorTone(model.status || model.health?.overall)} title={model.model + " · " + toneLabel(monitorTone(model.status || model.health?.overall), locale)}>{model.model}</span>)}{models.length > 4 && <small>+{models.length - 4}</small>}</div>;
 }
 
@@ -203,28 +203,29 @@ function StatusRow({ row, mode, showThroughput, range, locale, formatNumber, lab
   const [detailVersion, setDetailVersion] = useState(0);
   const { id, group_id: groupId } = row.source;
   const platform = row.platform;
+  const shouldLoadDetail = mode === "v2" || expanded;
   const description = row.description?.trim();
   const showDescription = description && ![row.name, platform].some((value) => value?.trim().toLowerCase() === description.toLowerCase());
   useEffect(() => {
-    if (!expanded) return undefined;
+    if (!shouldLoadDetail) return undefined;
     const controller = new AbortController();
     setDetail((current) => ({ ...current, loading: true, error: "" }));
     const request = mode === "v2" ? monitorApi.models({ range, group_id: groupId, platform }, controller.signal) : monitorApi.status(id, controller.signal);
     request.then((data) => { if (!controller.signal.aborted) setDetail({ data, loading: false }); }).catch((error) => { if (!controller.signal.aborted) setDetail((current) => ({ ...current, error: error.message, loading: false })); });
     return () => controller.abort();
-  }, [expanded, mode, range, id, groupId, platform, updatedAt, detailVersion]);
+  }, [shouldLoadDetail, mode, range, id, groupId, platform, updatedAt, detailVersion]);
 
   return <>
         <TableRow highlighted={expanded} className="console-group-overview-row" data-tone={row.tone}>
           <TableCell data-column="identity"><div className="console-group-identity"><strong title={row.name}>{row.name}</strong>{showDescription && <small title={description}>{description}</small>}<span>{row.platform}{row.group?.is_exclusive ? " · " + localized(locale, "专属", "Private") : ""}{row.group?.subscription_type === "subscription" ? " · SUB" : ""}</span></div></TableCell>
           <TableCell data-column="rate" data-label={labels[1]}><strong className="console-group-rate">{row.rate == null ? "—" : formatNumber(row.rate, { maximumFractionDigits: 4 }) + "×"}</strong>{row.originalRate != null && row.rate !== row.originalRate && <del className="console-group-original-rate">{row.originalRate}×</del>}</TableCell>
-          <TableCell data-column="state"><div className="console-group-state"><Status tone={row.tone} locale={locale} /><ModelTags models={row.models.length ? row.models : mode === "v2" ? visibleModels(detail?.data) : []} locale={locale} loaded={Boolean(detail?.data)} /></div></TableCell>
+          <TableCell data-column="state"><div className="console-group-state"><Status tone={row.tone} locale={locale} /><ModelTags models={row.models.length ? row.models : mode === "v2" ? visibleModels(detail?.data) : []} locale={locale} loaded={mode !== "v2" || Boolean(detail?.data)} error={detail?.error} /></div></TableCell>
           <TableCell data-column="latency" data-label={labels[3]}>{mode === "v2" ? <TtftMetric metrics={row.source.metrics?.ttft} health={row.source.health} locale={locale} formatNumber={formatNumber} /> : <div className="console-group-latency"><strong>{duration(row.latency, formatNumber)}</strong><small>{localized(locale, "主模型最近一次探测", "Latest primary-model probe")}</small></div>}</TableCell>
           {showThroughput && <TableCell data-column="throughput" data-label={labels[4]}><ThroughputMetric tpm={row.source.metrics?.tpm} locale={locale} formatNumber={formatNumber} /></TableCell>}
           <TableCell data-column="cache" data-label={labels[showThroughput ? 5 : 4]}><MetricRing metric={mode === "v2" ? "cache" : undefined} value={mode === "v2" ? row.cacheRate : row.availability} accessibleLabel={row.name + " · " + labels[showThroughput ? 5 : 4]} label={mode === "v2" ? range : localized(locale, "探测可用率", "Probe uptime")} tone={mode === "v2" ? monitorTone(row.source.health?.cache) : "operational"} /></TableCell>
           <TableCell data-column="success" data-label={labels[showThroughput ? 6 : 5]}>{mode === "v2" ? <MetricRing value={row.successRate} accessibleLabel={row.name + " · " + labels[showThroughput ? 6 : 5]} label={range} tone={monitorTone(row.source.health?.error_rate)} /> : <strong className="console-group-ping">{duration(row.ping, formatNumber)}</strong>}</TableCell>
           <TableCell className="console-group-trend-cell" data-column="trend" data-label={labels[showThroughput ? 7 : 6]}><Trend timeline={row.timeline} mode={mode} coverage={coverage} locale={locale} formatNumber={formatNumber} /></TableCell>
-          <TableCell data-column="action"><Button size="sm" aria-expanded={expanded} aria-controls={"monitor-detail-" + row.key} aria-label={row.name + " · " + localized(locale, "模型详情", "Model details")} onClick={() => setExpanded((current) => !current)}>{expanded ? localized(locale, "收起", "Collapse") : localized(locale, "展开", "Expand")}</Button></TableCell>
+          <TableCell data-column="action"><Button size="sm" aria-expanded={expanded} aria-controls={"monitor-detail-" + row.key} aria-label={row.name + " · " + localized(locale, "模型详情", "Model details")} onClick={() => { if (!expanded && mode === "v2") setDetailVersion((current) => current + 1); setExpanded((current) => !current); }}>{expanded ? localized(locale, "收起", "Collapse") : localized(locale, "展开", "Expand")}</Button></TableCell>
         </TableRow>
         {expanded && <TableRow className="console-group-detail-row"><TableCell colSpan={labels.length} id={"monitor-detail-" + row.key}><ModelDetails row={row} detail={detail} mode={mode} showThroughput={showThroughput} locale={locale} formatNumber={formatNumber} onRetry={() => setDetailVersion((current) => current + 1)} /></TableCell></TableRow>}
   </>;
