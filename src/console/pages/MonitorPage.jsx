@@ -103,7 +103,7 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   const strokeId = useId();
   const [activeTime, setActiveTime] = useState(null);
   const chartTimeline = mode === "v2" ? timeline.map(({ secondary, ...point }) => point) : timeline;
-  const geometry = trendGeometry(chartTimeline, mode === "v2" ? coverage : undefined, mode === "v2" ? 12000 : undefined);
+  const geometry = trendGeometry(chartTimeline, mode === "v2" ? coverage : undefined, undefined, mode === "v2" ? 20000 : undefined);
   const validPoints = geometry.points.filter((point) => point.latency != null || point.secondary != null);
   const lastVisiblePoint = validPoints.at(-1);
   const latestField = lastVisiblePoint?.latency != null ? "latency" : "secondary";
@@ -124,7 +124,10 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
   if (!geometry.points.length) return <div className="console-group-trend-empty">{localized(locale, "暂无延迟数据", "No latency data")}</div>;
   const primary = mode === "v2" ? localized(locale, "平均首字延迟", "Average TTFT") : localized(locale, "探测延迟", "Probe latency");
   const secondary = mode === "v2" ? null : "Ping";
-  const axisRatios = mode === "v2" ? [1, 0.75, 0.5, 0.25, 0] : [1, 0.5, 0];
+  const axisValues = mode === "v2"
+    ? [...new Set([geometry.max, 20000, 10000, 2000, 0].filter((value) => value <= geometry.max))]
+    : [geometry.max, geometry.max / 2, 0];
+  const axisRatios = axisValues.map((value) => value / geometry.max);
   // Tie color to the fixed value axis, not each path's bounds. Flat lines and
   // separate segments must use the same threshold, even across missing data.
   const warningOffset = 1 - (TTFT_TREND_WARNING_MS + TTFT_TREND_TRANSITION_MS) / geometry.max;
@@ -133,7 +136,7 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
     {mode !== "v2" && <div className="console-group-trend-legend"><span>{primary}</span>{secondary && <span>{secondary}</span>}</div>}
     <div className="console-group-trend-chart">
     <div className="console-group-trend-plot">
-    <div className="console-group-trend-axis" aria-label={localized(locale, "延迟刻度（毫秒）", "Latency scale (milliseconds)")}>{axisRatios.map((ratio) => <span key={ratio} style={{ top: (49 - ratio * 42) / 56 * 100 + "%" }}>{validPoints.length ? formatNumber(geometry.max * ratio, { maximumFractionDigits: 0 }) + " ms" : "—"}</span>)}</div>
+    <div className="console-group-trend-axis" aria-label={localized(locale, "延迟刻度（毫秒）", "Latency scale (milliseconds)")}>{axisValues.map((value) => <span key={value} style={{ top: (49 - value / geometry.max * 42) / 56 * 100 + "%" }}>{validPoints.length ? formatNumber(value, { maximumFractionDigits: 0 }) + " ms" : "—"}</span>)}</div>
     <svg viewBox="0 0 280 56" preserveAspectRatio="none" role="img" aria-label={primary + (secondary ? " / " + secondary : "") + " · " + dateLabel(geometry.startTime, locale) + " — " + dateLabel(geometry.endTime, locale)}>
       <defs>
         {mode === "v2" && <linearGradient id={strokeId} gradientUnits="userSpaceOnUse" x1="0" y1="7" x2="0" y2="49">
@@ -166,8 +169,8 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
         </g>;
       })}
     </svg>
-    {annotatedExtrema.map(({ kind, isCurrent, label, point }) => <div key={`${kind}-${point.time}`} className={`console-group-trend-extremum-value is-${kind}${isCurrent ? " is-current" : ""}`} style={{ left: point.x / 280 * 100 + "%", top: (49 - point.latency / geometry.max * 42) / 56 * 100 + "%" }} aria-label={label + " · " + duration(point.latency, formatNumber)}><span>{label}</span><strong>{duration(point.latency, formatNumber)}</strong></div>)}
-    {lastVisiblePoint && latestValue != null && !currentIsAnnotated && <div className="console-group-trend-latest-value" style={{ left: lastVisiblePoint.x / 280 * 100 + "%", top: latestY / 56 * 100 + "%" }} aria-label={localized(locale, "当前值", "Current value") + " · " + duration(latestValue, formatNumber)}><span>{localized(locale, "当前值", "Current")}</span><strong>{duration(latestValue, formatNumber)}</strong></div>}
+    {annotatedExtrema.map(({ kind, isCurrent, label, point }) => { const pointY = (49 - point.latency / geometry.max * 42) / 56 * 100; return <div key={`${kind}-${point.time}`} className={`console-group-trend-extremum-value is-${kind}${isCurrent ? " is-current" : ""}${point.x < 45 ? " is-left" : point.x > 190 ? " is-right" : ""}${pointY < 24 ? " is-top" : ""}`} style={{ left: point.x / 280 * 100 + "%", top: pointY + "%" }} aria-label={label + " · " + duration(point.latency, formatNumber)}><span>{label}</span><strong>{duration(point.latency, formatNumber)}</strong></div>; })}
+    {lastVisiblePoint && latestValue != null && !currentIsAnnotated && <div className={`console-group-trend-latest-value${lastVisiblePoint.x < 45 ? " is-left" : lastVisiblePoint.x > 190 ? " is-right" : ""}${latestY < 24 ? " is-top" : ""}`} style={{ left: lastVisiblePoint.x / 280 * 100 + "%", top: latestY / 56 * 100 + "%" }} aria-label={localized(locale, "当前值", "Current value") + " · " + duration(latestValue, formatNumber)}><span>{localized(locale, "当前值", "Current")}</span><strong>{duration(latestValue, formatNumber)}</strong></div>}
     <div className="console-group-trend-targets" role="group" aria-label={localized(locale, "查看各时间点数据", "Inspect trend points")}>{geometry.points.map((point, index) => {
       const left = index === 0 ? 0 : (geometry.points[index - 1].x + point.x) / 2;
       const right = index === geometry.points.length - 1 ? 280 : (point.x + geometry.points[index + 1].x) / 2;
@@ -383,7 +386,7 @@ export function MonitorPage() {
       </div>}
       {!settingsError && ((state.loading && noData) || settingsLoading) ? <div className="console-group-loading" role="status" aria-label={t("common.loading")}>{Array.from({ length: 6 }, (_, index) => <Skeleton className="h-20 w-full" key={index} />)}</div> : visible.length ? <StatusTable rows={visible} mode={mode} showThroughput={showThroughput} range={range} locale={locale} formatNumber={formatNumber} updatedAt={state.updatedAt} coverage={state.coverage} /> : !state.error && !settingsError && <EmptyState icon="pulse" description={localized(locale, "暂无符合条件的监控数据。", "No monitoring data matches these filters.")} />}
       {showThroughput && <div className="console-group-definitions"><p>{localized(locale, "每秒 Token：所选窗口内的总吞吐量（TPM ÷ 60，含输入、输出及缓存 Token）。", "Tokens/sec: total throughput in the selected window (TPM ÷ 60, including input, output and cache tokens).")}</p></div>}
-      <footer className="console-group-footer"><span>{visible.length} {scope}</span><span>{mode === "v2" ? localized(locale, "— 表示样本不足或暂无数据 · 趋势纵轴固定 0–12000 ms", "— indicates insufficient samples or no data · Trend scale is fixed at 0–12000 ms") : localized(locale, "可用率来自主动探测 · 趋势为最近最多 60 次探测", "Uptime is based on probes · Trends show up to 60 recent probes")}</span></footer>
+      <footer className="console-group-footer"><span>{visible.length} {scope}</span><span>{mode === "v2" ? localized(locale, "— 表示样本不足或暂无数据 · 趋势纵轴按当前窗口数据自适应", "— indicates insufficient samples or no data · Trend scale adapts to the selected window") : localized(locale, "可用率来自主动探测 · 趋势为最近最多 60 次探测", "Uptime is based on probes · Trends show up to 60 recent probes")}</span></footer>
     </Panel>
   </Page>;
 }

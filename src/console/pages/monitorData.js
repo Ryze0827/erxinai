@@ -114,7 +114,7 @@ export function sortMonitorRows(rows, sort) {
   });
 }
 
-export function trendGeometry(timeline, coverage, fixedMax) {
+export function trendGeometry(timeline, coverage, fixedMax, minimumMax) {
   let points = timeline.filter((point) => Number.isFinite(Date.parse(point.time))).slice().sort((a, b) => Date.parse(a.time) - Date.parse(b.time));
   const requestedStart = Date.parse(coverage?.requested_start);
   const requestedEnd = Date.parse(coverage?.requested_end || coverage?.data_through);
@@ -131,7 +131,8 @@ export function trendGeometry(timeline, coverage, fixedMax) {
       points.push(byTime.get(time) || { time: new Date(time).toISOString(), latency: null, secondary: null, tone: "unknown" });
     }
   }
-  const max = metricNumber(fixedMax) ?? Math.max(1, ...points.flatMap((point) => [point.latency ?? 0, point.secondary ?? 0]));
+  const dataMax = Math.max(1, ...points.flatMap((point) => [point.latency ?? 0, point.secondary ?? 0]));
+  const max = Math.max(metricNumber(fixedMax) ?? dataMax, metricNumber(minimumMax) ?? 0);
   const yFor = (value) => 49 - Math.min(max, Math.max(0, value)) / max * 42;
   const positioned = points.map((point) => ({
     ...point,
