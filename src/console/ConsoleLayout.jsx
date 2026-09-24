@@ -210,9 +210,10 @@ function AnnouncementBody({ content }) {
 
 function SiteAnnouncementBar({ onClick }) {
   const { t } = useLocale();
-  const message = "GPT分组按充值金额，调低倍率/开通专线，详情查看历史";
+  const message = t("announcement.siteMessage");
+  const linkLabel = t("announcement.siteMessageLink");
   const activate = (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onClick?.(); } };
-  return <div className="console-site-announcement-slot"><Alert layout="inline" role="button" tabIndex={0} aria-label={t("announcement.title")} className="console-site-announcement" onClick={onClick} onKeyDown={activate}><AlertIcon><Icon name="announcement" size={16} /></AlertIcon><AlertTitle as="p">{message}<span className="console-site-announcement-link">公告</span></AlertTitle></Alert></div>;
+  return <div className="console-site-announcement-slot"><Alert layout="inline" role="button" tabIndex={0} aria-label={t("announcement.title")} className="console-site-announcement" onClick={onClick} onKeyDown={activate}><AlertIcon><Icon name="announcement" size={16} /></AlertIcon><AlertTitle as="p">{message}<span className="console-site-announcement-link">{linkLabel}</span></AlertTitle></Alert></div>;
 }
 
 function effectiveRateAnnouncement(items) {
