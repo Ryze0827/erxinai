@@ -50,9 +50,13 @@ npm run dev
 ```bash
 VITE_API_BASE_URL=/api/v1
 VITE_DEV_API_PROXY_TARGET=http://127.0.0.1:8080
-VITE_DEV_IMAGE_PROXY_TARGET=https://image.aiwayxx.com
+VITE_DEV_IMAGE_PROXY_TARGET=https://image.example.com
 VITE_DASHBOARD_URL=/dashboard
 ```
+
+`https://image.example.com` 是占位地址，请替换为实际配置的生图网关。
+
+除非另有说明，文档中的代码路径相对于仓库根目录，Markdown 链接相对于文档所在目录。同级检出时，配套后端位于 `../sub2api/backend`；请按本地目录布局调整，不在共享文档中记录个人绝对路径。分享文档或截图前，请参照[文档脱敏约定](./SECURITY.md#documentation-hygiene)。
 
 ## 可用命令
 

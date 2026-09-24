@@ -2,8 +2,13 @@
 
 版本：1.0.0  
 日期：2026-08-11  
-适用工程：`/Users/liwei/WebstormProjects/erxinai`  
-业务参考：`/Users/liwei/GolandProjects/sub2api`
+适用工程：`.`
+
+业务参考：`../sub2api`
+
+后端工程：`../sub2api/backend`
+
+以上路径相对于本仓库根目录，假设两个工程同级检出；其他目录布局请在本地调整。
 
 这份文档是登录后非管理员用户控制台的实现规格。它与本文件夹内 24 张 Dark/Light 页面主稿、品牌资源和插画共同构成离线设计源，不依赖 Figma。
 
@@ -102,7 +107,7 @@
 1. Image Studio
 2. Image API Docs
 
-分组之后是独立外链 `Erxin Member Store`，打开 `https://shop.erxin.store` 新标签。用户卡固定在侧边栏底部。Profile 只从右上角用户菜单进入。Subscriptions 不显示在侧边栏。
+分组之后是独立外链 `Erxin Member Store`，在新标签打开配置的商城地址（占位示例：`https://shop.example.com`）。用户卡固定在侧边栏底部。Profile 只从右上角用户菜单进入。Subscriptions 不显示在侧边栏。
 
 所有 feature flag、simple/standard run mode、可用 Batch Image key 和后端配置继续决定菜单可见性；视觉重构不能绕过当前权限判断。
 
@@ -704,7 +709,7 @@ Profile 只从右上用户菜单进入，不添加侧边栏菜单。不要发明
 源文件：`src/api/images.js`。
 
 - Development：同源 Vite `/image-api` proxy。
-- Production 默认：`https://image.aiwayxx.com`，可由 `VITE_IMAGE_GATEWAY_BASE_URL` 覆盖，但非本地必须 HTTPS。
+- Production：使用已配置的网关，默认地址以 `src/api/images.js` 为准，可由 `VITE_IMAGE_GATEWAY_BASE_URL` 覆盖，但非本地必须 HTTPS。文档仅提供占位示例 `https://image.example.com`，不记录实际部署地址。
 - OpenAI generation：`POST /v1/images/generations`，JSON。
 - OpenAI edit：`POST /v1/images/edits`，multipart；一张 reference 使用 `image`，多张使用重复 `image[]`。
 - Gemini：`POST /v1beta/models/:model:generateContent`。

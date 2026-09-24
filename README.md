@@ -50,9 +50,13 @@ Optional environment variables:
 ```bash
 VITE_API_BASE_URL=/api/v1
 VITE_DEV_API_PROXY_TARGET=http://127.0.0.1:8080
-VITE_DEV_IMAGE_PROXY_TARGET=https://image.aiwayxx.com
+VITE_DEV_IMAGE_PROXY_TARGET=https://image.example.com
 VITE_DASHBOARD_URL=/dashboard
 ```
+
+`https://image.example.com` is a placeholder; replace it with your configured image gateway.
+
+Documentation code paths are relative to the repository root unless stated otherwise; Markdown links are relative to the containing document. With sibling checkouts, the companion backend is at `../sub2api/backend`. Adapt this path to your local checkout layout without recording personal absolute paths. See [documentation hygiene](./SECURITY.md#documentation-hygiene) before sharing documentation or screenshots.
 
 ## Available Scripts
 

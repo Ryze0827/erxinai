@@ -1,14 +1,16 @@
 # Design QA — 中转效率驾驶舱
 
+Evidence paths under `artifacts/` are relative to the repository root. Local generated references and temporary captures are not archived in the repository; only descriptive labels or filenames are retained below.
+
 ## Evidence
 
-- Source visual truth: `/Users/liwei/.codex/generated_images/01a000db-920b-72e0-a0f3-9b021c307c28/exec-9ffbf21b-4959-4147-b2e2-0c2aeabf2de2.png`
-- Final browser implementation: `/private/tmp/dashboard-heatmap-spacing-fixed.png`
-- Full-view comparison: `/private/tmp/dashboard-heatmap-spacing-full-comparison.png`
-- Focused heatmap comparison: `/private/tmp/dashboard-heatmap-spacing-focused-comparison.png`
-- Focused lower-panel comparison: `/private/tmp/relay-efficiency-spacing-focused-comparison.png`
-- Focused routing comparison: `/private/tmp/relay-route-comparison-dark.png`
-- Focused metric comparison: `/private/tmp/relay-metrics-comparison-dark.png`
+- Source visual truth: local generated reference (not archived)
+- Final browser implementation: `dashboard-heatmap-spacing-fixed.png` (local temporary capture, not archived)
+- Full-view comparison: `dashboard-heatmap-spacing-full-comparison.png` (local temporary capture, not archived)
+- Focused heatmap comparison: `dashboard-heatmap-spacing-focused-comparison.png` (local temporary capture, not archived)
+- Focused lower-panel comparison: `relay-efficiency-spacing-focused-comparison.png` (local temporary capture, not archived)
+- Focused routing comparison: `relay-route-comparison-dark.png` (local temporary capture, not archived)
+- Focused metric comparison: `relay-metrics-comparison-dark.png` (local temporary capture, not archived)
 - Source pixels: 1747 × 900.
 - Implementation viewport and pixels: 1920 × 936 CSS px at device pixel ratio 1.
 - Density normalization: the full implementation capture was scaled proportionally to 1747 px wide before stacking it with the source. The focused source and implementation lower rows were cropped from their native captures and each scaled to 1600 px wide before stacking.
@@ -36,26 +38,26 @@
 
 ## Comparison History
 
-1. Initial browser pass — `/private/tmp/relay-efficiency-dashboard-dark-v1.png`
+1. Initial browser pass — `relay-efficiency-dashboard-dark-v1.png` (local temporary capture, not archived)
    - [P2] With zero current-day traffic, the entire routing half was empty, which materially weakened the selected composition and the component's usefulness.
    - Fix: use the same dashboard response's `total_*` platform fields only when all `today_*` platform fields are empty, and expose the change with a `路由 · 累计` badge.
-2. Final browser pass — `/private/tmp/relay-efficiency-dashboard-final-clean.png`
+2. Final browser pass — `relay-efficiency-dashboard-final-clean.png` (local temporary capture, not archived)
    - The real cumulative route rows restore the intended information density, meter alignment, and visual balance.
-3. Precision pass — `/private/tmp/relay-efficiency-segmented-exact.png`
+3. Precision pass — `relay-efficiency-segmented-exact.png` (local temporary capture, not archived)
    - [P2] The first cache treatment used a masked continuous fill, created a partial trailing block, and did not match the mock's segment count or inactive-track color.
    - [P2] The second and third metric labels sat below the cache label because their content used independent flex spacing.
    - Fix: render nine real segments inside the Appica meter, quantize the active state, match the reference's non-linear blue ramp and neutral remainder, and place all three metrics on a shared four-row grid.
-4. Fractional and routing pass — `/private/tmp/relay-efficiency-revision-dark.png`
+4. Fractional and routing pass — `relay-efficiency-revision-dark.png` (local temporary capture, not archived)
    - [P2] Quantizing the cache value filled the ninth block completely at 92.3%, overstating the visible result; the change label also exposed percentage-point notation rather than a percentage change.
    - [P2] Routing columns used proportional right-aligned tracks that pushed actual spend and route share away from the source anchors. Per-platform meter colors and generic square markers also diverged from the selected design and existing group identity system.
    - Fix: preserve nine equal fixed cells while filling the final cell fractionally, calculate the seven-day comparison as a relative percentage, use the measured four-column proportions and left alignment, apply one role-based blue meter ramp, and reuse `PlatformMark` icons.
    - The combined lower-panel, routing, and metric comparisons show no remaining P0/P1/P2 mismatch.
-5. Pixel-snapping and routing-density pass — `/private/tmp/relay-efficiency-spacing-fixed.png`
+5. Pixel-snapping and routing-density pass — `relay-efficiency-spacing-fixed.png` (local temporary capture, not archived)
    - [P2] The nominal `0.125rem` cache gap became `1.8px` after the page-level `0.9` zoom. Although the layout rectangles reported equal subpixel gaps, rasterization made alternating gaps look one or two pixels wide.
    - [P2] With only two live platform rows, `justify-content: center` left excess space between the routing header and the first record.
    - Fix: derive one rendered-pixel unit from the page scale, use CSS `round(down, …)` to make the available track width divisible into nine equal rendered cells, and compensate the gap to exactly two rendered pixels. Align the route list to the start and reduce its table top padding.
    - Post-fix evidence: nine `15px` cells, eight `2px` gaps, no space between the table header box and first row, and a `25.19px` titlebar-to-first-row distance. The focused stacked comparison shows the tighter routing rhythm without changing the four-column alignment.
-6. Heatmap pixel-grid pass — `/private/tmp/dashboard-heatmap-spacing-fixed.png`
+6. Heatmap pixel-grid pass — `dashboard-heatmap-spacing-fixed.png` (local temporary capture, not archived)
    - [P2] The heatmap's nominal `3px` row and column gaps became `2.7px` after the page-level `0.9` zoom. Equal subpixel geometry therefore rasterized with visibly inconsistent upper/lower spacing.
    - Fix: derive the heatmap gap from the rendered-pixel unit, snap the available dynamic grid width to a multiple of its column count, and apply the same exact gap to the seven weekday rows.
    - Post-fix evidence: all 161 cells resolve to `14px × 14px`, all 22 horizontal gaps and all six vertical gaps resolve to `3px`, weekday labels share the same `14px` row height and `3px` gaps, and the focused comparison shows a uniform grid rhythm.
@@ -75,11 +77,11 @@ final result: passed
 
 ## Evidence
 
-- Source visual truth: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/reference-dark-orange.png`
-- Before implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/before-dark-blue.png`
-- Final implementation at the reference size: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/after-dark-orange-buttons-only-1672x941.png`
-- Additional 2560 × 1352 implementation capture: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/after-dark-orange-buttons-only.png`
-- Full-view comparison: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-landing-orange-dark/comparison-reference-vs-buttons-only.png`
+- Source visual truth: `artifacts/design-qa/2026-08-28-landing-orange-dark/reference-dark-orange.png`
+- Before implementation: `artifacts/design-qa/2026-08-28-landing-orange-dark/before-dark-blue.png`
+- Final implementation at the reference size: `artifacts/design-qa/2026-08-28-landing-orange-dark/after-dark-orange-buttons-only-1672x941.png`
+- Additional 2560 × 1352 implementation capture: `artifacts/design-qa/2026-08-28-landing-orange-dark/after-dark-orange-buttons-only.png`
+- Full-view comparison: `artifacts/design-qa/2026-08-28-landing-orange-dark/comparison-reference-vs-buttons-only.png`
 - Source, comparison viewport, and implementation pixels: 1672 × 941 at device pixel ratio 1.
 - State: Chinese locale, unauthenticated landing route, Dark theme.
 
@@ -126,10 +128,10 @@ final result: passed
 
 ## Evidence
 
-- Scoped source capture: `/private/tmp/channel-status-history-spacing-before.png`
-- Final browser implementation: `/private/tmp/channel-status-history-spacing-fixed.png`
-- Full-view comparison: `/private/tmp/channel-status-history-full-comparison.png`
-- Focused status-history comparison: `/private/tmp/channel-status-history-focused-comparison.png`
+- Scoped source capture: `channel-status-history-spacing-before.png` (local temporary capture, not archived)
+- Final browser implementation: `channel-status-history-spacing-fixed.png` (local temporary capture, not archived)
+- Full-view comparison: `channel-status-history-full-comparison.png` (local temporary capture, not archived)
+- Focused status-history comparison: `channel-status-history-focused-comparison.png` (local temporary capture, not archived)
 - Source, viewport, and implementation pixels: 1920 × 992 at device pixel ratio 1.
 - State: Chinese locale, authenticated channel-status route, Light theme, 7-day window, one selected channel, 48 status data points.
 - Scope: preserve the existing component and data while making every inter-cell gap visually identical.
@@ -152,9 +154,9 @@ final result: passed
 
 ## Comparison History
 
-1. Initial capture — `/private/tmp/channel-status-history-spacing-before.png`
+1. Initial capture — `channel-status-history-spacing-before.png` (local temporary capture, not archived)
    - [P2] The `0.125rem` gap became a non-integer rendered distance under the global scale, producing visibly uneven spacing.
-2. Final capture — `/private/tmp/channel-status-history-spacing-fixed.png`
+2. Final capture — `channel-status-history-spacing-fixed.png` (local temporary capture, not archived)
    - Fix: compensate the gap by the page scale so the rendered separation is exactly two pixels.
    - Post-fix evidence: 48 status cells, 47 gaps, every gap exactly `2px`; the focused before/after comparison shows no surrounding layout drift.
 
@@ -174,12 +176,12 @@ final result: passed
 
 ## Evidence
 
-- Source visual truth: `/Users/liwei/.codex/generated_images/019ffbf9-385d-7bf2-a559-7a406fba5d5e/exec-1bd18e30-11a0-4fb4-a9e1-253d003bb686.png`
-- Final Light implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-light-icon-alignment-1743x902.png`
-- Final Dark implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-dark-icon-alignment-1743x902.png`
-- Full-view comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-icon-alignment-full-comparison.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-icon-alignment-full-comparison.png`
-- Focused comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-icon-alignment-focused-comparison.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-icon-alignment-focused-comparison.png`
-- Before/after comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-icon-alignment-before-after.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-icon-alignment-before-after.png`
+- Source visual truth: local generated reference (not archived)
+- Final Light implementation: `artifacts/design-qa/2026-08-15-dashboard-color/dashboard-light-icon-alignment-1743x902.png`
+- Final Dark implementation: `artifacts/design-qa/2026-08-15-dashboard-color/dashboard-dark-icon-alignment-1743x902.png`
+- Full-view comparisons: `artifacts/design-qa/2026-08-15-dashboard-color/light-icon-alignment-full-comparison.png`, `artifacts/design-qa/2026-08-15-dashboard-color/dark-icon-alignment-full-comparison.png`
+- Focused comparisons: `artifacts/design-qa/2026-08-15-dashboard-color/light-icon-alignment-focused-comparison.png`, `artifacts/design-qa/2026-08-15-dashboard-color/dark-icon-alignment-focused-comparison.png`
+- Before/after comparisons: `artifacts/design-qa/2026-08-15-dashboard-color/light-icon-alignment-before-after.png`, `artifacts/design-qa/2026-08-15-dashboard-color/dark-icon-alignment-before-after.png`
 - Source, viewport, and implementation pixels: 1743 × 902 at device pixel ratio 1.
 - State: Chinese locale, authenticated overview route, Light and Dark themes.
 
@@ -222,12 +224,12 @@ final result: passed
 
 ## Evidence
 
-- Light source visual truth: `/Users/liwei/.codex/generated_images/019ffbf9-385d-7bf2-a559-7a406fba5d5e/exec-1bd18e30-11a0-4fb4-a9e1-253d003bb686.png`
-- Dark source visual truth: `/Users/liwei/.codex/generated_images/019ffbf9-385d-7bf2-a559-7a406fba5d5e/exec-ac87b8c3-d55d-440f-b3a2-6008c9e687f9.png`
-- Final Light implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-light-final-1743x902.png`
-- Final Dark implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-dark-final-1743x902.png`
-- Full-view comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-comparison-full.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-comparison-full.png`
-- Focused comparisons: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/light-comparison-focus.png`, `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dark-comparison-focus.png`
+- Light source visual truth: local generated reference (not archived)
+- Dark source visual truth: local generated reference (not archived)
+- Final Light implementation: `artifacts/design-qa/2026-08-15-dashboard-color/dashboard-light-final-1743x902.png`
+- Final Dark implementation: `artifacts/design-qa/2026-08-15-dashboard-color/dashboard-dark-final-1743x902.png`
+- Full-view comparisons: `artifacts/design-qa/2026-08-15-dashboard-color/light-comparison-full.png`, `artifacts/design-qa/2026-08-15-dashboard-color/dark-comparison-full.png`
+- Focused comparisons: `artifacts/design-qa/2026-08-15-dashboard-color/light-comparison-focus.png`, `artifacts/design-qa/2026-08-15-dashboard-color/dark-comparison-focus.png`
 - Source, viewport, and implementation pixels: 1743 × 902 at device pixel ratio 1.
 - State: Chinese locale, authenticated overview route, active overview navigation item, Light and Dark themes.
 
@@ -250,7 +252,7 @@ final result: passed
 
 ## Comparison History
 
-1. Initial Light browser pass — `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-15-dashboard-color/dashboard-light-1920x1024.png`
+1. Initial Light browser pass — `artifacts/design-qa/2026-08-15-dashboard-color/dashboard-light-1920x1024.png`
    - [P2] Appica `primary` resolves to the neutral foreground role in this theme, so the initial trend line, first donut segment, and active navigation icon remained black instead of the approved blue.
    - Fix: move interactive blue and first-series mappings to `secondary-emphasis`, retain role-based green/orange, and derive violet by mixing semantic secondary and error roles.
 2. Light/Dark refinement pass — final implementation captures listed above.
@@ -276,13 +278,13 @@ final result: passed
 
 ## Evidence
 
-- Source reference: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/reference-purchase.png`
-- Baseline implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/purchase-before-2560x1352.png`
-- Final purchase implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/purchase-after-final.png`
-- Final API docs implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/image-api-docs-after.png`
-- Final API key modal implementation: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/use-key-modal-after.png`
-- Full source/implementation comparison: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/purchase-source-implementation-full.png`
-- Focused source/implementation comparison: `/Users/liwei/WebstormProjects/erxinai/artifacts/design-qa/2026-08-28-console-component-radii/purchase-source-implementation-focus.png`
+- Source reference: `artifacts/design-qa/2026-08-28-console-component-radii/reference-purchase.png`
+- Baseline implementation: `artifacts/design-qa/2026-08-28-console-component-radii/purchase-before-2560x1352.png`
+- Final purchase implementation: `artifacts/design-qa/2026-08-28-console-component-radii/purchase-after-final.png`
+- Final API docs implementation: `artifacts/design-qa/2026-08-28-console-component-radii/image-api-docs-after.png`
+- Final API key modal implementation: `artifacts/design-qa/2026-08-28-console-component-radii/use-key-modal-after.png`
+- Full source/implementation comparison: `artifacts/design-qa/2026-08-28-console-component-radii/purchase-source-implementation-full.png`
+- Focused source/implementation comparison: `artifacts/design-qa/2026-08-28-console-component-radii/purchase-source-implementation-focus.png`
 - Source viewport: 2560 × 1352. Final browser capture: 2560 × 1296 at device pixel ratio 1; the source was normalized to the same visible height for comparison.
 - State: Chinese locale, authenticated console, Light theme.
 

@@ -13,6 +13,12 @@ This repository contains the browser application. The controls below are the min
 - Image references accept only verified PNG, JPEG, and WebP signatures, with a 10 MB per-file and 50 MB per-session limit. Avatar source files are limited to 10 MB.
 - Production builds do not require inline scripts, allowing a restrictive `script-src` policy. The Nginx baseline is in `deploy/nginx/`.
 
+## Documentation hygiene
+
+- Use repository-relative code paths and document-relative Markdown links. State the base directory for companion repositories; omit personal home directories, local cache paths, and session identifiers.
+- Use reserved example domains such as `example.com` for deployment examples and explicit placeholders for credentials. Never include real API keys, passwords, session tokens, private keys, internal endpoints, or personal account data in shared documentation.
+- Check screenshots and exported logs for the same information before sharing. Describe unarchived local evidence as such instead of publishing temporary filesystem paths or inventing repository links.
+
 ## Required backend release gates
 
 1. **Session handling**

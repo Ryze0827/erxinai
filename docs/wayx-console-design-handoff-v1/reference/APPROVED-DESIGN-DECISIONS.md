@@ -48,7 +48,7 @@ These images are the visual source of truth for the later unified console implem
 - Light reference: `api-keys-approved-light-v1.png`
 - Viewport: 1920 × 1080, dark theme
 - Key constraints: use a responsive 2 × 2 endpoint area for four configured endpoints; each endpoint keeps its copy and latency-test controls immediately after the URL; endpoint labels describe configured routes (`Default`, `Route 1`, `Route 2`, `Route 3`) rather than API groups, models, platforms, or product capabilities.
-- Visible endpoint examples: `https://api.wayx.ai`, `https://api-1.wayx.ai`, `https://api-2.wayx.ai`, `https://api-3.wayx.ai`.
+- Visible endpoint examples (placeholders): `https://api.example.com`, `https://api-1.example.com`, `https://api-2.example.com`, `https://api-3.example.com`.
 - Implementation note: visible labels and URLs are examples only. Render the configured default/custom endpoint data returned by the existing application contract.
 
 ## Usage
@@ -57,7 +57,9 @@ These images are the visual source of truth for the later unified console implem
 - Reference: `usage-approved-dark-v1.png`
 - Light reference: `usage-approved-light-v1.png`
 - Viewport: 1920 × 1080, dark theme
-- Source-of-truth business reference: `/Users/liwei/GolandProjects/sub2api`
+- Source-of-truth business reference: `../sub2api`
+- Backend project: `../sub2api/backend`
+- These paths are relative to this repository's root and assume sibling checkouts; adapt locally for other directory layouts.
 - Contract constraint: preserve the meaning and availability of the original user Usage APIs, filters, usage/error records, billing fields, model/group distributions, sorting, pagination, export, and detail disclosures. The page's information architecture and visual composition may be redesigned from scratch.
 - Current direction: retain the broad ledger-plus-insights silhouette of the first Usage exploration, but rebuild the records for a stable fixed-column scan. FT and user-billed cost are primary; total duration and standard/original cost are secondary.
 - Token language: always combine consistent outline icons with explicit `IN`, `OUT`, `READ`, and `WRITE` labels; never use unlabeled colored dots or percentages as the only explanation.
