@@ -159,15 +159,14 @@ function Trend({ timeline, mode, coverage, locale, formatNumber }) {
           {["latency", ...(secondary ? ["secondary"] : [])].map((field) => {
             if (point[field] == null) return null;
             const boundary = geometry.points[index - 1]?.[field] == null || geometry.points[index + 1]?.[field] == null;
+            const annotated = (isLatest && field === latestField) || (field === "latency" && annotatedExtrema.some((annotation) => annotation.point.time === point.time));
             const value = Math.min(geometry.max, Math.max(0, point[field]));
-            return <path key={field} className={"console-group-trend-marker is-" + field + (boundary ? " is-boundary" : "")} d={`M${point.x},${49 - value / geometry.max * 42} h0.001`} style={mode === "v2" ? { stroke: ttftTrendColor(point[field]) } : undefined} />;
+            return <path key={field} className={"console-group-trend-marker is-" + field + (boundary ? " is-boundary" : "") + (annotated ? " is-annotated" : "")} d={`M${point.x},${49 - value / geometry.max * 42} h0.001`} style={mode === "v2" ? { stroke: ttftTrendColor(point[field]) } : undefined} />;
           })}
         </g>;
       })}
     </svg>
-    {annotatedExtrema.map(({ kind, isCurrent, point }) => <span key={`${kind}-${point.time}`} className={`console-group-trend-dot is-${kind}${isCurrent ? " is-current" : ""}`} style={{ left: point.x / 280 * 100 + "%", top: (49 - point.latency / geometry.max * 42) / 56 * 100 + "%" }} aria-hidden="true" />)}
-    {lastVisiblePoint && latestValue != null && !currentIsAnnotated && <span className="console-group-trend-dot is-latest" style={{ left: lastVisiblePoint.x / 280 * 100 + "%", top: latestY / 56 * 100 + "%" }} aria-hidden="true" />}
-    {annotatedExtrema.map(({ kind, isCurrent, label, point }) => <div key={`${kind}-${point.time}`} className={`console-group-trend-extremum-value is-${kind}${isCurrent ? " is-current" : ""}${point.x < 45 ? " is-left" : point.x > 190 ? " is-right" : ""}`} style={{ left: point.x / 280 * 100 + "%", top: (49 - point.latency / geometry.max * 42) / 56 * 100 + "%" }} aria-label={label + " · " + duration(point.latency, formatNumber)}><span>{label}</span><strong>{duration(point.latency, formatNumber)}</strong></div>)}
+    {annotatedExtrema.map(({ kind, isCurrent, label, point }) => <div key={`${kind}-${point.time}`} className={`console-group-trend-extremum-value is-${kind}${isCurrent ? " is-current" : ""}`} style={{ left: point.x / 280 * 100 + "%", top: (49 - point.latency / geometry.max * 42) / 56 * 100 + "%" }} aria-label={label + " · " + duration(point.latency, formatNumber)}><span>{label}</span><strong>{duration(point.latency, formatNumber)}</strong></div>)}
     {lastVisiblePoint && latestValue != null && !currentIsAnnotated && <div className="console-group-trend-latest-value" style={{ left: lastVisiblePoint.x / 280 * 100 + "%", top: latestY / 56 * 100 + "%" }} aria-label={localized(locale, "当前值", "Current value") + " · " + duration(latestValue, formatNumber)}><span>{localized(locale, "当前值", "Current")}</span><strong>{duration(latestValue, formatNumber)}</strong></div>}
     <div className="console-group-trend-targets" role="group" aria-label={localized(locale, "查看各时间点数据", "Inspect trend points")}>{geometry.points.map((point, index) => {
       const left = index === 0 ? 0 : (geometry.points[index - 1].x + point.x) / 2;
