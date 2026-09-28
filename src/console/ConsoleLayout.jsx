@@ -113,6 +113,10 @@ const toolsNav = [
   { path: "/invoice", key: "nav.invoice", icon: "orderReceipt", feature: "payment", standardOnly: true },
 ];
 
+const adminNav = [
+  { path: "/admin/rate-inspection", key: "nav.rateInspection", icon: "search" },
+];
+
 const featureDefinitions = {
   payment: ["payment_enabled", "opt-out"],
   monitor: ["channel_monitor_enabled", "opt-out"],
@@ -482,7 +486,8 @@ export function ConsoleLayout({ children }) {
   const workspaceItems = workspaceNav.filter((item) => !item.sidebarHidden && itemEnabled(item, settings, simpleMode, batchEnabled));
   const personalItems = accountNav.filter((item) => !item.sidebarHidden && itemEnabled(item, settings, simpleMode, batchEnabled));
   const toolItems = [...toolsNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...customItems];
-  const allItems = [...overviewItems, ...workspaceNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...accountNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...toolItems];
+  const adminItems = user?.role === "admin" ? adminNav : [];
+  const allItems = [...overviewItems, ...workspaceNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...accountNav.filter((item) => itemEnabled(item, settings, simpleMode, batchEnabled)), ...toolItems, ...adminItems];
   const title = pageTitle(location.pathname, allItems, t);
   const logo = DEFAULT_SITE_LOGO;
   const siteName = branding?.siteName || DEFAULT_SITE_NAME;
@@ -585,14 +590,34 @@ export function ConsoleLayout({ children }) {
     sidebarMotionsRef.current.clear();
     setSidebarCollapsed((value) => !value);
   };
-  return <ConsoleBackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`} ref={sidebarRef}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <BrandLogo key={logo} src={logo} alt="" width="31" height="31" decoding="sync" fetchPriority="high" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><SidebarAssistant /><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></ConsoleBackgroundPattern>;
+  return <ConsoleBackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`} ref={sidebarRef}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <BrandLogo key={logo} src={logo} alt="" width="31" height="31" decoding="sync" fetchPriority="high" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} />{adminItems.length > 0 && <SidebarSection title={t("nav.sectionAdmin")} items={adminItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} />}<StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><SidebarAssistant /><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></ConsoleBackgroundPattern>;
 }
 
-export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false }) {
+export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false, adminOnly = false }) {
   const location = useLocation();
-  const { authenticated, user, settings, settingsLoading, settingsError } = useConsole();
+  const { authenticated, user, settings, settingsLoading, settingsError, refreshUser } = useConsole();
+  const [adminCheck, setAdminCheck] = useState(adminOnly ? "checking" : "allowed");
+  useEffect(() => {
+    if (!adminOnly) {
+      setAdminCheck("allowed");
+      return undefined;
+    }
+    if (!authenticated) return undefined;
+    let active = true;
+    setAdminCheck("checking");
+    refreshUser().then((nextUser) => {
+      if (active) setAdminCheck(nextUser?.role === "admin" ? "allowed" : "denied");
+    }).catch(() => {
+      if (active) setAdminCheck("denied");
+    });
+    return () => {
+      active = false;
+    };
+  }, [adminOnly, authenticated, refreshUser]);
   if (getAccessToken() && !user) return <div className="console-standalone"><Spinner /></div>;
   if (!authenticated) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+  if (adminOnly && adminCheck === "checking") return <div className="console-standalone"><Spinner /></div>;
+  if (adminOnly && (adminCheck === "denied" || user?.role !== "admin")) return <Navigate to="/admin/dashboard" replace />;
   if (settings?.backend_mode_enabled && user?.role !== "admin") return <Navigate to="/login" replace />;
   if (standardOnly && user?.run_mode === "simple") return <Navigate to="/admin/dashboard" replace />;
   if (feature && settingsLoading && mode === "opt-in") return <div className="console-standalone"><Spinner /></div>;
