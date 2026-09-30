@@ -110,7 +110,7 @@ const accountNav = [
 const toolsNav = [
   { path: "/image-studio", key: "imageStudio.title", icon: "imageStudio" },
   { path: "/image-api-docs", key: "imageDocs.title", icon: "apiBook" },
-  { path: "/invoice", key: "nav.invoice", icon: "orderReceipt", feature: "payment", standardOnly: true },
+  { path: "/invoice", key: "nav.invoice", icon: "orderReceipt", standardOnly: true },
 ];
 
 const featureDefinitions = {

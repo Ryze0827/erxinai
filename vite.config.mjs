@@ -14,6 +14,13 @@ export default defineConfig(({ mode }) => {
       host: "0.0.0.0",
       allowedHosts: ["terminal.local"],
       proxy: {
+        "^/api/invoice-user(?:/|$)": {
+          target: env.VITE_DEV_INVOICE_PROXY_TARGET || "http://127.0.0.1:8765",
+          changeOrigin: true,
+          configure(proxy) {
+            proxy.on("proxyReq", (proxyReq) => { proxyReq.removeHeader("origin"); });
+          },
+        },
         "/api": {
           target: proxyTarget,
           changeOrigin: true,

@@ -66,7 +66,7 @@ export function App() {
           <Route path="/profile" element={<ConsoleRoute><ProfilePage /></ConsoleRoute>} />
           <Route path="/image-studio" element={<ConsoleRoute><ImageStudioPage /></ConsoleRoute>} />
           <Route path="/image-api-docs" element={<ConsoleRoute><ImageApiDocsPage /></ConsoleRoute>} />
-          <Route path="/invoice" element={<ConsoleRoute standardOnly feature="payment_enabled" mode="opt-out"><InvoicePage /></ConsoleRoute>} />
+          <Route path="/invoice" element={<ConsoleRoute standardOnly><InvoicePage /></ConsoleRoute>} />
           <Route path="/video-workflow" element={<ConsoleRoute><VideoWorkflowPage /></ConsoleRoute>} />
           <Route path="/subscriptions" element={<ConsoleRoute standardOnly><SubscriptionsPage /></ConsoleRoute>} />
           <Route path="/purchase" element={<ConsoleRoute standardOnly feature="payment_enabled" mode="opt-out"><PurchasePage /></ConsoleRoute>} />
