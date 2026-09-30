@@ -23,7 +23,6 @@ import { CustomPage } from "./console/pages/CustomPage";
 import { ImageApiDocsPage } from "./console/pages/ImageApiDocsPage";
 import { ImageStudioPage } from "./console/pages/ImageStudioPage";
 import { InvoicePage } from "./console/pages/InvoicePage";
-import { RateInspectionPage } from "./console/pages/RateInspectionPage";
 import { VideoWorkflowPage } from "./console/pages/VideoWorkflowPage";
 import { AirwallexPaymentPage, OrdersPage, PaymentQRCodePage, PaymentResultPage, PurchasePage, StripePaymentPage, StripePopupPage, WeChatPaymentCallbackPage } from "./console/pages/Payments";
 
@@ -55,7 +54,6 @@ export function App() {
 
           <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={<ConsoleRoute><DashboardPage /></ConsoleRoute>} />
-          <Route path="/admin/rate-inspection" element={<ConsoleRoute adminOnly><RateInspectionPage /></ConsoleRoute>} />
           <Route path="/keys" element={<ConsoleRoute><KeysPage /></ConsoleRoute>} />
           <Route path="/batch-image" element={<ConsoleRoute standardOnly><BatchImagesPage /></ConsoleRoute>} />
           <Route path="/docs/batch-image" element={<ConsoleRoute standardOnly><BatchImagesPage /></ConsoleRoute>} />
