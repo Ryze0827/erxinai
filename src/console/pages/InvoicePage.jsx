@@ -158,7 +158,7 @@ export function InvoicePage() {
         <Field label={t("invoice.email")} hint={t("invoice.emailHint")} className="console-invoice-email"><TextInput type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy} placeholder={t("invoice.emailPlaceholder")} onChange={(event) => setEmail(event.target.value)} /></Field>
         <div className="console-invoice-selection" data-selected={orderIds.length > 0} aria-live="polite">
           <span>{t("invoice.selectedAmount")}</span><strong>{quoteCurrent ? formatUsd(quote.amount) : "—"}</strong>
-          {quoteCurrent && <><span>{t("invoice.fee")}: {formatUsd(quote.fee)} ({quote.rate}%)</span><span>{t("invoice.balance")}: {formatUsd(quote.balance)}</span></>}
+          {quoteCurrent && <><span>{t("invoice.fee")}: {formatUsd(quote.fee)}</span><span>{t("invoice.balance")}: {formatUsd(quote.balance)}</span></>}
           {quoteLoading && <span>{t("invoice.checking")}</span>}
         </div>
         <Button icon="refresh" loading={quoteLoading} disabled={!state.enabled || !orderIds.length || busy} onClick={() => setQuoteRevision((value) => value + 1)}>{t("invoice.refreshQuote")}</Button>
