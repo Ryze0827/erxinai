@@ -4855,6 +4855,118 @@ html[data-console-theme] .console-purchase-review dd {
   font-weight: 600;
 }
 
+html[data-console-theme] .console-recharge-banner {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+html[data-console-theme] .console-recharge-notice-content {
+  grid-column: 1 / -1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+html[data-console-theme] .console-recharge-notice-content > strong {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--foreground-intense);
+}
+
+html[data-console-theme] .console-recharge-notice-content > :not(:first-child) {
+  margin-top: 0.5rem;
+}
+
+html[data-console-theme] .console-recharge-notice-content :is(ul, ol) {
+  padding-inline-start: 1.25rem;
+  list-style: revert;
+}
+
+html[data-console-theme] .console-recharge-notice-content a {
+  color: var(--info-intense);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+html[data-console-theme] .console-recharge-notice-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+html[data-console-theme] .console-recharge-notice-content pre {
+  overflow-x: auto;
+}
+
+html[data-console-theme] .console-recharge-hint,
+html[data-console-theme] .console-recharge-error {
+  margin-top: 0.75rem;
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+}
+
+html[data-console-theme] .console-recharge-error {
+  color: var(--error-emphasis);
+}
+
+html[data-console-theme] .console-purchase-review .is-benefit :is(dt, dd, small),
+html[data-console-theme] .console-order-benefit {
+  color: var(--success-emphasis);
+}
+
+html[data-console-theme] .console-purchase-review .is-credit-total {
+  padding: 0.75rem;
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--background-muted);
+}
+
+html[data-console-theme] .console-purchase-review del {
+  color: var(--foreground-muted);
+  font-weight: 400;
+}
+
+html[data-console-theme] .console-order-payment,
+html[data-console-theme] .console-order-benefit {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-order-payment {
+  color: var(--foreground-muted);
+}
+
+html[data-console-theme] .console-payment-amount-summary {
+  display: grid;
+  width: 100%;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border: var(--border-width) solid var(--border-muted);
+  border-radius: var(--radius-lg);
+  background: var(--background-subtle);
+  text-align: start;
+  font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-payment-amount-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+html[data-console-theme] .console-payment-amount-summary dt {
+  color: var(--foreground-muted);
+}
+
+html[data-console-theme] .console-payment-amount-summary dd {
+  color: var(--foreground-intense);
+  font-variant-numeric: tabular-nums;
+}
+
 html[data-console-theme] .console-purchase-submit,
 html[data-console-theme] .console-purchase-history {
   grid-column: 1 / -1;
@@ -4867,63 +4979,471 @@ html[data-console-theme] .console-purchase-history {
   text-decoration: none;
 }
 
-/* Top-up colors: balance, spending, selection and confirmation. */
-html[data-console-theme] .console-purchase-balance .console-purchase-overview {
-  background: linear-gradient(110deg, color-mix(in oklab, var(--success-emphasis) 7%, var(--background)), var(--background) 55%);
-  border-color: color-mix(in oklab, var(--success-emphasis) 18%, var(--border-muted));
-}
-html[data-console-theme] .console-purchase-overview-icon {
-  color: var(--success-intense);
-  background: color-mix(in oklab, var(--success-emphasis) 12%, var(--background));
-}
-html[data-console-theme] .console-purchase-overview-copy strong { color: var(--success-intense); }
-html[data-console-theme] .console-purchase-overview-metric {
-  --purchase-metric-accent: var(--info-emphasis);
-  --purchase-metric-ink: var(--info-intense);
-  background: color-mix(in oklab, var(--purchase-metric-accent) 7%, var(--background));
-  border-color: color-mix(in oklab, var(--purchase-metric-accent) 20%, var(--border-muted));
-}
-html[data-console-theme] .console-purchase-overview-metric:nth-child(2) { --purchase-metric-accent: var(--warning-emphasis); --purchase-metric-ink: var(--warning-intense); }
-html[data-console-theme] .console-purchase-overview-metric:nth-child(3) { --purchase-metric-accent: var(--success-emphasis); --purchase-metric-ink: var(--success-intense); }
-html[data-console-theme] .console-purchase-overview-metric strong { color: var(--purchase-metric-ink); }
 html[data-console-theme] .console-purchase-step {
   --purchase-step-accent: var(--info-emphasis);
   --purchase-step-ink: var(--info-intense);
   border-top-color: color-mix(in oklab, var(--purchase-step-accent) 40%, var(--border-muted));
   background: linear-gradient(180deg, color-mix(in oklab, var(--purchase-step-accent) 3%, var(--background)), var(--background) 8rem);
 }
-html[data-console-theme] .console-purchase-step.is-review { --purchase-step-accent: var(--success-emphasis); --purchase-step-ink: var(--success-intense); }
+
 html[data-console-theme] .console-purchase-step-title > span {
   color: var(--purchase-step-ink);
   background: color-mix(in oklab, var(--purchase-step-accent) 12%, var(--background));
 }
-html[data-console-theme] .console-purchase-progress i { color: var(--info-intense); background: color-mix(in oklab, var(--info-emphasis) 10%, var(--background)); }
-html[data-console-theme] .console-purchase-progress > span:last-child i { color: var(--success-intense); background: color-mix(in oklab, var(--success-emphasis) 10%, var(--background)); }
-html[data-console-theme] .console-purchase-progress > span::after { background: color-mix(in oklab, var(--info-emphasis) 18%, var(--border-muted)); }
-html[data-console-theme] .console-purchase-amounts [data-slot="toggle"]:hover:not(:disabled) { color: var(--info-intense); border-color: var(--info-emphasis); background: color-mix(in oklab, var(--info-emphasis) 5%, var(--background)); }
-html[data-console-theme] .console-purchase-amounts [data-slot="toggle"][data-pressed],
-html[data-console-theme] .console-purchase-amounts [data-slot="toggle"].is-selected {
-  color: var(--info-intense);
-  border-color: var(--info-emphasis);
-  background: color-mix(in oklab, var(--info-emphasis) 13%, var(--background));
+
+/* Recharge: compact choices with a single, clearly separated checkout summary. */
+html[data-console-theme] .console-purchase-page {
+  --recharge-info-ink: color-mix(in oklab, var(--info-emphasis) 55%, var(--foreground-intense));
+  --recharge-info-surface: color-mix(in oklab, var(--info-muted) 20%, var(--background));
+  --recharge-info-border: color-mix(in oklab, var(--info-emphasis) 40%, var(--border-muted));
+  --recharge-success-ink: color-mix(in oklab, var(--success-emphasis) 55%, var(--foreground-intense));
+  --recharge-success-surface: color-mix(in oklab, var(--success-muted) 22%, var(--background));
+  --recharge-action: color-mix(in oklab, var(--info-emphasis) 65%, var(--foreground-intense));
+  --recharge-action-hover: color-mix(in oklab, var(--recharge-action) 88%, var(--foreground-intense));
+  max-width: 92rem;
+  margin-inline: auto;
 }
-html[data-console-theme] .console-purchase-amount-check { color: var(--info-intense); }
-html[data-console-theme] .console-purchase-review > div:last-child {
-  padding: 0.75rem;
-  border: var(--border-width) solid color-mix(in oklab, var(--success-emphasis) 22%, var(--border-muted));
+
+html[data-console-theme] .console-purchase-balance .console-purchase-overview {
+  min-height: 0;
+  border-color: color-mix(in oklab, var(--success-emphasis) 14%, var(--border-muted));
+  background: linear-gradient(110deg, var(--recharge-success-surface), var(--background) 38%);
+}
+
+html[data-console-theme] .console-purchase-overview > [data-slot="card-content"] {
+  grid-template-columns: minmax(14rem, 0.8fr) minmax(0, 1.5fr);
+  gap: 2rem;
+  padding: 1.5rem 2rem;
+}
+
+html[data-console-theme] .console-purchase-overview-icon {
+  color: var(--recharge-success-ink);
+  background: color-mix(in oklab, var(--success-muted) 45%, var(--background));
+}
+
+html[data-console-theme] .console-purchase-overview-copy strong {
+  color: var(--recharge-success-ink);
+}
+
+html[data-console-theme] .console-purchase-overview-metric strong {
+  color: var(--recharge-info-ink);
+}
+
+html[data-console-theme] .console-purchase-overview-metric:nth-child(2) strong {
+  color: color-mix(in oklab, var(--warning-emphasis) 50%, var(--foreground-intense));
+}
+
+html[data-console-theme] .console-purchase-overview-metric:nth-child(3) strong {
+  color: var(--recharge-success-ink);
+}
+
+html[data-console-theme] .console-purchase-overview-stats {
+  gap: 0;
+}
+
+html[data-console-theme] .console-purchase-overview-metric {
+  min-height: 0;
+  padding: 0.25rem 1.25rem;
+  border: 0;
+  border-inline-start: var(--border-width) solid var(--border-muted);
+  border-radius: 0;
+  background: transparent;
+}
+
+html[data-console-theme] .console-purchase-overview-value {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+html[data-console-theme] .console-purchase-overview-value > span {
+  white-space: normal;
+}
+
+html[data-console-theme] .console-purchase-checkout.console-recharge-layout {
+  overflow: hidden;
+}
+
+html[data-console-theme] .console-purchase-checkout.console-recharge-layout > [data-slot="card-content"] {
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 23rem);
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+}
+
+html[data-console-theme] .console-recharge-layout .console-recharge-banner {
+  padding: 1.5rem 2rem 0;
+}
+
+html[data-console-theme] .console-recharge-form {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+html[data-console-theme] .console-recharge-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+html[data-console-theme] .console-recharge-section-heading h2,
+html[data-console-theme] .console-recharge-summary h2 {
+  margin: 0;
+  color: var(--foreground-intense);
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+html[data-console-theme] .console-recharge-section-heading > span,
+html[data-console-theme] .console-recharge-limits {
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-recharge-description {
+  margin: 0.375rem 0 1.25rem;
+  color: var(--foreground-muted);
+  font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-recharge-layout .console-purchase-amounts,
+html[data-console-theme] .console-recharge-preset-skeletons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+html[data-console-theme] .console-recharge-layout .console-purchase-amounts [data-slot="toggle"] {
+  display: flex;
+  height: auto;
+  min-height: 6rem;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  text-align: start;
+  white-space: normal;
+}
+
+html[data-console-theme] .console-purchase-preset-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+html[data-console-theme] .console-purchase-preset-top strong {
+  color: var(--foreground-intense);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-recharge-layout [data-slot="badge"].console-purchase-preset-benefit {
+  min-height: 0;
+  margin-inline-start: auto;
+  color: var(--recharge-success-ink);
+  background: var(--recharge-success-surface);
+  border: var(--border-width) solid color-mix(in oklab, var(--success-emphasis) 18%, var(--border-muted));
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+html[data-console-theme] .console-recharge-layout [data-slot="badge"].console-purchase-preset-benefit::before {
+  background: transparent;
+}
+
+html[data-console-theme] .console-recharge-layout .console-purchase-amounts small {
+  padding-inline-end: 0.625rem;
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-recharge-layout .console-purchase-amounts [data-slot="toggle"].is-selected {
+  border-color: var(--recharge-info-border);
+  background: linear-gradient(135deg, var(--recharge-info-surface), color-mix(in oklab, var(--info-muted) 8%, var(--background)));
+  box-shadow: inset 0 0 0 var(--border-width) var(--recharge-info-border);
+}
+
+html[data-console-theme] .console-recharge-layout .console-purchase-amounts .is-selected :is(strong, small) {
+  color: var(--recharge-info-ink);
+}
+
+html[data-console-theme] .console-recharge-layout .console-purchase-amounts [data-slot="toggle"]:focus-visible {
+  outline: calc(var(--border-width) * 2) solid var(--recharge-info-ink);
+  outline-offset: calc(var(--border-width) * 3);
+}
+
+html[data-console-theme] .console-recharge-layout .console-purchase-amount-check {
+  inset: auto 0.625rem 0.875rem auto;
+  color: var(--recharge-info-ink);
+}
+
+html[data-console-theme] .console-recharge-custom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 16rem);
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+html[data-console-theme] .console-recharge-custom .console-purchase-section-title {
+  margin: 0 0 0.25rem;
+}
+
+html[data-console-theme] .console-recharge-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  margin-top: 1rem;
+}
+
+html[data-console-theme] .console-recharge-hint svg {
+  flex: none;
+  margin-top: 0.125rem;
+  color: var(--recharge-success-ink);
+}
+
+html[data-console-theme] .console-recharge-payment {
+  padding-top: 1.5rem;
+  border-top: var(--border-width) solid var(--border-muted);
+}
+
+html[data-console-theme] .console-recharge-payment .console-payment-methods {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  margin-top: 1rem;
+}
+
+html[data-console-theme] .console-recharge-payment .console-payment-methods > label {
+  min-height: 4.25rem;
+  padding: 0.875rem 1rem;
+}
+
+html[data-console-theme] .console-recharge-payment .console-payment-methods > label.is-selected {
+  border-color: var(--recharge-info-border);
+  background: var(--recharge-info-surface);
+}
+
+html[data-console-theme] .console-recharge-payment [data-slot="radio"] {
+  --primary: var(--recharge-action);
+  --primary-foreground: var(--foreground-inverse);
+}
+
+html[data-console-theme] .console-recharge-custom [data-slot="number-field"]:focus-within {
+  border-color: var(--recharge-info-border);
+  --focus-ring-input: var(--recharge-info-border);
+}
+
+html[data-console-theme] .console-recharge-limits {
+  margin-top: 0.625rem;
+}
+
+html[data-console-theme] .console-recharge-summary {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  border-inline-start: var(--border-width) solid var(--border-muted);
+  background: linear-gradient(165deg, var(--recharge-info-surface), var(--background-subtle) 55%);
+}
+
+html[data-console-theme] .console-recharge-total {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+}
+
+html[data-console-theme] .console-recharge-total > span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--foreground-muted);
+  font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-recharge-total small {
+  color: var(--foreground-subtle);
+  font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-recharge-total > strong {
+  color: var(--recharge-info-ink);
+  font-size: clamp(1.75rem, 2.5vw, 2.5rem);
+  line-height: 1.15;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tight);
+  overflow-wrap: anywhere;
+}
+
+html[data-console-theme] .console-recharge-summary .console-purchase-review {
+  gap: 0.875rem;
+}
+
+html[data-console-theme] .console-recharge-summary .console-purchase-review > div {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+html[data-console-theme] .console-recharge-summary .console-purchase-review dd {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+html[data-console-theme] .console-recharge-summary .console-purchase-review .is-credit-total {
+  margin-top: 0.25rem;
+  padding: 0.875rem;
+  border: var(--border-width) solid color-mix(in oklab, var(--success-emphasis) 20%, var(--border-muted));
   border-radius: var(--radius-md);
-  background: color-mix(in oklab, var(--success-emphasis) 8%, var(--background));
+  background: var(--recharge-success-surface);
 }
-html[data-console-theme] .console-purchase-review > div:last-child :is(dt, dd) { color: var(--success-intense); }
-html[data-console-theme] .console-purchase-review > div:last-child dd { font-size: var(--text-lg); }
-html[data-console-theme] .console-purchase-page .console-purchase-balance [data-slot="button"].console-purchase-submit {
-  color: var(--info-intense);
-  border-color: color-mix(in oklab, var(--info-emphasis) 45%, var(--border-muted));
-  background: color-mix(in oklab, var(--info-emphasis) 15%, var(--background));
+
+html[data-console-theme] .console-recharge-summary .is-credit-total :is(dt, dd) {
+  color: var(--recharge-success-ink);
+  font-weight: 600;
 }
-html[data-console-theme] .console-purchase-page .console-purchase-balance [data-slot="button"].console-purchase-submit:hover:not(:disabled) { background: color-mix(in oklab, var(--info-emphasis) 23%, var(--background)); }
-html[data-console-theme] .console-purchase-history { color: var(--info-intense); }
-html[data-console-theme] .console-purchase-history:hover { text-decoration: underline; }
+
+html[data-console-theme] .console-recharge-summary .is-benefit :is(dt, dd, small) {
+  color: var(--recharge-success-ink);
+}
+
+html[data-console-theme] .console-recharge-balance-after {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  margin-top: 0.625rem;
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-recharge-balance-after strong {
+  color: var(--recharge-success-ink);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-recharge-summary [data-slot="button"].console-purchase-submit {
+  --primary: var(--recharge-action);
+  --primary-muted: var(--recharge-action-hover);
+  --primary-foreground: var(--foreground-inverse);
+  --focus-ring-primary: var(--recharge-info-border);
+  width: 100%;
+  min-height: 3rem;
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-console-theme] .console-recharge-layout .console-purchase-amounts [data-slot="toggle"]:hover:not(.is-selected) {
+    border-color: var(--recharge-info-border);
+    background: var(--recharge-info-surface);
+  }
+
+  html[data-console-theme] .console-recharge-summary [data-slot="button"].console-purchase-submit:hover:not(:disabled) {
+    background: var(--recharge-action-hover);
+  }
+}
+
+html[data-console-theme] .console-recharge-summary .console-purchase-history {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-top: -0.5rem;
+  font-size: var(--text-xs);
+  color: var(--recharge-info-ink);
+}
+
+html[data-console-theme] .console-recharge-summary .console-purchase-history:hover {
+  color: var(--foreground-intense);
+}
+
+html[data-console-theme] .console-recharge-preset-skeletons > [data-slot="skeleton"] {
+  height: 6rem;
+}
+
+@media (max-width: 75rem) {
+  html[data-console-theme] .console-recharge-layout .console-purchase-amounts,
+  html[data-console-theme] .console-recharge-preset-skeletons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 64rem) {
+  html[data-console-theme] .console-purchase-checkout.console-recharge-layout > [data-slot="card-content"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html[data-console-theme] .console-recharge-summary {
+    border-inline-start: 0;
+    border-top: var(--border-width) solid var(--border-muted);
+  }
+
+  html[data-console-theme] .console-recharge-layout .console-purchase-amounts,
+  html[data-console-theme] .console-recharge-preset-skeletons {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 47.5rem) {
+  html[data-console-theme] .console-recharge-form,
+  html[data-console-theme] .console-recharge-summary {
+    padding: 1.25rem;
+  }
+
+  html[data-console-theme] .console-recharge-layout .console-recharge-banner {
+    padding: 1.25rem 1.25rem 0;
+  }
+
+  html[data-console-theme] .console-purchase-overview > [data-slot="card-content"] {
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  html[data-console-theme] .console-purchase-overview .console-purchase-overview-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: var(--border-width) solid var(--border-muted);
+  }
+
+  html[data-console-theme] .console-purchase-overview .console-purchase-overview-metric {
+    padding: 0;
+    border: 0;
+  }
+
+  html[data-console-theme] .console-purchase-overview-value > span {
+    font-size: var(--text-xs);
+  }
+
+  html[data-console-theme] .console-recharge-layout .console-purchase-amounts,
+  html[data-console-theme] .console-recharge-preset-skeletons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html[data-console-theme] .console-recharge-custom {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.625rem;
+  }
+}
 
 html[data-console-theme] .console-muted {
   color: var(--foreground-muted);

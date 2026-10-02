@@ -18,6 +18,7 @@ export function createRecovery(result, context = {}) {
     intentId: result.intent_id || "", currency: result.currency || context.currency || "CNY", countryCode: result.country_code || "CN",
     paymentEnv: result.payment_env || "", payAmount: Number(result.pay_amount || 0), orderType: context.orderType || "balance",
     paymentMode: result.payment_mode || "", resumeToken: result.resume_token || "", stripePublishableKey: context.stripePublishableKey || "",
+    bonusAmount: Number(result.bonus_amount || 0),
     createdAt: Date.now(),
   };
 }

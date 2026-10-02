@@ -3,6 +3,9 @@ import { BrandAlipay, BrandStripe, BrandWechat, CreditCard } from "@appica/icons
 import { Radio } from "@appica/ui-react/radio";
 import { RadioGroup } from "@appica/ui-react/radio-group";
 import { NumberField } from "@appica/ui-react/number-field";
+import { Badge } from "@appica/ui-react/badge";
+import { Alert } from "@appica/ui-react/alert";
+import ReactMarkdown from "react-markdown";
 import { Toggle as AppicaToggle } from "@appica/ui-react/toggle";
 import { ToggleGroup } from "@appica/ui-react/toggle-group";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -16,6 +19,7 @@ import { CompactTabs } from "../components/ConsoleControls";
 import { ConsoleBackgroundPattern } from "../components/ConsoleBackgroundPattern";
 import { clearRecovery, createRecovery, paymentQuery, readRecovery, saveRecovery, successfulOrder, terminalOrder, visibleMethods } from "../paymentFlow";
 import { safeExternalUrl, safeImageUrl, statusLabel } from "../utils";
+import { normalizeRechargeBonusTiers, quoteRechargeBonus, rechargeMultiplier, roundRechargeAmount } from "../rechargeBonus";
 
 const WECHAT_PENDING_KEY = "payment.wechat.pending";
 const BALANCE_AMOUNT_PRESETS = [10, 20, 50, 100, 200, 500, 1000, 2000];
@@ -66,22 +70,37 @@ function PaymentMark({ type, method }) {
 }
 
 function currency(value, code, locale) {
-  try { return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", { style: "currency", currency: code || "CNY", currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 }).format(Number(value) || 0); }
+  try { return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", { style: "currency", currency: code || "CNY", currencyDisplay: "narrowSymbol", minimumFractionDigits: paymentFractionDigits(code), maximumFractionDigits: paymentFractionDigits(code) }).format(Number(value) || 0); }
   catch { return `${code || ""} ${(Number(value) || 0).toFixed(2)}`; }
 }
 
+function orderAmountDetails(order, locale) {
+  const rows = [];
+  if (order.pay_amount != null) rows.push([locale === "zh" ? "支付金额" : "Payment amount", currency(order.pay_amount, order.currency, locale)]);
+  if (order.amount != null) rows.push([locale === "zh" ? (order.order_type === "subscription" ? "套餐金额" : "到账额度") : (order.order_type === "subscription" ? "Plan amount" : "Credit amount"), currency(order.amount, "USD", locale)]);
+  // 历史订单只展示后端快照；bonus_amount 在两种模式下都是到账额内的优惠部分。
+  if (order.order_type !== "subscription" && Number(order.bonus_amount) > 0) rows.push([locale === "zh" ? "其中优惠额度" : "Included promotional credit", currency(order.bonus_amount, "USD", locale)]);
+  return rows;
+}
+
+function PaymentAmountSummary({ order, locale }) {
+  const rows = orderAmountDetails(order, locale);
+  if (!rows.length) return null;
+  return <dl className="console-payment-amount-summary">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>;
+}
+
 function methodFits(method, amount) {
-  if (!method || method.available === false) return false;
+  if (!method || method.available === false || !Number.isFinite(amount) || amount <= 0) return false;
   if (Number(method.single_min) > 0 && amount < Number(method.single_min)) return false;
   return !(Number(method.single_max) > 0 && amount > Number(method.single_max));
 }
 
-function PaymentMethods({ methods, selected, setSelected, amount, amountForMethod, locale }) {
+function PaymentMethods({ methods, selected, setSelected, amount, amountForMethod, locale, showSelection = false }) {
   const entries = Object.entries(methods);
   const enabled = ([, method]) => methodFits(method, amountForMethod ? amountForMethod(method) : amount);
   return <RadioGroup value={selected} onValueChange={setSelected} className="console-payment-methods" aria-label={locale === "zh" ? "支付方式" : "Payment method"}>{entries.map(([type, method]) => {
     const available = enabled([type, method]);
-    return <label key={type} className={`${selected === type ? "is-selected" : ""} ${available ? "" : "is-disabled"}`}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{paymentDescription(type, locale)}</small></div><span className="console-payment-method-selected console-visually-hidden"><Radio value={type} disabled={!available} aria-label={method.display_name || paymentLabel(type, locale)} /></span></label>;
+    return <label key={type} className={`${selected === type ? "is-selected" : ""} ${available ? "" : "is-disabled"}`}><PaymentMark type={type} method={method} /><div><strong>{method.display_name || paymentLabel(type, locale)}</strong><small>{paymentDescription(type, locale)}</small></div><span className={`console-payment-method-selected ${showSelection ? "" : "console-visually-hidden"}`}><Radio value={type} disabled={!available} aria-label={method.display_name || paymentLabel(type, locale)} /></span></label>;
   })}</RadioGroup>;
 }
 
@@ -124,16 +143,7 @@ function subscriptionCharge(price, checkout, method) {
 
 function balanceCharge(credit, checkout, method) {
   const currencyCode = String(method?.currency || "CNY").toUpperCase();
-  const multiplier = Number(checkout?.balance_recharge_multiplier || 1);
-  const amount = Number(credit || 0);
-  const converted = currencyCode === "CNY" && multiplier > 0 ? amount / multiplier : amount;
-  return roundPaymentAmount(converted, currencyCode);
-}
-
-function balanceCreditLimit(charge, checkout, method) {
-  const currencyCode = String(method?.currency || "CNY").toUpperCase();
-  const multiplier = Number(checkout?.balance_recharge_multiplier || 1);
-  return roundPaymentAmount(currencyCode === "CNY" ? Number(charge || 0) * multiplier : Number(charge || 0), "USD");
+  return roundPaymentAmount(Number(credit || 0) / rechargeMultiplier(checkout), currencyCode);
 }
 
 function withWechatResumeContext(authorizeUrl, context) {
@@ -155,18 +165,21 @@ function withWechatResumeContext(authorizeUrl, context) {
 }
 
 function paymentFractionDigits(currencyCode) {
-  try { return new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode || "CNY" }).resolvedOptions().maximumFractionDigits ?? 2; }
-  catch { return 2; }
+  const code = String(currencyCode || "CNY").trim().toUpperCase();
+  // 与后端 CurrencyMaxFractionDigits 保持一致（含 MGA / ISK / UGX）。
+  if (["BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "VND", "VUV", "XAF", "XOF", "XPF", "ISK", "UGX"].includes(code)) return 0;
+  if (["BHD", "IQD", "JOD", "KWD", "LYD", "OMR", "TND"].includes(code)) return 3;
+  return 2;
 }
 
 function roundPaymentAmount(value, currencyCode) {
-  const factor = 10 ** paymentFractionDigits(currencyCode);
-  return Math.round(Number(value || 0) * factor) / factor;
+  return roundRechargeAmount(Number(value || 0), paymentFractionDigits(currencyCode));
 }
 
 function paymentFee(amount, rate, currencyCode) {
   const factor = 10 ** paymentFractionDigits(currencyCode);
-  return Math.ceil((Number(amount || 0) * Number(rate || 0) / 100) * factor) / factor;
+  // 支付金额按币种最小单位、费率按后端两位小数约束转为整数，避免浮点误差多收一分。
+  return Math.ceil(Math.round(Number(amount || 0) * factor) * Math.round(Number(rate || 0) * 100) / 10000) / factor;
 }
 
 function paymentTotal(amount, rate, currencyCode) {
@@ -235,9 +248,16 @@ function PurchaseTabs({ hidden, tab, setTab, setPlan, locale, t }) {
   return <CompactTabs value={tab} items={items} label={locale === "zh" ? "购买类型" : "Purchase type"} className="console-purchase-tabs" onChange={(next) => { setTab(next); if (next === "balance") setPlan(null); }} />;
 }
 
-function AmountPresets({ amount, setAmount }) {
+function AmountPresets({ amount, setAmount, quoteForCredit, hasBonus, locale, selectedLimit, formatUsd }) {
   const selected = BALANCE_AMOUNT_PRESETS.includes(Number(amount)) ? [String(amount)] : [];
-  return <ToggleGroup value={selected} className="console-amounts console-purchase-amounts" onValueChange={(values) => values.at(-1) && setAmount(Number(values.at(-1)))}>{BALANCE_AMOUNT_PRESETS.map((value) => <AppicaToggle type="button" value={String(value)} className={Number(amount) === value ? "is-selected" : ""} key={value}><strong>${value}</strong><span className="console-purchase-amount-check"><Icon name="check" size={13} /></span></AppicaToggle>)}</ToggleGroup>;
+  return <ToggleGroup value={selected} className={`console-amounts console-purchase-amounts ${hasBonus ? "has-bonus" : ""}`} aria-label={locale === "zh" ? "充值额度（USD）" : "Top-up credit (USD)"} onValueChange={(values) => values.at(-1) && setAmount(Number(values.at(-1)))}>{BALANCE_AMOUNT_PRESETS.map((value) => {
+    const quote = quoteForCredit(value);
+    return <AppicaToggle type="button" value={String(value)} className={Number(amount) === value ? "is-selected" : ""} key={value}>
+      <span className="console-purchase-preset-top"><strong>${value.toLocaleString("en-US")}</strong>{quote.percent > 0 && <Badge variant="soft" size="sm" className="console-purchase-preset-benefit">{quote.mode === "discount" ? (locale === "zh" ? `减 ${quote.percent}%` : `${quote.percent}% off`) : (locale === "zh" ? `赠 ${quote.percent}%` : `+${quote.percent}%`)}</Badge>}</span>
+      <small>{hasBonus && quote.mode === "discount" ? `${locale === "zh" ? "应付" : "Pay"} ${currency(quote.payBase, selectedLimit?.currency, locale)}` : `${locale === "zh" ? "到账" : "Credit"} ${formatUsd(quote.credited)}`}</small>
+      <span className="console-purchase-amount-check" aria-hidden="true"><Icon name="check" size={13} /></span>
+    </AppicaToggle>;
+  })}</ToggleGroup>;
 }
 
 function defaultBalanceAmount(lastRechargeAmount) {
@@ -250,9 +270,6 @@ function PurchaseSectionTitle({ title, description }) {
   return <div className="console-purchase-section-title"><strong>{title}</strong>{description && <small>{description}</small>}</div>;
 }
 
-function PurchaseStepTitle({ number, title }) {
-  return <div className="console-purchase-step-title"><span>{String(number).padStart(2, "0")}</span><strong>{title}</strong></div>;
-}
 
 function successfulBalanceOrders(items = []) {
   return items.filter((item) => item.order_type === "balance" && successfulOrder(item.status));
@@ -317,15 +334,51 @@ function BalanceOverview({ user, overview, formatUsd, locale }) {
   </Panel>;
 }
 
-function BalancePurchase({ user, overview, locale, t, formatUsd, amount, setAmount, methods, method, setMethod, orderAmount, selectedLimit, payable, state, methodAvailable, minimumCredit, maximumCredit, onPay }) {
+function BalancePurchase({ checkout, user, overview, locale, t, formatUsd, amount, setAmount, methods, method, setMethod, orderAmount, selectedLimit, payable, fee, feeRate, state, methodAvailable, quote, quoteForCredit, bonusTiers, balanceTotalForMethod, onPay }) {
   const methodCount = Object.keys(methods).length;
-  const buttonAmount = currency(payable, selectedLimit?.currency || "CNY", "zh");
-  const minimumLabel = minimumCredit > 0 ? `$${minimumCredit}` : "$10";
+  const paymentCurrency = selectedLimit?.currency || "CNY";
+  const formatPayment = (value) => currency(value, paymentCurrency, locale);
   const balance = Number(user?.balance || 0);
-  const credit = Math.max(0, Number(amount || 0));
-  const bonusCredit = 0;
-  const bonusDescription = overview.lastRechargeAmount == null ? (locale === "zh" ? "首充奖励" : "First top-up bonus") : (locale === "zh" ? "会员赠送" : "Member bonus");
-  return <div className="console-purchase-balance"><BalanceOverview user={user} overview={overview} formatUsd={formatUsd} locale={locale} /><Panel className="console-purchase-checkout"><div className="console-purchase-progress" aria-hidden="true">{[1, 2, 3].map((step) => <span key={step}><i><Icon name="check" size={12} /></i></span>)}</div><div className="console-purchase-step is-amount"><PurchaseStepTitle number={1} title={locale === "zh" ? "金额" : "Amount"} /><AmountPresets amount={amount} setAmount={setAmount} /><PurchaseSectionTitle title={locale === "zh" ? "自定义" : "Custom"} /><NumberField className="console-purchase-custom-input" min={minimumCredit || undefined} max={maximumCredit || undefined} step={10} value={Number(amount) || minimumCredit} format={{ style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 }} locale={locale === "zh" ? "zh-CN" : "en-US"} inputProps={{ "aria-label": locale === "zh" ? "自定义充值金额" : "Custom top-up amount" }} onValueChange={(value) => setAmount(value ?? minimumCredit)} /><small className="console-purchase-minimum">{locale === "zh" ? `最低充值 ${minimumLabel}` : `Minimum ${minimumLabel}`}</small></div><div className="console-purchase-step is-payment"><PurchaseStepTitle number={2} title={locale === "zh" ? "支付" : "Payment"} />{methodCount ? <PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={orderAmount} locale={locale} /> : <div className="console-payment-empty">{locale === "zh" ? "暂未配置可用支付方式" : "No payment methods are available"}</div>}</div><div className="console-purchase-step is-review"><PurchaseStepTitle number={3} title={locale === "zh" ? "确认" : "Review"} /><dl className="console-purchase-review"><div><dt>{locale === "zh" ? "充值额度" : "Credit to add"}</dt><dd>{formatUsd(credit)}</dd></div><div><dt>{locale === "zh" ? "赠送额度" : "Bonus credit"}<small>{bonusDescription}</small></dt><dd>{formatUsd(bonusCredit)}</dd></div><div><dt>{locale === "zh" ? "当前余额" : "Current balance"}</dt><dd>{formatUsd(balance)}</dd></div><div><dt>{locale === "zh" ? "充值后余额" : "Balance after top-up"}</dt><dd>{formatUsd(balance + credit + bonusCredit)}</dd></div></dl></div><Button variant="primary" className="console-purchase-submit" icon="shield" onClick={onPay} disabled={state.busy || !methodAvailable || orderAmount <= 0}>{state.busy ? t("common.loading") : `${locale === "zh" ? "确认支付" : "Confirm payment"} ${buttonAmount}`}</Button><Link className="console-purchase-history" to="/orders">{locale === "zh" ? "查看支付记录" : "View payment history"}</Link></Panel></div>;
+  const notice = String(checkout.recharge_bonus_notice || "").trim();
+  const validCredit = Number.isFinite(Number(amount)) && Number(amount) >= 10;
+  return <div className="console-purchase-balance">
+    <BalanceOverview user={user} overview={overview} formatUsd={formatUsd} locale={locale} />
+    <Panel className="console-purchase-checkout console-recharge-layout">
+      {notice && <div className="console-recharge-banner"><Alert variant="info" role="note" className="console-recharge-notice"><div className="console-recharge-notice-content"><strong><Icon name="gift" size={16} />{locale === "zh" ? "充值活动" : "Top-up offer"}</strong><ReactMarkdown skipHtml components={{ a: ({ href, children }) => <a href={safeExternalUrl(href) || undefined} target="_blank" rel="noopener noreferrer">{children}</a> }}>{notice}</ReactMarkdown></div></Alert></div>}
+      <div className="console-recharge-form">
+        <section className="console-recharge-section" aria-labelledby="recharge-amount-title">
+          <div className="console-recharge-section-heading"><h2 id="recharge-amount-title">{locale === "zh" ? "选择充值额度" : "Choose your credit"}</h2><span>USD</span></div>
+          <p className="console-recharge-description">{locale === "zh" ? "额度以美元计价，充值优惠自动生效。" : "Credit is in USD. Eligible offers apply automatically."}</p>
+          <AmountPresets amount={amount} setAmount={setAmount} quoteForCredit={quoteForCredit} hasBonus={bonusTiers.length > 0} locale={locale} selectedLimit={selectedLimit} formatUsd={formatUsd} />
+          <div className="console-recharge-custom"><div><PurchaseSectionTitle title={locale === "zh" ? "其他金额" : "Custom amount"} /><small className="console-purchase-minimum">{locale === "zh" ? "最低 $10，不含赠送额度" : "From $10, before bonus credit"}</small></div><NumberField className="console-purchase-custom-input" min={10} step={10} value={amount} format={{ style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 }} locale={locale === "zh" ? "zh-CN" : "en-US"} inputProps={{ "aria-label": locale === "zh" ? "自定义充值金额" : "Custom top-up amount" }} onValueChange={(value) => setAmount(value)} /></div>
+          {bonusTiers.length > 0 && <p className="console-recharge-hint"><Icon name="gift" size={14} />{quote.mode === "discount" ? (locale === "zh" ? "优惠抵扣实付，到账额度不变；卡片金额未含手续费。" : "Discounts reduce payment, not credit. Card prices exclude fees.") : (locale === "zh" ? "赠送额度随充值一起到账，可直接用于消费。" : "Bonus credit arrives with your top-up, ready to use.")}</p>}
+        </section>
+        <section className="console-recharge-section console-recharge-payment" aria-labelledby="recharge-method-title">
+          <div className="console-recharge-section-heading"><h2 id="recharge-method-title">{locale === "zh" ? "支付方式" : "Payment method"}</h2></div>
+          {methodCount ? <PaymentMethods methods={methods} selected={method} setSelected={setMethod} amountForMethod={balanceTotalForMethod} locale={locale} showSelection /> : <div className="console-payment-empty">{locale === "zh" ? "暂未配置可用支付方式" : "No payment methods are available"}</div>}
+          {selectedLimit && <p className="console-recharge-limits">{locale === "zh" ? "单笔实付" : "Per payment"} · {formatPayment(selectedLimit.single_min || 0)}{Number(selectedLimit.single_max) > 0 ? ` – ${formatPayment(selectedLimit.single_max)}` : (locale === "zh" ? " 起" : " minimum")}</p>}
+          {methodCount > 0 && validCredit && !methodAvailable && <p role="status" className="console-recharge-error">{locale === "zh" ? "当前支付方式不可用于此金额，请调整金额或选择其他支付方式。" : "This method is unavailable for this amount. Adjust the amount or choose another method."}</p>}
+        </section>
+      </div>
+      <aside className="console-recharge-summary" aria-labelledby="recharge-summary-title">
+        <h2 id="recharge-summary-title">{locale === "zh" ? "充值明细" : "Top-up summary"}</h2>
+        <div className="console-recharge-summary-amounts" aria-live="polite" aria-atomic="true">
+          <div className="console-recharge-total"><span>{locale === "zh" ? "实际支付" : "Total payment"}<small>{paymentCurrency}</small></span><strong>{formatPayment(payable)}</strong></div>
+          <dl className="console-purchase-review">
+            {quote.mode === "bonus" && quote.bonus > 0 && <div><dt>{locale === "zh" ? "充值额度" : "Base credit"}</dt><dd>{formatUsd(quote.base)}</dd></div>}
+            {quote.mode === "bonus" && quote.bonus > 0 && <div className="is-benefit"><dt>{locale === "zh" ? "优惠赠送" : "Bonus credit"}<small>+{quote.percent}%</small></dt><dd>+{formatUsd(quote.bonus)}</dd></div>}
+            {(quote.discount > 0 || fee > 0) && <div><dt>{locale === "zh" ? "支付原价" : "Payment subtotal"}</dt><dd>{quote.discount > 0 ? <del>{formatPayment(orderAmount)}</del> : formatPayment(orderAmount)}</dd></div>}
+            {quote.discount > 0 && <div className="is-benefit"><dt>{locale === "zh" ? "优惠抵扣" : "Discount"}<small>{quote.percent}%</small></dt><dd>−{formatPayment(quote.discount)}</dd></div>}
+            {fee > 0 && <div><dt>{locale === "zh" ? "手续费" : "Processing fee"}<small>{feeRate}%</small></dt><dd>+{formatPayment(fee)}</dd></div>}
+            <div className="is-credit-total"><dt>{locale === "zh" ? "合计到账" : "Total credit"}</dt><dd>{formatUsd(quote.credited)}</dd></div>
+          </dl>
+          <div className="console-recharge-balance-after"><span>{locale === "zh" ? "充值后余额" : "Balance after top-up"}</span><strong>{formatUsd(roundRechargeAmount(balance + quote.credited))}</strong></div>
+        </div>
+        <Button variant="primary" className="console-purchase-submit" icon="shield" onClick={onPay} disabled={state.busy || !methodAvailable || !validCredit || orderAmount <= 0}>{state.busy ? t("common.loading") : (locale === "zh" ? "确认支付" : "Confirm payment")}</Button>
+        <Link className="console-purchase-history" to="/orders">{locale === "zh" ? "查看充值记录" : "View payment history"}<Icon name="chevronRight" size={14} /></Link>
+      </aside>
+    </Panel>
+  </div>;
 }
 
 function SubscriptionCheckout({ plan, locale, chargeAmount, selectedLimit, methods, method, setMethod, payable, subscriptionTotalForMethod, state, methodAvailable, onPay, t }) {
@@ -350,22 +403,14 @@ function PurchaseOverviewLoading() {
   </Panel>;
 }
 
-function PurchaseStepLoading({ rows = 3 }) {
-  return <div className="console-purchase-step console-purchase-step-skeleton" aria-hidden="true"><div className="console-purchase-step-title"><Skeleton /><Skeleton /></div>{Array.from({ length: rows }, (_, index) => <Skeleton key={index} />)}</div>;
-}
-
 function PurchaseLoading({ title }) {
   return <Page title={title} className="console-purchase-page console-purchase-loading">
     <Skeleton className="console-purchase-tabs-skeleton" />
     <div className="console-purchase-balance">
       <PurchaseOverviewLoading />
-      <Panel className="console-purchase-checkout" aria-hidden="true">
-        <div className="console-purchase-progress">{Array.from({ length: 3 }, (_, index) => <span key={index}><i /></span>)}</div>
-        <PurchaseStepLoading rows={5} />
-        <PurchaseStepLoading rows={2} />
-        <PurchaseStepLoading rows={4} />
-        <Skeleton className="console-purchase-submit" />
-        <Skeleton className="console-purchase-history" />
+      <Panel className="console-purchase-checkout console-recharge-layout" aria-hidden="true">
+        <div className="console-recharge-form"><Skeleton className="h-5 w-32" /><div className="console-recharge-preset-skeletons">{BALANCE_AMOUNT_PRESETS.map((value) => <Skeleton key={value} />)}</div><Skeleton className="h-12 w-full" /><Skeleton className="h-16 w-full" /></div>
+        <div className="console-recharge-summary"><Skeleton className="h-5 w-24" /><Skeleton className="h-12 w-40" /><Skeleton className="h-32 w-full" /><Skeleton className="h-12 w-full" /></div>
       </Panel>
     </div>
   </Page>;
@@ -390,13 +435,15 @@ export function PurchasePage() {
   const selectedLimit = methods[method];
   const creditAmount = Number(amount || 0);
   const orderAmount = tab === "subscription" ? Number(plan?.price || 0) : balanceCharge(creditAmount, checkout, selectedLimit);
-  const chargeAmount = tab === "subscription" ? subscriptionCharge(orderAmount, checkout, selectedLimit) : orderAmount;
+  const bonusTiers = useMemo(() => normalizeRechargeBonusTiers(checkout?.recharge_bonus_tiers), [checkout]);
+  const quoteForCredit = (credit, candidate = selectedLimit) => quoteRechargeBonus(balanceCharge(credit, checkout, candidate), checkout, bonusTiers, paymentFractionDigits(candidate?.currency));
+  const quote = quoteForCredit(creditAmount);
+  const chargeAmount = tab === "subscription" ? subscriptionCharge(orderAmount, checkout, selectedLimit) : quote.payBase;
   const feeRate = Number(checkout?.recharge_fee_rate || 0);
   const selectedCurrency = selectedLimit?.currency || "CNY";
   const fee = paymentFee(chargeAmount, feeRate, selectedCurrency);
   const payable = paymentTotal(chargeAmount, feeRate, selectedCurrency);
-  const minimumCredit = Math.max(10, balanceCreditLimit(checkout?.global_min, checkout, selectedLimit));
-  const maximumCredit = Number(checkout?.global_max) > 0 ? balanceCreditLimit(checkout.global_max, checkout, selectedLimit) : 0;
+  const balanceTotalForMethod = (candidate) => paymentTotal(quoteForCredit(creditAmount, candidate).payBase, feeRate, candidate?.currency || "CNY");
   const subscriptionTotalForMethod = (candidate) => paymentTotal(subscriptionCharge(orderAmount, checkout, candidate), feeRate, candidate?.currency || "CNY");
 
   const load = useCallback(async () => {
@@ -435,6 +482,7 @@ export function PurchasePage() {
     const activeMethod = pending?.paymentType ?? method;
     const activePlanId = pending?.planId || plan?.id;
     if ((!activeAmount && !options.resumeToken) || !activeMethod) return;
+    if (!pending && !options.resumeToken && (!methodFits(selectedLimit, payable) || (activeType === "balance" && (!Number.isFinite(creditAmount) || creditAmount < 10)))) return;
     setState((current) => ({ ...current, busy: true }));
     try {
       const body = makeOrderBody({ amount: activeAmount, paymentType: activeMethod, orderType: activeType, planId: activePlanId, resumeToken: options.resumeToken, openid: options.openid, forceQr: checkout?.alipay_force_qrcode });
@@ -448,7 +496,7 @@ export function PurchasePage() {
         navigate(`/payment/result?${paymentQuery(launched)}`);
       }
     } catch (error) { notify("error", error.message); } finally { if (mountedRef.current) setState((current) => ({ ...current, busy: false })); }
-  }, [checkout, locale, method, methods, navigate, notify, orderAmount, plan?.id, tab]);
+  }, [checkout, creditAmount, locale, method, methods, navigate, notify, orderAmount, payable, plan?.id, selectedLimit, tab]);
 
   useEffect(() => {
     if (!checkout || resumeHandled.current || params.get("wechat_resume") !== "1") return;
@@ -474,8 +522,8 @@ export function PurchasePage() {
 
   if (state.loading) return <PurchaseLoading title={t("purchase.title")} />;
   if (state.error || !checkout) return <Page title={t("purchase.title")}><Panel><ErrorState message={state.error} onRetry={load} /></Panel></Page>;
-  const methodAvailable = methodFits(selectedLimit, tab === "subscription" ? payable : orderAmount);
-  const purchaseProps = { checkout, user, overview, locale, t, formatCurrency, formatUsd, amount, setAmount, methods, method, setMethod, orderAmount, chargeAmount, selectedLimit, feeRate, fee, payable, state, methodAvailable, minimumCredit, maximumCredit, plan, setPlan, subscriptionTotalForMethod, onPay: () => create() };
+  const methodAvailable = methodFits(selectedLimit, payable);
+  const purchaseProps = { checkout, user, overview, locale, t, formatCurrency, formatUsd, amount, setAmount, methods, method, setMethod, orderAmount, chargeAmount, selectedLimit, feeRate, fee, payable, state, methodAvailable, quote, quoteForCredit, bonusTiers, balanceTotalForMethod, plan, setPlan, subscriptionTotalForMethod, onPay: () => create() };
   return <Page title={t("purchase.title")} className="console-purchase-page">
     <PurchaseTabs hidden={checkout.balance_disabled} tab={tab} setTab={setTab} setPlan={setPlan} locale={locale} t={t} />
     {tab === "balance" ? <BalancePurchase {...purchaseProps} /> : <SubscriptionPurchase {...purchaseProps} />}
@@ -523,7 +571,7 @@ export function OrdersPage() {
   const columns = [
     { key: "id", label: t("orders.id"), render: (row) => <span className="console-order-id">{row.id ?? "—"}</span> },
     { key: "out_trade_no", label: t("orders.number"), render: (row) => <span className="console-order-number">{row.out_trade_no || "—"}</span> },
-    { key: "amount", label: t("orders.amount"), render: (row) => <span className={`console-order-amount text-sm font-medium tabular-nums ${successfulOrder(row.status) ? "text-success-emphasis" : "text-foreground"}`}>{displayAmount(row)}</span> },
+    { key: "amount", label: t("orders.amount"), render: (row) => <div><span className={`console-order-amount text-sm font-medium tabular-nums ${successfulOrder(row.status) ? "text-success-emphasis" : "text-foreground"}`}>{displayAmount(row)}</span>{row.pay_amount != null && <small className="console-order-payment">{locale === "zh" ? "支付" : "Paid"} {currency(row.pay_amount, row.currency, locale)}</small>}{row.order_type !== "subscription" && Number(row.bonus_amount) > 0 && <small className="console-order-benefit">{locale === "zh" ? "含优惠" : "Includes offer"} {formatUsd(row.bonus_amount)}</small>}</div> },
     { key: "payment_type", label: t("orders.method"), render: (row) => orderPaymentLabel(row.payment_type) },
     { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={String(row.status).toLowerCase()} label={statusLabel(String(row.status).toLowerCase(), locale)} /> },
     { key: "created_at", label: t("common.date"), render: (row) => formatDate(row.created_at) },
@@ -533,7 +581,7 @@ export function OrdersPage() {
   const setStatusFilter = (value) => { setFilter(value); setPaging((current) => ({ ...current, page: 1 })); };
   const statusTabs = [{ value: "", label: t("common.all") }, ...filterOptions.map((status) => ({ value: status, label: statusLabel(status.toLowerCase(), locale) }))];
   const orderTable = <><DataTable className="console-orders-table" columns={columns} rows={state.items} empty={<EmptyState icon="order" />} /><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
-  return <Page title={t("orders.title")} className="console-orders-page" actions={<Button variant="primary" icon="plus" onClick={() => navigate("/purchase")}>{t("purchase.title")}</Button>}><Panel className="console-orders-panel" aria-busy={state.loading}><div className="console-orders-toolbar"><CompactTabs value={filter} items={statusTabs} label={locale === "zh" ? "订单状态" : "Order status"} className="console-orders-status-tabs" onChange={setStatusFilter} /><Button icon="refresh" onClick={load} loading={state.loading}>{t("common.refresh")}</Button></div>{state.loading && !state.items.length ? <TableSkeleton columns={7} /> : state.error && !state.items.length ? <ErrorState message={state.error} onRetry={load} /> : orderTable}</Panel><ConfirmDialog open={dialog?.type === "cancel"} title={t("orders.cancel")} description={locale === "zh" ? "确定取消这个待支付订单吗？" : "Cancel this pending order?"} busy={state.busy} onClose={() => setDialog(null)} onConfirm={submitAction} /><Modal open={dialog?.type === "refund"} title={t("orders.refund")} onClose={() => setDialog(null)} size="small" footer={<><Button onClick={() => setDialog(null)}>{t("common.cancel")}</Button><Button variant="primary" onClick={submitAction} disabled={!reason.trim() || state.busy}>{t("common.confirm")}</Button></>}><Field label={t("orders.reason")}><TextArea rows="4" value={reason} onChange={(event) => setReason(event.target.value)} /></Field></Modal><Modal open={dialog?.type === "view"} title={locale === "zh" ? "订单详情" : "Order details"} onClose={() => setDialog(null)} size="small"><dl className="console-order-detail">{dialog?.item && [[t("orders.id"), dialog.item.id ?? "—"], [t("orders.number"), dialog.item.out_trade_no || "—"], [t("orders.amount"), displayAmount(dialog.item)], [t("orders.method"), orderPaymentLabel(dialog.item.payment_type)], [t("common.status"), statusLabel(String(dialog.item.status).toLowerCase(), locale)], [t("common.date"), formatDate(dialog.item.created_at)]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></Modal></Page>;
+  return <Page title={t("orders.title")} className="console-orders-page" actions={<Button variant="primary" icon="plus" onClick={() => navigate("/purchase")}>{t("purchase.title")}</Button>}><Panel className="console-orders-panel" aria-busy={state.loading}><div className="console-orders-toolbar"><CompactTabs value={filter} items={statusTabs} label={locale === "zh" ? "订单状态" : "Order status"} className="console-orders-status-tabs" onChange={setStatusFilter} /><Button icon="refresh" onClick={load} loading={state.loading}>{t("common.refresh")}</Button></div>{state.loading && !state.items.length ? <TableSkeleton columns={7} /> : state.error && !state.items.length ? <ErrorState message={state.error} onRetry={load} /> : orderTable}</Panel><ConfirmDialog open={dialog?.type === "cancel"} title={t("orders.cancel")} description={locale === "zh" ? "确定取消这个待支付订单吗？" : "Cancel this pending order?"} busy={state.busy} onClose={() => setDialog(null)} onConfirm={submitAction} /><Modal open={dialog?.type === "refund"} title={t("orders.refund")} onClose={() => setDialog(null)} size="small" footer={<><Button onClick={() => setDialog(null)}>{t("common.cancel")}</Button><Button variant="primary" onClick={submitAction} disabled={!reason.trim() || state.busy}>{t("common.confirm")}</Button></>}><Field label={t("orders.reason")}><TextArea rows="4" value={reason} onChange={(event) => setReason(event.target.value)} /></Field></Modal><Modal open={dialog?.type === "view"} title={locale === "zh" ? "订单详情" : "Order details"} onClose={() => setDialog(null)} size="small"><dl className="console-order-detail">{dialog?.item && [[t("orders.id"), dialog.item.id ?? "—"], [t("orders.number"), dialog.item.out_trade_no || "—"], ...orderAmountDetails(dialog.item, locale), [t("orders.method"), orderPaymentLabel(dialog.item.payment_type)], [t("common.status"), statusLabel(String(dialog.item.status).toLowerCase(), locale)], [t("common.date"), formatDate(dialog.item.created_at)]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></Modal></Page>;
 }
 
 function PaymentShell({ children }) {
@@ -569,7 +617,7 @@ export function PaymentQRCodePage() {
   }, [navigate, snapshot?.orderId, snapshot?.qrCode]);
   const cancel = async () => { try { await paymentApi.cancel(snapshot.orderId); clearRecovery(); navigate("/purchase", { replace: true }); } catch (error) { notify("error", error.message); } };
   if (!snapshot) return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><ErrorState message={locale === "zh" ? "支付参数不完整或已过期。" : "Payment details are missing or expired."} /><Link className={buttonLinkClass({ variant: "primary" })} to="/purchase">{t("payment.back")}</Link></div></Panel></PaymentShell>;
-  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className="console-payment-state-icon"><Icon name={expired ? "warning" : "card"} size={30} /></span><h1>{expired ? t("payment.failed") : t("payment.waiting")}</h1><p>{snapshot?.qrCode ? t("payment.scan") : (locale === "zh" ? "在新窗口完成付款。" : "Complete payment in the provider window.")}</p>{qr && !expired && <img className="console-qr" src={qr} alt="Payment QR code" />}{paymentUrl && !snapshot?.qrCode && !expired && <a className={buttonLinkClass({ variant: "primary" })} href={paymentUrl} target="_blank" rel="noopener noreferrer">{locale === "zh" ? "打开支付页面" : "Open payment page"}</a>}<strong className="console-countdown">{countdownText(remaining)}</strong><div className="console-payment-state-actions"><Button onClick={() => navigate("/purchase")}>{t("payment.back")}</Button>{snapshot?.orderId && !expired && <Button variant="danger" onClick={cancel}>{t("orders.cancel")}</Button>}</div></div></Panel></PaymentShell>;
+  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className="console-payment-state-icon"><Icon name={expired ? "warning" : "card"} size={30} /></span><h1>{expired ? t("payment.failed") : t("payment.waiting")}</h1><p>{snapshot?.qrCode ? t("payment.scan") : (locale === "zh" ? "在新窗口完成付款。" : "Complete payment in the provider window.")}</p>{qr && !expired && <img className="console-qr" src={qr} alt="Payment QR code" />}{paymentUrl && !snapshot?.qrCode && !expired && <a className={buttonLinkClass({ variant: "primary" })} href={paymentUrl} target="_blank" rel="noopener noreferrer">{locale === "zh" ? "打开支付页面" : "Open payment page"}</a>}<PaymentAmountSummary order={{ amount: snapshot.amount, pay_amount: snapshot.payAmount, bonus_amount: snapshot.bonusAmount, order_type: snapshot.orderType, currency: snapshot.currency }} locale={locale} /><strong className="console-countdown">{countdownText(remaining)}</strong><div className="console-payment-state-actions"><Button onClick={() => navigate("/purchase")}>{t("payment.back")}</Button>{snapshot?.orderId && !expired && <Button variant="danger" onClick={cancel}>{t("orders.cancel")}</Button>}</div></div></Panel></PaymentShell>;
 }
 
 function pendingStatus(status) {
@@ -609,7 +657,7 @@ export function PaymentResultPage() {
     return () => { mounted = false; mountedRef.current = false; window.clearInterval(refreshRef.current); };
   }, [resolve]);
   const success = successfulOrder(state.order?.status);
-  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className={`console-payment-state-icon ${success ? "is-success" : state.error ? "is-error" : ""}`}><Icon name={success ? "check" : state.error ? "warning" : "clock"} size={30} /></span>{state.loading ? <Spinner label={t("payment.processing")} /> : <><h1>{success ? t("payment.success") : pendingStatus(state.order?.status) ? t("payment.processing") : t("payment.failed")}</h1><p>{state.error || (success ? (locale === "zh" ? "余额或订阅权益将在片刻内更新。" : "Your balance or subscription will update shortly.") : state.order?.status)}</p>{state.order && <div className="console-result-order"><span>{t("orders.number")}</span><strong className="console-mono">{state.order.out_trade_no}</strong><span>{t("common.status")}</span><StatusBadge status={String(state.order.status).toLowerCase()} label={statusLabel(String(state.order.status).toLowerCase(), locale)} /></div>}<div className="console-payment-state-actions"><Link className={buttonLinkClass({ variant: "primary" })} to="/orders">{t("payment.viewOrders")}</Link><Link className={buttonLinkClass()} to="/purchase">{t("payment.back")}</Link></div></>}</div></Panel></PaymentShell>;
+  return <PaymentShell><Panel className="console-payment-state"><div className="console-panel-body"><span className={`console-payment-state-icon ${success ? "is-success" : state.error ? "is-error" : ""}`}><Icon name={success ? "check" : state.error ? "warning" : "clock"} size={30} /></span>{state.loading ? <Spinner label={t("payment.processing")} /> : <><h1>{success ? t("payment.success") : pendingStatus(state.order?.status) ? t("payment.processing") : t("payment.failed")}</h1><p>{state.error || (success ? (locale === "zh" ? "余额或订阅权益将在片刻内更新。" : "Your balance or subscription will update shortly.") : state.order?.status)}</p>{state.order && <div className="console-result-order"><span>{t("orders.number")}</span><strong className="console-mono">{state.order.out_trade_no}</strong><span>{t("common.status")}</span><StatusBadge status={String(state.order.status).toLowerCase()} label={statusLabel(String(state.order.status).toLowerCase(), locale)} /></div>}{state.order && <PaymentAmountSummary order={state.order} locale={locale} />}<div className="console-payment-state-actions"><Link className={buttonLinkClass({ variant: "primary" })} to="/orders">{t("payment.viewOrders")}</Link><Link className={buttonLinkClass()} to="/purchase">{t("payment.back")}</Link></div></>}</div></Panel></PaymentShell>;
 }
 
 async function loadStripePaymentClient(snapshot, locale) {
