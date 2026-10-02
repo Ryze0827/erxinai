@@ -248,13 +248,13 @@ function PurchaseTabs({ hidden, tab, setTab, setPlan, locale, t }) {
   return <CompactTabs value={tab} items={items} label={locale === "zh" ? "购买类型" : "Purchase type"} className="console-purchase-tabs" onChange={(next) => { setTab(next); if (next === "balance") setPlan(null); }} />;
 }
 
-function AmountPresets({ amount, setAmount, quoteForCredit, hasBonus, locale, selectedLimit, formatUsd }) {
+function AmountPresets({ amount, setAmount, quoteForCredit, hasBonus, locale, formatUsd }) {
   const selected = BALANCE_AMOUNT_PRESETS.includes(Number(amount)) ? [String(amount)] : [];
   return <ToggleGroup value={selected} className={`console-amounts console-purchase-amounts ${hasBonus ? "has-bonus" : ""}`} aria-label={locale === "zh" ? "充值额度（USD）" : "Top-up credit (USD)"} onValueChange={(values) => values.at(-1) && setAmount(Number(values.at(-1)))}>{BALANCE_AMOUNT_PRESETS.map((value) => {
     const quote = quoteForCredit(value);
     return <AppicaToggle type="button" value={String(value)} className={Number(amount) === value ? "is-selected" : ""} key={value}>
       <span className="console-purchase-preset-top"><strong>${value.toLocaleString("en-US")}</strong>{quote.percent > 0 && <Badge variant="soft" size="sm" className="console-purchase-preset-benefit">{quote.mode === "discount" ? (locale === "zh" ? `减 ${quote.percent}%` : `${quote.percent}% off`) : (locale === "zh" ? `赠 ${quote.percent}%` : `+${quote.percent}%`)}</Badge>}</span>
-      <small>{hasBonus && quote.mode === "discount" ? `${locale === "zh" ? "应付" : "Pay"} ${currency(quote.payBase, selectedLimit?.currency, locale)}` : `${locale === "zh" ? "到账" : "Credit"} ${formatUsd(quote.credited)}`}</small>
+      <small>{hasBonus && quote.mode === "discount" ? `${locale === "zh" ? "应付" : "Pay"} ${formatUsd(quote.payBase)}` : `${locale === "zh" ? "到账" : "Credit"} ${formatUsd(quote.credited)}`}</small>
       <span className="console-purchase-amount-check" aria-hidden="true"><Icon name="check" size={13} /></span>
     </AppicaToggle>;
   })}</ToggleGroup>;
@@ -336,8 +336,7 @@ function BalanceOverview({ user, overview, formatUsd, locale }) {
 
 function BalancePurchase({ checkout, user, overview, locale, t, formatUsd, amount, setAmount, methods, method, setMethod, orderAmount, selectedLimit, payable, fee, feeRate, state, methodAvailable, quote, quoteForCredit, bonusTiers, balanceTotalForMethod, onPay }) {
   const methodCount = Object.keys(methods).length;
-  const paymentCurrency = selectedLimit?.currency || "CNY";
-  const formatPayment = (value) => currency(value, paymentCurrency, locale);
+  const formatPayment = formatUsd;
   const balance = Number(user?.balance || 0);
   const notice = String(checkout.recharge_bonus_notice || "").trim();
   const validCredit = Number.isFinite(Number(amount)) && Number(amount) >= 10;
@@ -349,7 +348,7 @@ function BalancePurchase({ checkout, user, overview, locale, t, formatUsd, amoun
         <section className="console-recharge-section" aria-labelledby="recharge-amount-title">
           <div className="console-recharge-section-heading"><h2 id="recharge-amount-title">{locale === "zh" ? "选择充值额度" : "Choose your credit"}</h2><span>USD</span></div>
           <p className="console-recharge-description">{locale === "zh" ? "额度以美元计价，充值优惠自动生效。" : "Credit is in USD. Eligible offers apply automatically."}</p>
-          <AmountPresets amount={amount} setAmount={setAmount} quoteForCredit={quoteForCredit} hasBonus={bonusTiers.length > 0} locale={locale} selectedLimit={selectedLimit} formatUsd={formatUsd} />
+          <AmountPresets amount={amount} setAmount={setAmount} quoteForCredit={quoteForCredit} hasBonus={bonusTiers.length > 0} locale={locale} formatUsd={formatUsd} />
           <div className="console-recharge-custom"><div><PurchaseSectionTitle title={locale === "zh" ? "其他金额" : "Custom amount"} /><small className="console-purchase-minimum">{locale === "zh" ? "最低 $10，不含赠送额度" : "From $10, before bonus credit"}</small></div><NumberField className="console-purchase-custom-input" min={10} step={10} value={amount} format={{ style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 }} locale={locale === "zh" ? "zh-CN" : "en-US"} inputProps={{ "aria-label": locale === "zh" ? "自定义充值金额" : "Custom top-up amount" }} onValueChange={(value) => setAmount(value)} /></div>
           {bonusTiers.length > 0 && <p className="console-recharge-hint"><Icon name="gift" size={14} />{quote.mode === "discount" ? (locale === "zh" ? "优惠抵扣实付，到账额度不变；卡片金额未含手续费。" : "Discounts reduce payment, not credit. Card prices exclude fees.") : (locale === "zh" ? "赠送额度随充值一起到账，可直接用于消费。" : "Bonus credit arrives with your top-up, ready to use.")}</p>}
         </section>
@@ -363,7 +362,7 @@ function BalancePurchase({ checkout, user, overview, locale, t, formatUsd, amoun
       <aside className="console-recharge-summary" aria-labelledby="recharge-summary-title">
         <h2 id="recharge-summary-title">{locale === "zh" ? "充值明细" : "Top-up summary"}</h2>
         <div className="console-recharge-summary-amounts" aria-live="polite" aria-atomic="true">
-          <div className="console-recharge-total"><span>{locale === "zh" ? "实际支付" : "Total payment"}<small>{paymentCurrency}</small></span><strong>{formatPayment(payable)}</strong></div>
+          <div className="console-recharge-total"><span>{locale === "zh" ? "实际支付" : "Total payment"}<small>USD</small></span><strong>{formatPayment(payable)}</strong></div>
           <dl className="console-purchase-review">
             {quote.mode === "bonus" && quote.bonus > 0 && <div><dt>{locale === "zh" ? "充值额度" : "Base credit"}</dt><dd>{formatUsd(quote.base)}</dd></div>}
             {quote.mode === "bonus" && quote.bonus > 0 && <div className="is-benefit"><dt>{locale === "zh" ? "优惠赠送" : "Bonus credit"}<small>+{quote.percent}%</small></dt><dd>+{formatUsd(quote.bonus)}</dd></div>}
