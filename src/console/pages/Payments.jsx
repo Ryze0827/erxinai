@@ -19,7 +19,7 @@ import { CompactTabs } from "../components/ConsoleControls";
 import { ConsoleBackgroundPattern } from "../components/ConsoleBackgroundPattern";
 import { clearRecovery, createRecovery, paymentQuery, readRecovery, saveRecovery, successfulOrder, terminalOrder, visibleMethods } from "../paymentFlow";
 import { safeExternalUrl, safeImageUrl, statusLabel } from "../utils";
-import { normalizeRechargeBonusTiers, quoteRechargeBonus, rechargeMultiplier, roundRechargeAmount } from "../rechargeBonus";
+import { describeRechargeBonusIntervals, normalizeRechargeBonusTiers, quoteRechargeBonus, rechargeMultiplier, roundRechargeAmount } from "../rechargeBonus";
 
 const WECHAT_PENDING_KEY = "payment.wechat.pending";
 const BALANCE_AMOUNT_PRESETS = [10, 20, 50, 100, 200, 500, 1000, 2000];
@@ -263,6 +263,21 @@ function PurchaseTabs({ hidden, tab, setTab, setPlan, locale, t }) {
   return <CompactTabs value={tab} items={items} label={locale === "zh" ? "购买类型" : "Purchase type"} className="console-purchase-tabs" onChange={(next) => { setTab(next); if (next === "balance") setPlan(null); }} />;
 }
 
+function RechargeBonusPreview({ tiers, mode, amount, locale }) {
+  const intervals = describeRechargeBonusIntervals(tiers);
+  if (!intervals.length) return null;
+  const formatNumber = (value) => Number(value).toLocaleString(locale === "zh" ? "zh-CN" : "en-US", { maximumFractionDigits: 2 });
+  return <div className="console-recharge-bonus-preview">
+    <div className="console-recharge-bonus-heading"><strong><Icon name="gift" size={14} aria-hidden="true" />{locale === "zh" ? "充值优惠" : "Top-up offers"}</strong><span>{locale === "zh" ? "按优惠前支付金额匹配，含起始金额、不含结束金额" : "Based on payment before discounts. Start included; end excluded."}</span></div>
+    <div className="console-recharge-bonus-ranges">{intervals.map((interval) => {
+      const current = amount > 0 && amount >= interval.from && (interval.to == null || amount < interval.to);
+      const range = interval.to == null ? `≥ ${formatNumber(interval.from)}` : `${formatNumber(interval.from)} ~ ${formatNumber(interval.to)}`;
+      const benefit = interval.percent > 0 ? (mode === "discount" ? (locale === "zh" ? `立减 ${formatNumber(interval.percent)}%` : `${formatNumber(interval.percent)}% off`) : (locale === "zh" ? `赠送 ${formatNumber(interval.percent)}%` : `${formatNumber(interval.percent)}% bonus`)) : (locale === "zh" ? (mode === "discount" ? "无折扣" : "不赠送") : (mode === "discount" ? "No discount" : "No bonus"));
+      return <Badge key={interval.from} variant="soft" size="sm" className={`console-recharge-bonus-range ${current ? "is-current" : ""}`} aria-current={current ? "true" : undefined}>{current && <Icon name="check" size={12} aria-label={locale === "zh" ? "当前区间" : "Current range"} />}<span>{range}：{benefit}</span></Badge>;
+    })}</div>
+  </div>;
+}
+
 function AmountPresets({ amount, setAmount, quoteForCredit, hasBonus, locale, formatUsd }) {
   const selected = BALANCE_AMOUNT_PRESETS.includes(Number(amount)) ? [String(amount)] : [];
   return <ToggleGroup value={selected} className={`console-amounts console-purchase-amounts ${hasBonus ? "has-bonus" : ""}`} aria-label={locale === "zh" ? "充值额度（USD）" : "Top-up credit (USD)"} onValueChange={(values) => values.at(-1) && setAmount(Number(values.at(-1)))}>{BALANCE_AMOUNT_PRESETS.map((value) => {
@@ -363,6 +378,7 @@ function BalancePurchase({ checkout, user, overview, locale, t, formatUsd, amoun
         <section className="console-recharge-section" aria-labelledby="recharge-amount-title">
           <div className="console-recharge-section-heading"><h2 id="recharge-amount-title">{locale === "zh" ? "选择充值额度" : "Choose your credit"}</h2><span>USD</span></div>
           <p className="console-recharge-description">{locale === "zh" ? "额度以美元计价，充值优惠自动生效。" : "Credit is in USD. Eligible offers apply automatically."}</p>
+          <RechargeBonusPreview tiers={bonusTiers} mode={quote.mode} amount={orderAmount} locale={locale} />
           <AmountPresets amount={amount} setAmount={setAmount} quoteForCredit={quoteForCredit} hasBonus={bonusTiers.length > 0} locale={locale} formatUsd={formatUsd} />
           <div className="console-recharge-custom"><div><PurchaseSectionTitle title={locale === "zh" ? "其他金额" : "Custom amount"} /><small className="console-purchase-minimum">{locale === "zh" ? "最低 $10，不含赠送额度" : "From $10, before bonus credit"}</small></div><NumberField className="console-purchase-custom-input" min={10} step={10} value={amount} format={{ style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 2 }} locale={locale === "zh" ? "zh-CN" : "en-US"} inputProps={{ "aria-label": locale === "zh" ? "自定义充值金额" : "Custom top-up amount" }} onValueChange={(value) => setAmount(value)} /></div>
           {bonusTiers.length > 0 && <p className="console-recharge-hint"><Icon name="gift" size={14} />{quote.mode === "discount" ? (locale === "zh" ? "优惠抵扣实付，到账额度不变；卡片金额未含手续费。" : "Discounts reduce payment, not credit. Card prices exclude fees.") : (locale === "zh" ? "赠送额度随充值一起到账，可直接用于消费。" : "Bonus credit arrives with your top-up, ready to use.")}</p>}

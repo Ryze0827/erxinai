@@ -22,6 +22,14 @@ export function normalizeRechargeBonusTiers(raw) {
   }).sort((a, b) => a.min_amount - b.min_amount);
 }
 
+// 区间含起始金额、不含结束金额；首档之前补充无优惠区间。
+export function describeRechargeBonusIntervals(tiers) {
+  const sorted = [...tiers].sort((a, b) => a.min_amount - b.min_amount);
+  if (!sorted.length) return [];
+  const intervals = sorted[0].min_amount > 0 ? [{ from: 0, to: sorted[0].min_amount, percent: 0 }] : [];
+  return intervals.concat(sorted.map((tier, index) => ({ from: tier.min_amount, to: sorted[index + 1]?.min_amount ?? null, percent: tier.bonus_percent })));
+}
+
 // 阶梯按提交的支付金额匹配；amount/bonus_amount 均为 USD 到账额度。
 export function quoteRechargeBonus(paymentAmount, checkout, tiers, currencyDigits = 2) {
   const amount = Number.isFinite(paymentAmount) && paymentAmount > 0 ? paymentAmount : 0;

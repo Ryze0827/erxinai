@@ -5111,6 +5111,59 @@ html[data-console-theme] .console-recharge-description {
   font-size: var(--text-sm);
 }
 
+html[data-console-theme] .console-recharge-bonus-preview {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: var(--border-width) solid var(--border-muted);
+  border-radius: var(--radius-md);
+  background: var(--background-subtle);
+}
+
+html[data-console-theme] .console-recharge-bonus-heading,
+html[data-console-theme] .console-recharge-bonus-ranges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+html[data-console-theme] .console-recharge-bonus-heading {
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-recharge-bonus-heading strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--foreground-intense);
+  font-weight: 500;
+}
+
+html[data-console-theme] .console-recharge-bonus-ranges [data-slot="badge"].console-recharge-bonus-range {
+  height: auto;
+  padding: 0.375rem 0.5rem;
+  border: var(--border-width) solid var(--border-muted);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  color: var(--foreground-muted);
+  background: var(--background);
+  white-space: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-recharge-bonus-ranges [data-slot="badge"].console-recharge-bonus-range::before {
+  content: none;
+}
+
+html[data-console-theme] .console-recharge-bonus-ranges [data-slot="badge"].console-recharge-bonus-range.is-current {
+  border-color: var(--recharge-info-border);
+  color: var(--recharge-info-ink);
+  background: var(--recharge-info-surface);
+}
+
 html[data-console-theme] .console-recharge-layout .console-purchase-amounts,
 html[data-console-theme] .console-recharge-preset-skeletons {
   display: grid;
