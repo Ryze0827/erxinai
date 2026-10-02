@@ -1,11 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "@appica/ui-react/alert";
 import { AlertDescription } from "@appica/ui-react/alert";
+import { Badge } from "@appica/ui-react/badge";
 import { Checkbox } from "@appica/ui-react/checkbox";
 import { invoiceApi } from "../../api/invoices";
 import { useConsole } from "../ConsoleContext";
 import { useLocale } from "../i18n";
+import { Icon } from "../Icon";
 import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, StatusBadge, TableSkeleton, TextInput } from "../UI";
+
+const invoiceStatuses = {
+  pending: { tone: "warning", icon: "clock" },
+  approved: { tone: "info", icon: "orderReceipt" },
+  issued: { tone: "success", icon: "check" },
+  rejected: { tone: "danger", icon: "close" },
+};
+
+function InvoiceRequestStatus({ status, t }) {
+  const appearance = invoiceStatuses[status];
+  return <Badge variant="soft" size="md" className={`console-status-badge is-${appearance?.tone || "neutral"}`}><Icon name={appearance?.icon || "info"} data-icon="start" aria-hidden="true" />{t(appearance ? `invoice.status.${status}` : "invoice.status.unknown")}</Badge>;
+}
 
 export function InvoicePage() {
   const { user, refreshUser, notify } = useConsole();
@@ -131,12 +145,13 @@ export function InvoicePage() {
     { key: "status", label: t("common.status"), render: (order) => <StatusBadge status={order.invoice_available ? "success" : "inactive"} label={t(order.invoice_available ? "invoice.eligible" : "invoice.ineligible")} /> },
   ];
   const historyColumns = [
-    { key: "title", label: t("invoice.header") },
-    { key: "amount", label: t("invoice.selectedAmount"), render: (item) => formatUsd(item.amount) },
-    { key: "fee", label: t("invoice.fee"), render: (item) => formatUsd(item.fee) },
-    { key: "status", label: t("common.status"), render: (item) => <div><StatusBadge status={item.status === "issued" ? "success" : "inactive"} label={t(`invoice.status.${item.status}`)} />{item.note && <p>{item.note}</p>}</div> },
-    { key: "mail_status", label: t("invoice.mail"), render: (item) => item.mail_status ? t(`invoice.mail.${item.mail_status}`) : "—" },
-    { key: "actions", label: t("invoice.file"), render: (item) => item.status === "issued" ? <Button disabled={busy} onClick={() => download(item)}>{t("invoice.download")}</Button> : "—" },
+    { key: "title", label: t("invoice.header"), render: (item) => <strong className="console-invoice-history-title">{item.title || "—"}</strong> },
+    { key: "amount", label: t("invoice.selectedAmount"), align: "right", render: (item) => <strong className="console-invoice-order-amount">{formatUsd(item.amount)}</strong> },
+    { key: "fee", label: t("invoice.fee"), align: "right", render: (item) => <span className="console-invoice-history-fee">{formatUsd(item.fee)}</span> },
+    { key: "status", label: t("common.status"), render: (item) => <InvoiceRequestStatus status={item.status} t={t} /> },
+    { key: "note", label: t("invoice.reviewNote"), render: (item) => <span className="console-invoice-history-note">{String(item.note ?? "").trim() || "—"}</span> },
+    { key: "mail_status", label: t("invoice.mail"), render: (item) => <span className={`console-invoice-history-mail ${item.mail_status === "failed" ? "is-error" : ""}`}>{["pending", "sending", "sent", "failed", "skipped"].includes(item.mail_status) ? t(`invoice.mail.${item.mail_status}`) : "—"}</span> },
+    { key: "actions", label: t("invoice.file"), align: "right", render: (item) => item.status === "issued" ? <Button icon="download" disabled={busy} onClick={() => download(item)}>{t("invoice.download")}</Button> : <span className="console-invoice-history-placeholder">{t("invoice.fileUnavailable")}</span> },
   ];
   return <Page title={t("invoice.title")} className="console-invoice-page">
     <Panel title={t("invoice.ordersTitle")} actions={<Button icon="refresh" loading={state.loading} disabled={busy} onClick={() => { setSelected(new Map()); void load(); }}>{t("common.refresh")}</Button>} className="console-invoice-orders-panel" aria-busy={state.loading}>
@@ -147,8 +162,8 @@ export function InvoicePage() {
       </div>
       {state.loading && !state.items.length ? <TableSkeleton columns={5}/> : state.error ? <ErrorState message={state.error} onRetry={load}/> : <><DataTable className="console-invoice-orders-table" columns={columns} rows={state.items} empty={<EmptyState icon="order" title={t("invoice.emptyTitle")} description={t("invoice.emptyDescription")}/>}/><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })}/></>}
     </Panel>
-    <Panel title={t("invoice.history")} actions={<Button icon="refresh" onClick={loadHistory}>{t("common.refresh")}</Button>}>
-      {history.error ? <ErrorState message={history.error} onRetry={loadHistory}/> : <><DataTable columns={historyColumns} rows={history.items} empty={<EmptyState icon="order" title={t("invoice.noRequests")}/>}/><Pagination page={historyPage} pageSize={20} total={history.total} pages={history.pages} onPageChange={setHistoryPage}/></>}
+    <Panel className="console-invoice-history-panel" title={t("invoice.history")} actions={<Button icon="refresh" onClick={loadHistory}>{t("common.refresh")}</Button>}>
+      {history.error ? <ErrorState message={history.error} onRetry={loadHistory}/> : <><DataTable className="console-invoice-history-table" columns={historyColumns} rows={history.items} empty={<EmptyState icon="order" title={t("invoice.noRequests")}/>}/><Pagination page={historyPage} pageSize={20} total={history.total} pages={history.pages} onPageChange={setHistoryPage}/></>}
     </Panel>
     <Modal open={requestOpen} title={t("invoice.requestTitle")} description={t("invoice.confirmDescription")} onClose={closeRequest} className="console-invoice-modal" footer={<><Button disabled={busy} onClick={closeRequest}>{t("common.cancel")}</Button><Button type="submit" form="invoice-request-form" variant="primary" icon="send" loading={busy} disabled={!state.enabled || !quoteCurrent || !quote.sufficient || quoteLoading}>{t("invoice.confirmSubmit")}</Button></>}>
       <form id="invoice-request-form" onSubmit={submit} className="console-invoice-request">
