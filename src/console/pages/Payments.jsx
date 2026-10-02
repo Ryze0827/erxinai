@@ -235,8 +235,23 @@ function launchPayment(result, context, navigate) {
   return snapshot;
 }
 
+function planPeriod(plan, locale) {
+  const count = Number(plan.validity_days) || 0;
+  const unit = ["weeks", "months"].includes(plan.validity_unit) ? plan.validity_unit : "days";
+  const label = locale === "zh" ? { days: "天", weeks: "周", months: "个月" }[unit] : (count === 1 ? unit.slice(0, -1) : unit);
+  return `${count} ${label}`;
+}
+
 function PlanCard({ plan, selected, locale }) {
-  return <label className={`console-plan-card ${selected ? "is-selected" : ""}`}><div><span>{plan.group_platform || "AI"}</span><Radio value={String(plan.id)} aria-label={plan.name} /></div><h3>{plan.name}</h3><p>{plan.description}</p><strong>{currency(plan.price, "USD", locale)}</strong><small>/ {plan.validity_days} {locale === "zh" ? "天" : "days"}</small><div className="console-chip-list">{plan.daily_limit_usd != null && <span className="console-chip">${plan.daily_limit_usd}/day</span>}{plan.weekly_limit_usd != null && <span className="console-chip">${plan.weekly_limit_usd}/week</span>}{plan.monthly_limit_usd != null && <span className="console-chip">${plan.monthly_limit_usd}/month</span>}{(plan.features || []).slice(0, 3).map((feature) => <span className="console-chip" key={feature}>{feature}</span>)}</div></label>;
+  const limits = [["daily_limit_usd", "每日额度", "Daily credit"], ["weekly_limit_usd", "每周额度", "Weekly credit"], ["monthly_limit_usd", "每月额度", "Monthly credit"]].filter(([key]) => plan[key] != null);
+  return <label className={`console-plan-card ${selected ? "is-selected" : ""}`}>
+    <div className="console-plan-card-heading"><Badge variant="soft" size="sm" className="console-plan-platform">{plan.group_platform?.toUpperCase() || "AI"}</Badge><Radio value={String(plan.id)} aria-label={plan.name} /></div>
+    <div className="console-plan-intro"><h3>{plan.name}</h3>{plan.description && <p>{plan.description}</p>}</div>
+    <div className="console-plan-price"><div><strong>{currency(plan.price, "USD", locale)}</strong><span>USD</span></div><small>{locale === "zh" ? "有效期" : "Valid for"} {planPeriod(plan, locale)}{Number(plan.original_price) > Number(plan.price) && <del>{currency(plan.original_price, "USD", locale)}</del>}</small></div>
+    {limits.length > 0 && <dl className="console-plan-limits">{limits.map(([key, zh, en]) => <div key={key}><dt>{locale === "zh" ? zh : en}</dt><dd>{currency(plan[key], "USD", locale)}</dd></div>)}</dl>}
+    {plan.features?.length > 0 && <ul className="console-plan-features">{plan.features.map((feature, index) => <li key={index}><Icon name="check" size={14} aria-hidden="true" /><span>{feature}</span></li>)}</ul>}
+    <span className="console-plan-select-hint"><Icon name={selected ? "check" : "plus"} size={15} aria-hidden="true" />{selected ? (locale === "zh" ? "已选择此套餐" : "Plan selected") : (locale === "zh" ? "选择此套餐" : "Select this plan")}</span>
+  </label>;
 }
 
 function PurchaseTabs({ hidden, tab, setTab, setPlan, locale, t }) {
@@ -380,13 +395,17 @@ function BalancePurchase({ checkout, user, overview, locale, t, formatUsd, amoun
   </div>;
 }
 
-function SubscriptionCheckout({ plan, locale, chargeAmount, selectedLimit, methods, method, setMethod, payable, subscriptionTotalForMethod, state, methodAvailable, onPay, t }) {
-  return <Panel title={locale === "zh" ? "确认套餐" : "Confirm your plan"}><div className="console-panel-body console-subscribe-checkout"><div><strong>{plan.name}</strong><span>{currency(chargeAmount, selectedLimit?.currency, locale)}</span></div><PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={payable} amountForMethod={subscriptionTotalForMethod} locale={locale} /><Button variant="primary" onClick={onPay} disabled={state.busy || !methodAvailable}>{state.busy ? t("common.loading") : `${t("purchase.pay")} · ${currency(payable, selectedLimit?.currency, locale)}`}</Button></div></Panel>;
+function SubscriptionCheckout({ plan, locale, formatUsd, chargeAmount, methods, method, setMethod, payable, fee, subscriptionTotalForMethod, state, methodAvailable, onPay, t }) {
+  const formatPayment = formatUsd;
+  return <Panel className="console-subscription-checkout"><div className="console-subscription-checkout-body">
+    <section className="console-subscription-payment console-recharge-payment" aria-labelledby="subscription-payment-title"><div className="console-recharge-section-heading"><h2 id="subscription-payment-title">{locale === "zh" ? "支付方式" : "Payment method"}</h2></div><p className="console-recharge-description">{locale === "zh" ? "支付成功后自动开通，同分组续购可延长有效期。" : "Activated after payment. Renewals extend access to the same group."}</p>{Object.keys(methods).length ? <PaymentMethods methods={methods} selected={method} setSelected={setMethod} amount={payable} amountForMethod={subscriptionTotalForMethod} locale={locale} showSelection /> : <div className="console-payment-empty">{locale === "zh" ? "暂未配置可用支付方式" : "No payment methods are available"}</div>}{Object.keys(methods).length > 0 && !methodAvailable && <p className="console-recharge-error" role="status">{locale === "zh" ? "当前支付方式不可用于此套餐，请选择其他支付方式。" : "This payment method is unavailable for this plan. Choose another method."}</p>}</section>
+    <aside className="console-recharge-summary" aria-labelledby="subscription-summary-title"><h2 id="subscription-summary-title">{locale === "zh" ? "订阅明细" : "Subscription summary"}</h2><div className="console-subscription-selection"><strong>{plan.name}</strong><span>{locale === "zh" ? "有效期" : "Valid for"} {planPeriod(plan, locale)}</span></div><dl className="console-purchase-review"><div><dt>{locale === "zh" ? "套餐金额" : "Plan price"}</dt><dd>{formatPayment(chargeAmount)}</dd></div>{fee > 0 && <div><dt>{locale === "zh" ? "手续费" : "Processing fee"}</dt><dd>{formatPayment(fee)}</dd></div>}</dl><div className="console-recharge-total"><span>{locale === "zh" ? "实际支付" : "Total payment"}<small>USD</small></span><strong>{formatPayment(payable)}</strong></div><Button variant="primary" className="console-purchase-submit" icon="shield" onClick={onPay} disabled={state.busy || !methodAvailable}>{state.busy ? t("common.loading") : (locale === "zh" ? "确认订阅" : "Confirm subscription")}</Button></aside>
+  </div></Panel>;
 }
 
 function SubscriptionPurchase(props) {
   const { checkout, plan, setPlan, locale } = props;
-  return <><RadioGroup value={plan ? String(plan.id) : ""} onValueChange={(id) => setPlan(checkout.plans.find((item) => String(item.id) === id) || null)} className="console-plan-grid" aria-label={locale === "zh" ? "订阅套餐" : "Subscription plan"}>{checkout.plans.map((item) => <PlanCard key={item.id} plan={item} selected={plan?.id === item.id} locale={locale} />)}</RadioGroup>{!checkout.plans.length && <Panel><EmptyState icon="gift" /></Panel>}{plan && <SubscriptionCheckout {...props} />}</>;
+  return <div className="console-subscription-purchase"><div className="console-subscription-heading"><h2>{locale === "zh" ? "选择适合你的订阅" : "Choose your subscription"}</h2><p>{locale === "zh" ? "按周期购买分组使用权益，额度与有效期一目了然。" : "Choose group access with clear credit limits and validity."}</p></div><RadioGroup value={plan ? String(plan.id) : ""} onValueChange={(id) => setPlan(checkout.plans.find((item) => String(item.id) === id) || null)} className="console-plan-grid" aria-label={locale === "zh" ? "订阅套餐" : "Subscription plan"}>{checkout.plans.map((item) => <PlanCard key={item.id} plan={item} selected={plan?.id === item.id} locale={locale} />)}</RadioGroup>{!checkout.plans.length && <Panel><EmptyState icon="gift" title={locale === "zh" ? "暂无可购买的订阅" : "No subscriptions available"} description={locale === "zh" ? "套餐上架后将显示在这里。" : "Plans will appear here when available."} /></Panel>}{plan && <SubscriptionCheckout {...props} />}</div>;
 }
 
 function PurchaseHelp({ checkout }) {

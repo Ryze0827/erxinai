@@ -5445,6 +5445,218 @@ html[data-console-theme] .console-recharge-preset-skeletons > [data-slot="skelet
   }
 }
 
+/* Subscription plans and checkout */
+html[data-console-theme] .console-subscription-purchase {
+  display: grid;
+  gap: 1.5rem;
+}
+
+html[data-console-theme] .console-subscription-heading h2 {
+  margin: 0;
+  color: var(--foreground-intense);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+html[data-console-theme] .console-subscription-heading p {
+  margin: 0.5rem 0 0;
+  color: var(--foreground-muted);
+  font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-subscription-purchase .console-plan-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+html[data-console-theme] .console-subscription-purchase .console-plan-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-radius: var(--radius-xl);
+  background: var(--background);
+  cursor: pointer;
+}
+
+html[data-console-theme] .console-subscription-purchase .console-plan-card.is-selected {
+  border-color: var(--recharge-info-border);
+  background: linear-gradient(150deg, var(--recharge-info-surface), var(--background) 70%);
+  box-shadow: inset 0 0 0 var(--border-width) var(--recharge-info-border);
+}
+
+html[data-console-theme] .console-plan-card:has(:focus-visible) {
+  outline: calc(var(--border-width) * 2) solid var(--recharge-info-ink);
+  outline-offset: calc(var(--border-width) * 3);
+}
+
+html[data-console-theme] .console-plan-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+html[data-console-theme] .console-plan-card [data-slot="radio"] {
+  --primary: var(--recharge-action);
+  --primary-foreground: var(--foreground-inverse);
+}
+
+html[data-console-theme] [data-slot="badge"].console-plan-platform {
+  color: var(--recharge-info-ink);
+  background: var(--recharge-info-surface);
+  font-weight: 600;
+}
+
+html[data-console-theme] .console-plan-intro h3 {
+  margin: 0;
+  color: var(--foreground-intense);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+html[data-console-theme] .console-plan-intro p {
+  margin: 0.5rem 0 0;
+  color: var(--foreground-muted);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+html[data-console-theme] .console-plan-price > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+html[data-console-theme] .console-plan-price strong {
+  color: var(--foreground-intense);
+  font-size: clamp(1.75rem, 2.5vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+html[data-console-theme] .console-plan-price :is(span, small) {
+  color: var(--foreground-muted);
+  font-size: var(--text-xs);
+}
+
+html[data-console-theme] .console-plan-price small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.375rem;
+}
+
+html[data-console-theme] .console-plan-limits {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--background-subtle);
+  font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-plan-limits > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+html[data-console-theme] .console-plan-limits dt { color: var(--foreground-muted); }
+html[data-console-theme] .console-plan-limits dd {
+  color: var(--recharge-success-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-console-theme] .console-plan-features {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+html[data-console-theme] .console-plan-features li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+html[data-console-theme] .console-plan-features svg { flex: none; color: var(--recharge-success-ink); }
+
+html[data-console-theme] .console-plan-select-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: var(--border-width) solid var(--border-muted);
+  color: var(--foreground-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+html[data-console-theme] .console-plan-card.is-selected .console-plan-select-hint { color: var(--recharge-info-ink); }
+
+html[data-console-theme] .console-subscription-checkout { overflow: hidden; }
+html[data-console-theme] .console-subscription-checkout-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 23rem);
+}
+
+html[data-console-theme] .console-subscription-payment {
+  min-width: 0;
+  padding: 2rem;
+  border: 0;
+}
+
+html[data-console-theme] .console-subscription-selection {
+  display: grid;
+  gap: 0.375rem;
+  overflow-wrap: anywhere;
+}
+
+html[data-console-theme] .console-subscription-selection strong { color: var(--foreground-intense); font-weight: 600; }
+html[data-console-theme] .console-subscription-selection span { color: var(--foreground-muted); font-size: var(--text-xs); }
+html[data-console-theme] .console-subscription-checkout .console-recharge-total { margin: 0; }
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-console-theme] .console-subscription-purchase .console-plan-card:hover {
+    border-color: var(--recharge-info-border);
+    background: var(--recharge-info-surface);
+  }
+}
+
+@media (max-width: 75rem) {
+  html[data-console-theme] .console-subscription-purchase .console-plan-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 64rem) {
+  html[data-console-theme] .console-subscription-checkout-body { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 47.5rem) {
+  html[data-console-theme] .console-subscription-purchase .console-plan-grid { grid-template-columns: minmax(0, 1fr); }
+  html[data-console-theme] .console-subscription-purchase .console-plan-card,
+  html[data-console-theme] .console-subscription-payment { padding: 1.25rem; }
+  html[data-console-theme] .console-subscription-checkout .console-recharge-summary {
+    border-inline-start: 0;
+    border-top: var(--border-width) solid var(--border-muted);
+  }
+}
+
 html[data-console-theme] .console-muted {
   color: var(--foreground-muted);
 }
