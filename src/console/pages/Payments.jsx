@@ -792,6 +792,7 @@ export function AirwallexPaymentPage() {
     const initialize = async () => {
       if (!snapshot?.intentId || !snapshot?.clientSecret) throw new Error(locale === "zh" ? "支付参数不完整。" : "Payment parameters are incomplete.");
       const sdk = await import("@airwallex/components-sdk");
+      if (!active) return;
       const result = await sdk.init({ env: snapshot.paymentEnv === "prod" ? "prod" : "demo", enabledElements: ["payments"], locale: locale === "zh" ? "zh" : "en" });
       if (!active || !result.payments) return;
       const successUrl = `${window.location.origin}/payment/result?${paymentQuery(snapshot)}`;
