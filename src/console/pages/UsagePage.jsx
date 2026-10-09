@@ -284,8 +284,7 @@ function LatencyCell({ row, locale }) {
   const total = latencyLabel(row.duration_ms);
   const labels = locale === "zh" ? { fast: "快", normal: "正常", moderate: "偏慢", slow: "较慢", unknown: "未记录" } : { fast: "Fast", normal: "Normal", moderate: "Elevated", slow: "Slow", unknown: "No data" };
   const hint = localized(locale, "首 Token 响应参考：≤2s 快，2–10s 正常，10–30s 偏慢，>30s 较慢；仅评价响应速度。", "First-token response guide: ≤2s fast, 2–10s normal, 10–30s elevated, >30s slow; indicates response speed only.");
-  const outputTpsHint = localized(locale, "输出 Token ÷ 总耗时（包含首字等待），单位 tok/s。输出 Token 可能包含推理 Token。", "Output tokens divided by total duration, including first-token wait, in tok/s. Output tokens may include reasoning tokens.");
-  return <div className="console-latency" data-response={status} data-total-response={totalStatus} title={hint}><span className="console-latency-primary" aria-label={localized(locale, "首 Token", "First token") + ": " + first + " · " + labels[status]}><b>{first}</b><small>{labels[status]}</small></span><span className="console-latency-total"><small>{localized(locale, "总耗时", "Total")}</small><b>{total}</b></span><span className="console-latency-output"><small title={outputTpsHint}>{localized(locale, "输出 TPS", "Output TPS")}</small><b>{formatOutputTps(row)}</b></span></div>;
+  return <div className="console-latency" data-response={status} data-total-response={totalStatus}><span className="console-latency-primary" title={hint} aria-label={localized(locale, "首 Token", "First token") + ": " + first + " · " + labels[status]}><b>{first}</b><small>{labels[status]}</small></span><span className="console-latency-total"><small>{localized(locale, "总耗时", "Total")}</small><b>{total}</b></span><span className="console-latency-output"><small>{localized(locale, "输出 TPS", "Output TPS")}</small><b>{formatOutputTps(row)}</b></span></div>;
 }
 
 function ErrorDetail({ item }) {

@@ -11048,7 +11048,7 @@ html[data-console-theme] .console-usage-page .console-latency[data-total-respons
 html[data-console-theme] .console-usage-page .console-latency-total small { font-size: inherit; }
 html[data-console-theme] .console-usage-page .console-latency > .console-latency-output { padding-inline: 0.4rem; color: var(--foreground-muted); font-size: var(--text-xs); }
 html[data-console-theme] .console-usage-page .console-latency-output b { font-weight: 500; font-variant-numeric: tabular-nums; }
-html[data-console-theme] .console-usage-page .console-latency-output small { font-size: inherit; cursor: help; }
+html[data-console-theme] .console-usage-page .console-latency-output small { font-size: inherit; }
 html[data-console-theme] .console-usage-page .console-cost-main { display: grid; grid-template-columns: max-content 1.5rem; justify-content: start; gap: 0.25rem; text-align: start; }
 html[data-console-theme] .console-usage-page .console-cost-main > strong { grid-column: 1; grid-row: 1; }
 html[data-console-theme] .console-usage-page .console-cost-main > .console-long-context-marker { grid-column: 1; grid-row: 2; justify-self: start; padding: 0.1rem 0.25rem; border: var(--border-width) solid color-mix(in oklab, var(--warning-emphasis) 24%, var(--border-muted)); border-radius: var(--radius-sm); color: var(--warning-intense); background: color-mix(in oklab, var(--warning-emphasis) 12%, var(--background)); font-size: var(--text-xs); font-weight: 650; cursor: help; }
