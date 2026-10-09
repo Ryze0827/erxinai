@@ -63,12 +63,6 @@ function billingMode(row) {
   return row.billing_mode || (row.billing_type === 1 ? "subscription" : "token");
 }
 
-function billingModeLabel(row, t) {
-  const mode = billingMode(row);
-  if (mode === "token") return t("usage.token");
-  return mode.replaceAll("_", " ");
-}
-
 function FilterSelect({ label, value, onChange, children }) {
   return <Field label={label}><SelectInput value={value} onChange={(event) => onChange(event.target.value)}>{children}</SelectInput></Field>;
 }
@@ -112,8 +106,8 @@ function ModelGroupCell({ row }) {
   return <div className="console-usage-model-group"><ModelCell row={row} /><GroupBadge name={row.group?.name} platform={row.group?.platform} /></div>;
 }
 
-function TypeBillingCell({ row, t }) {
-  return <div className="console-usage-type-billing"><Badge variant="soft" size="sm" className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</Badge><small>{billingModeLabel(row, t)}</small></div>;
+function RequestTypeCell({ row, t }) {
+  return <div className="console-usage-request-type"><Badge variant="soft" size="sm" className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</Badge></div>;
 }
 
 function TokenCell({ row, locale }) {
@@ -417,7 +411,7 @@ export function UsagePage() {
     { key: "created_at", label: locale === "zh" ? "时间" : "Time", sortable: true, render: (row) => <UsageTimeCell value={row.created_at} locale={locale} /> },
     { key: "key_endpoint", label: locale === "zh" ? "密钥 / 端点" : "Key / endpoint", render: (row) => <KeyEndpointCell row={row} /> },
     { key: "model_group", label: locale === "zh" ? "模型 / 分组" : "Model / group", render: (row) => <ModelGroupCell row={row} /> },
-    { key: "type_billing", label: locale === "zh" ? "类型 / 计费" : "Type / billing", render: (row) => <TypeBillingCell row={row} t={t} /> },
+    { key: "type_billing", label: locale === "zh" ? "类型" : "Type", render: (row) => <RequestTypeCell row={row} t={t} /> },
     { key: "latency", label: locale === "zh" ? "首 Token / 总耗时" : "First token / total", render: (row) => <LatencyCell row={row} locale={locale} /> },
     { key: "cost", label: locale === "zh" ? "扣费" : "Billed cost", render: (row) => <CostCell row={row} formatNumber={formatNumber} locale={locale} /> },
     { key: "tokens", label: t("usage.tokens"), render: (row) => <TokenCell row={row} locale={locale} /> },

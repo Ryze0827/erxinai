@@ -7490,7 +7490,7 @@ html[data-console-theme] .console-usage-records-panel [data-column="user_agent"]
 html[data-console-theme] .console-usage-time,
 html[data-console-theme] .console-usage-key-endpoint,
 html[data-console-theme] .console-usage-model-group,
-html[data-console-theme] .console-usage-type-billing,
+html[data-console-theme] .console-usage-request-type,
 html[data-console-theme] .console-key-name,
 html[data-console-theme] .console-model-chain,
 html[data-console-theme] .console-ip,
@@ -7517,7 +7517,6 @@ html[data-console-theme] .console-token-cell > strong {
 html[data-console-theme] .console-usage-time small,
 html[data-console-theme] .console-usage-key-endpoint small,
 html[data-console-theme] .console-usage-model-group small,
-html[data-console-theme] .console-usage-type-billing small,
 html[data-console-theme] .console-token-cell > small {
   color: var(--foreground-subtle);
   font-size: var(--text-xs);
@@ -7545,7 +7544,7 @@ html[data-console-theme] .console-usage-model-group [data-slot="badge"] {
   max-width: 100%;
 }
 
-html[data-console-theme] .console-usage-type-billing {
+html[data-console-theme] .console-usage-request-type {
   align-items: flex-start;
 }
 
@@ -11025,7 +11024,7 @@ html[data-console-theme] .console-usage-record-tools { flex-wrap: wrap; gap: 0.7
 html[data-console-theme] .console-usage-record-tools .console-ip-toolbar { margin-inline-start: auto; }
 html[data-console-theme] .console-usage-records-panel .console-table tbody tr + tr > td { border-top: var(--border-width) solid color-mix(in oklab, var(--border-muted) 65%, transparent); }
 html[data-console-theme] .console-usage-records-panel .console-table tbody tr:hover > td { background: color-mix(in oklab, var(--info-emphasis) 4%, var(--background)); }
-html[data-console-theme] .console-usage-records-panel :is(.console-usage-time, .console-usage-key-endpoint, .console-usage-model-group, .console-usage-type-billing) { gap: 0.25rem; }
+html[data-console-theme] .console-usage-records-panel :is(.console-usage-time, .console-usage-key-endpoint, .console-usage-model-group, .console-usage-request-type) { gap: 0.25rem; }
 html[data-console-theme] .console-usage-time { font-variant-numeric: tabular-nums; }
 html[data-console-theme] .console-usage-page .console-token-cell > div { grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; max-width: 15.5rem; gap: 0.5rem; }
 html[data-console-theme] .console-usage-page .console-token-cell > div > span { display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; font-size: var(--text-sm); color: var(--foreground-intense); }
