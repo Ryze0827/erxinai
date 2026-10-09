@@ -4434,6 +4434,26 @@ html[data-console-theme] .console-usage-filters {
   gap: 0.75rem;
 }
 
+@container usage-page (min-width: 70rem) {
+  html[data-console-theme] .console-usage-filters--errors {
+    grid-template-columns: minmax(30rem, 2fr) repeat(4, minmax(9rem, 1fr));
+  }
+}
+
+@container usage-page (max-width: 69.99rem) {
+  html[data-console-theme] .console-usage-filters--errors .console-usage-range-field {
+    grid-column: 1 / -1;
+  }
+
+  html[data-console-theme] .console-usage-filters--errors .console-date-picker {
+    flex-wrap: wrap;
+  }
+
+  html[data-console-theme] .console-usage-filters--errors .console-date-native {
+    flex: 1 1 18rem;
+  }
+}
+
 html[data-console-theme] .console-usage-reset {
   flex: none;
   margin-inline-start: auto;
