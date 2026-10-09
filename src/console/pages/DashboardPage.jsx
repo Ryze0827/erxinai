@@ -106,6 +106,11 @@ function topRequestedModels(items) {
     .slice(0, 5);
 }
 
+function modelTokenTotal(item) {
+  if (item.total_tokens != null) return Number(item.total_tokens) || 0;
+  return ["input_tokens", "output_tokens", "cache_creation_tokens", "cache_read_tokens"].reduce((sum, key) => sum + (Number(item[key]) || 0), 0);
+}
+
 function preferenceHours(items) {
   const hours = Array(MODEL_PREFERENCE_HOURS).fill(0);
   (items || []).forEach((item) => {
@@ -223,6 +228,7 @@ export function DashboardPage() {
   const [data, setData] = useState({ stats: null, models: [], trend: [] });
   const [activity, setActivity] = useState({ loading: true, error: "", items: [] });
   const [tokenView, setTokenView] = useState("bar");
+  const [tokenModelBreakdown, setTokenModelBreakdown] = useState({ loading: true, items: [] });
   const [balanceNotificationOpen, setBalanceNotificationOpen] = useState(false);
   const [modelPreferences, setModelPreferences] = useState({ loading: true, error: "", items: [] });
   const [loading, setLoading] = useState(true);
@@ -258,12 +264,33 @@ export function DashboardPage() {
     }
   }, [modelPreferenceRange]);
 
+  const loadTokenModelBreakdown = useCallback(async (request) => {
+    if (mountedRef.current && request === loadRequestRef.current) setTokenModelBreakdown({ loading: true, items: [] });
+    try {
+      const response = await usageApi.dashboardModels(range);
+      const models = [...(response?.models || [])]
+        .filter((item) => item.model)
+        .sort((left, right) => modelTokenTotal(right) - modelTokenTotal(left))
+        .slice(0, 5);
+      const results = await Promise.allSettled(models.map((item) => usageApi.dashboardTrend({ ...range, granularity: "day", model: item.model })));
+      if (!mountedRef.current || request !== loadRequestRef.current) return;
+      const items = models.flatMap((item, index) => results[index].status === "fulfilled" ? [{ model: item.model, trend: results[index].value?.trend || [] }] : []);
+      setTokenModelBreakdown({
+        loading: false,
+        items,
+      });
+    } catch {
+      if (mountedRef.current && request === loadRequestRef.current) setTokenModelBreakdown({ loading: false, items: [] });
+    }
+  }, [range]);
+
   const load = useCallback(async () => {
     const request = ++loadRequestRef.current;
     const initial = !loadedRef.current;
     if (initial) setLoading(true);
     setError("");
     const query = { ...range, granularity: "day" };
+    loadTokenModelBreakdown(request);
     try {
       const results = await Promise.allSettled([
         refreshUser(), usageApi.dashboardStats(), usageApi.dashboardModels(modelDistributionRange),
@@ -290,7 +317,7 @@ export function DashboardPage() {
         if (initial) setLoading(false);
       }
     }
-  }, [loadModelPreferences, modelDistributionRange, range, refreshUser]);
+  }, [loadModelPreferences, loadTokenModelBreakdown, modelDistributionRange, range, refreshUser]);
 
   const loadActivity = useCallback(async (signal) => {
     const request = ++activityRequestRef.current;
@@ -349,7 +376,7 @@ export function DashboardPage() {
       <DashboardMetric icon="clock" label={t("dashboard.balanceRunway")} value={runwayValue} unit={runwayUnit} tone="runway"><div className="console-dashboard-saved"><small>{t("dashboard.balanceRunwayBasis")}</small><button className={buttonLinkClass({ variant: "ghost", size: "sm", className: "console-dashboard-notification-link" })} type="button" onClick={async () => { await refreshUser(); setBalanceNotificationOpen(true); }}><Icon name="bell" size={15} /><span>{t("profile.notifications")}</span></button></div></DashboardMetric>
     </section>
     <div className="console-dashboard-chart-grid">
-      {tokenView === "heatmap" ? <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel}><TokenActivity items={activity.items} loading={activity.loading} error={localizedLoadError(activity.error, t)} formatDate={formatDate} formatNumber={formatNumber} formatCurrency={formatCurrency} locale={locale} onRetry={() => loadActivity()} t={t} /></UsageTrendChart> : sectionErrors.trend ? <Panel className="console-trend console-dashboard-section-error" title={locale === "zh" ? "Token 用量" : "Token usage"} actions={tokenUsageActions}><ErrorState message={localizedLoadError(sectionErrors.trend, t)} onRetry={() => load()} /></Panel> : <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel} />}
+      {tokenView === "heatmap" ? <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel}><TokenActivity items={activity.items} loading={activity.loading} error={localizedLoadError(activity.error, t)} formatDate={formatDate} formatNumber={formatNumber} formatCurrency={formatCurrency} locale={locale} onRetry={() => loadActivity()} t={t} /></UsageTrendChart> : sectionErrors.trend ? <Panel className="console-trend console-dashboard-section-error" title={locale === "zh" ? "Token 用量" : "Token usage"} actions={tokenUsageActions}><ErrorState message={localizedLoadError(sectionErrors.trend, t)} onRetry={() => load()} /></Panel> : <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel} modelData={tokenModelBreakdown.items} modelBreakdownLoading={tokenModelBreakdown.loading} />}
       {sectionErrors.models ? <Panel className="console-dashboard-model-distribution console-dashboard-section-error" title={t("dashboard.models")}><ErrorState message={localizedLoadError(sectionErrors.models, t)} onRetry={() => load()} /></Panel> : <DistributionChart className="console-dashboard-model-distribution" title={t("dashboard.models")} rangeLabel={locale === "zh" ? "近 7 天" : "Last 7 days"} data={data.models} nameKey="model" limit={4} showMetricTabs={false} actualOnly itemLabel={t("usage.model")} tokenLabel="Token" centerValue={formatTokenMillions(totalModelTokens)} centerLabel={locale === "zh" ? "近 7 天 Token" : "Tokens · 7 days"} />}
     </div>
     <div className="console-dashboard-insight-grid console-dashboard-insight-grid--single"><ModelPreferencePanel items={modelPreferences.items} loading={modelPreferences.loading} error={modelPreferences.error} formatNumber={formatNumber} onRetry={() => loadModelPreferences()} t={t} /></div>
