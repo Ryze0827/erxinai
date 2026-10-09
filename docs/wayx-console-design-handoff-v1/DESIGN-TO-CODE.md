@@ -75,7 +75,6 @@
 ### 2.3 保留但不进入主菜单的页面
 
 - `/subscriptions`：保留页面、路由和头部订阅入口，侧边栏隐藏。
-- `/video-workflow`：保留直接访问，侧边栏隐藏；使用 `assets/illustrations/video-workflow-poster-wide.png`。
 - `/payment/*`：保留二维码、Stripe、Airwallex、回调与结果状态页。
 - `/custom/:id`：只允许现有安全的 Markdown 自定义页，不嵌入任意外部 URL。
 

@@ -258,13 +258,28 @@ export function CostCell({ row, formatNumber, locale }) {
     style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 6, maximumFractionDigits: 6,
   });
   const label = locale === "zh" ? "查看费用明细" : "View cost breakdown";
-  return <div className="console-cost-cell"><div className="console-cost-main"><strong>{formatCost(row.actual_cost)}</strong>{row.long_context_billing_applied && <i>x2</i>}<Popover><PopoverTrigger openOnHover render={<InlineButton variant="ghost" size="icon-sm" className="console-cost-detail-trigger" aria-label={label} />}><Icon name="info" size={12} /></PopoverTrigger><PopoverContent side="left" align="center" arrow={false} className="console-cost-tooltip"><CostTooltip row={row} formatCost={formatCost} locale={locale} /></PopoverContent></Popover></div></div>;
+  const longContextLabel = localized(locale, "长上下文", "Long context");
+  const longContextHint = localized(locale, "已应用长上下文计费。输入和输出费率取决于定价档位，并非统一倍率。", "Long-context pricing was applied. Input and output rates depend on the pricing tier, not a uniform multiplier.");
+  return <div className="console-cost-cell"><div className="console-cost-main"><strong>{formatCost(row.actual_cost)}</strong>{row.long_context_billing_applied && <span className="console-long-context-marker" title={longContextHint}>{longContextLabel}</span>}<Popover><PopoverTrigger openOnHover render={<InlineButton variant="ghost" size="icon-sm" className="console-cost-detail-trigger" aria-label={label} />}><Icon name="info" size={12} /></PopoverTrigger><PopoverContent side="left" align="center" arrow={false} className="console-cost-tooltip"><CostTooltip row={row} formatCost={formatCost} locale={locale} /></PopoverContent></Popover></div></div>;
 }
 
 function latencyLabel(value) {
   if (value == null) return "—";
   const formatted = formatDuration(Number(value)).replace(" ", "");
   return formatted.endsWith("ms") ? formatted : `${Number.parseFloat(formatted)}s`;
+}
+
+function formatOutputTps(row) {
+  const outputTokens = Number(row.output_tokens);
+  const durationMs = Number(row.duration_ms);
+  const supportedRequestTypes = ["sync", "stream", "ws_v2", "cyber"];
+  if (billingMode(row) === "image" || numeric(row.image_output_tokens) > 0
+    || !supportedRequestTypes.includes(requestType(row))
+    || !Number.isFinite(outputTokens) || outputTokens <= 0
+    || !Number.isFinite(durationMs) || durationMs <= 0) {
+    return "—";
+  }
+  return `${(outputTokens * 1000 / durationMs).toFixed(1)} tok/s`;
 }
 
 function firstTokenStatus(value) {
@@ -289,7 +304,8 @@ function LatencyCell({ row, locale }) {
   const total = latencyLabel(row.duration_ms);
   const labels = locale === "zh" ? { fast: "快", normal: "正常", moderate: "偏慢", slow: "较慢", unknown: "未记录" } : { fast: "Fast", normal: "Normal", moderate: "Elevated", slow: "Slow", unknown: "No data" };
   const hint = localized(locale, "首 Token 响应参考：≤2s 快，2–10s 正常，10–30s 偏慢，>30s 较慢；仅评价响应速度。", "First-token response guide: ≤2s fast, 2–10s normal, 10–30s elevated, >30s slow; indicates response speed only.");
-  return <div className="console-latency" data-response={status} data-total-response={totalStatus} title={hint}><span className="console-latency-primary" aria-label={localized(locale, "首 Token", "First token") + ": " + first + " · " + labels[status]}><b>{first}</b><small>{labels[status]}</small></span><span className="console-latency-total"><small>{localized(locale, "总耗时", "Total")}</small><b>{total}</b></span></div>;
+  const outputTpsHint = localized(locale, "输出 Token ÷ 总耗时（包含首字等待），单位 tok/s。输出 Token 可能包含推理 Token。", "Output tokens divided by total duration, including first-token wait, in tok/s. Output tokens may include reasoning tokens.");
+  return <div className="console-latency" data-response={status} data-total-response={totalStatus} title={hint}><span className="console-latency-primary" aria-label={localized(locale, "首 Token", "First token") + ": " + first + " · " + labels[status]}><b>{first}</b><small>{labels[status]}</small></span><span className="console-latency-total"><small>{localized(locale, "总耗时", "Total")}</small><b>{total}</b></span><span className="console-latency-output"><small title={outputTpsHint}>{localized(locale, "输出 TPS", "Output TPS")}</small><b>{formatOutputTps(row)}</b></span></div>;
 }
 
 function ErrorDetail({ item }) {

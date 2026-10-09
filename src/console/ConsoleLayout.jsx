@@ -458,7 +458,6 @@ function pageTitle(pathname, items, t) {
   if (exact) return exact.label || t(exact.key);
   const staticTitleKey = {
     "/batch-image": "batch.title",
-    "/video-workflow": "videoWorkflow.title",
   }[currentPath];
   if (staticTitleKey) return t(staticTitleKey);
   return t("nav.dashboard");
