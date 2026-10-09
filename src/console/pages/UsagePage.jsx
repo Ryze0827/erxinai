@@ -15,10 +15,9 @@ import { useConsole } from "../ConsoleContext";
 import { GroupBadge } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, DataTable, EmptyState, ErrorState, Field, InlineButton, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatCardSkeleton, StatusBadge, TruncatedText } from "../UI";
+import { Button, DataTable, ErrorState, Field, InlineButton, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatCardSkeleton, StatusBadge, TruncatedText } from "../UI";
 import { downloadBlob, formatCompact, formatDuration, formatTokenMillions } from "../utils";
 import { ColumnPicker, CompactTabs, DateRangePicker, SearchSelect, useHiddenColumns } from "../components/ConsoleControls";
-import { DistributionChart } from "../components/UsageCharts";
 import { IpGeoBatchToolbar, IpGeoCell } from "../components/IpGeo";
 
 function localDate(date) {
@@ -325,20 +324,6 @@ function csvRow(row, t) {
   return [row.created_at, row.api_key?.name || "", row.model, reasoningLabel(row.reasoning_effort), row.inbound_endpoint || "", row.ip_address || "", typeLabel(requestType(row), t), billingModeLabel(row, t), row.input_tokens, row.output_tokens, row.cache_read_tokens, row.cache_creation_tokens, row.rate_multiplier, Number(row.actual_cost || 0).toFixed(8), Number(row.total_cost || 0).toFixed(8), row.first_token_ms ?? "", row.duration_ms ?? ""].map(escapeCsv).join(",");
 }
 
-function GroupDistribution({ data, loading }) {
-  const { locale, formatCurrency } = useLocale();
-  const [metric, setMetric] = useState("tokens");
-  const rows = data.slice(0, 5);
-  const values = rows.map((row) => Number(metric === "tokens" ? row.total_tokens : row.actual_cost) || 0);
-  const total = Math.max(values.reduce((sum, value) => sum + value, 0), 1);
-  const loadingRows = <div className="console-group-distribution-list console-group-distribution-skeleton" aria-hidden="true">{Array.from({ length: 5 }, (_, index) => <div key={index}><span><Skeleton /><Skeleton /></span><Skeleton /></div>)}</div>;
-  return <Panel title={localized(locale, "分组分布", "Group distribution")} actions={<CompactTabs value={metric} onChange={setMetric} items={[{ value: "tokens", label: "Tokens" }, { value: "actual_cost", label: locale === "zh" ? "费用" : "Spend" }]} />} className="console-group-distribution">{loading ? loadingRows : !rows.length ? <EmptyState /> : <div className="console-group-distribution-list">{rows.map((row, index) => { const value = values[index]; const percent = value / total * 100; return <div className={`is-tone-${index % 4 + 1}`} key={`${row.group_name}-${index}`}><span><strong>{row.group_name || "—"}</strong><small>{metric === "tokens" ? formatTokenMillions(value) : formatCurrency(value)} <b>({percent.toFixed(1)}%)</b></small></span><i><b style={{ width: `${percent}%` }} /></i></div>; })}</div>}</Panel>;
-}
-
-function UsageChartsPanel({ data, loading, locale }) {
-  return <div className="console-usage-chart-grid"><DistributionChart title={localized(locale, "模型分布", "Model distribution")} data={data.models} nameKey="model" loading={loading} limit={4} actualOnly /><GroupDistribution data={data.groups} loading={loading} /></div>;
-}
-
 function UsageToolbar({ filters, changeRange, currentColumns, currentHidden, loadUsage, loadErrors, tab, state, exportCsv, exporting, locale, t }) {
   const refresh = () => {
     loadUsage();
@@ -406,9 +391,9 @@ export function UsagePage() {
   const [errorSort, setErrorSort] = useState({ key: "created_at", order: "desc" });
   const [tab, setTab] = useState("usage");
   const [options, setOptions] = useState({ keys: [], groups: [] });
-  const [data, setData] = useState({ items: [], total: 0, pages: 1, stats: null, models: [], groups: [] });
+  const [data, setData] = useState({ items: [], total: 0, pages: 1, stats: null, models: [] });
   const [errors, setErrors] = useState({ items: [], total: 0, pages: 1 });
-  const [state, setState] = useState({ loading: true, chartsLoading: true, error: "", errorLoading: false });
+  const [state, setState] = useState({ loading: true, error: "", errorLoading: false });
   const [detail, setDetail] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [geoEnabled, setGeoEnabled] = useState(false);
@@ -424,19 +409,17 @@ export function UsagePage() {
     requestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
-    setState((current) => ({ ...current, loading: true, chartsLoading: true, error: "" }));
+    setState((current) => ({ ...current, loading: true, error: "" }));
     const base = usageFilters(filters);
     const listQuery = { ...base, page: paging.page, page_size: paging.pageSize, sort_by: sort.key, sort_order: sort.order };
-    const chartQuery = { ...base, include_trend: false, include_model_stats: false, include_group_stats: true };
-    const results = await Promise.allSettled([usageApi.list(listQuery, controller.signal), usageApi.stats(base, controller.signal), usageApi.dashboardModels({ ...base, model_source: "requested" }, controller.signal), usageApi.dashboardSnapshot(chartQuery, controller.signal)]);
+    const results = await Promise.allSettled([usageApi.list(listQuery, controller.signal), usageApi.stats(base, controller.signal), usageApi.dashboardModels({ ...base, model_source: "requested" }, controller.signal)]);
     if (controller.signal.aborted) return;
-    if (results[0].status === "rejected") { setState((current) => ({ ...current, loading: false, chartsLoading: false, error: results[0].reason.message })); return; }
+    if (results[0].status === "rejected") { setState((current) => ({ ...current, loading: false, error: results[0].reason.message })); return; }
     const list = results[0].value;
     const stats = results[1].status === "fulfilled" ? results[1].value : null;
     const models = results[2].status === "fulfilled" ? results[2].value?.models || [] : [];
-    const snapshot = results[3].status === "fulfilled" ? results[3].value || {} : {};
-    setData({ items: list.items || [], total: Number(list.total || 0), pages: Number(list.pages || 1), stats, models, groups: snapshot.groups || [] });
-    setState((current) => ({ ...current, loading: false, chartsLoading: false, error: "" }));
+    setData({ items: list.items || [], total: Number(list.total || 0), pages: Number(list.pages || 1), stats, models });
+    setState((current) => ({ ...current, loading: false, error: "" }));
   }, [filters, paging, sort]);
 
   const loadErrors = useCallback(async () => {
@@ -506,5 +489,5 @@ export function UsagePage() {
   const currentHidden = tab === "errors" ? errorHidden : usageHidden;
 
   const closeDetail = () => { detailControllerRef.current?.abort(); detailRef.current = null; setDetail(null); };
-  return <Page title={t("usage.title")} className="console-usage-page"><UsageToolbar filters={filters} changeRange={changeRange} currentColumns={currentColumns} currentHidden={currentHidden} loadUsage={loadUsage} loadErrors={loadErrors} tab={tab} state={state} exportCsv={exportCsv} exporting={exporting} locale={locale} t={t} /><UsageStats stats={data.stats} loading={state.chartsLoading} /><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageFilterPanel tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div><UsageChartsPanel data={data} loading={state.chartsLoading} locale={locale} /></div><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
+  return <Page title={t("usage.title")} className="console-usage-page"><UsageToolbar filters={filters} changeRange={changeRange} currentColumns={currentColumns} currentHidden={currentHidden} loadUsage={loadUsage} loadErrors={loadErrors} tab={tab} state={state} exportCsv={exportCsv} exporting={exporting} locale={locale} t={t} /><UsageStats stats={data.stats} loading={state.loading} /><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageFilterPanel tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
 }
