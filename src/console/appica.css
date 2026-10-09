@@ -6806,8 +6806,6 @@ html[data-console-theme] .console-token-column-tooltip strong {
   font-weight: 500;
 }
 
-html[data-console-theme] .console-token-column-tooltip.is-above.is-start { transform: translate3d(var(--console-token-tooltip-x), var(--console-token-tooltip-y), 0) translate(0.5rem, calc(-100% - 0.5rem)); }
-html[data-console-theme] .console-token-column-tooltip.is-above.is-end { transform: translate3d(var(--console-token-tooltip-x), var(--console-token-tooltip-y), 0) translate(calc(-100% - 0.5rem), calc(-100% - 0.5rem)); }
 html[data-console-theme] .console-token-column-tooltip.is-below.is-start { transform: translate3d(var(--console-token-tooltip-x), var(--console-token-tooltip-y), 0) translate(0.5rem, 0.5rem); }
 html[data-console-theme] .console-token-column-tooltip.is-below.is-end { transform: translate3d(var(--console-token-tooltip-x), var(--console-token-tooltip-y), 0) translate(calc(-100% - 0.5rem), 0.5rem); }
 

@@ -137,9 +137,8 @@ function TokenColumnChart({ rows, ticks, title, locale, maximum, modelData = [],
     const barBounds = event.currentTarget.getBoundingClientRect();
     const pointerX = barBounds.left + barBounds.width / 2 - bounds.left;
     const x = Math.min(Math.max(pointerX, 8), bounds.width - 8);
-    const pointerY = keyboard ? 8 : event.clientY - bounds.top;
-    const placement = keyboard || pointerY < 110 ? "below" : "above";
-    const y = placement === "below" ? 8 : pointerY;
+    const placement = "below";
+    const y = 8;
     const tooltipWidth = Math.min(Number.parseFloat(getComputedStyle(document.documentElement).fontSize) * 17, window.innerWidth - 32);
     const canPlaceLeft = x >= tooltipWidth + 8;
     const canPlaceRight = bounds.width - x >= tooltipWidth + 8;
