@@ -89,8 +89,8 @@ export function DateRangePicker({ startDate, endDate, onChange }) {
   const [draft, setDraft] = useState(() => datePickerRange(startDate, endDate));
   useEffect(() => setDraft(datePickerRange(startDate, endDate)), [startDate, endDate]);
   const presets = [
-    ["today", "Today", "今天"], ["yesterday", "Yesterday", "昨天"], ["24h", "Last 24 hours", "最近 24 小时"],
-    ["7d", "Last 7 days", "最近 7 天"], ["14d", "Last 14 days", "最近 14 天"], ["30d", "Last 30 days", "最近 30 天"],
+    ["24h", "Last 24 hours", "最近 24 小时"], ["7d", "Last 7 days", "最近 7 天"], ["30d", "Last 30 days", "最近 30 天"],
+    ["today", "Today", "今天"], ["yesterday", "Yesterday", "昨天"], ["14d", "Last 14 days", "最近 14 天"],
     ["month", "This month", "本月"], ["lastMonth", "Last month", "上月"],
   ];
   const selected = selectedPreset(startDate, endDate, presets);
