@@ -4487,6 +4487,18 @@ html[data-console-theme] .console-usage-records-panel .console-pagination {
   border-top: var(--border-width) solid var(--border-muted);
 }
 
+html[data-console-theme] .console-usage-load-more {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: var(--border-width) solid var(--border-muted);
+  color: var(--foreground-muted);
+  font-size: var(--text-sm);
+}
+
 html[data-console-theme] .console-purchase-balance {
   display: flex;
   min-width: 0;

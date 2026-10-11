@@ -30,9 +30,24 @@ function last24Hours() {
 
 const emptyFilters = { ...last24Hours(), api_key_id: "", group_id: "", model: "" };
 const emptyErrorFilters = { api_key_id: "", model: "", category: "", status_code: "" };
+const MAX_USAGE_RECORDS = 1000;
 
 function clean(object) {
   return Object.fromEntries(Object.entries(object).filter(([, value]) => value !== "" && value !== null && value !== undefined));
+}
+
+function appendUsageItems(existing, next, maxItems = MAX_USAGE_RECORDS) {
+  const remaining = Math.max(maxItems - existing.length, 0);
+  if (!remaining) return [];
+  const ids = new Set(existing.map((item) => item.id).filter((id) => id != null));
+  const appended = [];
+  for (const item of next) {
+    if (item.id != null && ids.has(item.id)) continue;
+    if (item.id != null) ids.add(item.id);
+    appended.push(item);
+    if (appended.length >= remaining) break;
+  }
+  return appended;
 }
 
 function requestType(row) {
@@ -299,9 +314,9 @@ function UsageTabs({ enabled, tab, setTab, locale, t }) {
   return <CompactTabs value={tab} items={items} onChange={setTab} className="console-usage-tabs" label={localized(locale, "用量类型", "Usage type")} />;
 }
 
-function RecordsSkeleton({ columns, rowCount = 20 }) {
+function RecordsSkeleton({ columns, rowCount = 20, pagination = true }) {
   const { t } = useLocale();
-  return <><div className="console-table-wrap console-records-skeleton" role="status" aria-label={t("common.loading")}><AppicaTable className="console-table" size="sm" borderStyle="none" aria-hidden="true"><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <AppicaTableHead key={column.key}><span>{column.label}</span></AppicaTableHead>)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{Array.from({ length: rowCount }, (_, row) => <AppicaTableRow key={row}>{columns.map((column) => <AppicaTableCell key={column.key}><Skeleton className="console-records-skeleton-cell" /></AppicaTableCell>)}</AppicaTableRow>)}</AppicaTableBody></AppicaTable></div><div className="console-pagination console-records-pagination-skeleton" aria-hidden="true"><Skeleton /><div><Skeleton /><Skeleton /><Skeleton /></div></div></>;
+  return <><div className="console-table-wrap console-records-skeleton" role="status" aria-label={t("common.loading")}><AppicaTable className="console-table" size="sm" borderStyle="none" aria-hidden="true"><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <AppicaTableHead key={column.key}><span>{column.label}</span></AppicaTableHead>)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{Array.from({ length: rowCount }, (_, row) => <AppicaTableRow key={row}>{columns.map((column) => <AppicaTableCell key={column.key}><Skeleton className="console-records-skeleton-cell" /></AppicaTableCell>)}</AppicaTableRow>)}</AppicaTableBody></AppicaTable></div>{pagination && <div className="console-pagination console-records-pagination-skeleton" aria-hidden="true"><Skeleton /><div><Skeleton /><Skeleton /><Skeleton /></div></div>}</>;
 }
 
 function ErrorRecords({ loading, columns, errors, sort, setSort, paging, setPaging, openError }) {
@@ -309,16 +324,33 @@ function ErrorRecords({ loading, columns, errors, sort, setSort, paging, setPagi
   return <><DataTable columns={columns} rows={errors.items} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} onRowClick={openError} /><Pagination page={paging.page} pageSize={paging.pageSize} total={errors.total} pages={errors.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 }
 
-function UsageRecords({ state, columns, data, sort, setSort, paging, setPaging, loadUsage }) {
-  if (state.loading && !data.items.length) return <RecordsSkeleton columns={columns} rowCount={paging.pageSize} />;
+function UsageRecords({ state, columns, data, sort, onSort, paging, setPaging, loadUsage }) {
+  const { t } = useLocale();
+  const sentinelRef = useRef(null);
+  const loadingMoreRef = useRef(false);
+  const hasMore = paging.page < data.pages && data.items.length < data.total && data.items.length < MAX_USAGE_RECORDS;
+
+  useEffect(() => {
+    if (!state.loading) loadingMoreRef.current = false;
+    if (state.loading || state.error || !hasMore || !sentinelRef.current || typeof IntersectionObserver === "undefined") return undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || loadingMoreRef.current) return;
+      loadingMoreRef.current = true;
+      setPaging((current) => ({ ...current, page: current.page + 1 }));
+    }, { rootMargin: "0px 0px 160px 0px" });
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, setPaging, state.error, state.loading]);
+
+  if (state.loading && !data.items.length) return <RecordsSkeleton columns={columns} rowCount={paging.pageSize} pagination={false} />;
   if (state.error && !data.items.length) return <ErrorState message={state.error} onRetry={loadUsage} />;
-  return <><DataTable columns={columns} rows={data.items} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} hoverableRows /><Pagination page={paging.page} pageSize={paging.pageSize} total={data.total} pages={data.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
+  return <><DataTable columns={columns} rows={data.items} sortKey={sort.key} sortOrder={sort.order} onSort={onSort} hoverableRows />{state.error ? <ErrorState message={state.error} onRetry={loadUsage} /> : (state.loading || hasMore || data.items.length > 0) && <div ref={sentinelRef} className="console-usage-load-more" role="status" aria-live="polite">{state.loading ? <><Spinner /><span>{t("usage.loadingMore")}</span></> : hasMore ? null : data.items.length >= MAX_USAGE_RECORDS && data.total > data.items.length ? t("usage.loadLimitReached", { limit: MAX_USAGE_RECORDS }) : t("usage.loadedAll")}</div>}</>;
 }
 
-function RecordsPanel({ tabs, tab, data, errors, geoEnabled, setGeoEnabled, state, visibleErrorColumns, errorSort, setErrorSort, errorPaging, setErrorPaging, openError, visibleUsageColumns, sort, setSort, paging, setPaging, loadUsage }) {
+function RecordsPanel({ tabs, tab, data, errors, geoEnabled, setGeoEnabled, state, visibleErrorColumns, errorSort, setErrorSort, errorPaging, setErrorPaging, openError, visibleUsageColumns, sort, onUsageSort, paging, setPaging, loadUsage }) {
   const errorTab = tab === "errors";
   const actions = <IpGeoBatchToolbar enabled={geoEnabled} onToggle={() => setGeoEnabled((value) => !value)} />;
-  return <Panel className="console-usage-records-panel" aria-busy={errorTab ? state.errorLoading : state.loading}><div className="console-usage-record-tools">{tabs}{actions}</div>{errorTab ? <ErrorRecords loading={state.errorLoading} columns={visibleErrorColumns} errors={errors} sort={errorSort} setSort={setErrorSort} paging={errorPaging} setPaging={setErrorPaging} openError={openError} /> : <UsageRecords state={state} columns={visibleUsageColumns} data={data} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} />}</Panel>;
+  return <Panel className="console-usage-records-panel" aria-busy={errorTab ? state.errorLoading : state.loading}><div className="console-usage-record-tools">{tabs}{actions}</div>{errorTab ? <ErrorRecords loading={state.errorLoading} columns={visibleErrorColumns} errors={errors} sort={errorSort} setSort={setErrorSort} paging={errorPaging} setPaging={setErrorPaging} openError={openError} /> : <UsageRecords state={state} columns={visibleUsageColumns} data={data} sort={sort} onSort={onUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} />}</Panel>;
 }
 
 function ErrorDetailModal({ detail, locale, onClose }) {
@@ -359,12 +391,21 @@ export function UsagePage() {
     setState((current) => ({ ...current, loading: true, error: "" }));
     const base = clean(filters);
     const listQuery = { ...base, page: paging.page, page_size: paging.pageSize, sort_by: sort.key, sort_order: sort.order };
-    const results = await Promise.allSettled([usageApi.list(listQuery, controller.signal), usageApi.dashboardModels({ ...base, model_source: "requested" }, controller.signal)]);
+    const results = await Promise.allSettled(paging.page === 1
+      ? [usageApi.list(listQuery, controller.signal), usageApi.dashboardModels({ ...base, model_source: "requested" }, controller.signal)]
+      : [usageApi.list(listQuery, controller.signal)]);
     if (controller.signal.aborted) return;
     if (results[0].status === "rejected") { setState((current) => ({ ...current, loading: false, error: results[0].reason.message })); return; }
     const list = results[0].value;
-    const models = results[1].status === "fulfilled" ? results[1].value?.models || [] : [];
-    setData({ items: list.items || [], total: Number(list.total || 0), pages: Number(list.pages || 1), models });
+    const models = paging.page === 1 ? (results[1].status === "fulfilled" ? results[1].value?.models || [] : []) : null;
+    const items = list.items || [];
+    const pages = items.length ? Number(list.pages || 1) : Math.min(Number(list.pages || 1), paging.page);
+    setData((current) => ({
+      items: paging.page === 1 ? items.slice(0, MAX_USAGE_RECORDS) : [...current.items, ...appendUsageItems(current.items, items)],
+      total: Number(list.total || 0),
+      pages,
+      models: models ?? current.models,
+    }));
     setState((current) => ({ ...current, loading: false, error: "" }));
   }, [filters, paging, sort]);
 
@@ -387,10 +428,17 @@ export function UsagePage() {
   useEffect(() => { const controller = new AbortController(); Promise.allSettled([keysApi.list(1, 100, {}, controller.signal), groupsApi.available()]).then(([keys, groups]) => { if (!controller.signal.aborted) setOptions({ keys: keys.value?.items || [], groups: Array.isArray(groups.value) ? groups.value : groups.value?.items || [] }); }); return () => controller.abort(); }, []);
   useEffect(() => { if (!errorEnabled && tab === "errors") setTab("usage"); }, [errorEnabled, tab]);
 
-  const setFilter = (key, value) => { setFilters((current) => ({ ...current, [key]: value })); setPaging((current) => ({ ...current, page: 1 })); };
+  const resetUsageRecords = () => {
+    setData((current) => ({ ...current, items: [], total: 0, pages: 1 }));
+    setState((current) => ({ ...current, loading: true, error: "" }));
+    setPaging((current) => ({ ...current, page: 1 }));
+  };
+  const setFilter = (key, value) => { setFilters((current) => ({ ...current, [key]: value })); resetUsageRecords(); };
   const setErrorFilter = (key, value) => { setErrorFilters((current) => ({ ...current, [key]: value })); setErrorPaging((current) => ({ ...current, page: 1 })); };
-  const reset = () => { const range = last24Hours(); setFilters({ ...emptyFilters, ...range }); setErrorFilters(emptyErrorFilters); setPaging((current) => ({ ...current, page: 1 })); setErrorPaging((current) => ({ ...current, page: 1 })); };
-  const changeRange = (range) => { setFilters((current) => ({ ...current, ...range })); setPaging((current) => ({ ...current, page: 1 })); setErrorPaging((current) => ({ ...current, page: 1 })); };
+  const reset = () => { const range = last24Hours(); setFilters({ ...emptyFilters, ...range }); setErrorFilters(emptyErrorFilters); resetUsageRecords(); setErrorPaging((current) => ({ ...current, page: 1 })); };
+  const changeRange = (range) => { setFilters((current) => ({ ...current, ...range })); resetUsageRecords(); setErrorPaging((current) => ({ ...current, page: 1 })); };
+  const changeUsageSort = (key, order) => { setSort({ key, order }); resetUsageRecords(); };
+  const refreshUsage = () => { if (paging.page === 1) loadUsage(); else resetUsageRecords(); };
   const openError = async (item) => { detailControllerRef.current?.abort(); const controller = new AbortController(); const request = Symbol("error-detail"); detailControllerRef.current = controller; detailRef.current = request; setDetail({ loading: true, item }); try { const full = await usageApi.error(item.id, controller.signal); if (detailRef.current === request) setDetail({ loading: false, item: full }); } catch { if (!controller.signal.aborted && detailRef.current === request) setDetail({ loading: false, item }); } };
   const modelOptions = useMemo(() => [...new Set([...data.models.map((item) => item.model), filters.model].filter(Boolean))].sort(), [data.models, filters.model]);
   const errorModelOptions = useMemo(() => [...new Set([...errors.items.map((item) => item.model), errorFilters.model].filter(Boolean))].sort(), [errorFilters.model, errors.items]);
@@ -420,5 +468,5 @@ export function UsagePage() {
   const visibleErrorColumns = errorColumns.filter((column) => ["status", "created_at"].includes(column.key) || !errorHidden.hidden.has(column.key));
 
   const closeDetail = () => { detailControllerRef.current?.abort(); detailRef.current = null; setDetail(null); };
-  return <Page title={t("usage.title")} className="console-usage-page"><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageFilterPanel toolbar={<UsageFilterToolbar loadUsage={loadUsage} loadErrors={loadErrors} tab={tab} state={state} t={t} />} tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} changeRange={changeRange} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
+  return <Page title={t("usage.title")} className="console-usage-page"><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageFilterPanel toolbar={<UsageFilterToolbar loadUsage={refreshUsage} loadErrors={loadErrors} tab={tab} state={state} t={t} />} tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} changeRange={changeRange} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} onUsageSort={changeUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
 }
