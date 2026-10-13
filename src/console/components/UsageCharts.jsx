@@ -133,20 +133,26 @@ function TokenColumnChart({ rows, ticks, title, locale, maximum, modelData = [],
   }), [locale, modelBreakdownLoading, models, rows]);
 
   function showTooltip(event, index, keyboard = false) {
-    const bounds = event.currentTarget.ownerSVGElement.getBoundingClientRect();
+    const svg = event.currentTarget.ownerSVGElement;
+    const bounds = svg.getBoundingClientRect();
     const barBounds = event.currentTarget.getBoundingClientRect();
-    const barLeft = barBounds.left - bounds.left;
-    const barRight = barBounds.right - bounds.left;
+    // DOM rectangles include the console's CSS zoom; tooltip offsets do not.
+    const chartWidth = Number.parseFloat(getComputedStyle(svg).width);
+    const scale = bounds.width / chartWidth;
+    const barLeft = (barBounds.left - bounds.left) / scale;
+    const barRight = (barBounds.right - bounds.left) / scale;
     const placement = "below";
     const y = 8;
     const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const tooltipWidth = Math.min(rootFontSize * 17, window.innerWidth - rootFontSize * 2);
+    const tooltipWidth = Math.min(rootFontSize * 17, window.innerWidth / scale - rootFontSize * 2);
     const gap = rootFontSize * 0.5;
     const leftSpace = barLeft;
-    const rightSpace = bounds.width - barRight;
+    const rightSpace = chartWidth - barRight;
     const canPlaceLeft = leftSpace >= tooltipWidth + gap;
     const canPlaceRight = rightSpace >= tooltipWidth + gap;
-    const edge = canPlaceLeft ? "end" : canPlaceRight ? "start" : leftSpace >= rightSpace ? "end" : "start";
+    const previousEdge = tooltipVisible ? active?.edge : null;
+    const canKeepEdge = previousEdge === "end" ? canPlaceLeft : previousEdge === "start" && canPlaceRight;
+    const edge = canKeepEdge ? previousEdge : canPlaceLeft ? "end" : canPlaceRight ? "start" : leftSpace >= rightSpace ? "end" : "start";
     const x = edge === "end" ? barLeft : barRight;
     setActive({ index, x, y, placement, edge });
     setTooltipMotion(!keyboard);
@@ -191,7 +197,7 @@ function TokenColumnChart({ rows, ticks, title, locale, maximum, modelData = [],
         </g>;
       })}
     </svg>
-    {active && <div className={`console-token-column-tooltip is-${active.placement} is-${active.edge}${tooltipVisible ? " is-visible" : ""}${tooltipMotion ? " is-motion-enabled" : ""}`} role="tooltip" style={{ "--console-token-tooltip-x": `${active.x}px`, "--console-token-tooltip-y": `${active.y}px` }} onTransitionEnd={finishTooltipExit}>
+    {active && <div key={active.edge} className={`console-token-column-tooltip is-${active.placement} is-${active.edge}${tooltipVisible ? " is-visible" : ""}${tooltipMotion ? " is-motion-enabled" : ""}`} role="tooltip" style={{ "--console-token-tooltip-x": `${active.x}px`, "--console-token-tooltip-y": `${active.y}px` }} onTransitionEnd={finishTooltipExit}>
       <strong>{chartDateFull(chartRows[active.index].date, locale)}</strong>
       {modelBreakdownLoading && <small className="console-token-column-loading">{locale === "zh" ? "正在加载模型分布…" : "Loading model breakdown…"}</small>}
       {!modelBreakdownLoading && <div className="console-token-column-models">{chartRows[active.index].segments.filter((segment) => !segment.isFallback).map((segment, index) => <span key={`${segment.name}-${index}`}><i style={{ background: segment.color }} /><em title={segment.name}>{segment.name}</em><b>{formatCompactTokens(segment.value, locale)}</b></span>)}</div>}

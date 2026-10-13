@@ -6825,6 +6825,12 @@ html[data-console-theme] .console-token-column-tooltip.is-motion-enabled {
   transition: opacity var(--console-sidebar-motion-duration) var(--console-sidebar-motion-easing);
 }
 
+@media (hover: hover) and (pointer: fine) {
+  html[data-console-theme] .console-token-column-tooltip.is-motion-enabled {
+    transition: transform var(--console-sidebar-motion-duration) var(--console-sidebar-motion-easing), opacity var(--console-sidebar-motion-duration) var(--console-sidebar-motion-easing);
+  }
+}
+
 @starting-style {
   html[data-console-theme] .console-token-column-tooltip.is-visible.is-motion-enabled {
     opacity: 0;
