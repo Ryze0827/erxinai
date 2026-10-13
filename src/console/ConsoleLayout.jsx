@@ -95,6 +95,7 @@ const workspaceNav = [
   { path: "/usage", key: "nav.usage", icon: "usageChart", standardOnly: true },
   { path: "/available-channels", key: "nav.channels", icon: "channelNetwork", feature: "available", standardOnly: true },
   { path: "/monitor", key: "nav.monitor", icon: "serverHealth", feature: "monitor" },
+  { path: "/model-plaza", key: "nav.modelPlaza", icon: "channelNetwork" },
   { path: "/user-ranking", key: "nav.userRanking", icon: "usageChart", feature: "userRanking", sidebarHidden: true },
 ];
 

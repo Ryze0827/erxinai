@@ -14,6 +14,7 @@ import { KeysPage } from "./console/pages/KeysPage";
 import { UsagePage } from "./console/pages/UsagePage";
 import { SubscriptionsPage } from "./console/pages/SubscriptionsPage";
 import { RedeemPage } from "./console/pages/RedeemPage";
+import { ModelPlazaPage } from "./console/pages/ModelPlazaPage";
 import { ChannelsPage } from "./console/pages/ChannelsPage";
 import { MonitorPage, UserRankingPage } from "./console/pages/MonitorPage";
 import { AffiliatePage } from "./console/pages/AffiliatePage";
@@ -60,6 +61,7 @@ export function App() {
           <Route path="/redeem" element={<ConsoleRoute standardOnly><RedeemPage /></ConsoleRoute>} />
           <Route path="/affiliate" element={<ConsoleRoute standardOnly feature="affiliate_enabled"><AffiliatePage /></ConsoleRoute>} />
           <Route path="/available-channels" element={<ConsoleRoute standardOnly feature="available_channels_enabled"><ChannelsPage /></ConsoleRoute>} />
+          <Route path="/model-plaza" element={<ConsoleRoute><ModelPlazaPage /></ConsoleRoute>} />
           <Route path="/monitor" element={<ConsoleRoute feature="channel_monitor_enabled" mode="opt-out"><MonitorPage /></ConsoleRoute>} />
           <Route path="/user-ranking" element={<ConsoleRoute feature="channel_monitor_enabled" mode="opt-out"><UserRankingPage /></ConsoleRoute>} />
           <Route path="/profile" element={<ConsoleRoute><ProfilePage /></ConsoleRoute>} />
