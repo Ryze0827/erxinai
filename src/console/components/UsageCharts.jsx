@@ -135,14 +135,19 @@ function TokenColumnChart({ rows, ticks, title, locale, maximum, modelData = [],
   function showTooltip(event, index, keyboard = false) {
     const bounds = event.currentTarget.ownerSVGElement.getBoundingClientRect();
     const barBounds = event.currentTarget.getBoundingClientRect();
-    const pointerX = barBounds.left + barBounds.width / 2 - bounds.left;
-    const x = Math.min(Math.max(pointerX, 8), bounds.width - 8);
+    const barLeft = barBounds.left - bounds.left;
+    const barRight = barBounds.right - bounds.left;
     const placement = "below";
     const y = 8;
-    const tooltipWidth = Math.min(Number.parseFloat(getComputedStyle(document.documentElement).fontSize) * 17, window.innerWidth - 32);
-    const canPlaceLeft = x >= tooltipWidth + 8;
-    const canPlaceRight = bounds.width - x >= tooltipWidth + 8;
-    const edge = canPlaceLeft ? "end" : canPlaceRight ? "start" : x >= bounds.width / 2 ? "end" : "start";
+    const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const tooltipWidth = Math.min(rootFontSize * 17, window.innerWidth - rootFontSize * 2);
+    const gap = rootFontSize * 0.5;
+    const leftSpace = barLeft;
+    const rightSpace = bounds.width - barRight;
+    const canPlaceLeft = leftSpace >= tooltipWidth + gap;
+    const canPlaceRight = rightSpace >= tooltipWidth + gap;
+    const edge = canPlaceLeft ? "end" : canPlaceRight ? "start" : leftSpace >= rightSpace ? "end" : "start";
+    const x = edge === "end" ? barLeft : barRight;
     setActive({ index, x, y, placement, edge });
     setTooltipMotion(!keyboard);
     setTooltipVisible(true);

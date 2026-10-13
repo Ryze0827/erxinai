@@ -6822,7 +6822,7 @@ html[data-console-theme] .console-token-column-tooltip.is-visible {
 }
 
 html[data-console-theme] .console-token-column-tooltip.is-motion-enabled {
-  transition: transform var(--console-sidebar-motion-duration) var(--console-sidebar-motion-easing), opacity var(--console-sidebar-motion-duration) var(--console-sidebar-motion-easing);
+  transition: opacity var(--console-sidebar-motion-duration) var(--console-sidebar-motion-easing);
 }
 
 @starting-style {
