@@ -11379,6 +11379,7 @@ html[data-console-theme] .console-invoice-modal .console-invoice-request {
   align-items: start;
   gap: 1rem;
 }
+html[data-console-theme] .console-invoice-item,
 html[data-console-theme] .console-invoice-email,
 html[data-console-theme] .console-invoice-confirm-orders,
 html[data-console-theme] .console-invoice-consent {

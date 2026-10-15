@@ -7,7 +7,7 @@ import { invoiceApi } from "../../api/invoices";
 import { useConsole } from "../ConsoleContext";
 import { useLocale } from "../i18n";
 import { Icon } from "../Icon";
-import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, StatusBadge, TableSkeleton, TextInput } from "../UI";
+import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, StatusBadge, TableSkeleton, TextInput } from "../UI";
 
 const invoiceStatuses = {
   pending: { tone: "warning", icon: "clock" },
@@ -29,6 +29,8 @@ export function InvoicePage() {
   const [selected, setSelected] = useState(() => new Map());
   const [email, setEmail] = useState(() => user?.email || "");
   const [title, setTitle] = useState("");
+  const [invoiceItems, setInvoiceItems] = useState([]);
+  const [invoiceItem, setInvoiceItem] = useState("");
   const [taxId, setTaxId] = useState("");
   const [requestOpen, setRequestOpen] = useState(false);
   const [quote, setQuote] = useState(null);
@@ -47,6 +49,11 @@ export function InvoicePage() {
     setState((current) => ({ ...current, loading: true, error: "" }));
     try {
       const [settings, result] = await Promise.all([invoiceApi.settings(), invoiceApi.orders(paging)]);
+      if (mountedRef.current) {
+        const items = settings.invoice_items || [];
+        setInvoiceItems(items);
+        setInvoiceItem((current) => items.includes(current) ? current : items[0] || "");
+      }
       if (mountedRef.current) setState({ loading: false, error: "", items: result.items || [], total: Number(result.total || 0), pages: Number(result.pages || 1), enabled: settings.enabled === true });
     } catch (error) {
       if (mountedRef.current) setState((current) => ({ ...current, loading: false, enabled: false, error: error.message }));
@@ -110,14 +117,14 @@ export function InvoicePage() {
   }
   async function submit(event) {
     event.preventDefault();
-    if (!state.enabled || !quoteCurrent || !quote.sufficient || submitRef.current) return;
+    if (!state.enabled || !quoteCurrent || !quote.sufficient || !invoiceItems.includes(invoiceItem) || submitRef.current) return;
     submitRef.current = true; setBusy(true); setSubmitError("");
     try {
       const [settings, latest] = await Promise.all([invoiceApi.settings(), refreshUser()]);
       if (mountedRef.current) setState((current) => ({ ...current, enabled: settings.enabled === true }));
       if (settings.enabled !== true) throw new Error(t("invoice.unavailable"));
       if (!latest || Number(latest.balance) < Number(quote.fee)) throw new Error(t("invoice.insufficient"));
-      await invoiceApi.submit({ order_ids: orderIds, title, tax_id: taxId, email, quote_token: quote.quote_token });
+      await invoiceApi.submit({ order_ids: orderIds, title, tax_id: taxId, email, invoice_item: invoiceItem, quote_token: quote.quote_token });
       notify("success", t("invoice.submitted"));
       setRequestOpen(false);
       setSelected(new Map());
@@ -145,7 +152,7 @@ export function InvoicePage() {
     { key: "status", label: t("common.status"), render: (order) => <StatusBadge status={order.invoice_available ? "success" : "inactive"} label={t(order.invoice_available ? "invoice.eligible" : "invoice.ineligible")} /> },
   ];
   const historyColumns = [
-    { key: "title", label: t("invoice.header"), render: (item) => <strong className="console-invoice-history-title">{item.title || "—"}</strong> },
+    { key: "title", label: t("invoice.header"), render: (item) => <div><strong className="console-invoice-history-title">{item.title || "—"}</strong><div className="console-invoice-history-note">{item.invoice_item || t("invoice.itemUnspecified")}</div></div> },
     { key: "amount", label: t("invoice.selectedAmount"), align: "right", render: (item) => <strong className="console-invoice-order-amount">{formatUsd(item.amount)}</strong> },
     { key: "fee", label: t("invoice.fee"), align: "right", render: (item) => <span className="console-invoice-history-fee">{formatUsd(item.fee)}</span> },
     { key: "status", label: t("common.status"), render: (item) => <InvoiceRequestStatus status={item.status} t={t} /> },
@@ -165,11 +172,13 @@ export function InvoicePage() {
     <Panel className="console-invoice-history-panel" title={t("invoice.history")} actions={<Button icon="refresh" onClick={loadHistory}>{t("common.refresh")}</Button>}>
       {history.error ? <ErrorState message={history.error} onRetry={loadHistory}/> : <><DataTable className="console-invoice-history-table" columns={historyColumns} rows={history.items} empty={<EmptyState icon="order" title={t("invoice.noRequests")}/>}/><Pagination page={historyPage} pageSize={20} total={history.total} pages={history.pages} onPageChange={setHistoryPage}/></>}
     </Panel>
-    <Modal open={requestOpen} title={t("invoice.requestTitle")} description={t("invoice.confirmDescription")} onClose={closeRequest} className="console-invoice-modal" footer={<><Button disabled={busy} onClick={closeRequest}>{t("common.cancel")}</Button><Button type="submit" form="invoice-request-form" variant="primary" icon="send" loading={busy} disabled={!state.enabled || !quoteCurrent || !quote.sufficient || quoteLoading}>{t("invoice.confirmSubmit")}</Button></>}>
+    <Modal open={requestOpen} title={t("invoice.requestTitle")} description={t("invoice.confirmDescription")} onClose={closeRequest} className="console-invoice-modal" footer={<><Button disabled={busy} onClick={closeRequest}>{t("common.cancel")}</Button><Button type="submit" form="invoice-request-form" variant="primary" icon="send" loading={busy} disabled={!state.enabled || !quoteCurrent || !quote.sufficient || quoteLoading || !invoiceItems.includes(invoiceItem)}>{t("invoice.confirmSubmit")}</Button></>}>
       <form id="invoice-request-form" onSubmit={submit} className="console-invoice-request">
+        <Alert variant="warning"><AlertDescription><div>{t("invoice.noReissue")}</div><div>{t("invoice.deliveryNotice")}</div></AlertDescription></Alert>
         <div className="console-invoice-confirm-orders"><span>{t("invoice.selectedSummary", { count: orderIds.length })}</span><p>{orderIds.map((id) => `#${id}`).join(" · ")}</p></div>
         <Field label={t("invoice.header")}><TextInput required maxLength={200} value={title} disabled={busy} onChange={(event) => setTitle(event.target.value)} /></Field>
         <Field label={t("invoice.taxId")}><TextInput required pattern="[A-Za-z0-9]+" maxLength={32} value={taxId} disabled={busy} onChange={(event) => setTaxId(event.target.value.trim())} /></Field>
+        <Field label={t("invoice.item")} className="console-invoice-item"><SelectInput value={invoiceItem} disabled={busy} aria-label={t("invoice.item")} onChange={(event) => setInvoiceItem(event.target.value)}>{invoiceItems.map((item) => <option key={item} value={item}>{item}</option>)}</SelectInput></Field>
         <Field label={t("invoice.email")} hint={t("invoice.emailHint")} className="console-invoice-email"><TextInput type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy} placeholder={t("invoice.emailPlaceholder")} onChange={(event) => setEmail(event.target.value)} /></Field>
         <div className="console-invoice-selection" data-selected={orderIds.length > 0} aria-live="polite">
           <span>{t("invoice.selectedAmount")}</span><strong>{quoteCurrent ? formatUsd(quote.amount) : "—"}</strong>
