@@ -51,19 +51,21 @@ export function WelfareScheduleCountdown() {
 
   if (!snapshot) return null;
   const now = snapshot.serverNow + elapsed;
-  const hour = new Date(now + 8 * 3600000).getUTCHours();
-  const active = snapshot.start_hour < snapshot.end_hour
-    ? hour >= snapshot.start_hour && hour < snapshot.end_hour
-    : hour >= snapshot.start_hour || hour < snapshot.end_hour;
+  const minute = new Date(now + 8 * 3600000).getUTCHours() * 60 + new Date(now + 8 * 3600000).getUTCMinutes();
+  const startMinute = snapshot.start_minute ?? snapshot.start_hour * 60;
+  const endMinute = snapshot.end_minute ?? snapshot.end_hour * 60;
+  const active = startMinute < endMinute
+    ? minute >= startMinute && minute < endMinute
+    : minute >= startMinute || minute < endMinute;
   const shanghaiNow = now + 8 * 3600000;
-  const targetHour = active ? snapshot.end_hour : snapshot.start_hour;
-  const remaining = (targetHour * 3600000 - shanghaiNow % 86400000 + 86400000) % 86400000;
+  const targetMinute = active ? endMinute : startMinute;
+  const remaining = (targetMinute * 60000 - shanghaiNow % 86400000 + 86400000) % 86400000;
   const seconds = Math.ceil(remaining / 1000);
   const countdown = [Math.floor(seconds / 3600), Math.floor(seconds % 3600 / 60), seconds % 60].map((value) => String(value).padStart(2, "0")).join(":");
   const copy = snapshot.countdown_copy?.[locale] || snapshot.countdown_copy?.zh;
   const label = copy?.[active ? "closing" : "opening"];
   if (!label) return null;
-  const hours = `${String(snapshot.start_hour).padStart(2, "0")}:00–${String(snapshot.end_hour).padStart(2, "0")}:00`;
+  const hours = `${String(Math.floor(startMinute / 60)).padStart(2, "0")}:${String(startMinute % 60).padStart(2, "0")}–${String(Math.floor(endMinute / 60)).padStart(2, "0")}:${String(endMinute % 60).padStart(2, "0")}`;
   return <div className="console-welfare-countdown" data-active={active} title={`${hours} · Asia/Shanghai`} role="timer" aria-label={`${label} ${countdown}`}>
     <span>{label}</span><strong>{countdown}</strong>
   </div>;
