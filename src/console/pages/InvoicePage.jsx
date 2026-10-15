@@ -10,6 +10,7 @@ import { Icon } from "../Icon";
 import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, StatusBadge, TableSkeleton, TextInput } from "../UI";
 
 const DEFAULT_INVOICE_ITEM = "生产生活服务/信息服务费";
+const MINIMUM_INVOICE_AMOUNT = 300;
 
 const invoiceStatuses = {
   pending: { tone: "warning", icon: "clock" },
@@ -94,6 +95,7 @@ export function InvoicePage() {
 
   const quoteCurrent = requestOpen && quote && quote.orderIds.length === orderIds.length && quote.orderIds.every((id, index) => id === orderIds[index]);
   const selectedAmount = [...selected.values()].reduce((total, order) => total + Number(order.amount || 0), 0);
+  const belowMinimumAmount = orderIds.length > 0 && selectedAmount < MINIMUM_INVOICE_AMOUNT;
   const eligibleOnPage = state.items.filter((order) => order.invoice_available);
   const selectedOnPage = eligibleOnPage.filter((order) => selected.has(order.id));
   const allOnPageSelected = eligibleOnPage.length > 0 && selectedOnPage.length === eligibleOnPage.length;
@@ -109,7 +111,7 @@ export function InvoicePage() {
     return next;
   });
   function openRequest() {
-    if (!state.enabled || !orderIds.length || orderIds.length > 100 || busy) return;
+    if (!state.enabled || !orderIds.length || orderIds.length > 100 || belowMinimumAmount || busy) return;
     setQuote(null); setQuoteError(""); setSubmitError("");
     setRequestOpen(true);
   }
@@ -119,7 +121,7 @@ export function InvoicePage() {
   }
   async function submit(event) {
     event.preventDefault();
-    if (!state.enabled || !quoteCurrent || !quote.sufficient || !invoiceItems.includes(invoiceItem) || submitRef.current) return;
+    if (!state.enabled || !quoteCurrent || Number(quote.amount) < MINIMUM_INVOICE_AMOUNT || !quote.sufficient || !invoiceItems.includes(invoiceItem) || submitRef.current) return;
     submitRef.current = true; setBusy(true); setSubmitError("");
     try {
       const [settings, latest] = await Promise.all([invoiceApi.settings(), refreshUser()]);
@@ -166,15 +168,15 @@ export function InvoicePage() {
     <Panel title={t("invoice.ordersTitle")} actions={<Button icon="refresh" loading={state.loading} disabled={busy} onClick={() => { setSelected(new Map()); void load(); }}>{t("common.refresh")}</Button>} className="console-invoice-orders-panel" aria-busy={state.loading}>
       <p className="console-invoice-orders-description">{state.enabled || state.loading ? t("invoice.ordersDescription") : t("invoice.unavailable")}</p>
       <div className="console-invoice-order-actions">
-        <div aria-live="polite"><span>{t("invoice.selectedSummary", { count: orderIds.length })}</span><strong>{formatUsd(selectedAmount)}</strong>{orderIds.length > 100 && <span>{t("invoice.orderLimit")}</span>}</div>
-        <Button variant="primary" icon="orderReceipt" disabled={!state.enabled || !orderIds.length || orderIds.length > 100 || busy} onClick={openRequest}>{t("invoice.openRequest")}</Button>
+        <div aria-live="polite"><span>{t("invoice.selectedSummary", { count: orderIds.length })}</span><strong>{formatUsd(selectedAmount)}</strong>{belowMinimumAmount && <span>{t("invoice.minimumAmount", { amount: formatUsd(MINIMUM_INVOICE_AMOUNT) })}</span>}{orderIds.length > 100 && <span>{t("invoice.orderLimit")}</span>}</div>
+        <Button variant="primary" icon="orderReceipt" disabled={!state.enabled || !orderIds.length || orderIds.length > 100 || belowMinimumAmount || busy} onClick={openRequest}>{t("invoice.openRequest")}</Button>
       </div>
       {state.loading && !state.items.length ? <TableSkeleton columns={5}/> : state.error ? <ErrorState message={state.error} onRetry={load}/> : <><DataTable className="console-invoice-orders-table" columns={columns} rows={state.items} empty={<EmptyState icon="order" title={t("invoice.emptyTitle")} description={t("invoice.emptyDescription")}/>}/><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })}/></>}
     </Panel>
     <Panel className="console-invoice-history-panel" title={t("invoice.history")} actions={<Button icon="refresh" onClick={loadHistory}>{t("common.refresh")}</Button>}>
       {history.error ? <ErrorState message={history.error} onRetry={loadHistory}/> : <><DataTable className="console-invoice-history-table" columns={historyColumns} rows={history.items} empty={<EmptyState icon="order" title={t("invoice.noRequests")}/>}/><Pagination page={historyPage} pageSize={20} total={history.total} pages={history.pages} onPageChange={setHistoryPage}/></>}
     </Panel>
-    <Modal open={requestOpen} title={t("invoice.requestTitle")} description={t("invoice.confirmDescription")} onClose={closeRequest} className="console-invoice-modal" footer={<><Button disabled={busy} onClick={closeRequest}>{t("common.cancel")}</Button><Button type="submit" form="invoice-request-form" variant="primary" icon="send" loading={busy} disabled={!state.enabled || !quoteCurrent || !quote.sufficient || quoteLoading || !invoiceItems.includes(invoiceItem)}>{t("invoice.confirmSubmit")}</Button></>}>
+    <Modal open={requestOpen} title={t("invoice.requestTitle")} description={t("invoice.confirmDescription")} onClose={closeRequest} className="console-invoice-modal" footer={<><Button disabled={busy} onClick={closeRequest}>{t("common.cancel")}</Button><Button type="submit" form="invoice-request-form" variant="primary" icon="send" loading={busy} disabled={!state.enabled || !quoteCurrent || Number(quote?.amount) < MINIMUM_INVOICE_AMOUNT || !quote.sufficient || quoteLoading || !invoiceItems.includes(invoiceItem)}>{t("invoice.confirmSubmit")}</Button></>}>
       <form id="invoice-request-form" onSubmit={submit} className="console-invoice-request">
         <Alert variant="warning" className="console-invoice-notice"><Icon name="info" aria-hidden="true" /><AlertDescription><span>{t("invoice.noReissue")}</span><span>{t("invoice.deliveryNotice")}</span></AlertDescription></Alert>
         <div className="console-invoice-confirm-orders"><span>{t("invoice.selectedSummary", { count: orderIds.length })}</span><p>{orderIds.map((id) => `#${id}`).join(" · ")}</p></div>
@@ -192,6 +194,7 @@ export function InvoicePage() {
         </section>
         {!state.enabled && <Alert variant="info" className="console-invoice-feedback"><AlertDescription>{t("invoice.unavailable")}</AlertDescription></Alert>}
         {(quoteError || submitError) && <Alert variant="error" className="console-invoice-feedback"><AlertDescription>{quoteError || submitError}</AlertDescription></Alert>}
+        {quoteCurrent && Number(quote.amount) < MINIMUM_INVOICE_AMOUNT && <Alert variant="warning" className="console-invoice-feedback"><AlertDescription>{t("invoice.minimumAmount", { amount: formatUsd(MINIMUM_INVOICE_AMOUNT) })}</AlertDescription></Alert>}
         {quoteCurrent && !quote.sufficient && <Alert variant="warning" className="console-invoice-feedback"><AlertDescription>{t("invoice.insufficient")}</AlertDescription></Alert>}
       </form>
     </Modal>
