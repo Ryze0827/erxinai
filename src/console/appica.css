@@ -4437,7 +4437,9 @@ html[data-console-theme] .console-usage-range-field .console-date-picker {
 
 html[data-console-theme] .console-usage-range-field .console-date-native {
   width: auto;
+  min-width: 0;
   flex: 1 1 16rem;
+  max-width: 100%;
 }
 
 html[data-console-theme] .console-usage-filter-content {
@@ -4490,6 +4492,19 @@ html[data-console-theme] .console-usage-filters {
 }
 
 @container usage-page (max-width: 69.99rem) {
+  html[data-console-theme] .console-usage-range-field .console-date-picker {
+    flex-wrap: wrap;
+  }
+
+  html[data-console-theme] .console-usage-range-field [data-slot="button"].console-date-preset-trigger {
+    min-width: min(9rem, 100%);
+    flex: 1 1 9rem;
+  }
+
+  html[data-console-theme] .console-usage-range-field .console-date-native {
+    flex: 1 1 14rem;
+  }
+
   html[data-console-theme] .console-usage-filters--errors .console-usage-range-field {
     grid-column: 1 / -1;
   }
