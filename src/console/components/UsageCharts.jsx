@@ -129,6 +129,8 @@ function TokenColumnChart({ rows, ticks, title, locale, maximum, modelData = [],
     const segments = models.map((model, index) => ({ name: model.name, value: values[index], color: model.color })).filter((segment) => segment.value > 0);
     if (remainder > 0 && models.length && !modelBreakdownLoading) segments.push({ name: locale === "zh" ? "其他" : "Other", value: remainder, color: tokenSeriesColors[5] });
     if (!segments.length && row._total_tokens > 0) segments.push({ name: "", value: row._total_tokens, color: tokenSeriesColors[0], isFallback: true });
+    // Share descending daily usage order: tooltip first, stack bottom first.
+    segments.sort((left, right) => right.value - left.value);
     return { ...row, date, segments, stackedTotal: segments.reduce((sum, segment) => sum + segment.value, 0) };
   }), [locale, modelBreakdownLoading, models, rows]);
 
@@ -186,7 +188,10 @@ function TokenColumnChart({ rows, ticks, title, locale, maximum, modelData = [],
         const width = Math.min(30, Math.max(3, slot * 0.68));
         const x = index * slot + (slot - width) / 2;
         let y = 190;
-        const segments = row.segments.map((segment) => {
+        // Tooltip order is descending, while drawing starts at the baseline.
+        // Reverse the display order so the largest segment is rendered first
+        // from the bottom of the stacked column.
+        const segments = [...row.segments].reverse().map((segment) => {
           const height = segment.value / maximum * 184;
           y -= height;
           return { ...segment, x, y, width, height };
