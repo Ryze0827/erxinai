@@ -176,22 +176,23 @@ export function InvoicePage() {
     </Panel>
     <Modal open={requestOpen} title={t("invoice.requestTitle")} description={t("invoice.confirmDescription")} onClose={closeRequest} className="console-invoice-modal" footer={<><Button disabled={busy} onClick={closeRequest}>{t("common.cancel")}</Button><Button type="submit" form="invoice-request-form" variant="primary" icon="send" loading={busy} disabled={!state.enabled || !quoteCurrent || !quote.sufficient || quoteLoading || !invoiceItems.includes(invoiceItem)}>{t("invoice.confirmSubmit")}</Button></>}>
       <form id="invoice-request-form" onSubmit={submit} className="console-invoice-request">
-        <Alert variant="warning"><AlertDescription><div>{t("invoice.noReissue")}</div><div>{t("invoice.deliveryNotice")}</div></AlertDescription></Alert>
+        <Alert variant="warning" className="console-invoice-notice"><Icon name="info" aria-hidden="true" /><AlertDescription><span>{t("invoice.noReissue")}</span><span>{t("invoice.deliveryNotice")}</span></AlertDescription></Alert>
         <div className="console-invoice-confirm-orders"><span>{t("invoice.selectedSummary", { count: orderIds.length })}</span><p>{orderIds.map((id) => `#${id}`).join(" · ")}</p></div>
         <Field label={t("invoice.header")}><TextInput required maxLength={200} value={title} disabled={busy} onChange={(event) => setTitle(event.target.value)} /></Field>
         <Field label={t("invoice.taxId")}><TextInput required pattern="[A-Za-z0-9]+" maxLength={32} value={taxId} disabled={busy} onChange={(event) => setTaxId(event.target.value.trim())} /></Field>
         <Field label={t("invoice.item")} className="console-invoice-item"><SelectInput value={invoiceItem} disabled={busy} aria-label={t("invoice.item")} onChange={(event) => setInvoiceItem(event.target.value)}>{invoiceItems.map((item) => <option key={item} value={item}>{item}</option>)}</SelectInput></Field>
         <Field label={t("invoice.email")} hint={t("invoice.emailHint")} className="console-invoice-email"><TextInput type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy} placeholder={t("invoice.emailPlaceholder")} onChange={(event) => setEmail(event.target.value)} /></Field>
-        <div className="console-invoice-selection" data-selected={orderIds.length > 0} aria-live="polite">
-          <span>{t("invoice.selectedAmount")}</span><strong>{quoteCurrent ? formatUsd(quote.amount) : "—"}</strong>
-          {quoteCurrent && <><span>{t("invoice.fee")}: {formatUsd(quote.fee)}</span><span>{t("invoice.balance")}: {formatUsd(quote.balance)}</span></>}
-          {quoteLoading && <span>{t("invoice.checking")}</span>}
-        </div>
-        <Button icon="refresh" loading={quoteLoading} disabled={!state.enabled || !orderIds.length || busy} onClick={() => setQuoteRevision((value) => value + 1)}>{t("invoice.refreshQuote")}</Button>
-        {!state.enabled && <Alert variant="info"><AlertDescription>{t("invoice.unavailable")}</AlertDescription></Alert>}
-        {(quoteError || submitError) && <Alert variant="error"><AlertDescription>{quoteError || submitError}</AlertDescription></Alert>}
-        {quoteCurrent && !quote.sufficient && <Alert variant="warning"><AlertDescription>{t("invoice.insufficient")}</AlertDescription></Alert>}
-        <p className="console-invoice-consent">{t("invoice.consent")}</p>
+        <section className="console-invoice-quote" aria-label={t("invoice.selectedAmount")}>
+          <div className="console-invoice-quote-total" aria-live="polite"><span>{t("invoice.selectedAmount")}</span><strong>{quoteCurrent ? formatUsd(quote.amount) : "—"}</strong></div>
+          <div className="console-invoice-quote-details" aria-live="polite">
+            <span>{t("invoice.fee")}<strong>{quoteCurrent ? formatUsd(quote.fee) : "—"}</strong></span>
+            <span>{t("invoice.balance")}<strong>{quoteCurrent ? formatUsd(quote.balance) : "—"}</strong></span>
+          </div>
+          <div className="console-invoice-quote-footer"><span>{quoteLoading ? t("invoice.checking") : t("invoice.consent")}</span><Button icon="refresh" loading={quoteLoading} disabled={!state.enabled || !orderIds.length || busy} onClick={() => setQuoteRevision((value) => value + 1)}>{t("common.refresh")}</Button></div>
+        </section>
+        {!state.enabled && <Alert variant="info" className="console-invoice-feedback"><AlertDescription>{t("invoice.unavailable")}</AlertDescription></Alert>}
+        {(quoteError || submitError) && <Alert variant="error" className="console-invoice-feedback"><AlertDescription>{quoteError || submitError}</AlertDescription></Alert>}
+        {quoteCurrent && !quote.sufficient && <Alert variant="warning" className="console-invoice-feedback"><AlertDescription>{t("invoice.insufficient")}</AlertDescription></Alert>}
       </form>
     </Modal>
   </Page>;
