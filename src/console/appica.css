@@ -7845,6 +7845,21 @@ html[data-console-theme] .console-latency > span:last-child {
 }
 
 @container usage-page (max-width: 42rem) {
+  html[data-console-theme] .console-usage-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  html[data-console-theme] .console-usage-range-field,
+  html[data-console-theme] .console-usage-range-field .console-date-picker,
+  html[data-console-theme] .console-usage-range-field .console-date-native {
+    width: 100%;
+  }
+
+  html[data-console-theme] .console-usage-range-field .console-date-picker {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   html[data-console-theme] .console-usage-filter-actions > [data-slot="button"] {
     flex: 1 1 8rem;
     margin-inline-start: 0;
@@ -9270,6 +9285,19 @@ html[data-console-theme] .console-date-native {
 html[data-console-theme] .console-date-native-input {
   color: var(--foreground);
   background: var(--background);
+}
+
+/* Keep the two date fields readable when the range control is narrow. */
+html[data-console-theme] .console-date-native [data-slot="date-field"] {
+  min-width: 0;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+
+html[data-console-theme] .console-date-native [data-slot="date-field-segments"] {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 html[data-console-theme] [data-slot="popover-content"].console-cost-tooltip {
