@@ -49,3 +49,7 @@ export const invoiceApi = {
   requests: (page = 1) => flowpoolRequest(`/requests?page=${page}`),
   download: (id) => flowpoolRequest(`/requests/${id}/file`, { blob: true }),
 };
+
+export const promotionsApi = {
+  welfareSchedule: (signal) => flowpoolRequest("/welfare-schedule", { service: "model-plaza-user", signal }),
+};

@@ -4,6 +4,7 @@ export { keysApi, groupsApi } from "./keys";
 export { usageApi } from "./usage";
 export { channelsApi, monitorApi } from "./channels";
 export { subscriptionsApi, redeemApi, announcementsApi, paymentApi } from "./billing";
+export { promotionsApi } from "./invoices";
 export { batchImagesApi } from "./batchImages";
 export { imageGenerationApi, IMAGE_GATEWAY_BASE_URL } from "./images";
 export { pagesApi } from "./pages";
