@@ -9,6 +9,8 @@ import { useLocale } from "../i18n";
 import { Icon } from "../Icon";
 import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, StatusBadge, TableSkeleton, TextInput } from "../UI";
 
+const DEFAULT_INVOICE_ITEM = "生产生活服务/信息服务费";
+
 const invoiceStatuses = {
   pending: { tone: "warning", icon: "clock" },
   approved: { tone: "info", icon: "orderReceipt" },
@@ -30,7 +32,7 @@ export function InvoicePage() {
   const [email, setEmail] = useState(() => user?.email || "");
   const [title, setTitle] = useState("");
   const [invoiceItems, setInvoiceItems] = useState([]);
-  const [invoiceItem, setInvoiceItem] = useState("");
+  const [invoiceItem, setInvoiceItem] = useState(DEFAULT_INVOICE_ITEM);
   const [taxId, setTaxId] = useState("");
   const [requestOpen, setRequestOpen] = useState(false);
   const [quote, setQuote] = useState(null);
@@ -52,7 +54,7 @@ export function InvoicePage() {
       if (mountedRef.current) {
         const items = settings.invoice_items || [];
         setInvoiceItems(items);
-        setInvoiceItem((current) => items.includes(current) ? current : items[0] || "");
+        setInvoiceItem((current) => items.includes(current) ? current : items.includes(DEFAULT_INVOICE_ITEM) ? DEFAULT_INVOICE_ITEM : items[0] || "");
       }
       if (mountedRef.current) setState({ loading: false, error: "", items: result.items || [], total: Number(result.total || 0), pages: Number(result.pages || 1), enabled: settings.enabled === true });
     } catch (error) {
@@ -152,7 +154,7 @@ export function InvoicePage() {
     { key: "status", label: t("common.status"), render: (order) => <StatusBadge status={order.invoice_available ? "success" : "inactive"} label={t(order.invoice_available ? "invoice.eligible" : "invoice.ineligible")} /> },
   ];
   const historyColumns = [
-    { key: "title", label: t("invoice.header"), render: (item) => <div><strong className="console-invoice-history-title">{item.title || "—"}</strong><div className="console-invoice-history-note">{item.invoice_item || t("invoice.itemUnspecified")}</div></div> },
+    { key: "title", label: t("invoice.header"), render: (item) => <div><strong className="console-invoice-history-title">{item.title || "—"}</strong><div className="console-invoice-history-note">{item.invoice_item || DEFAULT_INVOICE_ITEM}</div></div> },
     { key: "amount", label: t("invoice.selectedAmount"), align: "right", render: (item) => <strong className="console-invoice-order-amount">{formatUsd(item.amount)}</strong> },
     { key: "fee", label: t("invoice.fee"), align: "right", render: (item) => <span className="console-invoice-history-fee">{formatUsd(item.fee)}</span> },
     { key: "status", label: t("common.status"), render: (item) => <InvoiceRequestStatus status={item.status} t={t} /> },
