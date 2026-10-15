@@ -55,14 +55,16 @@ export function WelfareScheduleCountdown() {
   const active = snapshot.start_hour < snapshot.end_hour
     ? hour >= snapshot.start_hour && hour < snapshot.end_hour
     : hour >= snapshot.start_hour || hour < snapshot.end_hour;
-  const opening = Date.parse(snapshot.next_open_at);
-  if (!Number.isFinite(opening)) return null;
-  const seconds = Math.ceil(((opening - now) % 86400000 + 86400000) % 86400000 / 1000);
+  const shanghaiNow = now + 8 * 3600000;
+  const targetHour = active ? snapshot.end_hour : snapshot.start_hour;
+  const remaining = (targetHour * 3600000 - shanghaiNow % 86400000 + 86400000) % 86400000;
+  const seconds = Math.ceil(remaining / 1000);
   const countdown = [Math.floor(seconds / 3600), Math.floor(seconds % 3600 / 60), seconds % 60].map((value) => String(value).padStart(2, "0")).join(":");
-  const english = locale === "en";
-  const label = active ? (english ? "Welfare groups open" : "福利分组已开启") : (english ? "Welfare opens in" : "福利分组开启倒计时");
+  const copy = snapshot.countdown_copy?.[locale] || snapshot.countdown_copy?.zh;
+  const label = copy?.[active ? "closing" : "opening"];
+  if (!label) return null;
   const hours = `${String(snapshot.start_hour).padStart(2, "0")}:00–${String(snapshot.end_hour).padStart(2, "0")}:00`;
-  return <div className="console-welfare-countdown" data-active={active} title={`${hours} · Asia/Shanghai`} role="timer" aria-label={active ? label : `${label} ${countdown}`}>
-    <span>{label}</span>{!active && <strong>{countdown}</strong>}
+  return <div className="console-welfare-countdown" data-active={active} title={`${hours} · Asia/Shanghai`} role="timer" aria-label={`${label} ${countdown}`}>
+    <span>{label}</span><strong>{countdown}</strong>
   </div>;
 }
