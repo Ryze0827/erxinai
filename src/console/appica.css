@@ -6078,7 +6078,7 @@ html[data-console-theme] .console-tour-card > footer > [data-slot="button"] {
   html[data-console-theme] .console-sidebar,
   html[data-console-theme] .console-shell.is-sidebar-collapsed .console-sidebar {
     --console-sidebar-visible-width: var(--console-sidebar-width);
-    width: min(19rem, calc(100vw - 3rem));
+    width: min(20rem, calc(100vw - 1rem));
     clip-path: inset(0);
     transform: translateX(-105%);
     box-shadow: var(--shadow-xl);
@@ -6091,6 +6091,11 @@ html[data-console-theme] .console-tour-card > footer > [data-slot="button"] {
   html[data-console-theme] .console-sidebar.is-open,
   html[data-console-theme] .console-shell.is-sidebar-collapsed .console-sidebar.is-open {
     transform: translateX(0);
+  }
+
+  html[data-console-theme] .console-sidebar nav {
+    overscroll-behavior: contain;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   html[data-console-theme] .console-sidebar.is-collapsed .console-brand-row {
@@ -6232,6 +6237,44 @@ html[data-console-theme] .console-tour-card > footer > [data-slot="button"] {
 
   html[data-console-theme] [data-slot="card"].console-panel {
     --card-radius: var(--radius-lg);
+  }
+
+  html[data-console-theme] .console-page-head,
+  html[data-console-theme] .console-panel-head {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  html[data-console-theme] .console-page-actions,
+  html[data-console-theme] .console-table-actions,
+  html[data-console-theme] .console-inline-actions,
+  html[data-console-theme] .console-form-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  html[data-console-theme] .console-page-actions > [data-slot="button"],
+  html[data-console-theme] .console-page-actions > a,
+  html[data-console-theme] .console-inline-actions > [data-slot="button"],
+  html[data-console-theme] .console-form-actions > [data-slot="button"] {
+    flex: 1 1 8rem;
+    min-width: 0;
+  }
+
+  html[data-console-theme] .console-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  html[data-console-theme] .console-channel-head {
+    flex-wrap: wrap;
+  }
+
+  html[data-console-theme] .console-channel-head > div {
+    min-width: 0;
+    flex: 1 1 12rem;
   }
 
   html[data-console-theme] .console-filter-row,
