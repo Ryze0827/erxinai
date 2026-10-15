@@ -188,10 +188,8 @@ function TokenColumnChart({ rows, ticks, title, locale, maximum, modelData = [],
         const width = Math.min(30, Math.max(3, slot * 0.68));
         const x = index * slot + (slot - width) / 2;
         let y = 190;
-        // Tooltip order is descending, while drawing starts at the baseline.
-        // Reverse the display order so the largest segment is rendered first
-        // from the bottom of the stacked column.
-        const segments = [...row.segments].reverse().map((segment) => {
+        // Start at the baseline so the largest segment sits at the bottom.
+        const segments = row.segments.map((segment) => {
           const height = segment.value / maximum * 184;
           y -= height;
           return { ...segment, x, y, width, height };
