@@ -7805,6 +7805,18 @@ html[data-console-theme] .console-usage-records-panel [data-column="user_agent"]
   width: 13rem;
 }
 
+html[data-console-theme] .console-usage-records-panel [data-column="status"] {
+  width: 5rem;
+}
+
+html[data-console-theme] .console-usage-records-panel [data-column="message"] {
+  width: 28rem;
+}
+
+html[data-console-theme] .console-usage-records-panel [data-column="message"] .console-clamp {
+  max-width: none;
+}
+
 html[data-console-theme] .console-usage-time,
 html[data-console-theme] .console-usage-key-endpoint,
 html[data-console-theme] .console-usage-model-group,
@@ -7857,7 +7869,8 @@ html[data-console-theme] .console-usage-key-endpoint code {
   white-space: nowrap;
 }
 
-html[data-console-theme] .console-usage-model-group [data-slot="badge"] {
+html[data-console-theme] .console-usage-model-group [data-slot="badge"],
+html[data-console-theme] .console-usage-request-type [data-slot="badge"] {
   width: fit-content;
   max-width: 100%;
 }
@@ -9705,15 +9718,6 @@ html[data-console-theme] [data-slot="dialog-popup"].console-modal--large {
   width: min(56rem, calc(100vw - 2rem));
   max-width: none;
   max-height: calc(var(--console-viewport-height, 100svh) - 2rem);
-}
-
-html[data-console-theme] [data-slot="drawer-popup"].console-error-drawer {
-  width: min(36rem, calc(100vw - 1rem));
-  max-width: none;
-}
-
-html[data-console-theme] .console-error-drawer .console-description-list {
-  grid-template-columns: minmax(0, 1fr);
 }
 
 html[data-console-theme] [data-slot="alert"].console-other-client-note,

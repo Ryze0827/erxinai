@@ -10,11 +10,6 @@ import { TableRow as AppicaTableRow } from "@appica/ui-react/table";
 import { Popover } from "@appica/ui-react/popover";
 import { PopoverContent } from "@appica/ui-react/popover";
 import { PopoverTrigger } from "@appica/ui-react/popover";
-import { Drawer } from "@appica/ui-react/drawer";
-import { DrawerBody } from "@appica/ui-react/drawer";
-import { DrawerContent } from "@appica/ui-react/drawer";
-import { DrawerHeader } from "@appica/ui-react/drawer";
-import { DrawerTitle } from "@appica/ui-react/drawer";
 import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { GroupBadge } from "../GroupBadge";
@@ -61,10 +56,6 @@ function requestType(row) {
   if (["unknown", "sync", "stream", "ws_v2", "cyber"].includes(row.request_type)) return row.request_type;
   if (row.openai_ws_mode) return "ws_v2";
   return row.stream ? "stream" : "sync";
-}
-
-function errorSortKey(value) {
-  return value === "status" ? "status_code" : value;
 }
 
 function typeLabel(type, t) {
@@ -289,12 +280,6 @@ function LatencyCell({ row, locale }) {
   return <div className="console-latency" data-response={status} data-total-response={totalStatus}><span className="console-latency-primary" title={hint} aria-label={localized(locale, "首 Token", "First token") + ": " + first + " · " + labels[status]}><b>{first}</b><small>{labels[status]}</small></span><span className="console-latency-total"><small>{localized(locale, "总耗时", "Total")}</small><b>{total}</b></span></div>;
 }
 
-function ErrorDetail({ item }) {
-  const { locale, formatDate } = useLocale();
-  const fields = [[locale === "zh" ? "时间" : "Time", formatDate(item.created_at)], [locale === "zh" ? "模型" : "Model", item.model], [locale === "zh" ? "端点" : "Endpoint", item.inbound_endpoint], [locale === "zh" ? "状态" : "Status", item.status_code], [locale === "zh" ? "分类" : "Category", item.category], [locale === "zh" ? "平台" : "Platform", item.platform], [locale === "zh" ? "上游状态" : "Upstream status", item.upstream_status_code]];
-  return <div className="console-detail-stack"><dl className="console-description-list">{fields.filter(([, value]) => value !== null && value !== undefined && value !== "").map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><div className="console-error-box"><strong>{item.message || "—"}</strong>{item.error_body && <pre>{item.error_body}</pre>}</div></div>;
-}
-
 function UsageSummary({ summary, loading }) {
   const { locale, formatNumber } = useLocale();
   const formatCost = (value) => formatNumber(Number(value), { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 4, maximumFractionDigits: 4 });
@@ -337,9 +322,9 @@ function RecordsSkeleton({ columns, rowCount = 20, pagination = true }) {
   return <><div className="console-table-wrap console-records-skeleton" role="status" aria-label={t("common.loading")}><AppicaTable className="console-table" size="sm" borderStyle="none" aria-hidden="true"><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <AppicaTableHead key={column.key}><span>{column.label}</span></AppicaTableHead>)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{Array.from({ length: rowCount }, (_, row) => <AppicaTableRow key={row}>{columns.map((column) => <AppicaTableCell key={column.key}><Skeleton className="console-records-skeleton-cell" /></AppicaTableCell>)}</AppicaTableRow>)}</AppicaTableBody></AppicaTable></div>{pagination && <div className="console-pagination console-records-pagination-skeleton" aria-hidden="true"><Skeleton /><div><Skeleton /><Skeleton /><Skeleton /></div></div>}</>;
 }
 
-function ErrorRecords({ loading, columns, errors, sort, setSort, paging, setPaging, openError }) {
+function ErrorRecords({ loading, columns, errors, sort, setSort, paging, setPaging }) {
   if (loading && !errors.items.length) return <RecordsSkeleton columns={columns} rowCount={paging.pageSize} />;
-  return <><DataTable columns={columns} rows={errors.items} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} onRowClick={openError} /><Pagination page={paging.page} pageSize={paging.pageSize} total={errors.total} pages={errors.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
+  return <><DataTable columns={columns} rows={errors.items} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} /><Pagination page={paging.page} pageSize={paging.pageSize} total={errors.total} pages={errors.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 }
 
 function UsageRecords({ state, columns, data, sort, onSort, paging, setPaging, loadUsage }) {
@@ -365,22 +350,10 @@ function UsageRecords({ state, columns, data, sort, onSort, paging, setPaging, l
   return <><DataTable columns={columns} rows={data.items} sortKey={sort.key} sortOrder={sort.order} onSort={onSort} hoverableRows />{state.error ? <ErrorState message={state.error} onRetry={loadUsage} /> : (state.loading || hasMore || data.items.length > 0) && <div ref={sentinelRef} className="console-usage-load-more" role="status" aria-live="polite">{state.loading ? <><Spinner /><span>{t("usage.loadingMore")}</span></> : hasMore ? null : data.items.length >= MAX_USAGE_RECORDS && data.total > data.items.length ? t("usage.loadLimitReached", { limit: MAX_USAGE_RECORDS }) : t("usage.loadedAll")}</div>}</>;
 }
 
-function RecordsPanel({ tabs, tab, data, errors, geoEnabled, setGeoEnabled, state, visibleErrorColumns, errorSort, setErrorSort, errorPaging, setErrorPaging, openError, visibleUsageColumns, sort, onUsageSort, paging, setPaging, loadUsage }) {
+function RecordsPanel({ tabs, tab, data, errors, geoEnabled, setGeoEnabled, state, visibleErrorColumns, errorSort, setErrorSort, errorPaging, setErrorPaging, visibleUsageColumns, sort, onUsageSort, paging, setPaging, loadUsage }) {
   const errorTab = tab === "errors";
   const actions = <IpGeoBatchToolbar enabled={geoEnabled} onToggle={() => setGeoEnabled((value) => !value)} />;
-  return <Panel className="console-usage-records-panel" aria-busy={errorTab ? state.errorLoading : state.loading}><div className="console-usage-record-tools">{tabs}{actions}</div>{errorTab ? <ErrorRecords loading={state.errorLoading} columns={visibleErrorColumns} errors={errors} sort={errorSort} setSort={setErrorSort} paging={errorPaging} setPaging={setErrorPaging} openError={openError} /> : <UsageRecords state={state} columns={visibleUsageColumns} data={data} sort={sort} onSort={onUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} />}</Panel>;
-}
-
-function ErrorDetailDrawer({ detail, locale, t, onClose }) {
-  let content = null;
-  if (detail?.loading) content = <Spinner />;
-  else if (detail?.item) content = <ErrorDetail item={detail.item} />;
-  return <Drawer side="right" modal={false} open={Boolean(detail)} onOpenChange={(open) => !open && onClose()}>
-    <DrawerContent backdrop={false} closeLabel={t("common.close")} className="console-error-drawer">
-      <DrawerHeader><DrawerTitle>{localized(locale, "错误请求详情", "Error request details")}</DrawerTitle></DrawerHeader>
-      <DrawerBody>{content}</DrawerBody>
-    </DrawerContent>
-  </Drawer>;
+  return <Panel className="console-usage-records-panel" aria-busy={errorTab ? state.errorLoading : state.loading}><div className="console-usage-record-tools">{tabs}{actions}</div>{errorTab ? <ErrorRecords loading={state.errorLoading} columns={visibleErrorColumns} errors={errors} sort={errorSort} setSort={setErrorSort} paging={errorPaging} setPaging={setErrorPaging} /> : <UsageRecords state={state} columns={visibleUsageColumns} data={data} sort={sort} onSort={onUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} />}</Panel>;
 }
 
 export function UsagePage() {
@@ -397,12 +370,9 @@ export function UsagePage() {
   const [data, setData] = useState({ items: [], total: 0, pages: 1, models: [], summary: null });
   const [errors, setErrors] = useState({ items: [], total: 0, pages: 1 });
   const [state, setState] = useState({ loading: true, error: "", errorLoading: false });
-  const [detail, setDetail] = useState(null);
   const [geoEnabled, setGeoEnabled] = useState(false);
   const requestRef = useRef(null);
   const errorRequestRef = useRef(null);
-  const detailRef = useRef(null);
-  const detailControllerRef = useRef(null);
   const errorEnabled = settings?.allow_user_view_error_requests === true;
   const usageHidden = useHiddenColumns("user-usage-hidden-columns", ["user_agent"]);
   const errorHidden = useHiddenColumns("user-usage-error-hidden-columns", ["user_agent"]);
@@ -441,7 +411,7 @@ export function UsagePage() {
     errorRequestRef.current = controller;
     setState((current) => ({ ...current, errorLoading: true }));
     try {
-      const response = await usageApi.errors(clean({ ...errorFilters, start_date: filters.start_date, end_date: filters.end_date, page: errorPaging.page, page_size: errorPaging.pageSize, sort_by: errorSortKey(errorSort.key), sort_order: errorSort.order }), controller.signal);
+      const response = await usageApi.errors(clean({ ...errorFilters, start_date: filters.start_date, end_date: filters.end_date, page: errorPaging.page, page_size: errorPaging.pageSize, sort_by: errorSort.key, sort_order: errorSort.order }), controller.signal);
       if (controller.signal.aborted) return;
       setErrors({ items: response.items || [], total: Number(response.total || 0), pages: Number(response.pages || 1) });
     } catch (error) { if (error.name !== "AbortError") notify("error", error.message); } finally { if (!controller.signal.aborted) setState((current) => ({ ...current, errorLoading: false })); }
@@ -449,7 +419,7 @@ export function UsagePage() {
 
   useEffect(() => { loadUsage(); return () => requestRef.current?.abort(); }, [loadUsage]);
   useEffect(() => { if (tab === "errors") loadErrors(); }, [loadErrors, tab]);
-  useEffect(() => () => { errorRequestRef.current?.abort(); detailControllerRef.current?.abort(); detailRef.current = null; }, []);
+  useEffect(() => () => errorRequestRef.current?.abort(), []);
   useEffect(() => { const controller = new AbortController(); Promise.allSettled([keysApi.list(1, 100, {}, controller.signal), groupsApi.available()]).then(([keys, groups]) => { if (!controller.signal.aborted) setOptions({ keys: keys.value?.items || [], groups: Array.isArray(groups.value) ? groups.value : groups.value?.items || [] }); }); return () => controller.abort(); }, []);
   useEffect(() => { if (!errorEnabled && tab === "errors") setTab("usage"); }, [errorEnabled, tab]);
 
@@ -464,7 +434,6 @@ export function UsagePage() {
   const changeRange = (range) => { setFilters((current) => ({ ...current, ...range })); resetUsageRecords(); setErrorPaging((current) => ({ ...current, page: 1 })); };
   const changeUsageSort = (key, order) => { setSort({ key, order }); resetUsageRecords(); };
   const refreshUsage = () => { if (paging.page === 1) loadUsage(); else resetUsageRecords(); };
-  const openError = async (item) => { detailControllerRef.current?.abort(); const controller = new AbortController(); const request = Symbol("error-detail"); detailControllerRef.current = controller; detailRef.current = request; setDetail({ loading: true, item }); try { const full = await usageApi.error(item.id, controller.signal); if (detailRef.current === request) setDetail({ loading: false, item: full }); } catch { if (!controller.signal.aborted && detailRef.current === request) setDetail({ loading: false, item }); } };
   const modelOptions = useMemo(() => [...new Set([...data.models.map((item) => item.model), filters.model].filter(Boolean))].sort(), [data.models, filters.model]);
   const errorModelOptions = useMemo(() => [...new Set([...data.models.map((item) => item.model), ...errors.items.map((item) => item.model), errorFilters.model].filter(Boolean))].sort(), [data.models, errorFilters.model, errors.items]);
   const usageColumns = useMemo(() => [
@@ -481,10 +450,10 @@ export function UsagePage() {
   const errorColumns = useMemo(() => [
     { key: "key_name", label: t("usage.key"), render: (row) => <div className="console-key-name"><TruncatedText value={row.key_name} render={<strong />} />{row.key_deleted && <small>{locale === "zh" ? "已删除" : "Deleted"}</small>}</div> },
     { key: "model", label: t("usage.model"), sortable: true }, { key: "endpoint", label: locale === "zh" ? "端点" : "Endpoint", render: (row) => <TruncatedText value={row.inbound_endpoint} render={<code />} className="console-endpoint-code" /> },
-    { key: "client_ip", label: "IP", render: (row) => <IpGeoCell ip={row.client_ip} enabled={geoEnabled} /> }, { key: "group", label: t("usage.group"), render: (row) => <TruncatedText value={row.group_name} /> },
-    { key: "type", label: t("usage.type"), render: (row) => <Badge variant="soft" size="sm" className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</Badge> },
-    { key: "platform", label: locale === "zh" ? "平台" : "Platform" }, { key: "category", label: locale === "zh" ? "分类" : "Category", render: (row) => <TruncatedText value={row.category} className="console-chip" /> },
-    { key: "status", label: locale === "zh" ? "状态" : "Status", sortable: true, render: (row) => <StatusBadge status="failed" label={String(row.status_code || "—")} /> },
+    { key: "client_ip", label: "IP", render: (row) => <IpGeoCell ip={row.client_ip} enabled={geoEnabled} /> },
+    { key: "type_group", label: `${t("usage.type")} / ${t("usage.group")}`, render: (row) => <div className="console-usage-request-type"><Badge variant="soft" size="sm" className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</Badge><GroupBadge name={row.group_name} platform={row.platform} /></div> },
+    { key: "category", label: locale === "zh" ? "分类" : "Category", render: (row) => <TruncatedText value={row.category} className="console-chip" /> },
+    { key: "status", label: locale === "zh" ? "状态" : "Status", render: (row) => <StatusBadge status="failed" label={String(row.status_code || "—")} /> },
     { key: "message", label: locale === "zh" ? "错误信息" : "Message", render: (row) => <TruncatedText value={row.message} className="console-clamp" multiline /> },
     { key: "created_at", label: locale === "zh" ? "时间" : "Time", sortable: true, render: (row) => formatDate(row.created_at) },
     { key: "user_agent", label: "User-Agent", render: (row) => <TruncatedText value={row.user_agent} className="console-user-agent" /> },
@@ -492,6 +461,5 @@ export function UsagePage() {
   const visibleUsageColumns = usageColumns.filter((column) => column.key === "created_at" || !usageHidden.hidden.has(column.key));
   const visibleErrorColumns = errorColumns.filter((column) => ["status", "created_at"].includes(column.key) || !errorHidden.hidden.has(column.key));
 
-  const closeDetail = () => { detailControllerRef.current?.abort(); detailRef.current = null; setDetail(null); };
-  return <Page title={t("usage.title")} className="console-usage-page"><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageSummary summary={data.summary} loading={state.loading} /><UsageFilterPanel toolbar={<UsageFilterToolbar loadUsage={refreshUsage} loadErrors={loadErrors} tab={tab} state={state} t={t} />} tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} changeRange={changeRange} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} onUsageSort={changeUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div><ErrorDetailDrawer detail={detail} locale={locale} t={t} onClose={closeDetail} /></Page>;
+  return <Page title={t("usage.title")} className="console-usage-page"><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageSummary summary={data.summary} loading={state.loading} /><UsageFilterPanel toolbar={<UsageFilterToolbar loadUsage={refreshUsage} loadErrors={loadErrors} tab={tab} state={state} t={t} />} tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} changeRange={changeRange} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} visibleUsageColumns={visibleUsageColumns} sort={sort} onUsageSort={changeUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div></Page>;
 }

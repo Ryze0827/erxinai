@@ -14,5 +14,4 @@ export const usageApi = {
     signal,
   }),
   errors: (query = {}, signal) => apiRequest("/usage/errors", { query, signal }),
-  error: (id, signal) => apiRequest(`/usage/errors/${id}`, { signal }),
 };
