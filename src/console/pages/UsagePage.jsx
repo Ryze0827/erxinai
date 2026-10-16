@@ -16,7 +16,7 @@ import { GroupBadge } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 import { Button, DataTable, ErrorState, Field, InlineButton, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatusBadge, TruncatedText } from "../UI";
-import { formatDuration } from "../utils";
+import { formatDuration, formatTokenMillions } from "../utils";
 import { CompactTabs, DateRangePicker, SearchSelect, useHiddenColumns } from "../components/ConsoleControls";
 import { IpGeoBatchToolbar, IpGeoCell } from "../components/IpGeo";
 
@@ -289,6 +289,18 @@ function ErrorDetail({ item }) {
   return <div className="console-detail-stack"><dl className="console-description-list">{fields.filter(([, value]) => value !== null && value !== undefined && value !== "").map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><div className="console-error-box"><strong>{item.message || "—"}</strong>{item.error_body && <pre>{item.error_body}</pre>}</div></div>;
 }
 
+function UsageSummary({ summary, loading }) {
+  const { locale, formatNumber } = useLocale();
+  const formatCost = (value) => formatNumber(Number(value), { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  const metrics = [
+    { key: "requests", icon: "send", label: localized(locale, "总请求数", "Total requests"), value: summary?.total_requests, format: (value) => formatNumber(Number(value)) },
+    { key: "tokens", icon: "coins", label: localized(locale, "总 Token", "Total tokens"), value: summary?.total_tokens, format: formatTokenMillions },
+    { key: "spend", icon: "wallet", label: localized(locale, "总消费", "Total spend"), value: summary?.total_actual_cost, format: formatCost },
+    { key: "latency", icon: "hourglass", label: localized(locale, "平均耗时", "Average duration"), value: summary?.average_duration_ms, format: formatDuration },
+  ];
+  return <section className="console-usage-summary" aria-busy={loading} aria-label={localized(locale, "用量汇总", "Usage summary")}>{metrics.map((metric) => <div key={metric.key} className={`console-usage-summary-metric is-${metric.key}`}><i className="console-usage-summary-icon"><Icon name={metric.icon} size={21} /></i><span>{metric.label}</span><strong>{metric.value == null ? "—" : metric.format(metric.value)}</strong></div>)}</section>;
+}
+
 function UsageFilterToolbar({ loadUsage, loadErrors, tab, state, t }) {
   const refresh = () => {
     loadUsage();
@@ -371,7 +383,7 @@ export function UsagePage() {
   const [errorSort, setErrorSort] = useState({ key: "created_at", order: "desc" });
   const [tab, setTab] = useState("usage");
   const [options, setOptions] = useState({ keys: [], groups: [] });
-  const [data, setData] = useState({ items: [], total: 0, pages: 1, models: [] });
+  const [data, setData] = useState({ items: [], total: 0, pages: 1, models: [], summary: null });
   const [errors, setErrors] = useState({ items: [], total: 0, pages: 1 });
   const [state, setState] = useState({ loading: true, error: "", errorLoading: false });
   const [detail, setDetail] = useState(null);
@@ -392,12 +404,13 @@ export function UsagePage() {
     const base = clean(filters);
     const listQuery = { ...base, page: paging.page, page_size: paging.pageSize, sort_by: sort.key, sort_order: sort.order };
     const results = await Promise.allSettled(paging.page === 1
-      ? [usageApi.list(listQuery, controller.signal), usageApi.dashboardModels({ ...base, model_source: "requested" }, controller.signal)]
+      ? [usageApi.list(listQuery, controller.signal), usageApi.dashboardModels({ ...base, model_source: "requested" }, controller.signal), usageApi.stats(base, controller.signal)]
       : [usageApi.list(listQuery, controller.signal)]);
     if (controller.signal.aborted) return;
     if (results[0].status === "rejected") { setState((current) => ({ ...current, loading: false, error: results[0].reason.message })); return; }
     const list = results[0].value;
     const models = paging.page === 1 ? (results[1].status === "fulfilled" ? results[1].value?.models || [] : []) : null;
+    const summary = results[2]?.status === "fulfilled" ? results[2].value : null;
     const items = list.items || [];
     const pages = items.length ? Number(list.pages || 1) : Math.min(Number(list.pages || 1), paging.page);
     setData((current) => ({
@@ -405,6 +418,7 @@ export function UsagePage() {
       total: Number(list.total || 0),
       pages,
       models: models ?? current.models,
+      summary: paging.page === 1 ? summary : current.summary,
     }));
     setState((current) => ({ ...current, loading: false, error: "" }));
   }, [filters, paging, sort]);
@@ -468,5 +482,5 @@ export function UsagePage() {
   const visibleErrorColumns = errorColumns.filter((column) => ["status", "created_at"].includes(column.key) || !errorHidden.hidden.has(column.key));
 
   const closeDetail = () => { detailControllerRef.current?.abort(); detailRef.current = null; setDetail(null); };
-  return <Page title={t("usage.title")} className="console-usage-page"><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageFilterPanel toolbar={<UsageFilterToolbar loadUsage={refreshUsage} loadErrors={loadErrors} tab={tab} state={state} t={t} />} tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} changeRange={changeRange} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} onUsageSort={changeUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
+  return <Page title={t("usage.title")} className="console-usage-page"><div className="console-usage-workspace"><div className="console-usage-ledger">{tab === "usage" && <UsageSummary summary={data.summary} loading={state.loading} />}<UsageFilterPanel toolbar={<UsageFilterToolbar loadUsage={refreshUsage} loadErrors={loadErrors} tab={tab} state={state} t={t} />} tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} changeRange={changeRange} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} onUsageSort={changeUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
 }
