@@ -480,7 +480,7 @@ function ModelSettingsCard() {
   return (
     <ShowcaseCard className="order-8 min-[85rem]:flex-1" contentClassName="flex flex-col">
       <div className="flex items-center justify-between gap-2"><h3 className="text-foreground-intense text-sm font-semibold">{t("landing.routing.title")}</h3><Badge variant="soft" size="sm">{t("landing.routing.badge")}</Badge></div>
-      <Select items={models} value={model} onValueChange={setModel} alignItemWithTrigger={false}>
+      <Select items={models} value={model} onValueChange={setModel} alignItemWithTrigger={false} modal={false}>
         <SelectTrigger className="mt-3" startSlot={<Cpu />} aria-label={t("landing.routing.modelAria")}><SelectValue>{model}</SelectValue></SelectTrigger>
         <SelectContent>{models.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
       </Select>

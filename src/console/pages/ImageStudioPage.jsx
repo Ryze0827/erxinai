@@ -200,7 +200,7 @@ function StudioMessageReferences({ references = [], label }) {
 }
 
 function RecentResultPicker({ images, copy: c, disabled, onSelect }) {
-  return <DropdownMenu size="sm"><DropdownMenuTrigger render={<Button icon="image" />} className="console-image-recent-trigger" disabled={disabled || !images.length} title={!images.length ? c.noLatest : undefined}><span>{c.useLast}</span><Icon name="chevronDown" size={14} data-icon="end" /></DropdownMenuTrigger><DropdownMenuContent side="top" align="end" className="console-image-recent-menu" aria-label={c.selectRecent}>{images.map((image, index) => <DropdownMenuItem className="console-image-recent-item" key={image.id} onClick={() => onSelect(image.url)}><img src={image.url} alt="" /><span>{c.recentItem.replace("{index}", String(index + 1))}</span></DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>;
+  return <DropdownMenu size="sm" modal={false}><DropdownMenuTrigger render={<Button icon="image" />} className="console-image-recent-trigger" disabled={disabled || !images.length} title={!images.length ? c.noLatest : undefined}><span>{c.useLast}</span><Icon name="chevronDown" size={14} data-icon="end" /></DropdownMenuTrigger><DropdownMenuContent side="top" align="end" className="console-image-recent-menu" aria-label={c.selectRecent}>{images.map((image, index) => <DropdownMenuItem className="console-image-recent-item" key={image.id} onClick={() => onSelect(image.url)}><img src={image.url} alt="" /><span>{c.recentItem.replace("{index}", String(index + 1))}</span></DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>;
 }
 
 function StudioMessage({ message, copy: c, now, onPreview, onReference }) {

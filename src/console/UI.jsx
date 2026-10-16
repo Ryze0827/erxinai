@@ -145,7 +145,7 @@ export function SelectInput({ children, className = "", value = "", onChange, di
     const target = { value: selectedOption.value, name };
     onChange?.({ target, currentTarget: target });
   };
-  return <AppicaSelect items={options} value={selectedValue || null} onValueChange={change} disabled={disabled} size="md" variant="outline" alignItemWithTrigger={false}>
+  return <AppicaSelect items={options} value={selectedValue || null} onValueChange={change} disabled={disabled} size="md" variant="outline" alignItemWithTrigger={false} modal={false}>
     <AppicaSelectTrigger id={id} className={className} aria-label={props["aria-label"]} aria-describedby={props["aria-describedby"]}>
       <AppicaSelectValue placeholder={locale === "zh" ? "请选择" : "Select an option"}>{(currentValue) => options.find((option) => option.value === String(currentValue ?? ""))?.label || (locale === "zh" ? "请选择" : "Select an option")}</AppicaSelectValue>
     </AppicaSelectTrigger>

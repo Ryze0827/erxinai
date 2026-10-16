@@ -4426,19 +4426,12 @@ html[data-console-theme] .console-usage-page > :not(.console-page-title) {
 }
 
 html[data-console-theme] .console-usage-range-field {
-  width: min(100%, 38rem);
+  width: min(100%, 18rem);
   min-width: 0;
 }
 
 html[data-console-theme] .console-usage-range-field .console-date-picker {
   width: 100%;
-  max-width: 100%;
-}
-
-html[data-console-theme] .console-usage-range-field .console-date-native {
-  width: auto;
-  min-width: 0;
-  flex: 1 1 16rem;
   max-width: 100%;
 }
 
@@ -4595,36 +4588,34 @@ html[data-console-theme] .console-usage-filters {
   gap: 0.75rem;
 }
 
+html[data-console-theme] .console-usage-filters--usage {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+html[data-console-theme] .console-usage-filters--usage > * {
+  flex: 1 1 11rem;
+}
+
+html[data-console-theme] .console-usage-filters--usage > .console-usage-range-field {
+  flex: 0 0 auto;
+  width: auto;
+}
+
 @container usage-page (min-width: 70rem) {
   html[data-console-theme] .console-usage-filters--errors {
-    grid-template-columns: minmax(30rem, 2fr) repeat(4, minmax(9rem, 1fr));
+    grid-template-columns: auto repeat(4, minmax(9rem, 1fr));
   }
 }
 
 @container usage-page (max-width: 69.99rem) {
-  html[data-console-theme] .console-usage-range-field .console-date-picker {
-    flex-wrap: wrap;
-  }
-
   html[data-console-theme] .console-usage-range-field [data-slot="button"].console-date-preset-trigger {
     min-width: min(9rem, 100%);
     flex: 1 1 9rem;
   }
 
-  html[data-console-theme] .console-usage-range-field .console-date-native {
-    flex: 1 1 14rem;
-  }
-
   html[data-console-theme] .console-usage-filters--errors .console-usage-range-field {
     grid-column: 1 / -1;
-  }
-
-  html[data-console-theme] .console-usage-filters--errors .console-date-picker {
-    flex-wrap: wrap;
-  }
-
-  html[data-console-theme] .console-usage-filters--errors .console-date-native {
-    flex: 1 1 18rem;
   }
 }
 
@@ -8002,15 +7993,14 @@ html[data-console-theme] .console-latency > span:last-child {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  html[data-console-theme] .console-usage-range-field,
-  html[data-console-theme] .console-usage-range-field .console-date-picker,
-  html[data-console-theme] .console-usage-range-field .console-date-native {
-    width: 100%;
+  html[data-console-theme] .console-usage-filters--usage > * {
+    flex-basis: 100%;
   }
 
-  html[data-console-theme] .console-usage-range-field .console-date-picker {
-    align-items: stretch;
-    flex-direction: column;
+  html[data-console-theme] .console-usage-range-field,
+  html[data-console-theme] .console-usage-range-field .console-date-picker,
+  html[data-console-theme] .console-usage-filters--usage > .console-usage-range-field {
+    width: 100%;
   }
 
   html[data-console-theme] .console-usage-filter-actions > [data-slot="button"] {
@@ -9430,29 +9420,6 @@ html[data-console-theme] .console-date-preset-menu {
   min-width: 12rem;
 }
 
-html[data-console-theme] .console-date-native {
-  width: 18rem;
-  min-width: 0;
-}
-
-html[data-console-theme] .console-date-native-input {
-  color: var(--foreground);
-  background: var(--background);
-}
-
-/* Keep the two date fields readable when the range control is narrow. */
-html[data-console-theme] .console-date-native [data-slot="date-field"] {
-  min-width: 0;
-  flex: 1 1 0;
-  overflow: hidden;
-}
-
-html[data-console-theme] .console-date-native [data-slot="date-field-segments"] {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
 html[data-console-theme] [data-slot="popover-content"].console-cost-tooltip {
   width: min(22rem, calc(100vw - 2rem));
   min-width: 0;
@@ -9711,7 +9678,6 @@ html[data-console-theme] .console-stat-skeleton > [data-slot="skeleton"] {
 
 @media (max-width: 47.5rem) {
   html[data-console-theme] .console-date-picker,
-  html[data-console-theme] .console-date-native,
   html[data-console-theme] [data-slot="button"].console-date-preset-trigger {
     width: 100%;
   }
@@ -9739,6 +9705,15 @@ html[data-console-theme] [data-slot="dialog-popup"].console-modal--large {
   width: min(56rem, calc(100vw - 2rem));
   max-width: none;
   max-height: calc(var(--console-viewport-height, 100svh) - 2rem);
+}
+
+html[data-console-theme] [data-slot="drawer-popup"].console-error-drawer {
+  width: min(36rem, calc(100vw - 1rem));
+  max-width: none;
+}
+
+html[data-console-theme] .console-error-drawer .console-description-list {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 html[data-console-theme] [data-slot="alert"].console-other-client-note,

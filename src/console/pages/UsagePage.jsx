@@ -10,14 +10,19 @@ import { TableRow as AppicaTableRow } from "@appica/ui-react/table";
 import { Popover } from "@appica/ui-react/popover";
 import { PopoverContent } from "@appica/ui-react/popover";
 import { PopoverTrigger } from "@appica/ui-react/popover";
+import { Drawer } from "@appica/ui-react/drawer";
+import { DrawerBody } from "@appica/ui-react/drawer";
+import { DrawerContent } from "@appica/ui-react/drawer";
+import { DrawerHeader } from "@appica/ui-react/drawer";
+import { DrawerTitle } from "@appica/ui-react/drawer";
 import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { GroupBadge } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, DataTable, ErrorState, Field, InlineButton, Modal, Page, Pagination, Panel, SelectInput, Spinner, StatusBadge, TruncatedText } from "../UI";
+import { Button, DataTable, ErrorState, Field, InlineButton, Page, Pagination, Panel, SelectInput, Spinner, StatusBadge, TruncatedText } from "../UI";
 import { formatDuration, formatTokenMillions } from "../utils";
-import { CompactTabs, DateRangePicker, SearchSelect, useHiddenColumns } from "../components/ConsoleControls";
+import { CompactTabs, DateRangePicker, useHiddenColumns } from "../components/ConsoleControls";
 import { IpGeoBatchToolbar, IpGeoCell } from "../components/IpGeo";
 
 function localDate(date) {
@@ -28,7 +33,7 @@ function last24Hours() {
   return { start_date: localDate(new Date(Date.now() - 86400000)), end_date: localDate(new Date()) };
 }
 
-const emptyFilters = { ...last24Hours(), api_key_id: "", group_id: "", model: "" };
+const emptyFilters = { ...last24Hours(), api_key_id: "", group_id: "", model: "", request_type: "" };
 const emptyErrorFilters = { api_key_id: "", model: "", category: "", status_code: "" };
 const MAX_USAGE_RECORDS = 1000;
 
@@ -91,11 +96,11 @@ function DateRangeFilter({ filters, onChange, locale }) {
 }
 
 function UsageFilters({ filters, setFilter, apiKeys, groups, models, locale, t }) {
-  return <div className="console-usage-filters"><DateRangeFilter filters={filters} onChange={(range) => { setFilter("start_date", range.start_date); setFilter("end_date", range.end_date); }} locale={locale} /><FilterSelect label={t("usage.key")} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{localized(locale, "全部密钥", "All API keys")}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><Field label={t("usage.model")}><SearchSelect id="usage-model-options" value={filters.model} onChange={(event) => setFilter("model", event.target.value)} options={models} placeholder={localized(locale, "全部模型", "All models")} /></Field><FilterSelect label={t("usage.group")} value={filters.group_id} onChange={(value) => setFilter("group_id", value)}><option value="">{localized(locale, "全部分组", "All groups")}</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</FilterSelect></div>;
+  return <div className="console-usage-filters console-usage-filters--usage"><DateRangeFilter filters={filters} onChange={(range) => { setFilter("start_date", range.start_date); setFilter("end_date", range.end_date); }} locale={locale} /><FilterSelect label={t("usage.key")} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{localized(locale, "全部密钥", "All API keys")}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><FilterSelect label={t("usage.model")} value={filters.model} onChange={(value) => setFilter("model", value)}><option value="">{localized(locale, "全部模型", "All models")}</option>{models.map((model) => <option key={model} value={model}>{model}</option>)}</FilterSelect><FilterSelect label={t("usage.group")} value={filters.group_id} onChange={(value) => setFilter("group_id", value)}><option value="">{localized(locale, "全部分组", "All groups")}</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</FilterSelect><FilterSelect label={t("usage.type")} value={filters.request_type} onChange={(value) => setFilter("request_type", value)}><option value="">{localized(locale, "全部类型", "All types")}</option><option value="stream">{t("usage.requestType.stream")}</option><option value="sync">{t("usage.requestType.sync")}</option></FilterSelect></div>;
 }
 
-function ErrorFilters({ filters, setFilter, apiKeys, models, dateFilters, changeRange, locale }) {
-  return <div className="console-usage-filters console-usage-filters--errors"><DateRangeFilter filters={dateFilters} onChange={changeRange} locale={locale} /><FilterSelect label={locale === "zh" ? "密钥名称" : "Key name"} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{locale === "zh" ? "全部密钥" : "All keys"}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><Field label={locale === "zh" ? "模型" : "Model"}><SearchSelect id="error-model-options" value={filters.model} onChange={(event) => setFilter("model", event.target.value)} options={models} placeholder={locale === "zh" ? "输入模型片段" : "Enter any model fragment"} /></Field><FilterSelect label={locale === "zh" ? "错误分类" : "Category"} value={filters.category} onChange={(value) => setFilter("category", value)}><option value="">{locale === "zh" ? "全部分类" : "All categories"}</option>{["auth", "rate_limit", "quota", "invalid_request", "service_unavailable", "upstream", "internal", "cyber"].map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}</FilterSelect><FilterSelect label={locale === "zh" ? "状态码" : "Status"} value={filters.status_code} onChange={(value) => setFilter("status_code", value)}><option value="">{locale === "zh" ? "全部状态" : "All statuses"}</option>{[400, 401, 403, 404, 408, 409, 422, 429, 500, 502, 503, 504].map((code) => <option key={code} value={code}>{code}</option>)}</FilterSelect></div>;
+function ErrorFilters({ filters, setFilter, apiKeys, models, dateFilters, changeRange, locale, t }) {
+  return <div className="console-usage-filters console-usage-filters--errors"><DateRangeFilter filters={dateFilters} onChange={changeRange} locale={locale} /><FilterSelect label={t("usage.key")} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{localized(locale, "全部密钥", "All API keys")}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><FilterSelect label={t("usage.model")} value={filters.model} onChange={(value) => setFilter("model", value)}><option value="">{localized(locale, "全部模型", "All models")}</option>{models.map((model) => <option key={model} value={model}>{model}</option>)}</FilterSelect><FilterSelect label={locale === "zh" ? "错误分类" : "Category"} value={filters.category} onChange={(value) => setFilter("category", value)}><option value="">{locale === "zh" ? "全部分类" : "All categories"}</option>{["auth", "rate_limit", "quota", "invalid_request", "service_unavailable", "upstream", "internal", "cyber"].map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}</FilterSelect><FilterSelect label={locale === "zh" ? "状态码" : "Status"} value={filters.status_code} onChange={(value) => setFilter("status_code", value)}><option value="">{locale === "zh" ? "全部状态" : "All statuses"}</option>{[400, 401, 403, 404, 408, 409, 422, 429, 500, 502, 503, 504].map((code) => <option key={code} value={code}>{code}</option>)}</FilterSelect></div>;
 }
 
 function ModelCell({ row }) {
@@ -113,8 +118,9 @@ function UsageTimeCell({ value, locale }) {
 }
 
 function KeyEndpointCell({ row }) {
+  const { locale } = useLocale();
   const endpoint = row.inbound_endpoint || "—";
-  return <div className="console-usage-key-endpoint"><TruncatedText value={row.api_key?.name} render={<strong />} />{!row.api_key && row.api_key_id && <small>Deleted</small>}<span><TruncatedText value={endpoint} render={<code />} /></span></div>;
+  return <div className="console-usage-key-endpoint"><TruncatedText value={row.api_key?.name} render={<strong />} />{!row.api_key && row.api_key_id && <small>{localized(locale, "已删除", "Deleted")}</small>}<span><TruncatedText value={endpoint} render={<code />} /></span></div>;
 }
 
 function ModelGroupCell({ row }) {
@@ -243,13 +249,13 @@ function CostTooltip({ row, formatCost, locale }) {
 }
 
 export function CostCell({ row, formatNumber, locale }) {
-  const formatCost = (value) => formatNumber(numeric(value), {
-    style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 6, maximumFractionDigits: 6,
+  const formatCost = (value, digits = 6) => formatNumber(numeric(value), {
+    style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: digits, maximumFractionDigits: digits,
   });
   const label = locale === "zh" ? "查看费用明细" : "View cost breakdown";
   const longContextLabel = localized(locale, "长上下文", "Long context");
   const longContextHint = localized(locale, "已应用长上下文计费。输入和输出费率取决于定价档位，并非统一倍率。", "Long-context pricing was applied. Input and output rates depend on the pricing tier, not a uniform multiplier.");
-  return <div className="console-cost-cell"><div className="console-cost-main"><strong>{formatCost(row.actual_cost)}</strong>{row.long_context_billing_applied && <span className="console-long-context-marker" title={longContextHint}>{longContextLabel}</span>}<Popover><PopoverTrigger openOnHover render={<InlineButton variant="ghost" size="icon-sm" className="console-cost-detail-trigger" aria-label={label} />}><Icon name="info" size={12} /></PopoverTrigger><PopoverContent side="left" align="center" arrow={false} className="console-cost-tooltip"><CostTooltip row={row} formatCost={formatCost} locale={locale} /></PopoverContent></Popover></div></div>;
+  return <div className="console-cost-cell"><div className="console-cost-main"><strong>{formatCost(row.actual_cost, 4)}</strong>{row.long_context_billing_applied && <span className="console-long-context-marker" title={longContextHint}>{longContextLabel}</span>}<Popover><PopoverTrigger openOnHover render={<InlineButton variant="ghost" size="icon-sm" className="console-cost-detail-trigger" aria-label={label} />}><Icon name="info" size={12} /></PopoverTrigger><PopoverContent side="left" align="center" arrow={false} className="console-cost-tooltip"><CostTooltip row={row} formatCost={formatCost} locale={locale} /></PopoverContent></Popover></div></div>;
 }
 
 function latencyLabel(value) {
@@ -312,7 +318,7 @@ function UsageFilterToolbar({ loadUsage, loadErrors, tab, state, t }) {
 function UsageFilterPanel({ toolbar, tab, filters, errorFilters, options, modelOptions, errorModelOptions, setFilter, setErrorFilter, reset, changeRange, locale, t }) {
   const errorTab = tab === "errors";
   const filtersNode = errorTab
-    ? <ErrorFilters filters={errorFilters} setFilter={setErrorFilter} apiKeys={options.keys} models={errorModelOptions} dateFilters={filters} changeRange={changeRange} locale={locale} />
+    ? <ErrorFilters filters={errorFilters} setFilter={setErrorFilter} apiKeys={options.keys} models={errorModelOptions} dateFilters={filters} changeRange={changeRange} locale={locale} t={t} />
     : <UsageFilters filters={filters} setFilter={setFilter} apiKeys={options.keys} groups={options.groups} models={modelOptions} locale={locale} t={t} />;
   return <Panel className="console-usage-filter-panel"><div className="console-usage-filter-content"><div className="console-filter-action-layout">{filtersNode}<div className="console-usage-filter-actions">{toolbar}<Button className="console-usage-reset" icon="reset" onClick={reset}>{localized(locale, "重置", "Reset")}</Button></div></div></div></Panel>;
 }
@@ -365,11 +371,16 @@ function RecordsPanel({ tabs, tab, data, errors, geoEnabled, setGeoEnabled, stat
   return <Panel className="console-usage-records-panel" aria-busy={errorTab ? state.errorLoading : state.loading}><div className="console-usage-record-tools">{tabs}{actions}</div>{errorTab ? <ErrorRecords loading={state.errorLoading} columns={visibleErrorColumns} errors={errors} sort={errorSort} setSort={setErrorSort} paging={errorPaging} setPaging={setErrorPaging} openError={openError} /> : <UsageRecords state={state} columns={visibleUsageColumns} data={data} sort={sort} onSort={onUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} />}</Panel>;
 }
 
-function ErrorDetailModal({ detail, locale, onClose }) {
+function ErrorDetailDrawer({ detail, locale, t, onClose }) {
   let content = null;
   if (detail?.loading) content = <Spinner />;
   else if (detail?.item) content = <ErrorDetail item={detail.item} />;
-  return <Modal open={Boolean(detail)} title={localized(locale, "错误请求详情", "Error request details")} onClose={onClose} size="large">{content}</Modal>;
+  return <Drawer side="right" modal={false} open={Boolean(detail)} onOpenChange={(open) => !open && onClose()}>
+    <DrawerContent backdrop={false} closeLabel={t("common.close")} className="console-error-drawer">
+      <DrawerHeader><DrawerTitle>{localized(locale, "错误请求详情", "Error request details")}</DrawerTitle></DrawerHeader>
+      <DrawerBody>{content}</DrawerBody>
+    </DrawerContent>
+  </Drawer>;
 }
 
 export function UsagePage() {
@@ -455,12 +466,12 @@ export function UsagePage() {
   const refreshUsage = () => { if (paging.page === 1) loadUsage(); else resetUsageRecords(); };
   const openError = async (item) => { detailControllerRef.current?.abort(); const controller = new AbortController(); const request = Symbol("error-detail"); detailControllerRef.current = controller; detailRef.current = request; setDetail({ loading: true, item }); try { const full = await usageApi.error(item.id, controller.signal); if (detailRef.current === request) setDetail({ loading: false, item: full }); } catch { if (!controller.signal.aborted && detailRef.current === request) setDetail({ loading: false, item }); } };
   const modelOptions = useMemo(() => [...new Set([...data.models.map((item) => item.model), filters.model].filter(Boolean))].sort(), [data.models, filters.model]);
-  const errorModelOptions = useMemo(() => [...new Set([...errors.items.map((item) => item.model), errorFilters.model].filter(Boolean))].sort(), [errorFilters.model, errors.items]);
+  const errorModelOptions = useMemo(() => [...new Set([...data.models.map((item) => item.model), ...errors.items.map((item) => item.model), errorFilters.model].filter(Boolean))].sort(), [data.models, errorFilters.model, errors.items]);
   const usageColumns = useMemo(() => [
     { key: "created_at", label: locale === "zh" ? "时间" : "Time", sortable: true, render: (row) => <UsageTimeCell value={row.created_at} locale={locale} /> },
-    { key: "key_endpoint", label: locale === "zh" ? "密钥 / 端点" : "Key / endpoint", render: (row) => <KeyEndpointCell row={row} /> },
+    { key: "key_endpoint", label: `${t("usage.key")} / ${localized(locale, "端点", "endpoint")}`, render: (row) => <KeyEndpointCell row={row} /> },
     { key: "model_group", label: locale === "zh" ? "模型 / 分组" : "Model / group", render: (row) => <ModelGroupCell row={row} /> },
-    { key: "type_billing", label: locale === "zh" ? "类型" : "Type", render: (row) => <RequestTypeCell row={row} t={t} /> },
+    { key: "type_billing", label: t("usage.type"), render: (row) => <RequestTypeCell row={row} t={t} /> },
     { key: "latency", label: locale === "zh" ? "首 Token / 总耗时" : "First token / total", render: (row) => <LatencyCell row={row} locale={locale} /> },
     { key: "cost", label: locale === "zh" ? "扣费" : "Billed cost", render: (row) => <CostCell row={row} formatNumber={formatNumber} locale={locale} /> },
     { key: "tokens", label: t("usage.tokens"), render: (row) => <TokenCell row={row} locale={locale} /> },
@@ -468,7 +479,7 @@ export function UsagePage() {
     { key: "user_agent", label: "User-Agent", render: (row) => <TruncatedText value={row.user_agent} className="console-user-agent" /> },
   ], [formatNumber, geoEnabled, locale, t]);
   const errorColumns = useMemo(() => [
-    { key: "key_name", label: locale === "zh" ? "密钥名称" : "Key name", render: (row) => <div className="console-key-name"><TruncatedText value={row.key_name} render={<strong />} />{row.key_deleted && <small>{locale === "zh" ? "已删除" : "Deleted"}</small>}</div> },
+    { key: "key_name", label: t("usage.key"), render: (row) => <div className="console-key-name"><TruncatedText value={row.key_name} render={<strong />} />{row.key_deleted && <small>{locale === "zh" ? "已删除" : "Deleted"}</small>}</div> },
     { key: "model", label: t("usage.model"), sortable: true }, { key: "endpoint", label: locale === "zh" ? "端点" : "Endpoint", render: (row) => <TruncatedText value={row.inbound_endpoint} render={<code />} className="console-endpoint-code" /> },
     { key: "client_ip", label: "IP", render: (row) => <IpGeoCell ip={row.client_ip} enabled={geoEnabled} /> }, { key: "group", label: t("usage.group"), render: (row) => <TruncatedText value={row.group_name} /> },
     { key: "type", label: t("usage.type"), render: (row) => <Badge variant="soft" size="sm" className={`console-type-badge is-${requestType(row)}`}>{typeLabel(requestType(row), t)}</Badge> },
@@ -482,5 +493,5 @@ export function UsagePage() {
   const visibleErrorColumns = errorColumns.filter((column) => ["status", "created_at"].includes(column.key) || !errorHidden.hidden.has(column.key));
 
   const closeDetail = () => { detailControllerRef.current?.abort(); detailRef.current = null; setDetail(null); };
-  return <Page title={t("usage.title")} className="console-usage-page"><div className="console-usage-workspace"><div className="console-usage-ledger">{tab === "usage" && <UsageSummary summary={data.summary} loading={state.loading} />}<UsageFilterPanel toolbar={<UsageFilterToolbar loadUsage={refreshUsage} loadErrors={loadErrors} tab={tab} state={state} t={t} />} tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} changeRange={changeRange} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} onUsageSort={changeUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div><ErrorDetailModal detail={detail} locale={locale} onClose={closeDetail} /></Page>;
+  return <Page title={t("usage.title")} className="console-usage-page"><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageSummary summary={data.summary} loading={state.loading} /><UsageFilterPanel toolbar={<UsageFilterToolbar loadUsage={refreshUsage} loadErrors={loadErrors} tab={tab} state={state} t={t} />} tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} changeRange={changeRange} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} openError={openError} visibleUsageColumns={visibleUsageColumns} sort={sort} onUsageSort={changeUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div><ErrorDetailDrawer detail={detail} locale={locale} t={t} onClose={closeDetail} /></Page>;
 }
