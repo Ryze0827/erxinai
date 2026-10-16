@@ -5,6 +5,10 @@ export function modelRate(group, model) {
   return group.user_rate_multiplier ?? group.rate_multiplier ?? 1;
 }
 
+export function priceEntries(pricing, { rate = 1, tier = null } = {}) {
+  return pricingRows(pricing, tier).map(([field, base]) => ({ field, value: base * rate, original: rate < 1 ? base : null }));
+}
+
 export function pricingRows(pricing, tier = null) {
   const fields = ["input_price", "output_price", "cache_write_price", "cache_write_1h_price", "cache_read_price", "image_input_price", "image_output_price", "per_request_price"];
   return fields.flatMap((field) => {
