@@ -22,7 +22,7 @@ export function WelfareScheduleCountdown() {
         receivedAt = performance.now();
         const serverNow = Date.parse(schedule?.server_now);
         transition = Date.parse(schedule?.next_transition_at) - serverNow;
-        setSnapshot(schedule?.enabled && schedule?.show_announcement && Number.isFinite(serverNow) ? { ...schedule, serverNow } : null);
+        setSnapshot(schedule?.show_announcement && Number.isFinite(serverNow) ? { ...schedule, serverNow } : null);
         setElapsed(0);
       } catch {
         if (!controller.signal.aborted) setSnapshot(null);
