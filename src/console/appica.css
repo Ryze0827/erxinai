@@ -8132,10 +8132,10 @@ html[data-console-theme] .console-ip {
   }
 
   html[data-console-theme] [data-slot="card"].console-distribution > [data-slot="card-content"] {
-    height: 28rem;
-    min-height: 28rem;
-    max-height: 28rem;
-    flex-basis: 28rem;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    flex-basis: auto;
   }
 
   html[data-console-theme] .console-donut-wrap {
@@ -8172,8 +8172,18 @@ html[data-console-theme] .console-ip {
     flex-direction: column;
   }
 
-  html[data-console-theme] .console-usage-reset {
+  html[data-console-theme] .console-usage-filters {
+    flex: none;
+    align-content: start;
+  }
+
+  html[data-console-theme] .console-usage-filter-actions {
     width: 100%;
+    margin-inline-start: 0;
+  }
+
+  html[data-console-theme] .console-usage-filter-actions > [data-slot="button"] {
+    flex: 1;
   }
 }
 
@@ -10939,7 +10949,8 @@ html[data-console-theme] .console-invoice-submit p svg {
 
   html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="select"] {
     grid-column: 1;
-    grid-row: 1 / span 2;
+    grid-row: 1 / span 3;
+    width: auto;
     padding: 0;
   }
 
@@ -10955,16 +10966,17 @@ html[data-console-theme] .console-invoice-submit p svg {
   }
 
   html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="completed_at"] {
-    grid-column: 2;
+    grid-column: 2 / -1;
     grid-row: 2;
     color: var(--foreground-muted);
     font-size: var(--text-xs);
   }
 
   html[data-console-theme] .console-invoice-orders-table .console-table td[data-column="status"] {
-    grid-column: 3;
-    grid-row: 2;
-    text-align: end;
+    grid-column: 2 / -1;
+    grid-row: 3;
+    width: auto;
+    text-align: start;
   }
 
   html[data-console-theme] .console-invoice-request {
@@ -11825,5 +11837,91 @@ html[data-console-theme] .console-invoice-quote-footer > button { flex-shrink: 0
 
   html[data-console-theme] .console-compact-tabs-root [data-slot="tabs-list"] {
     width: max-content;
+  }
+}
+
+@media (max-width: 64rem) {
+  html[data-console-page] {
+    --console-scale: 1;
+  }
+
+  html[data-console-theme] .console-header-left strong {
+    display: block;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 47.5rem) {
+  html[data-console-theme] .console-model-preference-chart {
+    min-width: 0;
+  }
+
+  html[data-console-theme] .console-model-preference-axis {
+    display: block;
+  }
+
+  html[data-console-theme] .console-model-preference-axis > span {
+    display: none;
+  }
+
+  html[data-console-theme] .console-model-preference-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    padding-block: 0.75rem;
+  }
+
+  html[data-console-theme] .console-model-preference-plot {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  html[data-console-theme] .console-model-preference-window {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 47.5rem) {
+  html[data-console-theme] .console-header-left {
+    flex: 1 1 0;
+    gap: 0.5rem;
+  }
+
+  html[data-console-theme] .console-header-actions {
+    display: contents;
+  }
+
+  html[data-console-theme] .console-header .console-welfare-countdown {
+    order: 1;
+    width: 100%;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 23rem) {
+  html[data-console-theme] .console-header-left {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 47.5rem) {
+  html[data-console-theme] .console-group-summary {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: center;
+  }
+
+  html[data-console-theme] .console-group-summary > :is(.console-group-summary-ring, .console-group-summary-total) {
+    grid-column: span 3;
+  }
+
+  html[data-console-theme] .console-group-summary > .console-monitor-tone {
+    grid-column: span 2;
+    min-width: 0;
+  }
+
+  html[data-console-theme] .console-group-summary > .console-group-status-legend {
+    grid-column: 1 / -1;
   }
 }
