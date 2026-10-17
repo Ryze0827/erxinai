@@ -53,7 +53,7 @@ const LAYOUT_IDENTITY_TRANSFORMS = new Set([
 const STORE_URL = "https://shop.erxin.store";
 
 function isDesktopSidebar() {
-  return window.matchMedia("(min-width: 981px)").matches;
+  return !window.matchMedia("(max-width: 64rem)").matches;
 }
 
 function sidebarAnchorPoint(element, rect) {
@@ -372,7 +372,7 @@ function Walkthrough({ setMobileOpen }) {
   const current = walkthroughSteps[step];
   const close = () => {
     walkthroughSession = { active: false, step: 0 };
-    if (window.innerWidth <= 980) setMobileOpen(false);
+    if (!isDesktopSidebar()) setMobileOpen(false);
     setOpen(false);
     setTarget(null);
   };
@@ -380,7 +380,7 @@ function Walkthrough({ setMobileOpen }) {
     const normalized = Math.max(0, Math.min(walkthroughSteps.length - 1, nextStep));
     const next = walkthroughSteps[normalized];
     walkthroughSession = { active: true, step: normalized };
-    if (window.innerWidth <= 980) setMobileOpen(normalized < 2);
+    if (!isDesktopSidebar()) setMobileOpen(normalized < 2);
     setStep(normalized);
     setOpen(true);
     if (next.path && location.pathname !== next.path) navigate(next.path);
@@ -460,7 +460,7 @@ function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
     return () => { active = false; };
   }, []);
 
-  return <><header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label={t(mobileOpen ? "nav.closeMenu" : "nav.openMenu")} onClick={() => setMobileOpen((value) => !value)} /><strong>{title}</strong></div><div className="console-header-actions" data-sidebar-motion-static>{summary?.active_count > 0 && <Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-subscription-pill" })} to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<WelfareScheduleCountdown /><Walkthrough setMobileOpen={setMobileOpen} /><CheckInButton />{safeExternalUrl(settings?.doc_url) && <a className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-header-link" })} href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<InlineButton variant="outline" size="md" className="console-header-language" icon="language" aria-label={t("nav.switchLanguage")} title={t("nav.switchLanguage")} onClick={() => setLocale(locale === "en" ? "zh" : "en")}><span>{t("nav.language")}</span></InlineButton><ThemeToggle className="console-header-preference" /><AnnouncementMenu openEffectiveRateRequest={openEffectiveRateRequest} /><Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-balance-link" })} to="/purchase" aria-label={t("nav.balanceAria", { balance: formatUsd(user?.balance || 0) })}><Icon name="wallet" size={17} data-icon="start" /><strong className="console-balance-value">{formatUsd(user?.balance || 0)}</strong></Link></div></header><SiteAnnouncementBar onClick={() => setOpenEffectiveRateRequest((value) => value + 1)} /></>;
+  return <><header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" aria-controls="console-sidebar" aria-expanded={mobileOpen} icon={mobileOpen ? "close" : "menu"} label={t(mobileOpen ? "nav.closeMenu" : "nav.openMenu")} onClick={() => setMobileOpen((value) => !value)} /><strong>{title}</strong></div><div className="console-header-actions" data-sidebar-motion-static>{summary?.active_count > 0 && <Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-subscription-pill" })} to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<WelfareScheduleCountdown /><Walkthrough setMobileOpen={setMobileOpen} /><CheckInButton />{safeExternalUrl(settings?.doc_url) && <a className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-header-link" })} href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<InlineButton variant="outline" size="md" className="console-header-language" icon="language" aria-label={t("nav.switchLanguage")} title={t("nav.switchLanguage")} onClick={() => setLocale(locale === "en" ? "zh" : "en")}><span>{t("nav.language")}</span></InlineButton><ThemeToggle className="console-header-preference" /><AnnouncementMenu openEffectiveRateRequest={openEffectiveRateRequest} /><Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-balance-link" })} to="/purchase" aria-label={t("nav.balanceAria", { balance: formatUsd(user?.balance || 0) })}><Icon name="wallet" size={17} data-icon="start" /><strong className="console-balance-value">{formatUsd(user?.balance || 0)}</strong></Link></div></header><SiteAnnouncementBar onClick={() => setOpenEffectiveRateRequest((value) => value + 1)} /></>;
 }
 
 function pageTitle(pathname, items, t) {
@@ -479,6 +479,7 @@ export function ConsoleLayout({ children }) {
   const { user, authenticated, settings, branding, brandingReady } = useConsole();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopSidebar, setDesktopSidebar] = useState(isDesktopSidebar);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1");
   const sidebarRef = useRef(null);
   const workspaceRef = useRef(null);
@@ -511,6 +512,16 @@ export function ConsoleLayout({ children }) {
     setMobileOpen(false);
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [brandingReady, location.pathname, siteName, title]);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 64rem)");
+    const update = () => {
+      setDesktopSidebar(!media.matches);
+      if (!media.matches) setMobileOpen(false);
+    };
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   useEffect(() => {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
@@ -571,17 +582,22 @@ export function ConsoleLayout({ children }) {
   }, []);
   useEffect(() => {
     if (!mobileOpen) return undefined;
-    const close = (event) => event.key === "Escape" && setMobileOpen(false);
+    const close = (event) => !event.defaultPrevented && event.key === "Escape" && setMobileOpen(false);
+    const previousOverflow = document.body.style.overflow;
+    const trigger = document.activeElement;
+    sidebarRef.current?.querySelector(".console-sidebar-toggle")?.focus();
     document.body.style.overflow = "hidden";
     document.addEventListener("keydown", close);
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", close);
+      if (sidebarRef.current?.contains(document.activeElement)) trigger?.focus();
     };
   }, [mobileOpen]);
 
-  const collapseLabel = sidebarCollapsed ? t("nav.expand") : t("nav.collapse");
+  const collapseLabel = !desktopSidebar ? t("nav.closeMenu") : sidebarCollapsed ? t("nav.expand") : t("nav.collapse");
   const toggleSidebar = () => {
+    if (!desktopSidebar) { setMobileOpen(false); return; }
     const sidebar = sidebarRef.current;
     const workspace = workspaceRef.current;
     if (workspace && !reduceMotion && isDesktopSidebar()) {
@@ -595,7 +611,7 @@ export function ConsoleLayout({ children }) {
     sidebarMotionsRef.current.clear();
     setSidebarCollapsed((value) => !value);
   };
-  return <ConsoleBackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`} ref={sidebarRef}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <BrandLogo key={logo} src={logo} alt="" width="31" height="31" decoding="sync" fetchPriority="high" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><SidebarAssistant /><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></ConsoleBackgroundPattern>;
+  return <ConsoleBackgroundPattern variant="dots" spotlight track="window" className={`console-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""}`}><aside id="console-sidebar" inert={!desktopSidebar && !mobileOpen} className={`console-sidebar ${sidebarCollapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-open" : ""}`} ref={sidebarRef}><div className="console-brand-row"><Link className={`console-brand ${brandingReady ? "" : "is-pending"}`} to="/" title={sidebarCollapsed && brandingReady ? siteName : undefined}>{brandingReady && <BrandLogo key={logo} src={logo} alt="" width="31" height="31" decoding="sync" fetchPriority="high" />}{brandingReady && <strong>WayX</strong>}</Link><Button variant="ghost" className="console-sidebar-toggle" onClick={toggleSidebar} title={collapseLabel} aria-label={collapseLabel}><Icon name={!desktopSidebar ? "close" : sidebarCollapsed ? "chevronsRight" : "chevronsLeft"} size={18} /></Button></div><nav><SidebarSection items={overviewItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} className="console-nav-section--overview" /><SidebarSection title={t("nav.sectionWorkspace")} items={workspaceItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionAccount")} items={personalItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><SidebarSection title={t("nav.sectionTools")} items={toolItems} collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /><StoreNavigation collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></nav><SidebarAssistant /><div className="console-sidebar-foot"><SidebarUserMenu collapsed={sidebarCollapsed} onNavigate={() => setMobileOpen(false)} /></div></aside>{mobileOpen && <Button variant="ghost" className="console-sidebar-overlay" aria-label={t("nav.closeMenu")} onClick={() => setMobileOpen(false)} />}<div className="console-workspace" ref={workspaceRef}><ConsoleHeader title={title} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><main>{children}</main></div><ToastViewport /></ConsoleBackgroundPattern>;
 }
 
 export function ProtectedRoute({ children, feature, mode = "opt-in", standardOnly = false }) {

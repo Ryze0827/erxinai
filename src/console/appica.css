@@ -1003,14 +1003,14 @@ html[data-console-theme] .console-checkin-streak {
 }
 
 @media (max-width: 64rem) {
-  html[data-console-theme] .console-header:has(.console-welfare-countdown) {
+  html[data-console-theme] .console-header {
     height: auto;
     min-height: 4.5rem;
     flex-wrap: wrap;
     padding-block: 0.75rem;
   }
 
-  html[data-console-theme] .console-header:has(.console-welfare-countdown) .console-header-actions {
+  html[data-console-theme] .console-header .console-header-actions {
     flex-wrap: wrap;
   }
 }
@@ -6175,7 +6175,10 @@ html[data-console-theme] .console-tour-card > footer > [data-slot="button"] {
   html[data-console-theme] .console-sidebar,
   html[data-console-theme] .console-shell.is-sidebar-collapsed .console-sidebar {
     --console-sidebar-visible-width: var(--console-sidebar-width);
-    width: min(20rem, calc(100vw - 1rem));
+    width: min(20rem, calc(100vw - 3rem));
+    height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
     clip-path: inset(0);
     transform: translateX(-105%);
     box-shadow: var(--shadow-xl);
@@ -6420,6 +6423,12 @@ html[data-console-theme] .console-tour-card > footer > [data-slot="button"] {
   }
 
   html[data-console-theme] .console-pagination > div {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  html[data-console-theme] .console-pagination [data-slot="pagination"] {
+    max-width: 100%;
     overflow-x: auto;
   }
 
@@ -11763,3 +11772,58 @@ html[data-console-theme] .console-invoice-quote-footer > button { flex-shrink: 0
   }
 }
 
+
+/* Keep floating menus and navigation usable on narrow and short viewports. */
+@media (max-width: 64rem) {
+  html[data-console-theme] .console-header-left {
+    flex: 1 0 100%;
+  }
+
+  html[data-console-theme] .console-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  html[data-console-theme] .console-header-actions > * {
+    flex-shrink: 0;
+    max-width: 100%;
+  }
+
+  html[data-console-theme] .console-sidebar nav {
+    min-height: 0;
+  }
+
+  html[data-console-theme] .console-sidebar .console-nav-link {
+    min-height: 2.75rem;
+  }
+
+  html[data-console-theme] :is([data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"], [data-slot="select-content"], [data-slot="popover-content"]) {
+    max-width: min(calc(100vw - 2rem), var(--available-width, 100vw));
+    max-height: min(calc(100dvh - 2rem), var(--available-height, 100dvh));
+    overscroll-behavior: contain;
+  }
+
+  html[data-console-theme] [data-slot="popover-content"] {
+    overflow-y: auto;
+  }
+
+  html[data-console-theme] :is([data-slot="dropdown-menu-item"], [data-slot="dropdown-menu-checkbox-item"], [data-slot="dropdown-menu-radio-item"], [data-slot="select-item"]) {
+    min-height: 2.75rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  html[data-console-theme] .console-user-summary :is(strong, small) {
+    overflow-wrap: anywhere;
+  }
+
+  html[data-console-theme] .console-compact-tabs-root {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  html[data-console-theme] .console-compact-tabs-root [data-slot="tabs-list"] {
+    width: max-content;
+  }
+}
