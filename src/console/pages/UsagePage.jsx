@@ -3,7 +3,7 @@ import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { PlatformMark } from "../GroupBadge";
 import { Icon } from "../Icon";
-import { useLocale } from "../i18n";
+import { useLocale, translate, formatDateTimeFor, formatNumberFor, currencySymbolFor } from "../i18n";
 import { Button, DataTable, ErrorState, Field, Modal, Page, Pagination, PaginationSkeleton, Panel, SelectInput, Spinner, TruncatedText } from "../UI";
 import { formatDuration, formatTokenMillions } from "../utils";
 import { CompactTabs, DateRangePicker, useHiddenColumns } from "../components/ConsoleControls";
@@ -67,35 +67,22 @@ function FilterSelect({ label, value, onChange, children }) {
   return <Field label={label}><SelectInput value={value} onChange={(event) => onChange(event.target.value)}>{children}</SelectInput></Field>;
 }
 
-function localized(locale, zh, en) {
-  return locale === "zh" ? zh : en;
-}
-
 function DateRangeFilter({ filters, onChange, locale }) {
-  return <Field label={localized(locale, "时间范围", "Time range")} className="console-usage-range-field"><DateRangePicker startDate={filters.start_date} endDate={filters.end_date} onChange={onChange} /></Field>;
+  return <Field label={translate(locale, "usage.timeRange")} className="console-usage-range-field"><DateRangePicker startDate={filters.start_date} endDate={filters.end_date} onChange={onChange} /></Field>;
 }
 
 function UsageFilters({ filters, setFilter, apiKeys, groups, models, locale, t }) {
-  return <div className="console-usage-filters console-usage-filters--usage"><DateRangeFilter filters={filters} onChange={(range) => { setFilter("start_date", range.start_date); setFilter("end_date", range.end_date); }} locale={locale} /><FilterSelect label={t("usage.key")} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{localized(locale, "全部密钥", "All API keys")}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><FilterSelect label={t("usage.model")} value={filters.model} onChange={(value) => setFilter("model", value)}><option value="">{localized(locale, "全部模型", "All models")}</option>{models.map((model) => <option key={model} value={model}>{model}</option>)}</FilterSelect><FilterSelect label={t("usage.group")} value={filters.group_id} onChange={(value) => setFilter("group_id", value)}><option value="">{localized(locale, "全部分组", "All groups")}</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</FilterSelect><FilterSelect label={t("usage.type")} value={filters.request_type} onChange={(value) => setFilter("request_type", value)}><option value="">{localized(locale, "全部类型", "All types")}</option><option value="stream">{t("usage.requestType.stream")}</option><option value="sync">{t("usage.requestType.sync")}</option></FilterSelect></div>;
+  return <div className="console-usage-filters console-usage-filters--usage"><DateRangeFilter filters={filters} onChange={(range) => { setFilter("start_date", range.start_date); setFilter("end_date", range.end_date); }} locale={locale} /><FilterSelect label={t("usage.key")} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{t("usage.allApiKeys")}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><FilterSelect label={t("usage.model")} value={filters.model} onChange={(value) => setFilter("model", value)}><option value="">{t("usage.allModels")}</option>{models.map((model) => <option key={model} value={model}>{model}</option>)}</FilterSelect><FilterSelect label={t("usage.group")} value={filters.group_id} onChange={(value) => setFilter("group_id", value)}><option value="">{t("usage.allGroups")}</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</FilterSelect><FilterSelect label={t("usage.type")} value={filters.request_type} onChange={(value) => setFilter("request_type", value)}><option value="">{t("usage.allTypes")}</option><option value="stream">{t("usage.requestType.stream")}</option><option value="sync">{t("usage.requestType.sync")}</option></FilterSelect></div>;
 }
 
 function ErrorFilters({ filters, setFilter, apiKeys, models, dateFilters, changeRange, locale, t }) {
-  return <div className="console-usage-filters console-usage-filters--errors"><DateRangeFilter filters={dateFilters} onChange={changeRange} locale={locale} /><FilterSelect label={t("usage.key")} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{localized(locale, "全部密钥", "All API keys")}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><FilterSelect label={t("usage.model")} value={filters.model} onChange={(value) => setFilter("model", value)}><option value="">{localized(locale, "全部模型", "All models")}</option>{models.map((model) => <option key={model} value={model}>{model}</option>)}</FilterSelect><FilterSelect label={locale === "zh" ? "错误分类" : "Category"} value={filters.category} onChange={(value) => setFilter("category", value)}><option value="">{locale === "zh" ? "全部分类" : "All categories"}</option>{["auth", "rate_limit", "quota", "invalid_request", "service_unavailable", "upstream", "internal", "cyber"].map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}</FilterSelect><FilterSelect label={locale === "zh" ? "状态码" : "Status"} value={filters.status_code} onChange={(value) => setFilter("status_code", value)}><option value="">{locale === "zh" ? "全部状态" : "All statuses"}</option>{[400, 401, 403, 404, 408, 409, 422, 429, 500, 502, 503, 504].map((code) => <option key={code} value={code}>{code}</option>)}</FilterSelect></div>;
+  return <div className="console-usage-filters console-usage-filters--errors"><DateRangeFilter filters={dateFilters} onChange={changeRange} locale={locale} /><FilterSelect label={t("usage.key")} value={filters.api_key_id} onChange={(value) => setFilter("api_key_id", value)}><option value="">{t("usage.allApiKeys")}</option>{apiKeys.map((key) => <option key={key.id} value={key.id}>{key.name}</option>)}</FilterSelect><FilterSelect label={t("usage.model")} value={filters.model} onChange={(value) => setFilter("model", value)}><option value="">{t("usage.allModels")}</option>{models.map((model) => <option key={model} value={model}>{model}</option>)}</FilterSelect><FilterSelect label={t("usage.category")} value={filters.category} onChange={(value) => setFilter("category", value)}><option value="">{t("usage.allCategories")}</option>{["auth", "rate_limit", "quota", "invalid_request", "service_unavailable", "upstream", "internal", "cyber"].map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}</FilterSelect><FilterSelect label={t("usage.status")} value={filters.status_code} onChange={(value) => setFilter("status_code", value)}><option value="">{t("usage.allStatuses")}</option>{[400, 401, 403, 404, 408, 409, 422, 429, 500, 502, 503, 504].map((code) => <option key={code} value={code}>{code}</option>)}</FilterSelect></div>;
 }
 
 // Intl formatters are costly to construct; table cells share one per locale.
-const formatterCache = new Map();
 
-function cachedFormatter(kind, locale) {
-  const key = `${kind}:${locale}`;
-  if (!formatterCache.has(key)) {
-    const language = locale === "zh" ? "zh-CN" : "en-US";
-    formatterCache.set(key, kind === "time"
-      ? new Intl.DateTimeFormat(language, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" })
-      : new Intl.NumberFormat(language, { maximumFractionDigits: 0 }));
-  }
-  return formatterCache.get(key);
-}
+const LEDGER_TIME_FORMAT = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" };
+const LEDGER_COUNT_FORMAT = { maximumFractionDigits: 0 };
 
 /* Usage ledger cells: one line each, so rows read as an even grid. */
 
@@ -106,7 +93,7 @@ function EmptyValue() {
 function UsageTimeCell({ value, locale }) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return <EmptyValue />;
-  return <time className="console-ledger-time" dateTime={date.toISOString()} title={fullTime(date)}>{cachedFormatter("time", locale).format(date)}</time>;
+  return <time className="console-ledger-time" dateTime={date.toISOString()} title={fullTime(date)}>{formatDateTimeFor(locale, date, LEDGER_TIME_FORMAT)}</time>;
 }
 
 function fullTime(date) {
@@ -119,7 +106,7 @@ function GroupCell({ name, platform }) {
 }
 
 function KeyCell({ name, deleted, locale }) {
-  return <span className="console-ledger-inline"><TruncatedText value={name} />{deleted && <small>{localized(locale, "已删除", "Deleted")}</small>}</span>;
+  return <span className="console-ledger-inline"><TruncatedText value={name} />{deleted && <small>{translate(locale, "usage.deleted")}</small>}</span>;
 }
 
 function isImageUsage(row) {
@@ -128,8 +115,8 @@ function isImageUsage(row) {
 }
 
 function tokenBreakdown(row, locale) {
-  const labels = locale === "zh" ? { input: "输入", output: "输出", read: "缓存读取", write: "缓存创建" } : { input: "Input", output: "Output", read: "Cache read", write: "Cache creation" };
-  const format = (value) => cachedFormatter("count", locale).format(numeric(value));
+  const labels = { input: translate(locale, "usage.input"), output: translate(locale, "usage.output"), read: translate(locale, "usage.cacheRead"), write: translate(locale, "usage.cacheCreation") };
+  const format = (value) => formatNumberFor(locale, numeric(value), LEDGER_COUNT_FORMAT);
   return [
     `${labels.input}: ${format(row.input_tokens)}`,
     `${labels.output}: ${format(row.output_tokens)}`,
@@ -143,11 +130,11 @@ function NumberValue({ value, unit, title, tone }) {
 }
 
 function TokenValue({ row, field, locale }) {
-  return <NumberValue value={cachedFormatter("count", locale).format(numeric(row[field]))} unit="tok" title={tokenBreakdown(row, locale)} />;
+  return <NumberValue value={formatNumberFor(locale, numeric(row[field]), LEDGER_COUNT_FORMAT)} unit="tok" title={tokenBreakdown(row, locale)} />;
 }
 
 function InputTokensCell({ row, locale }) {
-  if (isImageUsage(row)) return <NumberValue value={row.image_count || 1} unit={localized(locale, "张", "img")} />;
+  if (isImageUsage(row)) return <NumberValue value={row.image_count || 1} unit={translate(locale, "usage.img")} />;
   return <TokenValue row={row} field="input_tokens" locale={locale} />;
 }
 
@@ -171,13 +158,14 @@ function numeric(value) {
 
 // Dollar amounts share the ledger number style: spaced "$" prefix, muted unit suffix.
 function MoneyValue({ value, digits = 6, unit, formatNumber }) {
+  const { locale } = useLocale();
   const amount = formatNumber(numeric(value), { minimumFractionDigits: digits, maximumFractionDigits: digits });
-  return <span className="console-ledger-number"><small className="is-prefix">$</small>{amount}{unit && <small>{unit}</small>}</span>;
+  return <span className="console-ledger-number"><small className="is-prefix">{currencySymbolFor(locale, "USD")}</small>{amount}{unit && <small>{unit}</small>}</span>;
 }
 
 export function CostCell({ row, formatNumber, locale }) {
-  const longContextLabel = localized(locale, "长上下文", "Long context");
-  const longContextHint = localized(locale, "已应用长上下文计费。输入和输出费率取决于定价档位，并非统一倍率。", "Long-context pricing was applied. Input and output rates depend on the pricing tier, not a uniform multiplier.");
+  const longContextLabel = translate(locale, "usage.longContext");
+  const longContextHint = translate(locale, "usage.longContextPricingWas");
   return <span className="console-ledger-cost"><MoneyValue value={row.actual_cost} digits={4} formatNumber={formatNumber} />{row.long_context_billing_applied && <small className="console-long-context-marker" title={longContextHint}>{longContextLabel}</small>}</span>;
 }
 
@@ -207,12 +195,12 @@ function UsageSummary({ summary, loading }) {
   const { locale, formatNumber } = useLocale();
   const formatCost = (value) => formatNumber(Number(value), { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 4, maximumFractionDigits: 4 });
   const metrics = [
-    { key: "requests", icon: "send", label: localized(locale, "总请求数", "Total requests"), value: summary?.total_requests, format: (value) => formatNumber(Number(value)) },
-    { key: "tokens", icon: "coins", label: localized(locale, "总 Token", "Total tokens"), value: summary?.total_tokens, format: formatTokenMillions },
-    { key: "spend", icon: "wallet", label: localized(locale, "总消费", "Total spend"), value: summary?.total_actual_cost, format: formatCost },
-    { key: "latency", icon: "hourglass", label: localized(locale, "平均耗时", "Average duration"), value: summary?.average_duration_ms, format: formatDuration },
+    { key: "requests", icon: "send", label: translate(locale, "usage.totalRequests"), value: summary?.total_requests, format: (value) => formatNumber(Number(value)) },
+    { key: "tokens", icon: "coins", label: translate(locale, "usage.totalTokens"), value: summary?.total_tokens, format: formatTokenMillions },
+    { key: "spend", icon: "wallet", label: translate(locale, "usage.totalSpend"), value: summary?.total_actual_cost, format: formatCost },
+    { key: "latency", icon: "hourglass", label: translate(locale, "usage.averageDuration"), value: summary?.average_duration_ms, format: formatDuration },
   ];
-  return <section className="console-usage-summary" aria-busy={loading} aria-label={localized(locale, "用量汇总", "Usage summary")}>{metrics.map((metric) => <div key={metric.key} className={`console-usage-summary-metric is-${metric.key}`}><i className="console-usage-summary-icon"><Icon name={metric.icon} size={21} /></i><span>{metric.label}</span><strong>{metric.value == null ? "—" : metric.format(metric.value)}</strong></div>)}</section>;
+  return <section className="console-usage-summary" aria-busy={loading} aria-label={translate(locale, "usage.usageSummary")}>{metrics.map((metric) => <div key={metric.key} className={`console-usage-summary-metric is-${metric.key}`}><i className="console-usage-summary-icon"><Icon name={metric.icon} size={21} /></i><span>{metric.label}</span><strong>{metric.value == null ? "—" : metric.format(metric.value)}</strong></div>)}</section>;
 }
 
 function UsageFilterToolbar({ loadUsage, loadErrors, tab, state, t }) {
@@ -228,16 +216,16 @@ function UsageFilterPanel({ toolbar, tab, filters, errorFilters, options, modelO
   const filtersNode = errorTab
     ? <ErrorFilters filters={errorFilters} setFilter={setErrorFilter} apiKeys={options.keys} models={errorModelOptions} dateFilters={filters} changeRange={changeRange} locale={locale} t={t} />
     : <UsageFilters filters={filters} setFilter={setFilter} apiKeys={options.keys} groups={options.groups} models={modelOptions} locale={locale} t={t} />;
-  return <Panel className="console-usage-filter-panel"><div className="console-usage-filter-content"><div className="console-filter-action-layout">{filtersNode}<div className="console-usage-filter-actions">{toolbar}<Button className="console-usage-reset" icon="reset" onClick={reset}>{localized(locale, "重置", "Reset")}</Button></div></div></div></Panel>;
+  return <Panel className="console-usage-filter-panel"><div className="console-usage-filter-content"><div className="console-filter-action-layout">{filtersNode}<div className="console-usage-filter-actions">{toolbar}<Button className="console-usage-reset" icon="reset" onClick={reset}>{t("usage.reset")}</Button></div></div></div></Panel>;
 }
 
 function UsageTabs({ enabled, tab, setTab, locale, t }) {
   if (!enabled) return null;
   const items = [
-    { value: "usage", label: localized(locale, "用量记录", "Usage records") },
+    { value: "usage", label: t("usage.usageRecords") },
     { value: "errors", label: t("usage.errors") },
   ];
-  return <CompactTabs value={tab} items={items} onChange={setTab} className="console-usage-tabs" label={localized(locale, "用量类型", "Usage type")} />;
+  return <CompactTabs value={tab} items={items} onChange={setTab} className="console-usage-tabs" label={t("usage.usageType")} />;
 }
 
 function ErrorRecords({ loading, columns, errors, sort, setSort, paging, setPaging, openError }) {
@@ -273,20 +261,20 @@ function ErrorDetailModal({ item, onClose }) {
   const { t, locale } = useLocale();
   const date = item ? new Date(item.created_at) : null;
   const fields = item ? [
-    [localized(locale, "状态码", "Status"), item.status_code ? <NumberValue value={item.status_code} tone="slow" /> : <EmptyValue />],
+    [t("usage.status"), item.status_code ? <NumberValue value={item.status_code} tone="slow" /> : <EmptyValue />],
     [t("usage.model"), item.model || <EmptyValue />],
     [t("usage.group"), <GroupCell name={item.group_name} platform={item.platform} />],
     [t("usage.key"), <KeyCell name={item.key_name} deleted={item.key_deleted} locale={locale} />],
     [t("usage.type"), typeLabel(requestType(item), t)],
-    [localized(locale, "分类", "Category"), item.category || <EmptyValue />],
-    [localized(locale, "端点", "Endpoint"), item.inbound_endpoint ? <code>{item.inbound_endpoint}</code> : <EmptyValue />],
-    [localized(locale, "客户端 IP", "Client IP"), item.client_ip || <EmptyValue />],
+    [t("usage.category2"), item.category || <EmptyValue />],
+    [t("usage.endpoint"), item.inbound_endpoint ? <code>{item.inbound_endpoint}</code> : <EmptyValue />],
+    [t("usage.clientIp"), item.client_ip || <EmptyValue />],
     ["User-Agent", item.user_agent || <EmptyValue />],
   ] : [];
-  return <Modal className="console-announcement-modal console-error-detail-modal" open={Boolean(item)} title={localized(locale, "错误请求详情", "Error request details")} description={date && !Number.isNaN(date.getTime()) ? fullTime(date) : ""} onClose={onClose} footer={<Button variant="primary" icon="check" onClick={onClose}>{t("common.confirm")}</Button>}>
+  return <Modal className="console-announcement-modal console-error-detail-modal" open={Boolean(item)} title={t("usage.errorRequestDetails")} description={date && !Number.isNaN(date.getTime()) ? fullTime(date) : ""} onClose={onClose} footer={<Button variant="primary" icon="check" onClick={onClose}>{t("common.confirm")}</Button>}>
     {item && <div className="console-error-detail">
       <dl>{fields.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-      <section><h3>{localized(locale, "错误信息", "Message")}</h3><p>{item.message || "—"}</p></section>
+      <section><h3>{t("usage.message")}</h3><p>{item.message || "—"}</p></section>
     </div>}
   </Modal>;
 }
@@ -379,31 +367,31 @@ export function UsagePage() {
   const modelOptions = useMemo(() => [...new Set([...data.models.map((item) => item.model), filters.model].filter(Boolean))].sort(), [data.models, filters.model]);
   const errorModelOptions = useMemo(() => [...new Set([...data.models.map((item) => item.model), ...errors.items.map((item) => item.model), errorFilters.model].filter(Boolean))].sort(), [data.models, errorFilters.model, errors.items]);
   const usageColumns = useMemo(() => [
-    { key: "created_at", label: locale === "zh" ? "时间" : "Time", sortable: true, render: (row) => <UsageTimeCell value={row.created_at} locale={locale} /> },
+    { key: "created_at", label: t("usage.time"), sortable: true, render: (row) => <UsageTimeCell value={row.created_at} locale={locale} /> },
     // Only the model the user requested; upstream mappings stay internal.
     { key: "model", label: t("usage.model"), render: (row) => <TruncatedText value={row.model} /> },
     { key: "group", label: t("usage.group"), render: (row) => <GroupCell name={row.group?.name} platform={row.group?.platform} /> },
     { key: "key", label: t("usage.key"), render: (row) => <KeyCell name={row.api_key?.name} deleted={!row.api_key && Boolean(row.api_key_id)} locale={locale} /> },
-    { key: "input_tokens", label: localized(locale, "输入", "Input"), render: (row) => <InputTokensCell row={row} locale={locale} /> },
-    { key: "output_tokens", label: localized(locale, "输出", "Output"), render: (row) => <OutputTokensCell row={row} locale={locale} /> },
-    { key: "cache_read_tokens", label: localized(locale, "缓存读取", "Cache read"), render: (row) => <CacheReadCell row={row} locale={locale} /> },
-    { key: "cost", label: locale === "zh" ? "扣费" : "Billed cost", render: (row) => <CostCell row={row} formatNumber={formatNumber} locale={locale} /> },
+    { key: "input_tokens", label: t("usage.input"), render: (row) => <InputTokensCell row={row} locale={locale} /> },
+    { key: "output_tokens", label: t("usage.output"), render: (row) => <OutputTokensCell row={row} locale={locale} /> },
+    { key: "cache_read_tokens", label: t("usage.cacheRead"), render: (row) => <CacheReadCell row={row} locale={locale} /> },
+    { key: "cost", label: t("usage.billedCost"), render: (row) => <CostCell row={row} formatNumber={formatNumber} locale={locale} /> },
     { key: "request_type", label: t("usage.type"), render: (row) => typeLabel(requestType(row), t) },
-    { key: "first_token", label: localized(locale, "首 Token", "First token"), render: (row) => <FirstTokenCell row={row} /> },
-    { key: "duration", label: localized(locale, "总耗时", "Duration"), render: (row) => <DurationCell row={row} /> },
-    { key: "ip_address", label: locale === "zh" ? "客户端 IP" : "Client IP", render: (row) => <IpGeoCell ip={row.ip_address} enabled={geoEnabled} /> },
+    { key: "first_token", label: t("usage.firstToken"), render: (row) => <FirstTokenCell row={row} /> },
+    { key: "duration", label: t("usage.duration2"), render: (row) => <DurationCell row={row} /> },
+    { key: "ip_address", label: t("usage.clientIp"), render: (row) => <IpGeoCell ip={row.ip_address} enabled={geoEnabled} /> },
     { key: "user_agent", label: "User-Agent", render: (row) => <TruncatedText value={row.user_agent} className="console-user-agent" /> },
   ], [formatNumber, geoEnabled, locale, t]);
   const errorColumns = useMemo(() => [
-    { key: "created_at", label: locale === "zh" ? "时间" : "Time", sortable: true, render: (row) => <UsageTimeCell value={row.created_at} locale={locale} /> },
+    { key: "created_at", label: t("usage.time"), sortable: true, render: (row) => <UsageTimeCell value={row.created_at} locale={locale} /> },
     { key: "model", label: t("usage.model"), sortable: true },
     { key: "group", label: t("usage.group"), render: (row) => <GroupCell name={row.group_name} platform={row.platform} /> },
     { key: "key", label: t("usage.key"), render: (row) => <KeyCell name={row.key_name} deleted={row.key_deleted} locale={locale} /> },
     { key: "request_type", label: t("usage.type"), render: (row) => typeLabel(requestType(row), t) },
-    { key: "status", label: locale === "zh" ? "状态" : "Status", render: (row) => row.status_code ? <NumberValue value={row.status_code} tone="slow" /> : <EmptyValue /> },
-    { key: "category", label: locale === "zh" ? "分类" : "Category", render: (row) => <TruncatedText value={row.category} /> },
-    { key: "message", label: locale === "zh" ? "错误信息" : "Message", render: (row) => <TruncatedText value={row.message} /> },
-    { key: "client_ip", label: locale === "zh" ? "客户端 IP" : "Client IP", render: (row) => <IpGeoCell ip={row.client_ip} enabled={geoEnabled} /> },
+    { key: "status", label: t("common.status"), render: (row) => row.status_code ? <NumberValue value={row.status_code} tone="slow" /> : <EmptyValue /> },
+    { key: "category", label: t("usage.category2"), render: (row) => <TruncatedText value={row.category} /> },
+    { key: "message", label: t("usage.message"), render: (row) => <TruncatedText value={row.message} /> },
+    { key: "client_ip", label: t("usage.clientIp"), render: (row) => <IpGeoCell ip={row.client_ip} enabled={geoEnabled} /> },
     { key: "user_agent", label: "User-Agent", render: (row) => <TruncatedText value={row.user_agent} className="console-user-agent" /> },
   ], [geoEnabled, locale, t]);
   // Stable column arrays let memoized table rows skip re-rendering on unrelated page state.

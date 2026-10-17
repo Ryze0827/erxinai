@@ -52,4 +52,6 @@ export const invoiceApi = {
 
 export const promotionsApi = {
   welfareSchedule: (signal) => flowpoolRequest("/welfare-schedule", { service: "model-plaza-user", signal }),
+  checkIn: (signal) => flowpoolRequest("/check-in", { service: "model-plaza-user", signal }),
+  submitCheckIn: () => flowpoolRequest("/check-in", { method: "POST", service: "model-plaza-user" }),
 };

@@ -1,19 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { channelsApi, groupsApi } from "../../api";
 import { GroupBadge, PlatformMark } from "../GroupBadge";
-import { useLocale } from "../i18n";
+import { useLocale, translate, formatCurrencyFor } from "../i18n";
 import { Button, EmptyState, ErrorState, Field, Page, Panel, SelectInput, Skeleton, TextInput } from "../UI";
 
 function formatPrice(value, locale, scale = 1) {
   if (value === null || value === undefined) return "—";
-  return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", maximumFractionDigits: 6 }).format(Number(value) * scale);
+  return formatCurrencyFor(locale, Number(value) * scale, "USD", { maximumFractionDigits: 6 });
 }
 
 function Pricing({ pricing, locale }) {
   if (!pricing) return <span className="console-muted">—</span>;
-  const labels = locale === "zh"
-    ? { input: "输入 / M", output: "输出 / M", write: "缓存写入 / M", read: "缓存读取 / M", request: "每次请求", image: "每张图片", tiers: "阶梯价格" }
-    : { input: "Input / M", output: "Output / M", write: "Cache write / M", read: "Cache read / M", request: "Per request", image: "Per image", tiers: "Pricing tiers" };
+  const labels = { input: translate(locale, "channels.inputM"), output: translate(locale, "channels.outputM"), write: translate(locale, "channels.cacheWriteM"), read: translate(locale, "channels.cacheReadM"), request: translate(locale, "channels.perRequest"), image: translate(locale, "channels.perImage"), tiers: translate(locale, "channels.pricingTiers") };
   const tokenMode = pricing.billing_mode === "token";
   const rows = tokenMode
     ? [[labels.input, pricing.input_price, 1e6], [labels.output, pricing.output_price, 1e6], [labels.write, pricing.cache_write_price, 1e6], [labels.read, pricing.cache_read_price, 1e6], [labels.image, pricing.image_output_price, 1e6]]
@@ -65,7 +63,7 @@ export function ChannelsPage() {
   const channelList = <div className="console-channel-list" aria-busy={state.loading}>{visible.map((section, index) => <Panel key={`${section.channel_name}-${section.platform}-${index}`} className="console-channel-card"><div className="console-panel-body"><div className="console-channel-head"><span className="console-platform-icon console-platform-surface"><PlatformMark platform={section.platform} /></span><div><h3>{section.channel_name}</h3><p>{section.channel_description || section.platform}</p></div><GroupBadge name={section.platform} platform={section.platform} /></div><div className="console-channel-groups"><span>{t("channels.groups")}</span><div className="console-chip-list">{(section.groups || []).map((group) => { const userRate = rates[group.id] ?? rates[String(group.id)] ?? group.rate_multiplier; const original = Number(group.rate_multiplier || 1); const detail = `${userRate || 1}×${group.subscription_type === "subscription" ? " · SUB" : ""}`; const originalDetail = Number(userRate) < original ? `${original}×` : undefined; return <GroupBadge name={group.name} platform={section.platform} detail={detail} originalDetail={originalDetail} key={group.id} />; })}</div></div><div className="console-model-cards">{(section.supported_models || []).map((model) => <div key={model.name}><div><strong>{model.name}</strong><span>{model.pricing?.billing_mode || model.platform}</span></div><Pricing pricing={model.pricing} locale={locale} /></div>)}</div></div></Panel>)}</div>;
 
   return <Page title={t("channels.title")} className="console-channels-page" actions={<Button icon="refresh" onClick={load} loading={state.loading}>{t("common.refresh")}</Button>}>
-    <Panel className="console-channels-filters"><div className="console-toolbar"><Field label={t("common.search")} className="is-wide"><TextInput value={filters.search} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder={locale === "zh" ? "渠道或模型" : "Channel or model"} /></Field><Field label={t("channels.platform")}><SelectInput value={filters.platform} onChange={(event) => setFilters((current) => ({ ...current, platform: event.target.value }))}><option value="">{t("common.all")}</option>{platforms.map((platform) => <option key={platform}>{platform}</option>)}</SelectInput></Field></div></Panel>
+    <Panel className="console-channels-filters"><div className="console-toolbar"><Field label={t("common.search")} className="is-wide"><TextInput value={filters.search} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder={t("channels.channelModel")} /></Field><Field label={t("channels.platform")}><SelectInput value={filters.platform} onChange={(event) => setFilters((current) => ({ ...current, platform: event.target.value }))}><option value="">{t("common.all")}</option>{platforms.map((platform) => <option key={platform}>{platform}</option>)}</SelectInput></Field></div></Panel>
     {state.loading && !sections.length ? <ChannelsLoading /> : state.error && !sections.length ? <Panel><ErrorState message={state.error} onRetry={load} /></Panel> : !visible.length ? <Panel><EmptyState icon="channel" /></Panel> : channelList}
   </Page>;
 }

@@ -5,9 +5,9 @@ import {
   getRefreshToken,
   persistTokenResponse,
 } from "./session";
+import { detectLocale, translate } from "../console/i18n";
 
 const API_BASE_URL = normalizeBaseURL(import.meta.env.VITE_API_BASE_URL || "/api/v1");
-const DEFAULT_LOCALE = "en";
 const DEFAULT_TIMEOUT_MS = 60_000;
 let refreshPromise = null;
 
@@ -37,21 +37,25 @@ export function buildApiUrl(path) {
 
 export function buildGatewayUrl(path) {
   const rawPath = String(path || "");
-  if (rawPath.startsWith("//")) throw new ApiError("The gateway URL is invalid.", { status: 0, reason: "INVALID_GATEWAY_URL" });
+  if (rawPath.startsWith("//")) throw new ApiError(localizedMessage("common.error.invalidGateway"), { status: 0, reason: "INVALID_GATEWAY_URL" });
   const normalizedPath = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
   try {
     const origin = new URL(API_BASE_URL, window.location.origin).origin;
     const url = /^https?:\/\//i.test(path) ? new URL(path) : new URL(normalizedPath, origin);
     if (url.protocol === "https:" || (url.protocol === "http:" && (url.origin === window.location.origin || ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)))) return url.toString();
-    throw new ApiError("Gateway requests require HTTPS.", { status: 0, reason: "INSECURE_GATEWAY_URL" });
+    throw new ApiError(localizedMessage("common.error.insecureGateway"), { status: 0, reason: "INSECURE_GATEWAY_URL" });
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    throw new ApiError("The gateway URL is invalid.", { status: 0, reason: "INVALID_GATEWAY_URL" });
+    throw new ApiError(localizedMessage("common.error.invalidGateway"), { status: 0, reason: "INVALID_GATEWAY_URL" });
   }
 }
 
 function getRequestLocale() {
-  return localStorage.getItem("sentence_locale") || DEFAULT_LOCALE;
+  return detectLocale();
+}
+
+function localizedMessage(key, variables) {
+  return translate(detectLocale(), key, variables);
 }
 
 function getTimezone() {
@@ -113,8 +117,8 @@ function unwrapResponse(response, payload) {
     ? backendMessage.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "").trim().slice(0, 300)
     : "";
   const message = response.status >= 500
-    ? "The service is temporarily unavailable. Please try again later."
-    : sanitizedMessage || `Request failed with status ${response.status}`;
+    ? localizedMessage("common.error.serviceUnavailable")
+    : sanitizedMessage || localizedMessage("common.error.requestFailed", { status: response.status });
   throw new ApiError(message, {
     status: response.status,
     code: payload?.code,
@@ -140,7 +144,7 @@ async function fetchWithTimeout(url, init, sourceSignal, timeoutMs = DEFAULT_TIM
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } catch (error) {
-    if (timedOut) throw new ApiError("Request timed out. Please try again.", { status: 0, reason: "TIMEOUT", cause: error });
+    if (timedOut) throw new ApiError(localizedMessage("common.error.timeout"), { status: 0, reason: "TIMEOUT", cause: error });
     throw error;
   } finally {
     window.clearTimeout(timer);
@@ -168,7 +172,7 @@ async function fetchJSON(path, options) {
 
 async function refreshSession() {
   const refreshToken = getRefreshToken();
-  if (!refreshToken) throw new ApiError("Session expired.", { status: 401 });
+  if (!refreshToken) throw new ApiError(localizedMessage("common.error.sessionExpired"), { status: 401 });
   const { response, payload } = await fetchJSON("/auth/refresh", {
     method: "POST",
     body: { refresh_token: refreshToken },
@@ -210,7 +214,7 @@ export async function apiRequest(path, options = {}) {
   } catch (error) {
     if (error?.name === "AbortError") throw error;
     if (error instanceof ApiError) throw error;
-    throw new ApiError("Network error. Please check your connection.", { status: 0, cause: error });
+    throw new ApiError(localizedMessage("common.error.network"), { status: 0, cause: error });
   }
 }
 
@@ -238,7 +242,7 @@ export async function gatewayRequest(path, options = {}) {
   } catch (error) {
     if (error?.name === "AbortError") throw error;
     if (error instanceof ApiError) throw error;
-    throw new ApiError("Network error. Please check your connection.", { status: 0, cause: error });
+    throw new ApiError(localizedMessage("common.error.network"), { status: 0, cause: error });
   }
 }
 

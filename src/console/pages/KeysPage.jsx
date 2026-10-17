@@ -6,7 +6,7 @@ import { useSearchParams } from "react-router";
 import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
-import { useLocale } from "../i18n";
+import { useLocale, translate, translateNodes, formatDateTimeFor } from "../i18n";
 import { Button, ConfirmDialog, CopyButton, DataTable, EmptyState, ErrorState, Field, IconButton, InlineButton, LineChart, Modal, Page, Pagination, Panel, PaginationSkeleton, ProgressBar, SelectInput, StatusBadge, TextArea, TextInput, Toggle } from "../UI";
 import { formatTokenMillions, maskKey, statusLabel } from "../utils";
 import { ColumnPicker, useHiddenColumns } from "../components/ConsoleControls";
@@ -81,15 +81,15 @@ function endpointItems(settings, defaultLabel) {
 function EndpointPopover({ settings }) {
   const { t, locale } = useLocale();
   const defaultLabel = t("keys.endpointDefault");
-  if (!settings) return <section className="console-endpoint-popover" role="status" aria-label={t("common.loading")}><header><strong>{t("keys.endpoints")}</strong><span><Skeleton className="console-endpoint-count-placeholder" /> {locale === "zh" ? "个可用" : "available"}</span></header><div className="console-endpoint-grid"><div className="console-endpoint-item" aria-hidden="true"><b>{defaultLabel}</b><code><Skeleton className="console-endpoint-value-placeholder" /></code><span className="console-endpoint-action-placeholder"><Icon name="copy" size={16} /></span><span className="console-endpoint-action-placeholder"><Icon name="pulse" size={16} /></span></div></div></section>;
+  if (!settings) return <section className="console-endpoint-popover" role="status" aria-label={t("common.loading")}><header><strong>{t("keys.endpoints")}</strong><span>{translateNodes(locale, "keys.availableCount", { count: <Skeleton className="console-endpoint-count-placeholder" /> })}</span></header><div className="console-endpoint-grid"><div className="console-endpoint-item" aria-hidden="true"><b>{defaultLabel}</b><code><Skeleton className="console-endpoint-value-placeholder" /></code><span className="console-endpoint-action-placeholder"><Icon name="copy" size={16} /></span><span className="console-endpoint-action-placeholder"><Icon name="pulse" size={16} /></span></div></div></section>;
   const items = endpointItems(settings, defaultLabel);
-  return <section className="console-endpoint-popover"><header><strong>{t("keys.endpoints")}</strong><span>{items.length} {locale === "zh" ? "个可用" : "available"}</span></header><div className="console-endpoint-grid">{items.map((item) => <div className="console-endpoint-item" key={item.endpoint} title={item.description || item.endpoint}><b>{item.name}{item.primary && item.name !== defaultLabel && <small>{defaultLabel}</small>}</b><code title={item.endpoint}>{item.endpoint}</code><CopyButton value={item.endpoint} /><a href={`https://www.tcptest.cn/http/${encodeURIComponent(item.endpoint)}`} target="_blank" rel="noreferrer" aria-label={t("keys.endpointSpeed")} title={t("keys.endpointSpeed")}><Icon name="pulse" size={16} /><span>{t("keys.endpointSpeed")}</span></a></div>)}</div></section>;
+  return <section className="console-endpoint-popover"><header><strong>{t("keys.endpoints")}</strong><span>{t("keys.availableCount", { count: items.length })}</span></header><div className="console-endpoint-grid">{items.map((item) => <div className="console-endpoint-item" key={item.endpoint} title={item.description || item.endpoint}><b>{item.name}{item.primary && item.name !== defaultLabel && <small>{defaultLabel}</small>}</b><code title={item.endpoint}>{item.endpoint}</code><CopyButton value={item.endpoint} /><a href={`https://www.tcptest.cn/http/${encodeURIComponent(item.endpoint)}`} target="_blank" rel="noreferrer" aria-label={t("keys.endpointSpeed")} title={t("keys.endpointSpeed")}><Icon name="pulse" size={16} /><span>{t("keys.endpointSpeed")}</span></a></div>)}</div></section>;
 }
 
 function resetCountdown(value, locale) {
   if (!value) return "";
   const diff = new Date(value).getTime() - Date.now();
-  if (diff <= 0) return locale === "zh" ? "现在" : "now";
+  if (diff <= 0) return translate(locale, "keys.now");
   const days = Math.floor(diff / 86400000);
   const hours = Math.floor(diff % 86400000 / 3600000);
   const minutes = Math.floor(diff % 3600000 / 60000);
@@ -102,16 +102,15 @@ function KeyCreatedTime({ value, locale }) {
   if (!value) return "—";
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return "—";
-  const language = locale === "zh" ? "zh-CN" : "en-US";
   const day = new Intl.DateTimeFormat("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
-  return <time className="console-key-created" dateTime={date.toISOString()}><span>{day}</span><small>{new Intl.DateTimeFormat(language, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date)}</small></time>;
+  return <time className="console-key-created" dateTime={date.toISOString()}><span>{day}</span><small>{formatDateTimeFor(locale, date, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</small></time>;
 }
 
 function UsageCell({ row, stats, formatCurrency, locale }) {
   const usage = stats?.[row.id] || stats?.[String(row.id)] || {};
   const percent = Number(row.quota) ? Number(row.quota_used || 0) / Number(row.quota) * 100 : 0;
   const tone = percent >= 100 ? "danger" : percent >= 80 ? "warning" : "primary";
-  return <div className="console-key-usage"><div><span>{locale === "zh" ? "今日" : "Today"}</span><strong>{formatCurrency(usage.today_actual_cost || 0)}</strong></div><div><span>{locale === "zh" ? "累计" : "Total"}</span><strong>{formatCurrency(usage.total_actual_cost || 0)}</strong></div>{Number(row.quota) > 0 && <div className="is-quota"><span>{locale === "zh" ? "额度" : "Quota"}</span><strong className="console-key-limit-amount" data-tone={tone}>{formatCurrency(row.quota_used)} / {formatCurrency(row.quota)}</strong><ProgressBar value={percent} tone={tone} /></div>}</div>;
+  return <div className="console-key-usage"><div><span>{translate(locale, "keys.today")}</span><strong>{formatCurrency(usage.today_actual_cost || 0)}</strong></div><div><span>{translate(locale, "keys.total")}</span><strong>{formatCurrency(usage.total_actual_cost || 0)}</strong></div>{Number(row.quota) > 0 && <div className="is-quota"><span>{translate(locale, "keys.quota")}</span><strong className="console-key-limit-amount" data-tone={tone}>{formatCurrency(row.quota_used)} / {formatCurrency(row.quota)}</strong><ProgressBar value={percent} tone={tone} /></div>}</div>;
 }
 
 function RateWindow({ label, used, limit, resetAt, formatCurrency, locale }) {
@@ -124,15 +123,11 @@ function RateWindow({ label, used, limit, resetAt, formatCurrency, locale }) {
 function RateLimitCell({ row, onReset, formatCurrency, locale }) {
   const active = row.rate_limit_5h || row.rate_limit_1d || row.rate_limit_7d;
   if (!active) return <span className="console-muted">—</span>;
-  return <div className="console-rate-windows"><RateWindow label="5h" used={row.usage_5h} limit={row.rate_limit_5h} resetAt={row.reset_5h_at} formatCurrency={formatCurrency} locale={locale} /><RateWindow label="1d" used={row.usage_1d} limit={row.rate_limit_1d} resetAt={row.reset_1d_at} formatCurrency={formatCurrency} locale={locale} /><RateWindow label="7d" used={row.usage_7d} limit={row.rate_limit_7d} resetAt={row.reset_7d_at} formatCurrency={formatCurrency} locale={locale} />{Boolean(row.usage_5h || row.usage_1d || row.usage_7d) && <InlineButton icon="reset" onClick={onReset}>{locale === "zh" ? "重置用量" : "Reset usage"}</InlineButton>}</div>;
+  return <div className="console-rate-windows"><RateWindow label="5h" used={row.usage_5h} limit={row.rate_limit_5h} resetAt={row.reset_5h_at} formatCurrency={formatCurrency} locale={locale} /><RateWindow label="1d" used={row.usage_1d} limit={row.rate_limit_1d} resetAt={row.reset_1d_at} formatCurrency={formatCurrency} locale={locale} /><RateWindow label="7d" used={row.usage_7d} limit={row.rate_limit_7d} resetAt={row.reset_7d_at} formatCurrency={formatCurrency} locale={locale} />{Boolean(row.usage_5h || row.usage_1d || row.usage_7d) && <InlineButton icon="reset" onClick={onReset}>{translate(locale, "keys.resetUsage")}</InlineButton>}</div>;
 }
 
 function SettingBlock({ title, enabled, onToggle, children }) {
   return <div className="console-key-setting"><div><strong>{title}</strong><Toggle checked={enabled} onChange={onToggle} label={enabled ? "ON" : "OFF"} /></div>{enabled && <div>{children}</div>}</div>;
-}
-
-function keyText(locale, zh, en) {
-  return locale === "zh" ? zh : en;
 }
 
 function KeyBasics({ form, setForm, groups, rates, editing, set, t }) {
@@ -141,25 +136,25 @@ function KeyBasics({ form, setForm, groups, rates, editing, set, t }) {
 
 function CustomKeySetting({ form, editing, toggle, set, locale, t }) {
   if (editing) return null;
-  return <SettingBlock title={keyText(locale, "自定义密钥", "Custom key")} enabled={form.use_custom_key} onToggle={toggle("use_custom_key")}><Field label={t("keys.formCustom")} hint={keyText(locale, "至少 16 位，仅支持字母、数字、下划线和连字符。", "At least 16 letters, numbers, underscores, or hyphens.")}><TextInput value={form.custom_key} onChange={set("custom_key")} placeholder="sk-…" autoComplete="off" /></Field></SettingBlock>;
+  return <SettingBlock title={t("keys.customKey")} enabled={form.use_custom_key} onToggle={toggle("use_custom_key")}><Field label={t("keys.formCustom")} hint={t("keys.atLeast16Letters")}><TextInput value={form.custom_key} onChange={set("custom_key")} placeholder="sk-…" autoComplete="off" /></Field></SettingBlock>;
 }
 
 function IpRestrictionSetting({ form, toggle, set, locale, t }) {
-  return <SettingBlock title={keyText(locale, "IP 访问限制", "IP restrictions")} enabled={form.enable_ip_restriction} onToggle={toggle("enable_ip_restriction")}><div className="console-form-grid"><Field label={t("keys.formAllow")} hint={keyText(locale, "每行一个 IP 或 CIDR", "One IP or CIDR per line.")}><TextArea rows="4" value={form.ip_whitelist} onChange={set("ip_whitelist")} /></Field><Field label={t("keys.formDeny")} hint={keyText(locale, "黑名单优先", "Denylist takes precedence.")}><TextArea rows="4" value={form.ip_blacklist} onChange={set("ip_blacklist")} /></Field></div></SettingBlock>;
+  return <SettingBlock title={t("keys.ipRestrictions")} enabled={form.enable_ip_restriction} onToggle={toggle("enable_ip_restriction")}><div className="console-form-grid"><Field label={t("keys.formAllow")} hint={t("keys.oneIpCidrPer")}><TextArea rows="4" value={form.ip_whitelist} onChange={set("ip_whitelist")} /></Field><Field label={t("keys.formDeny")} hint={t("keys.denylistTakesPrecedence")}><TextArea rows="4" value={form.ip_blacklist} onChange={set("ip_blacklist")} /></Field></div></SettingBlock>;
 }
 
 function QuotaSetting({ form, toggle, set, editing, selectedKey, onResetQuota, formatCurrency, locale, t }) {
   const hasUsage = Number(selectedKey?.quota_used) > 0;
-  return <SettingBlock title={keyText(locale, "总额度", "Total quota")} enabled={form.enable_quota} onToggle={toggle("enable_quota")}><div className="console-setting-row"><Field label={t("keys.formQuota")}><TextInput type="number" min="0" step="0.01" value={form.quota} onChange={set("quota")} /></Field>{editing && <div className="console-current-usage"><span>{keyText(locale, "已用", "Used")}</span><strong>{formatCurrency(selectedKey?.quota_used)}</strong>{hasUsage && <Button icon="reset" onClick={onResetQuota}>{keyText(locale, "重置", "Reset")}</Button>}</div>}</div></SettingBlock>;
+  return <SettingBlock title={t("keys.totalQuota")} enabled={form.enable_quota} onToggle={toggle("enable_quota")}><div className="console-setting-row"><Field label={t("keys.formQuota")}><TextInput type="number" min="0" step="0.01" value={form.quota} onChange={set("quota")} /></Field>{editing && <div className="console-current-usage"><span>{t("keys.used")}</span><strong>{formatCurrency(selectedKey?.quota_used)}</strong>{hasUsage && <Button icon="reset" onClick={onResetQuota}>{t("keys.reset")}</Button>}</div>}</div></SettingBlock>;
 }
 
 function RateLimitSetting({ form, toggle, set, editing, selectedKey, onResetRate, formatCurrency, locale, t }) {
-  return <SettingBlock title={keyText(locale, "周期限额", "Rolling spend limits")} enabled={form.enable_rate_limit} onToggle={toggle("enable_rate_limit")}><div className="console-form-grid console-form-grid--3"><Field label={t("keys.formRate5h")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_5h} onChange={set("rate_limit_5h")} /></Field><Field label={t("keys.formRate1d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_1d} onChange={set("rate_limit_1d")} /></Field><Field label={t("keys.formRate7d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_7d} onChange={set("rate_limit_7d")} /></Field></div>{editing && <div className="console-edit-rate-preview"><RateLimitCell row={selectedKey} onReset={onResetRate} formatCurrency={formatCurrency} locale={locale} /></div>}</SettingBlock>;
+  return <SettingBlock title={t("keys.rollingSpendLimits")} enabled={form.enable_rate_limit} onToggle={toggle("enable_rate_limit")}><div className="console-form-grid console-form-grid--3"><Field label={t("keys.formRate5h")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_5h} onChange={set("rate_limit_5h")} /></Field><Field label={t("keys.formRate1d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_1d} onChange={set("rate_limit_1d")} /></Field><Field label={t("keys.formRate7d")}><TextInput type="number" min="0" step="0.01" value={form.rate_limit_7d} onChange={set("rate_limit_7d")} /></Field></div>{editing && <div className="console-edit-rate-preview"><RateLimitCell row={selectedKey} onReset={onResetRate} formatCurrency={formatCurrency} locale={locale} /></div>}</SettingBlock>;
 }
 
 function ExpirationSetting({ form, setForm, toggle, pickExpiry, locale, t }) {
-  const presets = [["7", "7 days", "7 天"], ["30", "30 days", "30 天"], ["90", "90 days", "90 天"], ["custom", "Custom", "自定义"]];
-  return <SettingBlock title={keyText(locale, "到期时间", "Expiration")} enabled={form.enable_expiration} onToggle={toggle("enable_expiration")}><ToggleGroup value={[form.expiration_preset]} className="console-expiry-presets">{presets.map(([value, en, zh]) => <AppicaToggle type="button" value={value} key={value} className={form.expiration_preset === value ? "is-active" : ""} onPressedChange={(pressed) => pressed && pickExpiry(value)}>{keyText(locale, zh, en)}</AppicaToggle>)}</ToggleGroup><Field label={t("keys.formExpiry")}><TextInput type="datetime-local" value={form.expiration_date} onChange={(event) => setForm((current) => ({ ...current, expiration_preset: "custom", expiration_date: event.target.value }))} /></Field></SettingBlock>;
+  const presets = ["7", "30", "90", "custom"];
+  return <SettingBlock title={t("keys.formExpiry")} enabled={form.enable_expiration} onToggle={toggle("enable_expiration")}><ToggleGroup value={[form.expiration_preset]} className="console-expiry-presets">{presets.map((value) => <AppicaToggle type="button" value={value} key={value} className={form.expiration_preset === value ? "is-active" : ""} onPressedChange={(pressed) => pressed && pickExpiry(value)}>{value === "custom" ? t("keys.expiryCustom") : t("keys.expiryDays", { count: Number(value) })}</AppicaToggle>)}</ToggleGroup><Field label={t("keys.formExpiry")}><TextInput type="datetime-local" value={form.expiration_date} onChange={(event) => setForm((current) => ({ ...current, expiration_preset: "custom", expiration_date: event.target.value }))} /></Field></SettingBlock>;
 }
 
 function KeyForm({ form, setForm, groups, rates, editing, selectedKey, onResetQuota, onResetRate }) {
@@ -176,7 +171,7 @@ function UsageDetail({ apiKey }) {
   useEffect(() => { let active = true; keysApi.getDailyUsage(apiKey.id, 30).then((result) => active && setState({ loading: false, error: "", items: result.items || [] })).catch((error) => active && setState({ loading: false, error: error.message, items: [] })); return () => { active = false; }; }, [apiKey.id]);
   if (state.loading) return <div className="console-detail-stack console-key-usage-skeleton" aria-hidden="true"><div className="console-detail-summary">{Array.from({ length: 2 }, (_, index) => <div key={index}><Skeleton /><Skeleton /></div>)}</div><Skeleton /></div>;
   if (state.error) return <ErrorState message={state.error} />;
-  return <div className="console-detail-stack"><div className="console-detail-summary"><div><span>{locale === "zh" ? "累计消费" : "Total spend"}</span><strong>{formatCurrency(state.items.reduce((sum, item) => sum + Number(item.actual_cost || 0), 0))}</strong></div><div><span>Token</span><strong>{formatTokenMillions(state.items.reduce((sum, item) => sum + Number(item.total_tokens || 0), 0))}</strong></div></div><LineChart data={state.items} valueKey="total_tokens" /></div>;
+  return <div className="console-detail-stack"><div className="console-detail-summary"><div><span>{translate(locale, "keys.totalSpend")}</span><strong>{formatCurrency(state.items.reduce((sum, item) => sum + Number(item.actual_cost || 0), 0))}</strong></div><div><span>Token</span><strong>{formatTokenMillions(state.items.reduce((sum, item) => sum + Number(item.total_tokens || 0), 0))}</strong></div></div><LineChart data={state.items} valueKey="total_tokens" /></div>;
 }
 
 function ccsImportUrl(row, baseUrl, siteName, clientType) {
@@ -196,8 +191,8 @@ function customKeyInvalid(form) {
 }
 
 function keyFormWarning(form, locale) {
-  if (!form.name.trim() || form.group_id === "") return keyText(locale, "请填写名称并选择分组。", "Add a name and select a group.");
-  if (customKeyInvalid(form)) return keyText(locale, "自定义密钥格式不正确。", "The custom key format is invalid.");
+  if (!form.name.trim() || form.group_id === "") return translate(locale, "keys.addNameSelectGroup");
+  if (customKeyInvalid(form)) return translate(locale, "keys.customKeyFormatInvalid");
   return "";
 }
 
@@ -234,18 +229,18 @@ function KeysTableContent({ state, columns, result, sort, setSort, paging, setPa
   const onSort = (key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); };
   if (state.loading && !result.items.length) return <><DataTable className="console-keys-table" columns={columns} rows={result.items} loading sortKey={sort.key} sortOrder={sort.order} onSort={onSort} /><PaginationSkeleton /></>;
   if (state.error && !result.items.length) return <ErrorState message={state.error} onRetry={load} />;
-  const empty = <EmptyState icon="key" title={keyText(locale, "还没有 API 密钥", "No API keys yet")} action={<Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button>} />;
+  const empty = <EmptyState icon="key" title={t("keys.noApiKeysYet")} action={<Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button>} />;
   const rows = sortedKeyRows(result.items, sort);
   return <><DataTable className="console-keys-table" columns={columns} rows={rows} sortKey={sort.key} sortOrder={sort.order} onSort={onSort} empty={empty} /><Pagination page={paging.page} pageSize={paging.pageSize} total={result.total} pages={result.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 }
 
 function KeysTablePanel({ query, setQuery, setPaging, groups, settings, load, state, allColumns, hidden, toggleColumn, openCreate, columns, result, sort, setSort, paging, locale, t }) {
   const updateQuery = (key, value) => { setQuery((current) => ({ ...current, [key]: value })); setPaging((current) => ({ ...current, page: 1 })); };
-  return <><Panel className="console-endpoint-panel"><EndpointPopover settings={settings} /></Panel><Panel className="console-keys-panel"><div className="console-table-page-toolbar"><div className="console-filter-row"><Field label={t("common.search")} className="is-wide"><div className="console-filter-search"><Icon name="search" size={16} /><TextInput value={query.search} onChange={(event) => updateQuery("search", event.target.value)} placeholder={keyText(locale, "名称或密钥", "Name or key")} /></div></Field><Field label={t("keys.group")}><SelectInput value={query.group_id} onChange={(event) => updateQuery("group_id", event.target.value)}><option value="">{keyText(locale, "全部分组", "All groups")}</option><option value="0">{keyText(locale, "无分组", "No group")}</option>{groups.map((group) => <option value={group.id} key={group.id}>{group.name}</option>)}</SelectInput></Field><Field label={t("common.status")}><SelectInput value={query.status} onChange={(event) => updateQuery("status", event.target.value)}><option value="">{t("common.all")}</option><option value="active">{t("common.active")}</option><option value="inactive">{t("common.inactive")}</option><option value="quota_exhausted">{keyText(locale, "额度已用尽", "Quota exhausted")}</option><option value="expired">{keyText(locale, "已过期", "Expired")}</option></SelectInput></Field></div><div className="console-table-actions"><Button icon="refresh" onClick={load} loading={state.loading}>{t("common.refresh")}</Button><ColumnPicker columns={allColumns} hidden={hidden} onToggle={toggleColumn} alwaysVisible={["name", "actions"]} /><Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button></div></div><KeysTableContent state={state} columns={columns} result={result} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} load={load} openCreate={openCreate} locale={locale} t={t} /></Panel></>;
+  return <><Panel className="console-endpoint-panel"><EndpointPopover settings={settings} /></Panel><Panel className="console-keys-panel"><div className="console-table-page-toolbar"><div className="console-filter-row"><Field label={t("common.search")} className="is-wide"><div className="console-filter-search"><Icon name="search" size={16} /><TextInput value={query.search} onChange={(event) => updateQuery("search", event.target.value)} placeholder={t("keys.nameKey")} /></div></Field><Field label={t("keys.group")}><SelectInput value={query.group_id} onChange={(event) => updateQuery("group_id", event.target.value)}><option value="">{t("keys.allGroups")}</option><option value="0">{t("keys.noGroup")}</option>{groups.map((group) => <option value={group.id} key={group.id}>{group.name}</option>)}</SelectInput></Field><Field label={t("common.status")}><SelectInput value={query.status} onChange={(event) => updateQuery("status", event.target.value)}><option value="">{t("common.all")}</option><option value="active">{t("common.active")}</option><option value="inactive">{t("common.inactive")}</option><option value="quota_exhausted">{t("keys.quotaExhausted")}</option><option value="expired">{t("keys.expired")}</option></SelectInput></Field></div><div className="console-table-actions"><Button icon="refresh" onClick={load} loading={state.loading}>{t("common.refresh")}</Button><ColumnPicker columns={allColumns} hidden={hidden} onToggle={toggleColumn} alwaysVisible={["name", "actions"]} /><Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button></div></div><KeysTableContent state={state} columns={columns} result={result} sort={sort} setSort={setSort} paging={paging} setPaging={setPaging} load={load} openCreate={openCreate} locale={locale} t={t} /></Panel></>;
 }
 
 function KeyEditorDialog({ editor, setEditor, busy, submit, form, setForm, groups, rates, setDialog, locale, t }) {
-  const title = editor?.type === "edit" ? keyText(locale, "编辑 API 密钥", "Edit API key") : t("keys.new");
+  const title = editor?.type === "edit" ? t("keys.editApiKey") : t("keys.new");
   const footer = <><Button onClick={() => setEditor(null)} disabled={busy}>{t("common.cancel")}</Button><Button variant="primary" onClick={submit} disabled={busy}>{busy ? t("common.loading") : t("common.save")}</Button></>;
   return <Modal open={Boolean(editor)} title={title} description={t("keys.subtitle")} onClose={() => setEditor(null)} size="large" footer={footer}><KeyForm form={form} setForm={setForm} groups={groups} rates={rates} editing={editor?.type === "edit"} selectedKey={editor?.item} onResetQuota={() => setDialog({ type: "resetQuota", item: editor.item })} onResetRate={() => setDialog({ type: "resetRate", item: editor.item })} /></Modal>;
 }
@@ -255,11 +250,11 @@ function KeyUseDialogs({ dialog, setDialog, settings, t }) {
 }
 
 function KeyResetDialogs({ dialog, setDialog, busy, remove, updateKey, locale, t }) {
-  return <><ConfirmDialog open={dialog?.type === "delete"} title={t("keys.deleteTitle")} description={t("keys.deleteBody")} busy={busy} onClose={() => setDialog(null)} onConfirm={remove} /><ConfirmDialog open={dialog?.type === "resetQuota"} title={keyText(locale, "重置额度用量？", "Reset quota usage?")} description={keyText(locale, "已用额度会归零，此操作无法撤销。", "Used quota will return to zero. This cannot be undone.")} busy={busy} onClose={() => setDialog(null)} onConfirm={() => updateKey(dialog.item, { reset_quota: true }, keyText(locale, "额度用量已重置。", "Quota usage reset."))} /><ConfirmDialog open={dialog?.type === "resetRate"} title={keyText(locale, "重置周期限额用量？", "Reset rate-limit usage?")} description={keyText(locale, "5 小时、1 天和 7 天窗口都会归零。", "The 5-hour, 1-day, and 7-day windows will all return to zero.")} busy={busy} onClose={() => setDialog(null)} onConfirm={() => updateKey(dialog.item, { reset_rate_limit_usage: true }, keyText(locale, "周期用量已重置。", "Rate-limit usage reset."))} /></>;
+  return <><ConfirmDialog open={dialog?.type === "delete"} title={t("keys.deleteTitle")} description={t("keys.deleteBody")} busy={busy} onClose={() => setDialog(null)} onConfirm={remove} /><ConfirmDialog open={dialog?.type === "resetQuota"} title={t("keys.resetQuotaUsage")} description={t("keys.usedQuotaWillReturn")} busy={busy} onClose={() => setDialog(null)} onConfirm={() => updateKey(dialog.item, { reset_quota: true }, t("keys.quotaUsageReset"))} /><ConfirmDialog open={dialog?.type === "resetRate"} title={t("keys.resetRateLimitUsage")} description={t("keys.n5Hour1Day")} busy={busy} onClose={() => setDialog(null)} onConfirm={() => updateKey(dialog.item, { reset_rate_limit_usage: true }, t("keys.rateLimitUsageReset"))} /></>;
 }
 
 function CcsDialog({ dialog, setDialog, importCcs, locale }) {
-  return <Modal open={dialog?.type === "ccs"} title={keyText(locale, "导入到 CC Switch", "Import to CC Switch")} description={keyText(locale, "Antigravity 分组可选择目标客户端。", "Choose the target client for this Antigravity group.")} onClose={() => setDialog(null)} size="small"><div className="console-ccs-options"><Button variant="primary" onClick={() => importCcs(dialog.item, "claude")}>Claude Code</Button><Button variant="primary" onClick={() => importCcs(dialog.item, "gemini")}>Gemini CLI</Button></div></Modal>;
+  return <Modal open={dialog?.type === "ccs"} title={translate(locale, "keys.importCcSwitch")} description={translate(locale, "keys.chooseTargetClientAntigravity")} onClose={() => setDialog(null)} size="small"><div className="console-ccs-options"><Button variant="primary" onClick={() => importCcs(dialog.item, "claude")}>Claude Code</Button><Button variant="primary" onClick={() => importCcs(dialog.item, "gemini")}>Gemini CLI</Button></div></Modal>;
 }
 
 function CreatedKeyDialog({ createdKey, setCreatedKey, t }) {
@@ -335,15 +330,15 @@ export function KeysPage() {
     { key: "name", label: t("common.name"), sortable: true, render: (row) => <div className="console-key-title"><strong>{row.name}</strong>{Boolean(row.ip_whitelist?.length || row.ip_blacklist?.length) && <Icon name="shield" size={14} />}</div> },
     { key: "key", label: t("keys.key"), render: (row) => <span className="console-code"><span>{maskKey(row.key)}</span><CopyButton value={row.key} /></span> },
     { key: "group", label: t("keys.group"), render: (row) => <GroupSelect compact value={row.group_id ?? ""} groups={groups} rates={rates} onChange={(groupId) => changeGroup(row, groupId)} /> },
-    { key: "current_concurrency", label: locale === "zh" ? "当前并发" : "Concurrency", sortable: true, align: "center", render: (row) => <span className={`console-concurrency ${Number(row.current_concurrency) ? "is-active" : ""}`}>{row.current_concurrency || 0}</span> },
-    { key: "usage", label: locale === "zh" ? "用量" : "Usage", render: (row) => <UsageCell row={row} stats={usageStats} formatCurrency={formatCurrency} locale={locale} /> },
-    { key: "rate_limit", label: locale === "zh" ? "周期限额" : "Rate limits", render: (row) => <RateLimitCell row={row} onReset={() => setDialog({ type: "resetRate", item: row })} formatCurrency={formatCurrency} locale={locale} /> },
+    { key: "current_concurrency", label: t("keys.concurrency"), sortable: true, align: "center", render: (row) => <span className={`console-concurrency ${Number(row.current_concurrency) ? "is-active" : ""}`}>{row.current_concurrency || 0}</span> },
+    { key: "usage", label: t("keys.usage2"), render: (row) => <UsageCell row={row} stats={usageStats} formatCurrency={formatCurrency} locale={locale} /> },
+    { key: "rate_limit", label: t("keys.rateLimits"), render: (row) => <RateLimitCell row={row} onReset={() => setDialog({ type: "resetRate", item: row })} formatCurrency={formatCurrency} locale={locale} /> },
     { key: "expires_at", label: t("keys.expires"), sortable: true, render: (row) => <span className={row.expires_at && new Date(row.expires_at) < new Date() ? "console-danger-text" : ""}>{row.expires_at ? formatDate(row.expires_at) : t("common.never")}</span> },
     { key: "status", label: t("common.status"), render: (row) => <StatusBadge status={row.status} label={statusLabel(row.status, locale)} /> },
     { key: "last_used_at", label: t("keys.lastUsed"), sortable: true, render: (row) => row.last_used_at ? formatDate(row.last_used_at) : "—" },
-    { key: "last_used_ip", label: locale === "zh" ? "最近 IP" : "Last used IP", render: (row) => row.last_used_ip || "—" },
-    { key: "created_at", label: locale === "zh" ? "创建时间" : "Created", sortable: true, render: (row) => <KeyCreatedTime value={row.created_at} locale={locale} /> },
-    { key: "actions", label: t("common.actions"), render: (row) => <div className="console-key-actions"><InlineButton className="console-key-use-action" variant="soft" icon="terminal" data-walkthrough="use-key" aria-label={locale === "zh" ? "使用密钥" : "Use key"} title={locale === "zh" ? "使用密钥" : "Use key"} onClick={() => setDialog({ type: "use", item: row })}>{locale === "zh" ? "使用密钥" : "Use key"}</InlineButton>{settings?.hide_ccs_import_button !== true && <InlineButton className="console-key-cc-switch-action" icon="upload" aria-label="CC Switch" title="CC Switch" onClick={() => row.group?.platform === "antigravity" ? setDialog({ type: "ccs", item: row }) : importCcs(row)}>CC Switch</InlineButton>}<IconButton icon="edit" label={t("common.edit")} onClick={() => openEdit(row)} /><IconButton icon={row.status === "active" ? "pause" : "play"} label={t("keys.toggle")} onClick={() => updateKey(row, { status: row.status === "active" ? "inactive" : "active" })} /><IconButton icon="trash" label={t("common.delete")} onClick={() => setDialog({ type: "delete", item: row })} /></div> },
+    { key: "last_used_ip", label: t("keys.lastUsedIp"), render: (row) => row.last_used_ip || "—" },
+    { key: "created_at", label: t("keys.created2"), sortable: true, render: (row) => <KeyCreatedTime value={row.created_at} locale={locale} /> },
+    { key: "actions", label: t("common.actions"), render: (row) => <div className="console-key-actions"><InlineButton className="console-key-use-action" variant="soft" icon="terminal" data-walkthrough="use-key" aria-label={t("keys.useKey")} title={t("keys.useKey")} onClick={() => setDialog({ type: "use", item: row })}>{t("keys.useKey")}</InlineButton>{settings?.hide_ccs_import_button !== true && <InlineButton className="console-key-cc-switch-action" icon="upload" aria-label="CC Switch" title="CC Switch" onClick={() => row.group?.platform === "antigravity" ? setDialog({ type: "ccs", item: row }) : importCcs(row)}>CC Switch</InlineButton>}<IconButton icon="edit" label={t("common.edit")} onClick={() => openEdit(row)} /><IconButton icon={row.status === "active" ? "pause" : "play"} label={t("keys.toggle")} onClick={() => updateKey(row, { status: row.status === "active" ? "inactive" : "active" })} /><IconButton icon="trash" label={t("common.delete")} onClick={() => setDialog({ type: "delete", item: row })} /></div> },
   ], [formatCurrency, formatDate, groups, locale, rates, settings, t, usageStats]);
   const columns = allColumns.filter((column) => ["name", "actions"].includes(column.key) || !hidden.has(column.key));
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, TruncatedText } from "../UI";
-import { useLocale } from "../i18n";
+import { useLocale, translate } from "../i18n";
 
 const cache = new Map();
 
@@ -30,5 +30,5 @@ export function IpGeoCell({ ip, enabled = false }) {
 
 export function IpGeoBatchToolbar({ enabled, onToggle }) {
   const { locale } = useLocale();
-  return <div className="console-ip-toolbar"><Button icon="globe" onClick={onToggle}>{enabled ? (locale === "zh" ? "隐藏归属地" : "Hide locations") : (locale === "zh" ? "批量查询归属地" : "Look up locations")}</Button></div>;
+  return <div className="console-ip-toolbar"><Button icon="globe" onClick={onToggle}>{enabled ? translate(locale, "ipGeo.hideLocations") : translate(locale, "ipGeo.lookUpLocations")}</Button></div>;
 }

@@ -22,6 +22,7 @@ import {
   AppicaTotpForm,
 } from "./AppicaAuth";
 import { booleanParam, clearAffiliateCode, getErrorMessage, readOAuthFragment, safeAuthRedirect } from "./authUtils";
+import { useLocale } from "../console/i18n";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { usePublicSettings } from "./usePublicSettings";
 
@@ -59,6 +60,7 @@ function getAffiliatePayload() {
 }
 
 export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }) {
+  const { t } = useLocale();
   const location = useLocation();
   const navigate = useNavigate();
   const callbackParams = new URLSearchParams(location.search);
@@ -79,7 +81,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
   const [pending, setPending] = useState(savedPendingSession);
   const initialized = useRef(false);
   const initialPhaseRef = useRef(requestedPhase);
-  const providerName = provider === "oidc" ? settings?.oidc_oauth_provider_name || "OIDC" : ({ linuxdo: "Linux.do", wechat: "WeChat", dingtalk: "DingTalk", github: "GitHub", google: "Google" }[provider] || "your provider");
+  const providerName = provider === "oidc" ? settings?.oidc_oauth_provider_name || "OIDC" : ({ linuxdo: "Linux.do", wechat: t("auth.oauth.provider.wechat"), dingtalk: t("auth.oauth.provider.dingtalk"), github: "GitHub", google: "Google" }[provider] || t("auth.oauth.provider.fallback"));
   const handleTurnstileToken = useCallback((token) => setTurnstileToken(token), []);
 
   const adoptionPayload = () => ({
@@ -142,7 +144,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
     try {
       await applyCompletion(await authApi.exchangePendingOAuth(withDecision ? adoptionPayload() : {}));
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "This sign-in session is invalid or expired."));
+      setError(getErrorMessage(requestError, t("auth.oauth.sessionInvalid"), t));
       setPhase("error");
     }
   };
@@ -186,7 +188,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
 
   const submitInvitation = async (event) => {
     event.preventDefault();
-    if (!form.invitation.trim()) return setError("Enter an invitation code.");
+    if (!form.invitation.trim()) return setError(t("auth.oauth.invitationRequired"));
     setLoading(true);
     try {
       await applyCompletion(await authApi.completeOAuthRegistration(provider, {
@@ -196,7 +198,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
         ...(pending.token ? { [pending.token_field]: pending.token } : {}),
       }));
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "The invitation code could not be accepted."));
+      setError(getErrorMessage(requestError, t("auth.oauth.invitationFailed"), t));
     } finally {
       setLoading(false);
     }
@@ -204,7 +206,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
 
   const sendCode = async () => {
     if (!settings) return;
-    if (!form.email.trim()) return setError("Enter an email address first.");
+    if (!form.email.trim()) return setError(t("auth.oauth.emailFirst"));
     setLoading(true);
     try {
       const response = await authApi.sendPendingVerifyCode({
@@ -220,7 +222,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
       setTurnstileToken("");
       setTurnstileReset((value) => value + 1);
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "The verification code could not be sent."));
+      setError(getErrorMessage(requestError, t("auth.oauth.codeSendFailed"), t));
       setTurnstileToken("");
       setTurnstileReset((value) => value + 1);
     } finally {
@@ -246,15 +248,15 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
   const submitCreate = async (event) => {
     event.preventDefault();
     if (!settings) return;
-    if (!form.email.trim() || form.password.length < 6) return setError("Enter an email and a password of at least 6 characters.");
-    if ((settings.invitation_code_enabled || completion.invitation_required) && !form.invitation.trim()) return setError("Enter an invitation code.");
-    if (settings?.email_verify_enabled && !["github", "google"].includes(provider) && !/^\d{6}$/.test(form.verifyCode)) return setError("Enter the six-digit email verification code.");
+    if (!form.email.trim() || form.password.length < 6) return setError(t("auth.oauth.createRequired"));
+    if ((settings.invitation_code_enabled || completion.invitation_required) && !form.invitation.trim()) return setError(t("auth.oauth.invitationRequired"));
+    if (settings?.email_verify_enabled && !["github", "google"].includes(provider) && !/^\d{6}$/.test(form.verifyCode)) return setError(t("auth.oauth.codeRequired"));
     setLoading(true);
     try {
       const response = ["github", "google"].includes(provider) ? await submitEmailProviderAccount() : await submitPendingAccount();
       await applyCompletion(response);
     } catch (requestError) {
-      const message = getErrorMessage(requestError, "The account could not be created.");
+      const message = getErrorMessage(requestError, t("auth.oauth.createFailed"), t);
       setError(message);
       if (requestError?.reason === "EMAIL_EXISTS") setPhase("bind");
     } finally {
@@ -264,7 +266,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
 
   const submitBind = async (event) => {
     event.preventDefault();
-    if (!form.email.trim() || !form.password) return setError("Enter the email and password for your existing account.");
+    if (!form.email.trim() || !form.password) return setError(t("auth.oauth.bindRequired"));
     setLoading(true);
     try {
       await applyCompletion(await authApi.bindPendingLogin({
@@ -273,7 +275,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
         ...adoptionPayload(),
       }));
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "The existing account could not be linked."));
+      setError(getErrorMessage(requestError, t("auth.oauth.bindFailed"), t));
     } finally {
       setLoading(false);
     }
@@ -284,7 +286,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
     try {
       await finish(await authApi.login2FA({ temp_token: completion.temp_token, totp_code: code }));
     } catch (requestError) {
-      setError(getErrorMessage(requestError, "Verification failed."));
+      setError(getErrorMessage(requestError, t("auth.oauth.verifyFailed"), t));
     } finally {
       setLoading(false);
     }
@@ -292,7 +294,7 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
 
   return (
     <AppicaAuthLayout>
-      <AppicaAuthCard kicker="Secure sign-in" title={`Continue with ${providerName}`} description="Complete the remaining account step to finish authentication." footer={<Link to="/login">Back to login</Link>}>
+      <AppicaAuthCard kicker={t("auth.oauth.kicker")} title={t("auth.oauth.title", { provider: providerName })} description={t("auth.oauth.description")} footer={<Link to="/login">{t("auth.oauth.backToLogin")}</Link>}>
         {phase === "processing" && <ProcessingState />}
         {phase === "error" && <ErrorState error={error} onRetry={() => exchangePending()} />}
         {phase === "invitation" && <InvitationForm form={form} error={error} loading={loading} onChange={updateForm} onSubmit={submitInvitation} adoption={<AdoptionChoices completion={completion} adoption={adoption} setAdoption={setAdoption} />} />}
@@ -306,49 +308,55 @@ export function OAuthCallbackPage({ provider: routeProvider, initialPhase = "" }
 }
 
 function ProcessingState() {
-  return <div className="text-foreground-muted flex items-center justify-center gap-3 py-8" role="status"><Spinner /><p>Completing secure sign-in…</p></div>;
+  const { t } = useLocale();
+  return <div className="text-foreground-muted flex items-center justify-center gap-3 py-8" role="status"><Spinner /><p>{t("auth.oauth.processing")}</p></div>;
 }
 
 function ErrorState({ error, onRetry }) {
-  return <div className="flex flex-col gap-5"><AppicaAuthNotice tone="error">{error}</AppicaAuthNotice><Button type="button" variant="secondary" onClick={onRetry}>Try to resume</Button></div>;
+  const { t } = useLocale();
+  return <div className="flex flex-col gap-5"><AppicaAuthNotice tone="error">{error}</AppicaAuthNotice><Button type="button" variant="secondary" onClick={onRetry}>{t("auth.oauth.resume")}</Button></div>;
 }
 
 function AdoptionChoices({ completion, adoption, setAdoption }) {
+  const { t } = useLocale();
   if (!completion.adoption_required && !completion.suggested_display_name && !completion.suggested_avatar_url) return null;
   return (
     <div className="flex flex-col gap-3">
-      <b className="text-foreground-intense text-sm">Use profile details from this provider?</b>
-      {completion.suggested_display_name && <label className="text-foreground flex items-center gap-2 text-sm"><Checkbox checked={adoption.displayName} onCheckedChange={(checked) => setAdoption((current) => ({ ...current, displayName: checked }))} /><span>Use “{completion.suggested_display_name}” as my display name</span></label>}
-      {completion.suggested_avatar_url && <label className="text-foreground flex items-center gap-2 text-sm"><Checkbox checked={adoption.avatar} onCheckedChange={(checked) => setAdoption((current) => ({ ...current, avatar: checked }))} /><span>Use the provider profile image</span></label>}
+      <b className="text-foreground-intense text-sm">{t("auth.oauth.adoptTitle")}</b>
+      {completion.suggested_display_name && <label className="text-foreground flex items-center gap-2 text-sm"><Checkbox checked={adoption.displayName} onCheckedChange={(checked) => setAdoption((current) => ({ ...current, displayName: checked }))} /><span>{t("auth.oauth.adoptName", { name: completion.suggested_display_name })}</span></label>}
+      {completion.suggested_avatar_url && <label className="text-foreground flex items-center gap-2 text-sm"><Checkbox checked={adoption.avatar} onCheckedChange={(checked) => setAdoption((current) => ({ ...current, avatar: checked }))} /><span>{t("auth.oauth.adoptAvatar")}</span></label>}
     </div>
   );
 }
 
 function InvitationForm({ form, error, loading, onChange, onSubmit, adoption }) {
-  return <form className="flex flex-col gap-5" onSubmit={onSubmit}><AppicaAuthNotice tone="error">{error}</AppicaAuthNotice>{adoption}<AppicaAuthField label="Invitation code"><AppicaTextInput value={form.invitation} onChange={(event) => onChange("invitation", event.target.value)} placeholder="Enter your invitation code" autoFocus /></AppicaAuthField><AppicaSubmitButton loading={loading} loadingLabel="Checking…">Complete registration</AppicaSubmitButton></form>;
+  const { t } = useLocale();
+  return <form className="flex flex-col gap-5" onSubmit={onSubmit}><AppicaAuthNotice tone="error">{error}</AppicaAuthNotice>{adoption}<AppicaAuthField label={t("auth.oauth.invitationLabel")}><AppicaTextInput value={form.invitation} onChange={(event) => onChange("invitation", event.target.value)} placeholder={t("auth.oauth.invitationPlaceholder")} autoFocus /></AppicaAuthField><AppicaSubmitButton loading={loading} loadingLabel={t("auth.oauth.checking")}>{t("auth.oauth.completeRegistration")}</AppicaSubmitButton></form>;
 }
 
 function ChoiceState({ completion, onContinue, onCreate, onBind, adoption }) {
   const email = getCompletionEmail(completion);
   const marker = String(completion.step || completion.error || "").toLowerCase();
   const adoptionOnly = completion.adoption_required && !choiceSteps.has(marker);
-  return <div className="flex flex-col gap-5"><AppicaAuthNotice>{email ? `We found account context for ${email}. Choose how to continue.` : "Choose how you want to connect this provider."}</AppicaAuthNotice>{adoption}{adoptionOnly ? <Button type="button" size="lg" variant="primary" onClick={onContinue}>Confirm and continue</Button> : <div className="grid gap-3 sm:grid-cols-2"><Button type="button" size="lg" variant="secondary" onClick={onBind}>Bind an existing account</Button><Button type="button" size="lg" variant="primary" onClick={onCreate}>Create a new account</Button></div>}</div>;
+  const { t } = useLocale();
+  return <div className="flex flex-col gap-5"><AppicaAuthNotice>{email ? t("auth.oauth.choiceWithEmail", { email }) : t("auth.oauth.choice")}</AppicaAuthNotice>{adoption}{adoptionOnly ? <Button type="button" size="lg" variant="primary" onClick={onContinue}>{t("auth.oauth.confirmContinue")}</Button> : <div className="grid gap-3 sm:grid-cols-2"><Button type="button" size="lg" variant="secondary" onClick={onBind}>{t("auth.oauth.bindExisting")}</Button><Button type="button" size="lg" variant="primary" onClick={onCreate}>{t("auth.oauth.createNew")}</Button></div>}</div>;
 }
 
 function CreateAccountForm({ provider, settings, invitationRequired, settingsLoading, settingsError, onRetrySettings, form, error, loading, codeSent, turnstileToken, turnstileReset, onTurnstileToken, onChange, onSendCode, onSubmit, onBind, adoption }) {
+  const { t } = useLocale();
   const emailProvider = ["github", "google"].includes(provider);
   return (
     <form className="flex flex-col gap-5" onSubmit={onSubmit}>
-      <AppicaAuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error || (codeSent ? "Verification code sent." : "Create a local account to finish connecting this provider.")}</AppicaAuthNotice>
-      {settingsError && <Button type="button" variant="ghost" onClick={onRetrySettings}>Retry loading settings</Button>}
+      <AppicaAuthNotice tone={settingsError || error ? "error" : "info"}>{settingsError || error || (codeSent ? t("auth.oauth.codeSent") : t("auth.oauth.createIntro"))}</AppicaAuthNotice>
+      {settingsError && <Button type="button" variant="ghost" onClick={onRetrySettings}>{t("auth.oauth.retrySettings")}</Button>}
       {adoption}
-      <AppicaAuthField label="Email address"><AppicaTextInput type="email" value={form.email} onChange={(event) => onChange("email", event.target.value)} placeholder="you@company.com" readOnly={emailProvider} /></AppicaAuthField>
-      <AppicaAuthField label="Password"><AppicaPasswordInput value={form.password} onChange={(event) => onChange("password", event.target.value)} placeholder="At least 6 characters" autoComplete="new-password" /></AppicaAuthField>
-      {(invitationRequired || completionNeedsInvitation(settings)) && <AppicaAuthField label="Invitation code"><AppicaTextInput value={form.invitation} onChange={(event) => onChange("invitation", event.target.value)} placeholder="Invitation code" /></AppicaAuthField>}
+      <AppicaAuthField label={t("auth.oauth.email")}><AppicaTextInput type="email" value={form.email} onChange={(event) => onChange("email", event.target.value)} placeholder={t("auth.common.emailPlaceholder")} readOnly={emailProvider} /></AppicaAuthField>
+      <AppicaAuthField label={t("auth.oauth.password")}><AppicaPasswordInput value={form.password} onChange={(event) => onChange("password", event.target.value)} placeholder={t("auth.oauth.passwordPlaceholder")} autoComplete="new-password" /></AppicaAuthField>
+      {(invitationRequired || completionNeedsInvitation(settings)) && <AppicaAuthField label={t("auth.oauth.invitationLabel")}><AppicaTextInput value={form.invitation} onChange={(event) => onChange("invitation", event.target.value)} placeholder={t("auth.oauth.invitationLabel")} /></AppicaAuthField>}
       {settings?.email_verify_enabled && settings?.turnstile_enabled && !emailProvider && <TurnstileWidget enabled siteKey={settings?.turnstile_site_key} onToken={onTurnstileToken} resetKey={turnstileReset} />}
-      {settings?.email_verify_enabled && !emailProvider && <AppicaAuthField label="Email verification code"><AppicaTextInput value={form.verifyCode} onChange={(event) => onChange("verifyCode", event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" action={<Button type="button" variant="ghost" size="sm" onClick={onSendCode} disabled={settings?.turnstile_enabled && !turnstileToken}>{codeSent ? "Resend" : "Send code"}</Button>} /></AppicaAuthField>}
-      <AppicaSubmitButton loading={loading} loadingLabel="Creating…" disabled={settingsLoading || Boolean(settingsError)}>Create and continue</AppicaSubmitButton>
-      <Button type="button" variant="ghost" onClick={onBind}>I already have an account</Button>
+      {settings?.email_verify_enabled && !emailProvider && <AppicaAuthField label={t("auth.oauth.verifyCode")}><AppicaTextInput value={form.verifyCode} onChange={(event) => onChange("verifyCode", event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" action={<Button type="button" variant="ghost" size="sm" onClick={onSendCode} disabled={settings?.turnstile_enabled && !turnstileToken}>{codeSent ? t("auth.oauth.resend") : t("auth.oauth.sendCode")}</Button>} /></AppicaAuthField>}
+      <AppicaSubmitButton loading={loading} loadingLabel={t("auth.oauth.creating")} disabled={settingsLoading || Boolean(settingsError)}>{t("auth.oauth.createContinue")}</AppicaSubmitButton>
+      <Button type="button" variant="ghost" onClick={onBind}>{t("auth.oauth.haveAccount")}</Button>
     </form>
   );
 }
@@ -358,14 +366,15 @@ function completionNeedsInvitation(settings) {
 }
 
 function BindAccountForm({ form, error, loading, onChange, onSubmit, onCreate, adoption }) {
+  const { t } = useLocale();
   return (
     <form className="flex flex-col gap-5" onSubmit={onSubmit}>
-      <AppicaAuthNotice tone={error ? "error" : "info"}>{error || "Sign in to the existing account you want to link."}</AppicaAuthNotice>
+      <AppicaAuthNotice tone={error ? "error" : "info"}>{error || t("auth.oauth.bindIntro")}</AppicaAuthNotice>
       {adoption}
-      <AppicaAuthField label="Existing account email"><AppicaTextInput type="email" value={form.email} onChange={(event) => onChange("email", event.target.value)} placeholder="you@company.com" autoComplete="email" /></AppicaAuthField>
-      <AppicaAuthField label="Existing account password"><AppicaPasswordInput value={form.password} onChange={(event) => onChange("password", event.target.value)} placeholder="Enter your password" /></AppicaAuthField>
-      <AppicaSubmitButton loading={loading} loadingLabel="Linking…">Sign in and link</AppicaSubmitButton>
-      <Button type="button" variant="ghost" onClick={onCreate}>Create a new account instead</Button>
+      <AppicaAuthField label={t("auth.oauth.existingEmail")}><AppicaTextInput type="email" value={form.email} onChange={(event) => onChange("email", event.target.value)} placeholder={t("auth.common.emailPlaceholder")} autoComplete="email" /></AppicaAuthField>
+      <AppicaAuthField label={t("auth.oauth.existingPassword")}><AppicaPasswordInput value={form.password} onChange={(event) => onChange("password", event.target.value)} placeholder={t("auth.oauth.passwordEnter")} /></AppicaAuthField>
+      <AppicaSubmitButton loading={loading} loadingLabel={t("auth.oauth.linking")}>{t("auth.oauth.signInLink")}</AppicaSubmitButton>
+      <Button type="button" variant="ghost" onClick={onCreate}>{t("auth.oauth.createInstead")}</Button>
     </form>
   );
 }

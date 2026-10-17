@@ -57,7 +57,7 @@ import { TooltipTrigger as AppicaTooltipTrigger } from "@appica/ui-react/tooltip
 import { Toaster as AppicaToaster } from "@appica/ui-react/toast";
 import { Icon } from "./Icon";
 import { useConsole } from "./ConsoleContext";
-import { useLocale } from "./i18n";
+import { useLocale, translate } from "./i18n";
 import { useTheme } from "./theme";
 import { formatTokenMillions } from "./utils";
 import { useWindowVirtualRows } from "./components/useWindowVirtualRows";
@@ -148,7 +148,7 @@ export function SelectInput({ children, className = "", value = "", onChange, di
   };
   return <AppicaSelect items={options} value={selectedValue || null} onValueChange={change} disabled={disabled} size="md" variant="outline" alignItemWithTrigger={false} modal={false}>
     <AppicaSelectTrigger id={id} className={className} aria-label={props["aria-label"]} aria-describedby={props["aria-describedby"]}>
-      <AppicaSelectValue placeholder={locale === "zh" ? "请选择" : "Select an option"}>{(currentValue) => options.find((option) => option.value === String(currentValue ?? ""))?.label || (locale === "zh" ? "请选择" : "Select an option")}</AppicaSelectValue>
+      <AppicaSelectValue placeholder={translate(locale, "ui.selectOption")}>{(currentValue) => options.find((option) => option.value === String(currentValue ?? ""))?.label || translate(locale, "ui.selectOption")}</AppicaSelectValue>
     </AppicaSelectTrigger>
     <AppicaSelectContent>
       {options.map((option) => <AppicaSelectItem key={option.key} value={option.value} disabled={option.disabled}>{option.label}</AppicaSelectItem>)}
@@ -239,10 +239,10 @@ export function Pagination({ page = 1, pageSize = 20, total = 0, pages, onPageCh
   if (!total) return null;
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(total, page * pageSize);
-  const range = locale === "zh" ? `${start}–${end} / 共 ${total}` : `${start}–${end} of ${total}`;
+  const range = t("ui.of", { start, end, total });
   const items = paginationItems(page, totalPages);
   const pageButton = (target, label, icon, disabled = false) => <AppicaPaginationLink render={<button type="button" />} disabled={disabled} aria-label={label} onClick={() => onPageChange(target)}><Icon name={icon} size={16} /></AppicaPaginationLink>;
-  return <div className="console-pagination"><span>{range}</span><div>{onPageSizeChange && <SelectInput value={pageSize} searchable={false} aria-label={locale === "zh" ? "每页条数" : "Rows per page"} onChange={(event) => onPageSizeChange(Number(event.target.value))}>{[10, 20, 50, 100].map((size) => <option value={size} key={size}>{locale === "zh" ? `${size} 条 / 页` : `${size} per page`}</option>)}</SelectInput>}<AppicaPagination size="md"><AppicaPaginationList><AppicaPaginationItem>{pageButton(page - 1, t("common.previous"), "chevronLeft", page <= 1)}</AppicaPaginationItem>{items.map((item) => <AppicaPaginationItem key={item}>{typeof item === "number" ? <AppicaPaginationLink render={<button type="button" />} active={item === page} onClick={() => onPageChange(item)}>{item}</AppicaPaginationLink> : <AppicaPaginationEllipsis />}</AppicaPaginationItem>)}<AppicaPaginationItem>{pageButton(page + 1, t("common.next"), "chevronRight", page >= totalPages)}</AppicaPaginationItem></AppicaPaginationList></AppicaPagination></div></div>;
+  return <div className="console-pagination"><span>{range}</span><div>{onPageSizeChange && <SelectInput value={pageSize} searchable={false} aria-label={t("ui.rowsPerPage")} onChange={(event) => onPageSizeChange(Number(event.target.value))}>{[10, 20, 50, 100].map((size) => <option value={size} key={size}>{t("ui.perPage", { size })}</option>)}</SelectInput>}<AppicaPagination size="md"><AppicaPaginationList><AppicaPaginationItem>{pageButton(page - 1, t("common.previous"), "chevronLeft", page <= 1)}</AppicaPaginationItem>{items.map((item) => <AppicaPaginationItem key={item}>{typeof item === "number" ? <AppicaPaginationLink render={<button type="button" />} active={item === page} onClick={() => onPageChange(item)}>{item}</AppicaPaginationLink> : <AppicaPaginationEllipsis />}</AppicaPaginationItem>)}<AppicaPaginationItem>{pageButton(page + 1, t("common.next"), "chevronRight", page >= totalPages)}</AppicaPaginationItem></AppicaPaginationList></AppicaPagination></div></div>;
 }
 
 function mobileColumnLabel(column) {
@@ -347,7 +347,7 @@ export function LineChart({ data = [], valueKey = "total_tokens", labelKey = "da
   const points = useMemo(() => chartPoints(data, valueKey, 680, maximum), [data, valueKey, maximum]);
   const ticks = useMemo(() => Array.from({ length: 5 }, (_, index) => maximum * (4 - index) / 4), [maximum]);
   if (!data.length) return <EmptyState />;
-  const accessibleLabel = ariaLabel || (locale === "zh" ? "Token 用量趋势" : "Token usage trend");
+  const accessibleLabel = ariaLabel || translate(locale, "ui.tokenUsageTrend");
   return <div className="console-line-chart" role="group" aria-label={accessibleLabel}>
     <div className="console-line-chart-plot">
       <div className="console-line-chart-y-axis" aria-hidden="true">
@@ -362,21 +362,20 @@ export function LineChart({ data = [], valueKey = "total_tokens", labelKey = "da
       </svg>
     </div>
     <div className="console-line-chart-x-axis"><i aria-hidden="true" /><div className="console-chart-labels">{data.map((item, index) => <span key={`${item[labelKey]}-${index}`}>{String(item[labelKey] || "").slice(5, 10)}</span>)}</div></div>
-    <table className="console-visually-hidden"><caption>{accessibleLabel}</caption><thead><tr><th scope="col">{locale === "zh" ? "日期" : "Date"}</th><th scope="col">{unit}</th></tr></thead><tbody>{data.map((item, index) => <tr key={`${item[labelKey]}-accessible-${index}`}><th scope="row">{String(item[labelKey] || "")}</th><td>{formatTokenMillions(Number(item[valueKey]) || 0)}</td></tr>)}</tbody></table>
+    <table className="console-visually-hidden"><caption>{accessibleLabel}</caption><thead><tr><th scope="col">{translate(locale, "common.date")}</th><th scope="col">{unit}</th></tr></thead><tbody>{data.map((item, index) => <tr key={`${item[labelKey]}-accessible-${index}`}><th scope="row">{String(item[labelKey] || "")}</th><td>{formatTokenMillions(Number(item[valueKey]) || 0)}</td></tr>)}</tbody></table>
   </div>;
 }
 
 const themeMeta = {
-  light: { icon: "sunHigh", en: "Switch to dark theme", zh: "切换至深色模式" },
-  dark: { icon: "moonStars", en: "Switch to light theme", zh: "切换至浅色模式" },
+  light: { icon: "sunHigh", labelKey: "ui.theme.switchToDark" },
+  dark: { icon: "moonStars", labelKey: "ui.theme.switchToLight" },
 };
 
 export function ThemeToggle({ className = "" }) {
-  const { locale } = useLocale();
+  const { t } = useLocale();
   const { preference, cycle } = useTheme();
   const meta = themeMeta[preference] || themeMeta.light;
-  const label = locale === "zh" ? meta.zh : meta.en;
-  return <IconButton className={className} icon={meta.icon} label={label} onClick={cycle} />;
+  return <IconButton className={className} icon={meta.icon} label={t(meta.labelKey)} onClick={cycle} />;
 }
 
 export function CopyButton({ value, label, copiedLabel, className = "" }) {

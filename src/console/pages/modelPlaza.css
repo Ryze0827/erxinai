@@ -16,7 +16,7 @@ html[data-console-theme] .plaza-intro h2 {
   margin: 0;
   color: var(--foreground-intense);
   font-size: 1.5rem;
-  font-weight: 650;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-tight);
 }
 
@@ -117,7 +117,7 @@ html[data-console-theme] .plaza-group-title-row h3 {
   margin: 0;
   color: var(--foreground-intense);
   font-size: 1.125rem;
-  font-weight: 650;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: var(--tracking-tight);
 }
 
@@ -153,7 +153,7 @@ html[data-console-theme] .plaza-peak-note {
 
 html[data-console-theme] .plaza-peak-note > span {
   color: var(--warning-intense);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 html[data-console-theme] .plaza-card-grid {
@@ -189,7 +189,7 @@ html[data-console-theme] .plaza-card-name {
   margin: 0;
   color: var(--foreground-intense);
   font-size: var(--text-base);
-  font-weight: 650;
+  font-weight: var(--font-weight-semibold);
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -225,7 +225,7 @@ html[data-console-theme] .plaza-card-section > h5 {
   margin: 0 0 0.5rem;
   color: var(--foreground-intense);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 html[data-console-theme] .plaza-card-section dl {
@@ -250,7 +250,6 @@ html[data-console-theme] .plaza-card-section dt {
 html[data-console-theme] .plaza-card-section dd {
   margin: 0;
   color: var(--foreground-intense);
-  font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;

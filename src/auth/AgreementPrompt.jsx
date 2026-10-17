@@ -9,7 +9,7 @@ import { DialogDescription } from "@appica/ui-react/dialog";
 import { DialogFooter } from "@appica/ui-react/dialog";
 import { DialogHeader } from "@appica/ui-react/dialog";
 import { DialogTitle } from "@appica/ui-react/dialog";
-import { useLocale } from "../console/i18n";
+import { translateNodes, useLocale } from "../console/i18n";
 
 const AGREEMENT_KEY = "sub2api_login_agreement_consent";
 
@@ -45,14 +45,14 @@ export function useAgreement(settings) {
 }
 
 export function AgreementPrompt({ agreement }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [open, setOpen] = useState(false);
   if (!agreement.enabled) return null;
   return (
     <>
       <div className="text-foreground-muted flex items-start gap-3 text-sm leading-6">
         <Checkbox className="mt-1 shrink-0" checked={agreement.accepted} onCheckedChange={(checked) => checked && agreement.accept()} aria-label={t("auth.agreement.acceptLabel")} />
-        <span>{t("auth.agreement.prefix")}<Button className="h-auto p-0 align-baseline underline underline-offset-4" variant="ghost" size="sm" type="button" onClick={() => setOpen(true)}>{t("auth.agreement.link")}</Button>{t("auth.agreement.suffix")}</span>
+        <span>{translateNodes(locale, "auth.agreement.acceptText", { link: <Button className="h-auto p-0 align-baseline underline underline-offset-4" variant="ghost" size="sm" type="button" onClick={() => setOpen(true)}>{t("auth.agreement.link")}</Button> })}</span>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl" viewportProps={{ className: "dark" }}>

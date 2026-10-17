@@ -237,8 +237,8 @@ function LandingHeader({ theme, onThemeChange }) {
   const nextLocale = locale === "zh" ? "en" : "zh";
   const authLabel = authenticated ? t("nav.dashboard") : t("auth.login.submit");
   const themeLabel = theme === "dark"
-    ? (locale === "zh" ? "切换至浅色模式" : "Switch to light mode")
-    : (locale === "zh" ? "切换至深色模式" : "Switch to dark mode");
+    ? t("landing.switchLightMode")
+    : t("landing.switchDarkMode");
   return (
     <>
       <header className="bg-background/75 sticky top-0 z-30 grid h-18 grid-cols-[minmax(0,1fr)_auto] items-center p-4 backdrop-blur-lg md:px-6 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
@@ -254,7 +254,7 @@ function LandingHeader({ theme, onThemeChange }) {
         <div className="flex items-center justify-self-end gap-1.5 sm:gap-2">
           <Button className="text-foreground hidden w-45 justify-start lg:inline-flex" variant="soft" onClick={() => setSearchOpen(true)}><Search data-icon="start" /><span className="text-foreground-subtle font-normal">{t("landing.search")}</span><span className="ms-auto flex gap-1"><Kbd>⌘</Kbd><Kbd>K</Kbd></span></Button>
           <Button className="lg:hidden" variant="ghost" size="icon-md" aria-label={t("landing.search")} onClick={() => setSearchOpen(true)}><Search /></Button>
-          <Button variant="ghost" size="sm" aria-label={t("nav.switchLanguage")} onClick={() => setLocale(nextLocale)}><Language className="hidden size-4 sm:block" /><span className="min-w-5">{nextLocale === "zh" ? "中" : "EN"}</span></Button>
+          <Button variant="ghost" size="sm" aria-label={t("nav.switchLanguage")} onClick={() => setLocale(nextLocale)}><Language className="hidden size-4 sm:block" /><span className="min-w-5">{t("landing.languageShort")}</span></Button>
           <Button variant="ghost" size="icon-md" aria-label={themeLabel} title={themeLabel} onClick={() => onThemeChange(theme === "dark" ? "light" : "dark")}>{theme === "dark" ? <MoonStars /> : <SunHigh />}</Button>
           <Link className={`${buttonVariants({ variant: "primary", size: "sm" })} w-16 max-sm:px-3 sm:w-18`} to={authenticated ? "/admin/dashboard" : "/login"}>{authLabel}</Link>
         </div>
@@ -398,7 +398,7 @@ function OrderCard() {
       </div>
       <Separator className="my-4" />
       <div className="flex items-center gap-3">
-        <Avatar size="sm"><AvatarImage src="/assets/wayx/avatars/02.jpg" alt="WayX route" /><AvatarFallback>WX</AvatarFallback></Avatar>
+        <Avatar size="sm"><AvatarImage src="/assets/wayx/avatars/02.jpg" alt={t("landing.order.routeAvatar")} /><AvatarFallback>WX</AvatarFallback></Avatar>
         <div className="min-w-0 flex-1"><div className="text-foreground-intense truncate text-sm font-medium">{t("landing.order.primaryRoute")}</div><div className="text-foreground-muted text-xs">{t("landing.order.latency")}</div></div>
         <Button variant="outline" size="icon-sm" aria-label={t("landing.order.route")}><Route /></Button>
       </div>
@@ -459,7 +459,7 @@ function RatingCard() {
     <ShowcaseCard className="order-9 min-[85rem]:flex-1" contentClassName="flex flex-col">
       <div className="flex items-center gap-3"><span className="text-foreground-intense text-3xl font-semibold tabular-nums">{t("landing.health.score")}</span><div><div className="text-warning-emphasis flex gap-0.5" aria-label={t("landing.health.score")}>{Array.from({ length: 5 }, (_, index) => <StarFilled className="size-3.5" key={index} />)}</div><div className="text-foreground-muted mt-1 text-xs">{t("landing.health.detail")}</div></div></div>
       <div className="mt-4 flex flex-1 flex-col justify-center gap-2">
-        {ratings.map(([stars, value]) => <div className="flex items-center gap-2.5" key={stars}><span className="text-foreground-muted w-2 text-xs tabular-nums">{stars}</span><Meter className="flex-1" value={value} aria-label={`${stars} ${t("landing.health.detail")}`}><MeterProgress /></Meter><span className="text-foreground-muted w-8 text-end text-xs tabular-nums">{value}%</span></div>)}
+        {ratings.map(([stars, value]) => <div className="flex items-center gap-2.5" key={stars}><span className="text-foreground-muted w-2 text-xs tabular-nums">{stars}</span><Meter className="flex-1" value={value} aria-label={t("landing.health.ratingAria", { count: stars })}><MeterProgress /></Meter><span className="text-foreground-muted w-8 text-end text-xs tabular-nums">{value}%</span></div>)}
       </div>
       <Separator className="my-4" />
       <div className="flex items-center gap-3"><AvatarGroup>{["02", "04", "09"].map((avatar) => <Avatar size="xs" key={avatar}><AvatarImage src={`/assets/wayx/avatars/${avatar}.jpg`} alt="" /><AvatarFallback>WX</AvatarFallback></Avatar>)}</AvatarGroup><span className="text-foreground-muted text-xs">{t("landing.health.routes")}</span></div>

@@ -1,6 +1,10 @@
 import { DEFAULT_SITE_LOGO, normalizeSiteName } from "./branding";
+import { detectLocale, htmlLangFor } from "./console/locale";
 
 const BRANDING_STORAGE_KEY = "sentence_public_branding";
+
+// Set before the app renders so the first paint and font fallback match the locale.
+document.documentElement.lang = htmlLangFor(detectLocale());
 
 function cleanText(value, maximumLength) {
   return String(value || "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, maximumLength);

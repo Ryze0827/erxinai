@@ -15,7 +15,7 @@ import { TabsList } from "@appica/ui-react/tabs";
 import { TabsTrigger } from "@appica/ui-react/tabs";
 import { Button } from "../UI";
 import { Icon } from "../Icon";
-import { useLocale } from "../i18n";
+import { useLocale, translate } from "../i18n";
 
 function readHidden(storageKey, defaults) {
   try {
@@ -40,7 +40,7 @@ export function useHiddenColumns(storageKey, defaults = []) {
 export function ColumnPicker({ columns, hidden, onToggle, alwaysVisible = [] }) {
   const { locale } = useLocale();
   const choices = columns.filter((column) => !alwaysVisible.includes(column.key));
-  return <DropdownMenu size="sm" modal={false}><DropdownMenuTrigger render={<Button icon="grid" />}>{locale === "zh" ? "列设置" : "Columns"}</DropdownMenuTrigger><DropdownMenuContent align="end" className="console-column-menu">{choices.map((column) => <DropdownMenuCheckboxItem checked={!hidden.has(column.key)} onCheckedChange={() => onToggle(column.key)} key={column.key}>{column.label}</DropdownMenuCheckboxItem>)}</DropdownMenuContent></DropdownMenu>;
+  return <DropdownMenu size="sm" modal={false}><DropdownMenuTrigger render={<Button icon="grid" />}>{translate(locale, "controls.columns")}</DropdownMenuTrigger><DropdownMenuContent align="end" className="console-column-menu">{choices.map((column) => <DropdownMenuCheckboxItem checked={!hidden.has(column.key)} onCheckedChange={() => onToggle(column.key)} key={column.key}>{column.label}</DropdownMenuCheckboxItem>)}</DropdownMenuContent></DropdownMenu>;
 }
 
 function localDate(date) {
@@ -81,19 +81,17 @@ function datePickerRange(startDate, endDate) {
   return { from: parseLocalDate(startDate), to: parseLocalDate(endDate) };
 }
 
+const DATE_PRESETS = ["24h", "7d", "30d", "today", "yesterday", "14d", "month", "lastMonth"];
+
 export function DateRangePicker({ startDate, endDate, onChange }) {
   const { locale } = useLocale();
   const wrapperRef = useRef(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [draft, setDraft] = useState(() => datePickerRange(startDate, endDate));
   useEffect(() => setDraft(datePickerRange(startDate, endDate)), [startDate, endDate]);
-  const presets = [
-    ["24h", "Last 24 hours", "最近 24 小时"], ["7d", "Last 7 days", "最近 7 天"], ["30d", "Last 30 days", "最近 30 天"],
-    ["today", "Today", "今天"], ["yesterday", "Yesterday", "昨天"], ["14d", "Last 14 days", "最近 14 天"],
-    ["month", "This month", "本月"], ["lastMonth", "Last month", "上月"],
-  ];
+  const presets = DATE_PRESETS.map((value) => [value]);
   const selected = selectedPreset(startDate, endDate, presets);
-  const buttonLabel = selected ? (locale === "zh" ? selected[2] : selected[1]) : `${startDate} → ${endDate}`;
+  const buttonLabel = selected ? translate(locale, `controls.preset.${selected[0]}`) : translate(locale, "controls.dateRange", { start: startDate, end: endDate });
   const applyPreset = (preset) => {
     const range = rangeFor(preset);
     setDraft(datePickerRange(range.start_date, range.end_date));
@@ -109,7 +107,7 @@ export function DateRangePicker({ startDate, endDate, onChange }) {
     onChange({ start_date: localDate(range.from), end_date: localDate(range.to) });
     setCalendarOpen(false);
   };
-  return <div className="console-date-picker" ref={wrapperRef}><DropdownMenu size="sm" modal={false}><DropdownMenuTrigger render={<Button className="console-date-preset-trigger" icon="calendar" />}><span>{buttonLabel}</span><Icon name="chevronDown" size={14} data-icon="end" /></DropdownMenuTrigger><DropdownMenuContent align="start" className="console-date-preset-menu"><DropdownMenuRadioGroup value={selected?.[0] || ""} onValueChange={applyPreset}>{presets.map(([value, en, zh]) => <DropdownMenuRadioItem value={value} key={value}>{locale === "zh" ? zh : en}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup><DropdownMenuSeparator /><DropdownMenuItem onClick={openCustom}>{locale === "zh" ? "自定义范围" : "Custom range"}</DropdownMenuItem></DropdownMenuContent></DropdownMenu><Popover open={calendarOpen} onOpenChange={setCalendarOpen}><PopoverContent anchor={wrapperRef} side="bottom" align="start"><Calendar mode="range" selected={draft} onSelect={applyCustom} defaultMonth={draft.from} /></PopoverContent></Popover></div>;
+  return <div className="console-date-picker" ref={wrapperRef}><DropdownMenu size="sm" modal={false}><DropdownMenuTrigger render={<Button className="console-date-preset-trigger" icon="calendar" />}><span>{buttonLabel}</span><Icon name="chevronDown" size={14} data-icon="end" /></DropdownMenuTrigger><DropdownMenuContent align="start" className="console-date-preset-menu"><DropdownMenuRadioGroup value={selected?.[0] || ""} onValueChange={applyPreset}>{presets.map(([value]) => <DropdownMenuRadioItem value={value} key={value}>{translate(locale, `controls.preset.${value}`)}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup><DropdownMenuSeparator /><DropdownMenuItem onClick={openCustom}>{translate(locale, "controls.customRange")}</DropdownMenuItem></DropdownMenuContent></DropdownMenu><Popover open={calendarOpen} onOpenChange={setCalendarOpen}><PopoverContent anchor={wrapperRef} side="bottom" align="start"><Calendar mode="range" selected={draft} onSelect={applyCustom} defaultMonth={draft.from} /></PopoverContent></Popover></div>;
 }
 
 export function CompactTabs({ items, value, onChange, label, className = "" }) {

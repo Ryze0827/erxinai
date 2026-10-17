@@ -29,6 +29,36 @@
   src: url("/assets/fonts/GeistMono-Variable-Latin.woff2") format("woff2");
 }
 
+/* Geist ships curly quotes, ellipsis, em dash, and middle dot, so Chinese copy
+   would render them as narrow Latin glyphs. In Chinese locales these faces
+   hand only that punctuation to the system CJK font. */
+@font-face {
+  font-family: "WayX CJK Punct";
+  font-weight: 400;
+  src: local("PingFang SC Regular"), local("PingFangSC-Regular"), local("Microsoft YaHei"), local("MicrosoftYaHei"),
+    local("Noto Sans CJK SC Regular"), local("NotoSansCJKsc-Regular"), local("Source Han Sans SC Regular"),
+    local("SourceHanSansSC-Regular");
+  unicode-range: U+00B7, U+2014, U+2018-2019, U+201C-201D, U+2026;
+}
+
+@font-face {
+  font-family: "WayX CJK Punct";
+  font-weight: 500;
+  src: local("PingFang SC Medium"), local("PingFangSC-Medium"), local("Microsoft YaHei"), local("MicrosoftYaHei"),
+    local("Noto Sans CJK SC Medium"), local("NotoSansCJKsc-Medium"), local("Source Han Sans SC Medium"),
+    local("SourceHanSansSC-Medium");
+  unicode-range: U+00B7, U+2014, U+2018-2019, U+201C-201D, U+2026;
+}
+
+@font-face {
+  font-family: "WayX CJK Punct";
+  font-weight: 600;
+  src: local("PingFang SC Semibold"), local("PingFangSC-Semibold"), local("Microsoft YaHei Bold"),
+    local("MicrosoftYaHei-Bold"), local("Noto Sans CJK SC Bold"), local("NotoSansCJKsc-Bold"),
+    local("Source Han Sans SC Bold"), local("SourceHanSansSC-Bold");
+  unicode-range: U+00B7, U+2014, U+2018-2019, U+201C-201D, U+2026;
+}
+
 @theme inline {
   --font-sans: var(--wayx-font-sans);
   --font-mono: var(--wayx-font-mono);
@@ -36,10 +66,18 @@
 
 :root,
 .light {
-  --wayx-font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --wayx-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --wayx-font-cjk: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC";
+  --wayx-font-emoji: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --wayx-font-sans-base: "Geist", "Geist Fallback", var(--wayx-font-cjk), ui-sans-serif, system-ui, sans-serif,
+    var(--wayx-font-emoji);
+  --wayx-font-sans: var(--wayx-font-sans-base);
+  --wayx-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, var(--wayx-font-cjk), monospace;
   --font-sans: var(--wayx-font-sans);
   --font-mono: var(--wayx-font-mono);
+}
+
+html:lang(zh) {
+  --wayx-font-sans: "WayX CJK Punct", var(--wayx-font-sans-base);
 }
 
 html[data-console-theme] {

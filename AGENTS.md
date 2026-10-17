@@ -17,3 +17,16 @@
 - Do not hand-roll a component that exists in the library. Check the component list first:
   https://appica.dev/llms.txt
 - Every documentation page is served as clean markdown at `<url>.md` - fetch that, not the HTML.
+
+
+## Localization
+
+- All UI copy lives in `src/console/locales/en.js` and `zh.js` with matching keys. Read it with `t(key)` from
+  `useLocale()`, or `translate(locale, key)` outside components. Never branch on `locale === "zh"` for copy.
+- Put whole sentences in one key with `{name}` placeholders; do not join translated fragments in code. Use
+  `translateNodes` when a sentence embeds markup.
+- Plurals: pass a `count` variable and add `<key>.one` to `en.js`; Chinese needs only `<key>`.
+- Format numbers, money, and dates with the `useLocale()` formatters or `formatNumberFor` / `formatCurrencyFor` /
+  `formatDateTimeFor`, never `toLocaleString()` or a hard-coded `"en-US"`.
+- Chinese copy uses full-width punctuation, “” quotes, `……` for ellipsis, and a space between Chinese and Latin
+  letters or digits.

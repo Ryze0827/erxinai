@@ -7,7 +7,7 @@ import { totpApi, userApi } from "../../api";
 import { isEmail } from "../../auth/authUtils";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
-import { useLocale } from "../i18n";
+import { useLocale, translate, translateGroup } from "../i18n";
 import { Button, ConfirmDialog, Field, IconButton, Modal, Page, Panel, Spinner, StatusBadge, TextInput, Toggle } from "../UI";
 import { safeImageUrl, statusLabel } from "../utils";
 
@@ -19,20 +19,7 @@ const AVATAR_MAX_SOURCE_PIXELS = 25_000_000;
 const AVATAR_SCALE_STEPS = [1, 0.84, 0.68, 0.52, 0.4, 0.32];
 const AVATAR_QUALITY_STEPS = [0.88, 0.74, 0.6, 0.48, 0.36];
 const AVATAR_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
-const AVATAR_COPY = {
-  en: {
-    fallbackLabel: "Avatar URL (fallback)", fallbackHint: "The local image is active; you can fall back to this URL.",
-    localLabel: "Local avatar", localHint: "Local images are prepared in your browser and are not uploaded until you save.",
-    choose: "Choose image", preparing: "Preparing…", restore: "Use avatar URL", remove: "Remove avatar",
-    removed: "Avatar removed.", joined: (date) => `Joined ${date}`,
-  },
-  zh: {
-    fallbackLabel: "头像地址（回退）", fallbackHint: "当前预览使用本地图片；可恢复为此地址。",
-    localLabel: "本地头像", localHint: "本地图片会在浏览器中预处理，保存前不会上传。",
-    choose: "选择图片", preparing: "正在处理…", restore: "恢复地址头像", remove: "移除头像",
-    removed: "头像已移除。", joined: (date) => `注册于 ${date}`,
-  },
-};
+const AVATAR_COPY_KEYS = ["fallbackLabel", "fallbackHint", "localLabel", "localHint", "choose", "preparing", "restore", "remove", "removed"];
 
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -99,24 +86,8 @@ async function prepareAvatar(file) {
 }
 
 function avatarErrorMessage(code, locale) {
-  const messages = locale === "zh" ? {
-    avatar_invalid_type: "请选择 PNG、JPEG、WebP 或 GIF 图片。",
-    avatar_source_too_large: "头像源文件不能超过 10 MB。",
-    avatar_dimensions_too_large: "头像像素尺寸过大，请选择不超过 2500 万像素的图片。",
-    avatar_gif_too_large: "GIF 头像需小于 20 KB；较大的动图无法在保留动画的同时压缩。",
-    avatar_too_large: "无法将这张图片压缩到 20 KB 以内，请尝试构图更简单的图片。",
-    avatar_read_failed: "无法读取所选图片。",
-    avatar_compress_failed: "浏览器无法处理所选图片。",
-  } : {
-    avatar_invalid_type: "Choose a PNG, JPEG, WebP, or GIF image.",
-    avatar_source_too_large: "The source avatar must not exceed 10 MB.",
-    avatar_dimensions_too_large: "The avatar dimensions are too large. Choose an image under 25 megapixels.",
-    avatar_gif_too_large: "GIF avatars must be under 20 KB to preserve animation.",
-    avatar_too_large: "This image could not be compressed below 20 KB. Try a simpler image.",
-    avatar_read_failed: "The selected image could not be read.",
-    avatar_compress_failed: "The browser could not prepare the selected image.",
-  };
-  return messages[code] || (locale === "zh" ? "无法处理所选图片。" : "The selected image could not be prepared.");
+  const messages = { avatar_invalid_type: translate(locale, "profile.choosePngJpegWebp"), avatar_source_too_large: translate(locale, "profile.sourceAvatarMustNot"), avatar_dimensions_too_large: translate(locale, "profile.avatarDimensionsTooLarge"), avatar_gif_too_large: translate(locale, "profile.gifAvatarsMustUnder"), avatar_too_large: translate(locale, "profile.imageCouldNotCompressed"), avatar_read_failed: translate(locale, "profile.selectedImageCouldNot"), avatar_compress_failed: translate(locale, "profile.browserCouldNotPrepare") };
+  return messages[code] || translate(locale, "profile.selectedImageCouldNot2");
 }
 
 function avatarSize(value) {
@@ -136,7 +107,7 @@ function ProfileAvatarRow({ avatar, email, username, status, statusText, joined,
 }
 
 function ProfileAvatarFields({ form, setForm, locale, usernameLabel, avatarDraft, avatarMeta, hasSavedAvatar, busy, preparing, fileInputRef, onChoose, onRestore, onRemove }) {
-  const copy = AVATAR_COPY[locale] || AVATAR_COPY.en;
+  const copy = translateGroup(locale, "profile.avatarCopy", AVATAR_COPY_KEYS);
   const hint = avatarMeta ? `${avatarMeta.name} · ${avatarSize(avatarMeta.originalSize)} → ${avatarSize(avatarMeta.preparedSize)}` : copy.localHint;
   const chooseLabel = preparing ? copy.preparing : copy.choose;
   const unavailable = busy || preparing;
@@ -195,7 +166,7 @@ function ProfileCard() {
     try {
       const next = await userApi.update({ avatar_url: "" });
       updateUser(next); setForm((current) => ({ ...current, avatar_url: "" })); restoreAvatarUrl();
-      notify("success", (AVATAR_COPY[locale] || AVATAR_COPY.en).removed);
+      notify("success", (translateGroup(locale, "profile.avatarCopy", AVATAR_COPY_KEYS)).removed);
     } catch (error) { notify("error", error.message); } finally { setBusy(false); }
   };
   const save = async (event) => {
@@ -206,13 +177,14 @@ function ProfileCard() {
     }
     catch (error) { notify("error", error.message); } finally { setBusy(false); }
   };
-  const copy = AVATAR_COPY[locale] || AVATAR_COPY.en;
-  return <Panel className="console-profile-account"><form className="console-panel-body console-profile-form" onSubmit={save}><ProfileAvatarRow avatar={previewFailed ? "" : previewSource} email={user?.email} username={form.username} status={user?.status} statusText={statusLabel(user?.status || "active", locale)} joined={copy.joined(formatDate(user?.created_at, { dateOnly: true }))} onError={() => setPreviewFailed(true)} /><ProfileAvatarFields form={form} setForm={setForm} locale={locale} usernameLabel={t("profile.username")} avatarDraft={avatarDraft} avatarMeta={avatarMeta} hasSavedAvatar={Boolean(user?.avatar_url)} busy={busy} preparing={preparing} fileInputRef={fileInputRef} onChoose={chooseAvatar} onRestore={restoreAvatarUrl} onRemove={removeAvatar} /><div className="console-form-actions"><Button type="submit" variant="primary" disabled={busy || preparing}>{busy ? t("common.loading") : (locale === "zh" ? "保存资料" : "Save profile")}</Button></div></form></Panel>;
+  const copy = translateGroup(locale, "profile.avatarCopy", AVATAR_COPY_KEYS);
+  return <Panel className="console-profile-account"><form className="console-panel-body console-profile-form" onSubmit={save}><ProfileAvatarRow avatar={previewFailed ? "" : previewSource} email={user?.email} username={form.username} status={user?.status} statusText={statusLabel(user?.status || "active", locale)} joined={t("profile.joined", { date: formatDate(user?.created_at, { dateOnly: true }) })} onError={() => setPreviewFailed(true)} /><ProfileAvatarFields form={form} setForm={setForm} locale={locale} usernameLabel={t("profile.username")} avatarDraft={avatarDraft} avatarMeta={avatarMeta} hasSavedAvatar={Boolean(user?.avatar_url)} busy={busy} preparing={preparing} fileInputRef={fileInputRef} onChoose={chooseAvatar} onRestore={restoreAvatarUrl} onRemove={removeAvatar} /><div className="console-form-actions"><Button type="submit" variant="primary" disabled={busy || preparing}>{busy ? t("common.loading") : t("profile.saveProfile")}</Button></div></form></Panel>;
 }
 
+const PASSWORD_COPY_KEYS = ["hint", "confirm", "mismatch"];
+
 function passwordCopy(locale) {
-  if (locale === "zh") return { hint: "至少 8 个字符", confirm: "确认新密码", mismatch: "两次输入的密码不一致。" };
-  return { hint: "Use at least 8 characters.", confirm: "Confirm new password", mismatch: "Passwords do not match." };
+  return translateGroup(locale, "profile.passwordCopy", PASSWORD_COPY_KEYS);
 }
 
 function passwordIsValid(form) {
@@ -243,7 +215,7 @@ function PasswordCard() {
     try { await userApi.changePassword(form.old, form.next); setForm({ old: "", next: "", confirm: "" }); notify("success", t("common.saved")); }
     catch (error) { notify("error", error.message); } finally { setBusy(false); }
   };
-  return <Panel title={t("profile.password")} className="console-profile-password"><form className="console-panel-body" onSubmit={save}><PasswordFields form={form} setForm={setForm} visible={visible} setVisible={setVisible} copy={passwordCopy(locale)} t={t} /><div className="console-form-actions"><Button type="submit" disabled={passwordSubmitDisabled(form, busy)}>{busy ? t("common.loading") : (locale === "zh" ? "更新密码" : "Update password")}</Button></div></form></Panel>;
+  return <Panel title={t("profile.password")} className="console-profile-password"><form className="console-panel-body" onSubmit={save}><PasswordFields form={form} setForm={setForm} visible={visible} setVisible={setVisible} copy={passwordCopy(locale)} t={t} /><div className="console-form-actions"><Button type="submit" disabled={passwordSubmitDisabled(form, busy)}>{busy ? t("common.loading") : t("profile.updatePassword")}</Button></div></form></Panel>;
 }
 
 export function NotificationsCard() {
@@ -259,13 +231,13 @@ export function NotificationsCard() {
     try { const next = await userApi.update({ balance_notify_enabled: form.enabled, balance_notify_threshold: Number(form.threshold) || 0 }); updateUser(next); notify("success", t("common.saved")); }
     catch (error) { notify("error", error.message); } finally { setBusy(false); }
   };
-  const send = async () => { try { await userApi.sendNotifyEmailCode(email.value); setEmail((current) => ({ ...current, sent: true })); notify("success", locale === "zh" ? "验证码已发送。" : "Verification code sent."); } catch (error) { notify("error", error.message); } };
+  const send = async () => { try { await userApi.sendNotifyEmailCode(email.value); setEmail((current) => ({ ...current, sent: true })); notify("success", t("profile.verificationCodeSent")); } catch (error) { notify("error", error.message); } };
   const verify = async () => { try { await userApi.verifyNotifyEmail(email.value, email.code); await refreshUser(); setEmail({ value: "", code: "", sent: false }); setAddingEmail(false); notify("success", t("common.saved")); } catch (error) { notify("error", error.message); } };
   const changeEntry = async (entry, action) => {
     try { const next = action === "remove" ? await userApi.removeNotifyEmail(entry.email) : await userApi.toggleNotifyEmail(entry.email, !entry.disabled); if (next) updateUser(next); else await refreshUser(); }
     catch (error) { notify("error", error.message); }
   };
-  return <Panel title={t("profile.notifications")} className="console-profile-notifications"><div className="console-panel-body console-detail-stack"><Toggle checked={form.enabled} onChange={(event) => setForm((current) => ({ ...current, enabled: event.target.checked }))} label={t("profile.notifyEnabled")} /><div className="console-form-grid console-notification-threshold"><Field label={t("profile.threshold")} hint={`${locale === "zh" ? "当前" : "Current"}: ${formatCurrency(form.threshold)}`}><TextInput type="number" min="0" step="0.01" value={form.threshold} onChange={(event) => setForm((current) => ({ ...current, threshold: event.target.value }))} onWheel={(event) => event.currentTarget.blur()} disabled={!form.enabled} /></Field><div className="console-form-actions is-inline"><Button onClick={save} disabled={busy}>{t("common.save")}</Button></div></div><div className="console-divider" /><strong>{t("profile.notifyEmails")}</strong><div className="console-notify-emails">{(user?.balance_notify_extra_emails || []).map((entry) => <div key={entry.email}><Toggle checked={!entry.disabled} onChange={() => changeEntry(entry, "toggle")} label="" ariaLabel={`${entry.email}: ${entry.disabled ? t("common.disabled") : t("common.enabled")}`} /><span><strong>{entry.email}</strong><small>{entry.disabled ? t("common.disabled") : (locale === "zh" ? "已验证" : "Verified")}</small></span><IconButton icon="trash" label={t("common.delete")} onClick={() => changeEntry(entry, "remove")} /></div>)}</div>{addingEmail && <div className="console-notification-email-fields"><Field label={t("profile.addEmail")}><TextInput type="email" value={email.value} onChange={(event) => setEmail((current) => ({ ...current, value: event.target.value }))} /></Field>{email.sent && <Field label={t("profile.code")}><TextInput inputMode="numeric" value={email.code} onChange={(event) => setEmail((current) => ({ ...current, code: event.target.value }))} /></Field>}</div>}<div className="console-form-actions console-notification-email-actions is-inline"><Button icon="plus" onClick={() => setAddingEmail(true)}>{t("profile.addEmail")}</Button><Button icon="mail" onClick={email.sent ? verify : send} disabled={!addingEmail || !email.value || (email.sent && !email.code)}>{email.sent ? t("profile.verify") : t("profile.sendCode")}</Button></div></div></Panel>;
+  return <Panel title={t("profile.notifications")} className="console-profile-notifications"><div className="console-panel-body console-detail-stack"><Toggle checked={form.enabled} onChange={(event) => setForm((current) => ({ ...current, enabled: event.target.checked }))} label={t("profile.notifyEnabled")} /><div className="console-form-grid console-notification-threshold"><Field label={t("profile.threshold")} hint={t("profile.currentValue", { value: formatCurrency(form.threshold) })}><TextInput type="number" min="0" step="0.01" value={form.threshold} onChange={(event) => setForm((current) => ({ ...current, threshold: event.target.value }))} onWheel={(event) => event.currentTarget.blur()} disabled={!form.enabled} /></Field><div className="console-form-actions is-inline"><Button onClick={save} disabled={busy}>{t("common.save")}</Button></div></div><div className="console-divider" /><strong>{t("profile.notifyEmails")}</strong><div className="console-notify-emails">{(user?.balance_notify_extra_emails || []).map((entry) => <div key={entry.email}><Toggle checked={!entry.disabled} onChange={() => changeEntry(entry, "toggle")} label="" ariaLabel={`${entry.email}: ${entry.disabled ? t("common.disabled") : t("common.enabled")}`} /><span><strong>{entry.email}</strong><small>{entry.disabled ? t("common.disabled") : t("profile.verified")}</small></span><IconButton icon="trash" label={t("common.delete")} onClick={() => changeEntry(entry, "remove")} /></div>)}</div>{addingEmail && <div className="console-notification-email-fields"><Field label={t("profile.addEmail")}><TextInput type="email" value={email.value} onChange={(event) => setEmail((current) => ({ ...current, value: event.target.value }))} /></Field>{email.sent && <Field label={t("profile.code")}><TextInput inputMode="numeric" value={email.code} onChange={(event) => setEmail((current) => ({ ...current, code: event.target.value }))} /></Field>}</div>}<div className="console-form-actions console-notification-email-actions is-inline"><Button icon="plus" onClick={() => setAddingEmail(true)}>{t("profile.addEmail")}</Button><Button icon="mail" onClick={email.sent ? verify : send} disabled={!addingEmail || !email.value || (email.sent && !email.code)}>{email.sent ? t("profile.verify") : t("profile.sendCode")}</Button></div></div></Panel>;
 }
 
 function wechatBindingMode(settings) {
@@ -343,20 +315,20 @@ function IdentityCard() {
     try { await refreshUser(); } finally { setRefreshing(false); }
   };
   const rows = [{ id: "email", label: "Email", enabled: true }, ...providers];
-  return <Panel title={locale === "zh" ? "登录方式" : "Sign-in methods"} actions={<Button className="console-identity-refresh" icon="refresh" onClick={refresh} loading={refreshing}>{t("common.refresh")}</Button>} className="console-profile-identities"><div className="console-panel-body console-identity-list"><div className="console-identity-table-head"><span>{locale === "zh" ? "提供商" : "Provider"}</span><span>{t("common.status")}</span><span>{locale === "zh" ? "操作" : "Action"}</span></div>{rows.map((provider) => {
+  return <Panel title={t("profile.identities")} actions={<Button className="console-identity-refresh" icon="refresh" onClick={refresh} loading={refreshing}>{t("common.refresh")}</Button>} className="console-profile-identities"><div className="console-panel-body console-identity-list"><div className="console-identity-table-head"><span>{t("profile.provider")}</span><span>{t("common.status")}</span><span>{t("profile.action")}</span></div>{rows.map((provider) => {
     const bound = provider.id === "email" ? Boolean(user?.email) : bindingStatus(user, provider.id);
     const details = bindingDetails(user, provider.id);
     const canUnbind = provider.id !== "email" && bound && details.can_unbind === true;
-    const description = provider.id === "email" && bound ? user.email : provider.id === "email" ? (locale === "zh" ? "使用邮箱登录" : "Sign in with your email") : (locale === "zh" ? `使用 ${provider.label} 登录` : `Sign in with ${provider.label}`);
+    const description = provider.id === "email" && bound ? user.email : provider.id === "email" ? t("profile.signEmail") : t("profile.sign", { label: provider.label });
     const icon = { email: "mail", dingtalk: "dingtalk", wechat: "wechat" }[provider.id] || "globe";
-    return <div className="console-identity-row" key={provider.id}><span className={`console-identity-mark is-${provider.id}`}><Icon name={icon} size={22} /></span><div className="console-identity-content"><strong>{provider.label}</strong><small>{description}</small></div><div className="console-identity-status"><StatusBadge status={bound ? "active" : "inactive"} label={bound ? (locale === "zh" ? "已连接" : "Connected") : (locale === "zh" ? "未连接" : "Not connected")} /></div><div className="console-identity-actions">{provider.id === "email" && <Button onClick={() => setEmailModal(true)}>{bound ? t("profile.changeEmail") : t("profile.bind")}</Button>}{!bound && provider.id !== "email" && <Button onClick={() => beginBind(provider.id)}>{t("profile.bind")}</Button>}{canUnbind && <Button variant="danger" onClick={() => setUnbind(provider.id)}>{t("profile.unbind")}</Button>}</div></div>;
-  })}</div><Modal open={emailModal} title={hasBoundEmail ? t("profile.rebindEmail") : t("profile.bind")} onClose={() => setEmailModal(false)} size="small" footer={<><Button onClick={() => setEmailModal(false)} disabled={Boolean(emailBusy)}>{t("common.cancel")}</Button>{email.sent && <Button onClick={sendEmail} disabled={Boolean(emailBusy)}>{emailBusy === "sending" ? t("common.loading") : t("profile.resendCode")}</Button>}<Button variant="primary" onClick={email.sent ? bindEmail : sendEmail} disabled={Boolean(emailBusy)}>{emailBusy === "binding" || (!email.sent && emailBusy === "sending") ? t("common.loading") : email.sent ? t("profile.verify") : t("profile.sendCode")}</Button></>}><div className="console-form-grid"><Field label={t(hasBoundEmail ? "profile.newEmail" : "profile.email")} className="is-full"><TextInput type="email" value={email.value} onChange={(event) => updateEmail(event.target.value)} disabled={Boolean(emailBusy)} autoComplete="email" /></Field>{email.sent && <><Field label={t("profile.code")}><TextInput inputMode="numeric" maxLength="6" value={email.code} onChange={(event) => setEmail((current) => ({ ...current, code: event.target.value.replace(/\D/g, "").slice(0, 6) }))} disabled={Boolean(emailBusy)} autoComplete="one-time-code" /></Field><Field label={t("profile.currentPassword")}><TextInput type="password" value={email.password} onChange={(event) => setEmail((current) => ({ ...current, password: event.target.value }))} disabled={Boolean(emailBusy)} autoComplete={hasBoundEmail ? "current-password" : "new-password"} /></Field></>}</div></Modal><ConfirmDialog open={Boolean(unbind)} title={t("profile.unbind")} description={locale === "zh" ? "解绑后将无法继续使用该方式登录。" : "You will no longer be able to sign in with this provider."} onClose={() => setUnbind(null)} onConfirm={remove} /></Panel>;
+    return <div className="console-identity-row" key={provider.id}><span className={`console-identity-mark is-${provider.id}`}><Icon name={icon} size={22} /></span><div className="console-identity-content"><strong>{provider.label}</strong><small>{description}</small></div><div className="console-identity-status"><StatusBadge status={bound ? "active" : "inactive"} label={bound ? t("profile.connected") : t("profile.notConnected")} /></div><div className="console-identity-actions">{provider.id === "email" && <Button onClick={() => setEmailModal(true)}>{bound ? t("profile.changeEmail") : t("profile.bind")}</Button>}{!bound && provider.id !== "email" && <Button onClick={() => beginBind(provider.id)}>{t("profile.bind")}</Button>}{canUnbind && <Button variant="danger" onClick={() => setUnbind(provider.id)}>{t("profile.unbind")}</Button>}</div></div>;
+  })}</div><Modal open={emailModal} title={hasBoundEmail ? t("profile.rebindEmail") : t("profile.bind")} onClose={() => setEmailModal(false)} size="small" footer={<><Button onClick={() => setEmailModal(false)} disabled={Boolean(emailBusy)}>{t("common.cancel")}</Button>{email.sent && <Button onClick={sendEmail} disabled={Boolean(emailBusy)}>{emailBusy === "sending" ? t("common.loading") : t("profile.resendCode")}</Button>}<Button variant="primary" onClick={email.sent ? bindEmail : sendEmail} disabled={Boolean(emailBusy)}>{emailBusy === "binding" || (!email.sent && emailBusy === "sending") ? t("common.loading") : email.sent ? t("profile.verify") : t("profile.sendCode")}</Button></>}><div className="console-form-grid"><Field label={t(hasBoundEmail ? "profile.newEmail" : "profile.email")} className="is-full"><TextInput type="email" value={email.value} onChange={(event) => updateEmail(event.target.value)} disabled={Boolean(emailBusy)} autoComplete="email" /></Field>{email.sent && <><Field label={t("profile.code")}><TextInput inputMode="numeric" maxLength="6" value={email.code} onChange={(event) => setEmail((current) => ({ ...current, code: event.target.value.replace(/\D/g, "").slice(0, 6) }))} disabled={Boolean(emailBusy)} autoComplete="one-time-code" /></Field><Field label={t("profile.currentPassword")}><TextInput type="password" value={email.password} onChange={(event) => setEmail((current) => ({ ...current, password: event.target.value }))} disabled={Boolean(emailBusy)} autoComplete={hasBoundEmail ? "current-password" : "new-password"} /></Field></>}</div></Modal><ConfirmDialog open={Boolean(unbind)} title={t("profile.unbind")} description={t("profile.youWillNoLonger")} onClose={() => setUnbind(null)} onConfirm={remove} /></Panel>;
 }
 
 function TotpSummary({ status, locale, t, onBegin }) {
-  const heading = locale === "zh" ? "双因素身份验证" : "Two-factor authentication";
-  const description = status.enabled ? (locale === "zh" ? "你的账户已受到身份验证器动态代码保护。" : "Your account is protected with authenticator codes.") : (locale === "zh" ? "启用身份验证器动态代码保护你的账户。" : "Protect your account with rotating authenticator codes.");
-  return <Panel title={locale === "zh" ? "账户保护" : "Account protection"} className="console-profile-protection"><div className="console-panel-body console-security-card" data-enabled={Boolean(status.enabled)}><span><Icon name="shield" size={27} /></span><div><strong>{heading}<StatusBadge status={status.enabled ? "active" : "inactive"} label={status.enabled ? "ON" : "OFF"} /></strong><p>{description}</p></div><Button variant={status.enabled ? "danger" : "primary"} onClick={() => onBegin(status.enabled ? "disable" : "setup")}>{status.enabled ? t("profile.disable2fa") : t("profile.setup2fa")}</Button></div></Panel>;
+  const heading = t("profile.twoFactorAuthentication");
+  const description = status.enabled ? t("profile.accountProtectedAuthenticatorCodes") : t("profile.protectAccountRotatingAuthenticator");
+  return <Panel title={t("profile.accountProtection")} className="console-profile-protection"><div className="console-panel-body console-security-card" data-enabled={Boolean(status.enabled)}><span><Icon name="shield" size={27} /></span><div><strong>{heading}<StatusBadge status={status.enabled ? "active" : "inactive"} label={status.enabled ? "ON" : "OFF"} /></strong><p>{description}</p></div><Button variant={status.enabled ? "danger" : "primary"} onClick={() => onBegin(status.enabled ? "disable" : "setup")}>{status.enabled ? t("profile.disable2fa") : t("profile.setup2fa")}</Button></div></Panel>;
 }
 
 function TotpVerification({ flow, form, setForm, onSendCode, t }) {
@@ -366,7 +338,7 @@ function TotpVerification({ flow, form, setForm, onSendCode, t }) {
 
 function TotpSetup({ flow, form, setForm, t }) {
   const qrCode = safeImageUrl(flow.setup.qr_code_url);
-  return <div className="console-totp-setup">{qrCode && <img src={qrCode} alt="TOTP QR code" />}<Field label={t("profile.secret")}><div className="console-code"><span>{flow.setup.secret}</span></div></Field><Field label={t("profile.totpCode")}><TextInput inputMode="numeric" maxLength="6" value={form.totp} onChange={(event) => setForm((current) => ({ ...current, totp: event.target.value }))} /></Field></div>;
+  return <div className="console-totp-setup">{qrCode && <img src={qrCode} alt={t("profile.totpQrCode")} />}<Field label={t("profile.secret")}><div className="console-code"><span>{flow.setup.secret}</span></div></Field><Field label={t("profile.totpCode")}><TextInput inputMode="numeric" maxLength="6" value={form.totp} onChange={(event) => setForm((current) => ({ ...current, totp: event.target.value }))} /></Field></div>;
 }
 
 function TotpDialog({ flow, form, setForm, busy, onClose, onVerify, onEnable, onSendCode, t }) {
@@ -390,7 +362,7 @@ function TotpCard() {
     try { const method = await totpApi.getVerificationMethod(); setForm({ verification: "", totp: "" }); setFlow({ action, method: method.method, phase: "verify" }); }
     catch (error) { notify("error", error.message); }
   };
-  const sendCode = async () => { try { await totpApi.sendCode(); notify("success", locale === "zh" ? "验证码已发送。" : "Verification code sent."); } catch (error) { notify("error", error.message); } };
+  const sendCode = async () => { try { await totpApi.sendCode(); notify("success", t("profile.verificationCodeSent")); } catch (error) { notify("error", error.message); } };
   const verify = async () => {
     setBusy(true);
     const verification = flow.method === "email" ? { email_code: form.verification } : { password: form.verification };

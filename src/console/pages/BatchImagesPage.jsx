@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Checkbox as AppicaCheckbox } from "@appica/ui-react/checkbox";
 import { batchImagesApi, keysApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
-import { useLocale } from "../i18n";
+import { useLocale, translate, translateGroup, translateNodes, formatDateTimeFor } from "../i18n";
 import {
   Button,
   ConfirmDialog,
@@ -28,31 +28,16 @@ const terminalStatuses = new Set(["completed", "failed", "cancelled", "output_de
 const pageSizes = [20, 50, 100];
 const outputCounts = [1, 2, 3, 4];
 const initialFilters = { keyId: "", status: "", downloaded: "", taskName: "" };
-const copy = {
-  form: {
-    en: { taskPlaceholder: "Uses the current time when left blank", loadingModels: "Loading models…", selectModel: "Select a model", format: "Output format", outputCount: "Outputs per prompt", estimated: "Estimated", promptsHint: "Each non-empty line becomes a separate item.", jsonHint: "Overrides prompts above. Each item may include output_count and reference_images." },
-    zh: { taskPlaceholder: "留空时自动使用当前时间", loadingModels: "正在加载模型…", selectModel: "选择模型", format: "输出格式", outputCount: "每条生成张数", estimated: "预计", promptsHint: "每个非空行会成为一个独立任务。", jsonHint: "填写后覆盖上方提示词。每项可包含 output_count 与 reference_images。" },
-  },
-  filters: {
-    en: { key: "Submitted key", downloaded: "Download status", search: "Search task name", allKeys: "All keys", yes: "Downloaded", no: "Not downloaded", reset: "Reset" },
-    zh: { key: "提交密钥", downloaded: "下载状态", search: "搜索任务名称", allKeys: "全部密钥", yes: "已下载", no: "未下载", reset: "重置" },
-  },
-  jobs: {
-    en: { selectPage: "Select page", task: "Task", child: "Child", collapse: "Collapse", expand: "Expand", model: "Model", key: "Submitted key", status: "Status", results: "Results", cost: "Cost", downloaded: "Downloaded", notDownloaded: "Not downloaded", actions: "Actions", inspect: "View details", cancel: "Cancel job", download: "Download ZIP", retry: "Retry failed items", remove: "Delete record", empty: "No batch jobs" },
-    zh: { selectPage: "选择本页", task: "任务名称", child: "子任务", collapse: "收起", expand: "展开", model: "模型", key: "提交密钥", status: "状态", results: "结果", cost: "费用", downloaded: "下载状态", notDownloaded: "未下载", actions: "操作", inspect: "查看详情", cancel: "取消任务", download: "下载 ZIP", retry: "仅重试失败项", remove: "删除记录", empty: "暂无批量任务" },
-  },
-  items: {
-    en: { source: "Source", status: "Status", images: "Images", result: "Result", preview: "Preview", available: "Available", empty: "No job items yet", emptyHint: "Queued jobs show items after the provider accepts them." },
-    zh: { source: "来源任务", status: "状态", images: "图片", result: "结果", preview: "预览", available: "可下载", empty: "暂无任务明细", emptyHint: "排队中的任务会在上游接收后显示明细。" },
-  },
-  detail: {
-    en: { succeeded: "succeeded", failed: "failed", downloaded: "Downloaded", notDownloaded: "Not downloaded", refresh: "Refresh details", parent: "Parent job", child: "Retry child" },
-    zh: { succeeded: "成功", failed: "失败", downloaded: "已下载", notDownloaded: "未下载", refresh: "刷新明细", parent: "主任务", child: "重试子任务" },
-  },
+const COPY_KEYS = {
+  form: ["taskPlaceholder", "loadingModels", "selectModel", "format", "outputCount", "estimated", "promptsHint", "jsonHint"],
+  filters: ["key", "downloaded", "search", "allKeys", "yes", "no", "reset"],
+  jobs: ["selectPage", "task", "child", "collapse", "expand", "model", "key", "status", "results", "cost", "downloaded", "notDownloaded", "actions", "inspect", "cancel", "download", "retry", "remove", "empty"],
+  items: ["source", "status", "images", "result", "preview", "available", "empty", "emptyHint"],
+  detail: ["succeeded", "failed", "downloaded", "notDownloaded", "refresh", "parent", "child"],
 };
 
 function localCopy(section, locale) {
-  return copy[section][locale] || copy[section].en;
+  return translateGroup(locale, `batch.${section}`, COPY_KEYS[section]);
 }
 
 function initialForm(keyId = "") {
@@ -101,8 +86,8 @@ function advancedItems(value) {
 }
 
 function defaultTaskName(locale) {
-  const date = new Date().toLocaleString(locale === "zh" ? "zh-CN" : "en-US", { hour12: false });
-  return locale === "zh" ? `批量图片 ${date}` : `Batch images ${date}`;
+  const date = formatDateTimeFor(locale, new Date(), { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: false });
+  return translate(locale, "batch.batchImages", { date });
 }
 
 function buildPayload(form, locale) {
@@ -124,17 +109,17 @@ function expectedOutputs(items) {
 }
 
 function invalidItemsMessage(locale) {
-  return locale === "zh" ? "高级 Items JSON 格式无效。" : "Advanced Items JSON is invalid.";
+  return translate(locale, "batch.advancedItemsJsonInvalid");
 }
 
 function submissionProblem(key, payload, locale) {
-  if (!key || !payload.model || !payload.items.length) return locale === "zh" ? "请选择密钥和模型，并添加至少一个提示词。" : "Choose a key and model, then add at least one prompt.";
-  if (expectedOutputs(payload.items) > 200) return locale === "zh" ? "单个批量任务最多生成 200 张图片。" : "A batch can generate at most 200 images.";
+  if (!key || !payload.model || !payload.items.length) return translate(locale, "batch.chooseKeyModelThen");
+  if (expectedOutputs(payload.items) > 200) return translate(locale, "batch.batchCanGenerateAt");
   return "";
 }
 
 function submittedMessage(locale) {
-  return locale === "zh" ? "批量任务已提交。" : "Batch submitted.";
+  return translate(locale, "batch.batchSubmitted");
 }
 
 function unixDate(value, formatDate) {
@@ -310,7 +295,7 @@ function retryItems(items, recovered = new Set()) {
 
 function retryPayload(job, items, locale) {
   const payload = {
-    task_name: `${job.task_name || defaultTaskName(locale)} · ${locale === "zh" ? "失败项重试" : "failed retry"}`,
+    task_name: `${job.task_name || defaultTaskName(locale)} · ${translate(locale, "batch.failedRetry")}`,
     parent_batch_id: job.parent_batch_id || job.id,
     model: job.model,
     image_size: job.image_size || "1K",
@@ -340,11 +325,11 @@ function retryParentRef(key, created, job) {
 }
 
 function missingRetryPromptMessage(locale) {
-  return locale === "zh" ? "失败明细中没有可用于重试的 Prompt。" : "Failed items do not contain reusable prompts.";
+  return translate(locale, "batch.failedItemsDoNot");
 }
 
 function retrySubmittedMessage(locale) {
-  return locale === "zh" ? "失败项重试任务已提交。" : "Failed-item retry submitted.";
+  return translate(locale, "batch.failedItemRetrySubmitted");
 }
 
 function keyForJob(keys, job) {
@@ -369,7 +354,7 @@ async function removeJobRows(keys, rows) {
 }
 
 function unavailableKeyMessage(locale) {
-  return locale === "zh" ? "找不到任务使用的 API Key。" : "The API key used by this job is unavailable.";
+  return translate(locale, "batch.apiKeyUsedJob");
 }
 
 async function executeJobMutation(request, keys, locale) {
@@ -382,7 +367,7 @@ async function executeJobMutation(request, keys, locale) {
 
 function deleteFailureMessage(total, failed, locale) {
   const deleted = total - failed;
-  return locale === "zh" ? `${deleted} 条已删除，${failed} 条删除失败。列表已刷新。` : `${deleted} deleted; ${failed} failed. The list was refreshed.`;
+  return translate(locale, "batch.deletedFailedListWas", { deleted, failed });
 }
 
 function SelectionCheckbox({ checked, indeterminate = false, label, onChange }) {
@@ -405,7 +390,7 @@ function BatchForm({ form, setForm, keys, models, modelsLoading }) {
     <Field label={t("batch.aspect")}><SelectInput value={form.aspect_ratio} onChange={set("aspect_ratio")}><option value="">Auto</option><option>1:1</option><option>16:9</option><option>9:16</option><option>4:3</option><option>3:4</option></SelectInput></Field>
     <Field label={labels.format}><SelectInput value={form.response_mime_type} onChange={set("response_mime_type")}><option value="image/png">PNG</option><option value="image/jpeg">JPEG</option><option value="image/webp">WebP</option></SelectInput></Field>
     <Field label={labels.outputCount} hint={`${labels.estimated}: ${estimate}`}><SelectInput value={form.output_count} onChange={set("output_count")}>{outputCounts.map((count) => <option key={count} value={count}>{count}</option>)}</SelectInput></Field>
-    <Field label={t("batch.prompts")} className="is-full" hint={labels.promptsHint}><TextArea rows="8" value={form.prompts} onChange={set("prompts")} placeholder={locale === "zh" ? "一只戴宇航头盔的猫\n蓝色玻璃城市的航拍视角" : "A cat wearing an astronaut helmet\nAerial view of a blue glass city"} /></Field>
+    <Field label={t("batch.prompts")} className="is-full" hint={labels.promptsHint}><TextArea rows="8" value={form.prompts} onChange={set("prompts")} placeholder={t("batch.catWearingAstronautHelmet")} /></Field>
     <Field label={t("batch.json")} className="is-full" hint={labels.jsonHint}><TextArea rows="6" className="console-mono" value={form.json} onChange={set("json")} placeholder='[{"custom_id":"img_001","prompt":"…","output_count":2,"reference_images":[{"mime_type":"image/png","data":"BASE64"}]}]' /></Field>
   </div>;
 }
@@ -428,17 +413,17 @@ function SelectionBar({ count, downloadCount, deleteCount, busy, onDownload, onD
   const { locale } = useLocale();
   if (!count) return null;
   return <Panel className="console-batch-selection"><div className="console-toolbar">
-    <strong>{locale === "zh" ? `已选择 ${count} 个任务` : `${count} jobs selected`}</strong>
-    <Button icon="download" onClick={onDownload} disabled={!downloadCount || busy}>{locale === "zh" ? `下载选中 (${downloadCount})` : `Download (${downloadCount})`}</Button>
-    <Button variant="danger" icon="trash" onClick={onDelete} disabled={!deleteCount || busy}>{locale === "zh" ? `删除记录 (${deleteCount})` : `Delete (${deleteCount})`}</Button>
-    <Button onClick={onClear}>{locale === "zh" ? "清除选择" : "Clear"}</Button>
+    <strong>{translate(locale, "batch.jobsSelected", { count })}</strong>
+    <Button icon="download" onClick={onDownload} disabled={!downloadCount || busy}>{translate(locale, "batch.download2", { downloadCount })}</Button>
+    <Button variant="danger" icon="trash" onClick={onDelete} disabled={!deleteCount || busy}>{translate(locale, "batch.delete", { deleteCount })}</Button>
+    <Button onClick={onClear}>{translate(locale, "batch.clear")}</Button>
   </div></Panel>;
 }
 
 function CursorPagination({ page, pageSize, count, hasMore, loading, onPage, onPageSize }) {
   const { t, locale } = useLocale();
   if (!count && page === 1) return null;
-  return <div className="console-pagination"><span>{locale === "zh" ? `第 ${page} 页 · 本页 ${count} 条` : `Page ${page} · ${count} on this page`}</span><div><SelectInput value={pageSize} onChange={(event) => onPageSize(Number(event.target.value))}>{pageSizes.map((size) => <option key={size} value={size}>{size}</option>)}</SelectInput><Button onClick={() => onPage(page - 1)} disabled={page <= 1 || loading}>{t("common.previous")}</Button><Button onClick={() => onPage(page + 1)} disabled={!hasMore || loading}>{t("common.next")}</Button></div></div>;
+  return <div className="console-pagination"><span>{t("batch.pagePage", { page, count })}</span><div><SelectInput value={pageSize} onChange={(event) => onPageSize(Number(event.target.value))}>{pageSizes.map((size) => <option key={size} value={size}>{size}</option>)}</SelectInput><Button onClick={() => onPage(page - 1)} disabled={page <= 1 || loading}>{t("common.previous")}</Button><Button onClick={() => onPage(page + 1)} disabled={!hasMore || loading}>{t("common.next")}</Button></div></div>;
 }
 
 function JobNameCell({ row, expanded, formatDate, labels, onExpand }) {
@@ -479,7 +464,7 @@ function JobTable(props) {
 }
 
 function itemStatus(item, locale) {
-  if (["success", "succeeded"].includes(item.status)) return locale === "zh" ? "成功" : "Succeeded";
+  if (["success", "succeeded"].includes(item.status)) return translate(locale, "batch.succeeded");
   return statusLabel(item.status, locale);
 }
 
@@ -574,22 +559,25 @@ function DetailContent({ detail, apiKey, formatCurrency, formatDate, onRefresh }
   return <div className="console-detail-stack"><DetailSummary detail={detail} display={display} formatCurrency={formatCurrency} formatDate={formatDate} onRefresh={onRefresh} locale={locale} /><DetailItems apiKey={apiKey} items={detail.items} /></div>;
 }
 
+const GUIDE_STEPS = ["keys", "prompts", "children", "download", "images"];
+
 function GuideContent() {
   const { locale } = useLocale();
-  if (locale === "zh") return <div className="console-detail-stack"><p>1. 只会列出属于已开启批量生图 Gemini 分组的 API Key；筛选条件会直接映射到网关列表接口。</p><p>2. 普通提示词模式支持每条生成 1–4 张。高级 Items JSON 可为每项分别设置 <span className="console-mono">output_count</span> 和 <span className="console-mono">reference_images</span>。</p><p>3. 父任务可以展开查看失败项重试产生的子任务；父任务结果栏会汇总子任务恢复的成功结果。</p><p>4. 已完成任务可下载 ZIP。失败任务可以仅重试失败项，新任务会携带原始根任务的 <span className="console-mono">parent_batch_id</span>。</p><p>5. 详情中的图片按需加载，不会在打开任务时自动下载全部原图。</p></div>;
-  return <div className="console-detail-stack"><p>1. Only API keys in Gemini groups with batch images enabled are listed. Filters map directly to the gateway list endpoint.</p><p>2. Prompt mode creates 1–4 outputs per item. Advanced Items JSON supports per-item <span className="console-mono">output_count</span> and <span className="console-mono">reference_images</span>.</p><p>3. Expand a parent to inspect retry children. Parent result counts include successful recoveries from child jobs.</p><p>4. Completed jobs can be downloaded as ZIP files. Failed-only retry submits a child with the root <span className="console-mono">parent_batch_id</span>.</p><p>5. Detail images load only when requested, so opening a job does not download every original image.</p></div>;
+  const code = (value) => <span className="console-mono">{value}</span>;
+  const nodes = { outputCount: code("output_count"), referenceImages: code("reference_images"), parentBatchId: code("parent_batch_id") };
+  return <div className="console-detail-stack">{GUIDE_STEPS.map((step, index) => <p key={step}>{index + 1}. {translateNodes(locale, `batch.guide.${step}`, nodes)}</p>)}</div>;
 }
 
 function PageActions({ hasKeys, onGuide, onCreate }) {
   const { t, locale } = useLocale();
-  return <><Button icon="book" onClick={onGuide}>{locale === "zh" ? "使用说明" : "Guide"}</Button><Button variant="primary" icon="plus" onClick={onCreate} disabled={!hasKeys}>{t("batch.submit")}</Button></>;
+  return <><Button icon="book" onClick={onGuide}>{t("batch.guide")}</Button><Button variant="primary" icon="plus" onClick={onCreate} disabled={!hasKeys}>{t("batch.submit")}</Button></>;
 }
 
 function NoKeysNotice({ hasKeys, state }) {
   const { locale } = useLocale();
   if (hasKeys || state.loading || state.error) return null;
-  const title = locale === "zh" ? "没有可用的 Gemini 密钥" : "No eligible Gemini key";
-  const description = locale === "zh" ? "请先创建一个属于已开启批量图片分组的密钥。" : "Create a key in a Gemini group with batch images enabled.";
+  const title = translate(locale, "batch.noEligibleGeminiKey");
+  const description = translate(locale, "batch.createKeyGeminiGroup");
   return <Panel><EmptyState icon="image" title={title} description={description} /></Panel>;
 }
 
@@ -613,7 +601,7 @@ function CreateBatchModal({ open, form, setForm, keys, models, modelsLoading, wo
 function DetailFooter({ detail, retryable, busy, onClose, onCancel, onRetry, onDownload }) {
   const { t, locale } = useLocale();
   if (!detail || detail.loading) return null;
-  return <><Button onClick={onClose}>{t("common.close")}</Button>{canCancel(detail.job) && <Button onClick={onCancel}>{t("batch.cancel")}</Button>}{retryable && <Button icon="refresh" onClick={onRetry} disabled={busy}>{locale === "zh" ? "仅重试失败项" : "Retry failed"}</Button>}{canDownload(detail.job) && <Button variant="primary" icon="download" onClick={onDownload} disabled={busy}>{t("batch.download")}</Button>}</>;
+  return <><Button onClick={onClose}>{t("common.close")}</Button>{canCancel(detail.job) && <Button onClick={onCancel}>{t("batch.cancel")}</Button>}{retryable && <Button icon="refresh" onClick={onRetry} disabled={busy}>{t("batch.retryFailed")}</Button>}{canDownload(detail.job) && <Button variant="primary" icon="download" onClick={onDownload} disabled={busy}>{t("batch.download")}</Button>}</>;
 }
 
 function DetailBatchModal({ detail, detailKey, retryable, busy, formatCurrency, formatDate, onClose, onInspect, onCancel, onRetry, onDownload }) {
@@ -625,14 +613,14 @@ function DetailBatchModal({ detail, detailKey, retryable, busy, formatCurrency, 
 
 function GuideModal({ open, onClose }) {
   const { t, locale } = useLocale();
-  const title = locale === "zh" ? "批量图片使用说明" : "Batch images guide";
+  const title = t("batch.batchImagesGuide");
   return <Modal open={open} title={title} onClose={onClose} size="large" footer={<Button variant="primary" onClick={onClose}>{t("common.close")}</Button>}><GuideContent /></Modal>;
 }
 
 function confirmDescription(confirm, locale) {
-  if (confirm?.kind === "cancel") return locale === "zh" ? "取消会请求上游停止任务；已经成功的图片仍会按成功项结算。" : "Cancellation asks the provider to stop; successful outputs are still settled.";
+  if (confirm?.kind === "cancel") return translate(locale, "batch.cancellationAsksProviderStop");
   const count = confirm?.rows?.length || 0;
-  return locale === "zh" ? `将永久删除 ${count} 条任务记录及服务器结果，且无法撤销。` : `Permanently delete ${count} job records and stored results?`;
+  return translate(locale, "batch.permanentlyDeleteJobRecords", { count });
 }
 
 function JobConfirmDialog({ confirm, busy, onClose, onConfirm }) {
@@ -810,7 +798,7 @@ export function BatchImagesPage() {
 
   const inspect = useCallback(async (row) => {
     const key = keyForJob(keys, row);
-    if (!key) return notify("error", locale === "zh" ? "找不到任务使用的 API Key。" : "The API key used by this job is unavailable.");
+    if (!key) return notify("error", t("batch.apiKeyUsedJob"));
     const request = ++detailRequestRef.current;
     const children = row.parent_batch_id ? [] : childrenByParent.get(row._row_id) || [];
     const sources = [row, ...children];
@@ -819,7 +807,7 @@ export function BatchImagesPage() {
       const [full, ...itemResults] = await Promise.all([batchImagesApi.get(key.key, row.id), ...sources.map((source) => batchImagesApi.items(key.key, source.id))]);
       if (request !== detailRequestRef.current) return;
       const job = normalizeJob(full, key);
-      const items = itemResults.flatMap((result, index) => (result.data || []).map((item) => ({ ...item, batch_id: sources[index].id, source_task_name: sources[index].parent_batch_id ? (locale === "zh" ? "重试子任务" : "Retry child") : (locale === "zh" ? "主任务" : "Parent job"), _row_id: `${sources[index].id}:${item.custom_id}` })));
+      const items = itemResults.flatMap((result, index) => (result.data || []).map((item) => ({ ...item, batch_id: sources[index].id, source_task_name: sources[index].parent_batch_id ? t("batch.retryChild") : t("batch.parentJob"), _row_id: `${sources[index].id}:${item.custom_id}` })));
       setDetail({ loading: false, error: "", job, children, items });
     } catch (error) {
       if (request === detailRequestRef.current) setDetail({ loading: false, error: error.message, job: row, children, items: [] });
@@ -863,7 +851,7 @@ export function BatchImagesPage() {
 
   const saveDownload = async (row) => {
     const key = keyForJob(keys, row);
-    if (!key) throw new Error(locale === "zh" ? "找不到任务使用的 API Key。" : "The API key used by this job is unavailable.");
+    if (!key) throw new Error(t("batch.apiKeyUsedJob"));
     const blob = await batchImagesApi.download(key.key, row.id);
     downloadBlob(blob, `${row.task_name || row.id}.zip`);
     markDownloaded(row);
@@ -873,7 +861,7 @@ export function BatchImagesPage() {
     setWorking(`download:${row._row_id}`);
     try {
       await saveDownload(row);
-      notify("success", locale === "zh" ? "下载已开始。" : "Download started.");
+      notify("success", t("batch.downloadStarted"));
     } catch (error) {
       notify("error", error.message);
     } finally {
@@ -885,7 +873,7 @@ export function BatchImagesPage() {
     setWorking("bulk-download");
     try {
       for (const row of downloadableRows) await saveDownload(row);
-      notify("success", locale === "zh" ? "选中任务的下载已开始。" : "Selected downloads started.");
+      notify("success", t("batch.selectedDownloadsStarted"));
     } catch (error) {
       notify("error", error.message);
     } finally {

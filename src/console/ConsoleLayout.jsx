@@ -34,8 +34,9 @@ import { TeamMembersCard } from "../TeamMembersCard";
 import { useConsole, resolveFeature } from "./ConsoleContext";
 import { ConsoleBackgroundPattern } from "./components/ConsoleBackgroundPattern";
 import { WelfareScheduleCountdown } from "./components/WelfareScheduleCountdown";
+import { CheckInButton } from "./components/CheckInButton";
 import { Icon } from "./Icon";
-import { useLocale } from "./i18n";
+import { useLocale, translate } from "./i18n";
 import { nativeCustomPageIcon, nativeCustomPageKind, nativeCustomPageRoute } from "./nativeCustomPages";
 import { Button, buttonLinkClass, EmptyState, IconButton, InlineButton, Modal, Spinner, ThemeToggle, ToastViewport } from "./UI";
 import { safeExternalUrl, safeImageUrl } from "./utils";
@@ -193,7 +194,7 @@ function SidebarUserMenu({ collapsed, onNavigate }) {
 function SidebarAssistant() {
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
-  const label = locale === "zh" ? (open ? "关闭 WayX Assistant" : "打开 WayX Assistant") : (open ? "Close WayX Assistant" : "Open WayX Assistant");
+  const label = (open ? translate(locale, "layout.closeWayxAssistant") : translate(locale, "layout.openWayxAssistant"));
   return <div className="console-sidebar-assistant"><Popover open={open} onOpenChange={setOpen}><PopoverTrigger render={<AppicaButton type="button" variant="soft" size="icon-lg" className="group/assistant" aria-label={label} title={label}><MessageChatbot aria-hidden="true" className="absolute transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.77,0,0.175,1)] group-data-[popup-open]/assistant:transform-[rotate(45deg)_scale(.85)] group-data-[popup-open]/assistant:opacity-0 motion-reduce:transform-none motion-reduce:transition-opacity" /><X aria-hidden="true" className="absolute transform-[rotate(-45deg)_scale(.85)] opacity-0 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.77,0,0.175,1)] group-data-[popup-open]/assistant:transform-none group-data-[popup-open]/assistant:opacity-100 motion-reduce:transform-none motion-reduce:transition-opacity" /></AppicaButton>} /><PopoverContent arrow={false} side="right" align="end" className="w-108 max-w-[calc(100vw-2rem)] border-0 bg-transparent p-0 shadow-none"><AppicaAssistantCard className="w-full" /></PopoverContent></Popover></div>;
 }
 
@@ -218,11 +219,19 @@ function SiteAnnouncementBar({ onClick }) {
   return <div className="console-site-announcement-slot"><Alert layout="inline" role="button" tabIndex={0} aria-label={t("announcement.title")} className="console-site-announcement" onClick={onClick} onKeyDown={activate}><AlertIcon><Icon name="announcement" size={16} /></AlertIcon><AlertTitle as="p">{message}<span className="console-site-announcement-link">{linkLabel}</span></AlertTitle></Alert></div>;
 }
 
+// Announcements carry no type field yet, so the rate notice is recognized by
+// its wording. Keep one keyword set per published language.
+const RATE_ANNOUNCEMENT_KEYWORDS = [
+  { topic: "倍率", detail: ["生效", "调整策略"] },
+  { topic: "rate multiplier", detail: ["effective", "adjustment"] },
+];
+
 function effectiveRateAnnouncement(items) {
+  const mentionsRate = (text) => RATE_ANNOUNCEMENT_KEYWORDS.some(({ topic }) => text.includes(topic));
   return items.find((item) => {
-    const text = `${item?.title || ""} ${announcementContent(item)}`;
-    return text.includes("倍率") && (text.includes("生效") || text.includes("调整策略"));
-  }) || items.find((item) => String(item?.title || "").includes("倍率"));
+    const text = `${item?.title || ""} ${announcementContent(item)}`.toLowerCase();
+    return RATE_ANNOUNCEMENT_KEYWORDS.some(({ topic, detail }) => text.includes(topic) && detail.some((word) => text.includes(word)));
+  }) || items.find((item) => mentionsRate(String(item?.title || "").toLowerCase()));
 }
 
 function AnnouncementMenu({ openEffectiveRateRequest = 0 }) {
@@ -451,7 +460,7 @@ function ConsoleHeader({ title, mobileOpen, setMobileOpen }) {
     return () => { active = false; };
   }, []);
 
-  return <><header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label={t(mobileOpen ? "nav.closeMenu" : "nav.openMenu")} onClick={() => setMobileOpen((value) => !value)} /><strong>{title}</strong></div><div className="console-header-actions" data-sidebar-motion-static>{summary?.active_count > 0 && <Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-subscription-pill" })} to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<WelfareScheduleCountdown /><Walkthrough setMobileOpen={setMobileOpen} />{safeExternalUrl(settings?.doc_url) && <a className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-header-link" })} href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<InlineButton variant="outline" size="md" className="console-header-language" icon="language" aria-label={t("nav.switchLanguage")} title={t("nav.switchLanguage")} onClick={() => setLocale(locale === "en" ? "zh" : "en")}><span>{t("nav.language")}</span></InlineButton><ThemeToggle className="console-header-preference" /><AnnouncementMenu openEffectiveRateRequest={openEffectiveRateRequest} /><Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-balance-link" })} to="/purchase" aria-label={`${t("nav.purchase")}: ${formatUsd(user?.balance || 0)}`}><Icon name="wallet" size={17} data-icon="start" /><strong className="console-balance-value">{formatUsd(user?.balance || 0)}</strong></Link></div></header><SiteAnnouncementBar onClick={() => setOpenEffectiveRateRequest((value) => value + 1)} /></>;
+  return <><header className="console-header"><div className="console-header-left"><IconButton className="console-mobile-menu" icon={mobileOpen ? "close" : "menu"} label={t(mobileOpen ? "nav.closeMenu" : "nav.openMenu")} onClick={() => setMobileOpen((value) => !value)} /><strong>{title}</strong></div><div className="console-header-actions" data-sidebar-motion-static>{summary?.active_count > 0 && <Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-subscription-pill" })} to="/subscriptions"><Icon name="card" size={16} />{summary.active_count}</Link>}<WelfareScheduleCountdown /><Walkthrough setMobileOpen={setMobileOpen} /><CheckInButton />{safeExternalUrl(settings?.doc_url) && <a className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-header-link" })} href={safeExternalUrl(settings.doc_url)} target="_blank" rel="noreferrer"><Icon name="book" size={17} /><span>{t("nav.docs")}</span></a>}<InlineButton variant="outline" size="md" className="console-header-language" icon="language" aria-label={t("nav.switchLanguage")} title={t("nav.switchLanguage")} onClick={() => setLocale(locale === "en" ? "zh" : "en")}><span>{t("nav.language")}</span></InlineButton><ThemeToggle className="console-header-preference" /><AnnouncementMenu openEffectiveRateRequest={openEffectiveRateRequest} /><Link className={buttonLinkClass({ variant: "secondary", size: "md", className: "console-balance-link" })} to="/purchase" aria-label={t("nav.balanceAria", { balance: formatUsd(user?.balance || 0) })}><Icon name="wallet" size={17} data-icon="start" /><strong className="console-balance-value">{formatUsd(user?.balance || 0)}</strong></Link></div></header><SiteAnnouncementBar onClick={() => setOpenEffectiveRateRequest((value) => value + 1)} /></>;
 }
 
 function pageTitle(pathname, items, t) {
