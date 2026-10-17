@@ -128,9 +128,10 @@ function TokenCell({ row, locale }) {
   const formatCount = (value) => new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", { maximumFractionDigits: 0 }).format(numeric(value));
   const input = formatCount(row.input_tokens);
   const output = formatCount(row.output_tokens);
-  const cacheRead = formatCount(row.cache_read_tokens);
-  const title = `${labels.input}: ${input}\n${labels.output}: ${output}\n${labels.write}: ${formatCount(row.cache_creation_tokens)} (5m ${formatCount(row.cache_creation_5m_tokens)}, 1h ${formatCount(row.cache_creation_1h_tokens)})\n${labels.read}: ${cacheRead}`;
-  return <div className="console-token-cell" title={title}><div><span className="is-input"><small>{labels.input}</small><b>{input}</b></span><span className="is-output"><small>{labels.output}</small><b>{output}</b></span><span className="is-read"><small>{labels.read}</small><b>{cacheRead}</b></span></div></div>;
+  const cacheReadValue = numeric(row.cache_read_tokens);
+  const cacheRead = formatCount(cacheReadValue);
+  const title = [`${labels.input}: ${input}`, `${labels.output}: ${output}`, `${labels.write}: ${formatCount(row.cache_creation_tokens)} (5m ${formatCount(row.cache_creation_5m_tokens)}, 1h ${formatCount(row.cache_creation_1h_tokens)})`, cacheReadValue > 0 ? `${labels.read}: ${cacheRead}` : ""].filter(Boolean).join("\n");
+  return <div className="console-token-cell" title={title}><div><span className="is-input"><small>{labels.input}</small><b>{input}</b></span><span className="is-output"><small>{labels.output}</small><b>{output}</b></span>{cacheReadValue > 0 && <span className="is-read"><small>{labels.read}</small><b>{cacheRead}</b></span>}</div></div>;
 }
 
 function numeric(value) {
