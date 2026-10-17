@@ -6590,6 +6590,7 @@ html[data-console-theme] .console-dashboard-metric {
   grid-template-rows: auto auto minmax(0, 1fr);
   align-content: start;
   gap: 0 1rem;
+  min-height: 7rem;
   padding: 0.25rem 1rem;
   border: 0;
   border-radius: 0;
@@ -7113,6 +7114,15 @@ html[data-console-theme] .console-token-column-loading {
 html[data-console-theme] .console-token-column-hit {
   fill: transparent;
   pointer-events: all;
+}
+
+html[data-console-theme] .console-token-column-bar:focus:not(:focus-visible) {
+  outline: none;
+}
+
+html[data-console-theme] .console-token-column-bar:focus-visible {
+  outline: var(--border-width) solid var(--border-strong);
+  outline-offset: 0;
 }
 
 html[data-console-theme] .console-token-column-chart line {
