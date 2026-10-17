@@ -745,6 +745,13 @@ html[data-console-theme] .console-shell {
   isolation: isolate;
 }
 
+/* Pin the masked dot layers to the viewport. Spanning the full shell made them
+   as tall as the document, so long pages re-rasterized them on every scroll. */
+html[data-console-theme] .console-shell > [data-slot="background-pattern-layer"],
+html[data-console-theme] .console-shell > [data-slot="background-pattern-highlight"] {
+  position: fixed;
+}
+
 html[data-console-theme] .console-sidebar {
   --console-sidebar-visible-width: var(--console-sidebar-width);
   position: fixed;
@@ -1316,6 +1323,13 @@ html[data-console-theme] .console-table td {
 html[data-console-theme] .console-table td > * {
   min-width: 0;
   max-width: 100%;
+}
+
+/* Virtualized tables keep off-screen rows as two empty spacer rows. */
+html[data-console-theme] .console-table tbody > tr.console-table-spacer > td[colspan] {
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 html[data-console-theme] .console-table-truncate {
@@ -7768,15 +7782,14 @@ html[data-console-theme] .console-usage-records-panel .console-table td {
   height: 4.25rem;
 }
 
-/* Record rows contain several tooltip-backed values. Skip painting rows outside
-   the viewport while preserving their fixed layout height during page scroll. */
-html[data-console-theme] .console-usage-records-panel .console-table tbody tr {
-  content-visibility: auto;
-  contain-intrinsic-block-size: 4.25rem;
+/* Usage rows are virtualized by DataTable; plain cell clipping avoids a per-cell
+   :has() match. The cost cell keeps its detail trigger's focus ring visible. */
+html[data-console-theme] .console-usage-records-panel .console-table td {
+  overflow: hidden;
 }
 
-html[data-console-theme] .console-usage-records-panel .console-table td:not(:has(button, a, input, select, textarea, [role="button"])) {
-  overflow: hidden;
+html[data-console-theme] .console-usage-records-panel .console-table td[data-column="cost"] {
+  overflow: visible;
 }
 
 html[data-console-theme] .console-usage-records-panel [data-column="created_at"] {
@@ -11367,7 +11380,7 @@ html[data-console-theme] .console-redeem-entry form [data-slot="button"][type="s
 html[data-console-theme] .console-usage-record-tools { flex-wrap: wrap; gap: 0.75rem; justify-content: space-between; }
 html[data-console-theme] .console-usage-record-tools .console-ip-toolbar { margin-inline-start: auto; }
 html[data-console-theme] .console-usage-records-panel .console-table tbody tr + tr > td { border-top: var(--border-width) solid color-mix(in oklab, var(--border-muted) 65%, transparent); }
-html[data-console-theme] .console-usage-records-panel .console-table tbody tr:hover > td { background: color-mix(in oklab, var(--info-emphasis) 4%, var(--background)); }
+html[data-console-theme] .console-usage-records-panel .console-table tbody tr:not(.console-table-spacer):hover > td { background: color-mix(in oklab, var(--info-emphasis) 4%, var(--background)); }
 html[data-console-theme] .console-usage-records-panel :is(.console-usage-time, .console-usage-key-endpoint, .console-usage-model-group, .console-usage-request-type) { gap: 0.25rem; }
 html[data-console-theme] .console-usage-time { font-variant-numeric: tabular-nums; }
 html[data-console-theme] .console-usage-page .console-token-cell > div { grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; max-width: 15.5rem; gap: 0.5rem; }

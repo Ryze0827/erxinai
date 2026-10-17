@@ -101,11 +101,24 @@ function ModelCell({ row }) {
   return <div className="console-key-name"><strong className="console-table-truncate">{modelLabel(row.model)}</strong>{row.upstream_model && row.upstream_model !== row.model && <small className="console-table-truncate">{modelLabel(`↳ ${row.upstream_model}`)}</small>}</div>;
 }
 
+// Intl formatters are costly to construct; table cells share one per locale.
+const formatterCache = new Map();
+
+function cachedFormatter(kind, locale) {
+  const key = `${kind}:${locale}`;
+  if (!formatterCache.has(key)) {
+    const language = locale === "zh" ? "zh-CN" : "en-US";
+    formatterCache.set(key, kind === "time"
+      ? new Intl.DateTimeFormat(language, { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" })
+      : new Intl.NumberFormat(language, { maximumFractionDigits: 0 }));
+  }
+  return formatterCache.get(key);
+}
+
 function UsageTimeCell({ value, locale }) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-  const language = locale === "zh" ? "zh-CN" : "en-US";
-  return <time className="console-usage-time" dateTime={date.toISOString()}><span>{new Intl.DateTimeFormat(language, { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(date)}</span><small>{localDate(date)}</small></time>;
+  return <time className="console-usage-time" dateTime={date.toISOString()}><span>{cachedFormatter("time", locale).format(date)}</span><small>{localDate(date)}</small></time>;
 }
 
 function KeyEndpointCell({ row }) {
@@ -125,7 +138,7 @@ function RequestTypeCell({ row, t }) {
 function TokenCell({ row, locale }) {
   if (billingMode(row) === "image" || billingMode(row) === "per_request") return <div className="console-token-cell"><strong>{row.image_count || 1} {locale === "zh" ? "张" : "image(s)"}</strong><small>{row.image_output_size || row.image_size || row.image_input_size || "—"}</small></div>;
   const labels = locale === "zh" ? { input: "输入", output: "输出", read: "缓存读取", write: "缓存创建" } : { input: "Input", output: "Output", read: "Cache read", write: "Cache creation" };
-  const formatCount = (value) => new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", { maximumFractionDigits: 0 }).format(numeric(value));
+  const formatCount = (value) => cachedFormatter("count", locale).format(numeric(value));
   const input = formatCount(row.input_tokens);
   const output = formatCount(row.output_tokens);
   const cacheReadValue = numeric(row.cache_read_tokens);
@@ -348,7 +361,7 @@ function UsageRecords({ state, columns, data, sort, onSort, paging, setPaging, l
 
   if (state.loading && !data.items.length) return <RecordsSkeleton columns={columns} rowCount={paging.pageSize} pagination={false} />;
   if (state.error && !data.items.length) return <ErrorState message={state.error} onRetry={loadUsage} />;
-  return <><DataTable columns={columns} rows={data.items} sortKey={sort.key} sortOrder={sort.order} onSort={onSort} hoverableRows />{state.error ? <ErrorState message={state.error} onRetry={loadUsage} /> : (state.loading || hasMore || data.items.length > 0) && <div ref={sentinelRef} className="console-usage-load-more" role="status" aria-live="polite">{state.loading ? <><Spinner /><span>{t("usage.loadingMore")}</span></> : hasMore ? null : data.items.length >= MAX_USAGE_RECORDS && data.total > data.items.length ? t("usage.loadLimitReached", { limit: MAX_USAGE_RECORDS }) : t("usage.loadedAll")}</div>}</>;
+  return <><DataTable columns={columns} rows={data.items} sortKey={sort.key} sortOrder={sort.order} onSort={onSort} hoverableRows={false} virtualized />{state.error ? <ErrorState message={state.error} onRetry={loadUsage} /> : (state.loading || hasMore || data.items.length > 0) && <div ref={sentinelRef} className="console-usage-load-more" role="status" aria-live="polite">{state.loading ? <><Spinner /><span>{t("usage.loadingMore")}</span></> : hasMore ? null : data.items.length >= MAX_USAGE_RECORDS && data.total > data.items.length ? t("usage.loadLimitReached", { limit: MAX_USAGE_RECORDS }) : t("usage.loadedAll")}</div>}</>;
 }
 
 function RecordsPanel({ tabs, tab, data, errors, geoEnabled, setGeoEnabled, state, visibleErrorColumns, errorSort, setErrorSort, errorPaging, setErrorPaging, visibleUsageColumns, sort, onUsageSort, paging, setPaging, loadUsage }) {
@@ -459,8 +472,9 @@ export function UsagePage() {
     { key: "created_at", label: locale === "zh" ? "时间" : "Time", sortable: true, render: (row) => formatDate(row.created_at) },
     { key: "user_agent", label: "User-Agent", render: (row) => <TruncatedText value={row.user_agent} className="console-user-agent" /> },
   ], [formatDate, geoEnabled, locale, t]);
-  const visibleUsageColumns = usageColumns.filter((column) => column.key === "created_at" || !usageHidden.hidden.has(column.key));
-  const visibleErrorColumns = errorColumns.filter((column) => ["status", "created_at"].includes(column.key) || !errorHidden.hidden.has(column.key));
+  // Stable column arrays let memoized table rows skip re-rendering on unrelated page state.
+  const visibleUsageColumns = useMemo(() => usageColumns.filter((column) => column.key === "created_at" || !usageHidden.hidden.has(column.key)), [usageColumns, usageHidden.hidden]);
+  const visibleErrorColumns = useMemo(() => errorColumns.filter((column) => ["status", "created_at"].includes(column.key) || !errorHidden.hidden.has(column.key)), [errorColumns, errorHidden.hidden]);
 
   return <Page title={t("usage.title")} className="console-usage-page"><div className="console-usage-workspace"><div className="console-usage-ledger"><UsageSummary summary={data.summary} loading={state.loading} /><UsageFilterPanel toolbar={<UsageFilterToolbar loadUsage={refreshUsage} loadErrors={loadErrors} tab={tab} state={state} t={t} />} tab={tab} filters={filters} errorFilters={errorFilters} options={options} modelOptions={modelOptions} errorModelOptions={errorModelOptions} setFilter={setFilter} setErrorFilter={setErrorFilter} reset={reset} changeRange={changeRange} locale={locale} t={t} /><RecordsPanel tabs={<UsageTabs enabled={errorEnabled} tab={tab} setTab={setTab} locale={locale} t={t} />} tab={tab} data={data} errors={errors} geoEnabled={geoEnabled} setGeoEnabled={setGeoEnabled} state={state} visibleErrorColumns={visibleErrorColumns} errorSort={errorSort} setErrorSort={setErrorSort} errorPaging={errorPaging} setErrorPaging={setErrorPaging} visibleUsageColumns={visibleUsageColumns} sort={sort} onUsageSort={changeUsageSort} paging={paging} setPaging={setPaging} loadUsage={loadUsage} /></div></div></Page>;
 }

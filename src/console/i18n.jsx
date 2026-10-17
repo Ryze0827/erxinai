@@ -1370,7 +1370,13 @@ export function LocaleProvider({ children }) {
 
   const value = useMemo(() => {
     const t = (key, variables) => interpolate(dictionaries[locale]?.[key] || dictionaries.en[key] || key, variables);
-    const formatNumber = (number, options) => new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", options).format(Number(number) || 0);
+    // Tables call formatNumber per cell; reuse formatters for identical options.
+    const numberFormats = new Map();
+    const formatNumber = (number, options) => {
+      const key = options ? JSON.stringify(options) : "";
+      if (!numberFormats.has(key)) numberFormats.set(key, new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", options));
+      return numberFormats.get(key).format(Number(number) || 0);
+    };
     const formatCurrency = (number, currency = "USD") => new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", {
       style: "currency",
       currency,

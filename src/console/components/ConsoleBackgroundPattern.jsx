@@ -16,7 +16,8 @@ export function ConsoleBackgroundPattern({ track = "self", ...props }) {
 
     const updatePosition = () => {
       frame = 0;
-      const rect = host.getBoundingClientRect();
+      // The console shell pins this layer to the viewport, so measure the layer itself.
+      const rect = highlight.getBoundingClientRect();
       const scale = Number.parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
       highlight.style.setProperty("--pattern-x", `${(clientX - rect.left) / scale}px`);
       highlight.style.setProperty("--pattern-y", `${(clientY - rect.top) / scale}px`);

@@ -1,4 +1,4 @@
-import { Children, isValidElement, useMemo } from "react";
+import { Children, isValidElement, memo, useCallback, useMemo } from "react";
 import { Badge as AppicaBadge } from "@appica/ui-react/badge";
 import { Button as AppicaButton } from "@appica/ui-react/button";
 import { buttonVariants as appicaButtonVariants } from "@appica/ui-react/button";
@@ -60,6 +60,7 @@ import { useConsole } from "./ConsoleContext";
 import { useLocale } from "./i18n";
 import { useTheme } from "./theme";
 import { formatTokenMillions } from "./utils";
+import { useWindowVirtualRows } from "./components/useWindowVirtualRows";
 
 export function Page({ title, actions, children, className = "" }) {
   const hasActions = Boolean(actions);
@@ -274,18 +275,29 @@ function ConsoleTableHeader({ column, sortKey, sortOrder, onSort }) {
   return <AppicaTableHead data-column={column.key} className={column.align ? `is-${column.align}` : ""} aria-sort={sortable ? direction : undefined}>{sortable ? <AppicaButton type="button" variant="ghost" size="sm" className={`console-table-sort-button ${active ? "is-sorted" : ""}`} onClick={() => onSort(column.key, active && sortOrder === "asc" ? "desc" : "asc")}><span>{column.label}</span><Icon name={icon} size={13} /></AppicaButton> : <span>{column.label}</span>}</AppicaTableHead>;
 }
 
-function ConsoleTableRow({ row, index, rowKey, columns, onRowClick }) {
+const ConsoleTableRow = memo(function ConsoleTableRow({ row, index, columns, onRowClick, virtual = false }) {
   const click = (event) => {
     if (!rowHasInteractiveTarget(event)) onRowClick?.(row);
   };
-  return <AppicaTableRow key={row[rowKey] ?? index} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <AppicaTableCell key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : <TruncatedText value={row[column.key]} />}</AppicaTableCell>)}</AppicaTableRow>;
+  return <AppicaTableRow data-index={virtual ? index : undefined} aria-rowindex={virtual ? index + 2 : undefined} onClick={onRowClick ? click : undefined} onKeyDown={onRowClick ? (event) => rowKeyDown(event, row, onRowClick) : undefined} tabIndex={onRowClick ? 0 : undefined} role={onRowClick ? "button" : undefined} className={onRowClick ? "is-clickable" : ""}>{columns.map((column) => <AppicaTableCell key={column.key} data-column={column.key} data-label={mobileColumnLabel(column)} className={column.align ? `is-${column.align}` : ""}>{column.render ? column.render(row) : <TruncatedText value={row[column.key]} />}</AppicaTableCell>)}</AppicaTableRow>;
+});
+
+function TableSpacer({ height, columns }) {
+  if (height <= 0) return null;
+  return <AppicaTableRow className="console-table-spacer" aria-hidden="true"><AppicaTableCell colSpan={columns.length} style={{ height }} /></AppicaTableRow>;
 }
 
-export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "", hoverableRows = true }) {
+function VirtualTableBody({ columns, rows, rowKey, onRowClick }) {
+  const getKey = useCallback((index) => rows[index]?.[rowKey] ?? index, [rowKey, rows]);
+  const { bodyRef, start, end, paddingTop, paddingBottom } = useWindowVirtualRows({ count: rows.length, getKey });
+  return <AppicaTableBody ref={bodyRef}><TableSpacer height={paddingTop} columns={columns} />{rows.slice(start, end).map((row, offset) => <ConsoleTableRow key={row[rowKey] ?? start + offset} row={row} index={start + offset} columns={columns} onRowClick={onRowClick} virtual />)}<TableSpacer height={paddingBottom} columns={columns} /></AppicaTableBody>;
+}
+
+export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "", hoverableRows = true, virtualized = false }) {
   if (!rows?.length) return empty || <EmptyState />;
   return (
     <div className={`console-table-wrap ${className}`}>
-      <AppicaTable className="console-table" size="sm" borderStyle="none" hoverableRows={hoverableRows}><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader><AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} rowKey={rowKey} columns={columns} onRowClick={onRowClick} />)}</AppicaTableBody></AppicaTable>
+      <AppicaTable className="console-table" size="sm" borderStyle="none" hoverableRows={hoverableRows} aria-rowcount={virtualized ? rows.length + 1 : undefined}><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader>{virtualized ? <VirtualTableBody columns={columns} rows={rows} rowKey={rowKey} onRowClick={onRowClick} /> : <AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} columns={columns} onRowClick={onRowClick} />)}</AppicaTableBody>}</AppicaTable>
     </div>
   );
 }
