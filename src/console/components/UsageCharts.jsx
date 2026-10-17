@@ -101,8 +101,8 @@ function chartDateFull(value, locale) {
   return new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en-US", { dateStyle: "long", timeZone: "UTC" }).format(date);
 }
 
-function formatCompactTokens(value, locale) {
-  return new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", { notation: "compact", maximumFractionDigits: 1 }).format(Number(value) || 0);
+function formatCompactTokens(value) {
+  return formatTokenMillions(value);
 }
 
 const tokenSeriesColors = ["var(--console-chart-1)", "var(--console-chart-2)", "var(--console-chart-3)", "var(--console-chart-4)", "var(--info-emphasis)", "var(--error-emphasis)"];
