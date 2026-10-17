@@ -12351,3 +12351,82 @@ html[data-console-theme] .console-header-benefits {
     display: none;
   }
 }
+
+@media (max-width: 47.5rem) {
+  html[data-console-theme] .console-group-summary {
+    gap: 0.75rem 0.5rem;
+    padding: 0.875rem 0.75rem;
+  }
+
+  html[data-console-theme] .console-group-summary > .console-group-summary-ring {
+    grid-column: span 4;
+    min-width: 0;
+  }
+
+  html[data-console-theme] .console-group-summary-ring .console-group-ring-wrap {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    justify-items: start;
+    gap: 0.625rem;
+  }
+
+  html[data-console-theme] .console-group-summary-ring .console-group-ring-wrap > small {
+    font-size: var(--text-xs);
+    white-space: normal;
+  }
+
+  html[data-console-theme] .console-group-summary > div.console-group-summary-total:not(:first-child):not(:last-child) {
+    grid-column: span 2;
+    justify-items: center;
+    gap: 0.25rem;
+    padding: 0 0.375rem;
+    text-align: center;
+    border-inline-start: var(--border-width) solid var(--border-muted);
+  }
+
+  html[data-console-theme] .console-group-summary > div.console-monitor-tone:not(:first-child):not(:last-child) {
+    align-self: stretch;
+    align-content: center;
+    justify-items: center;
+    gap: 0.25rem;
+    padding: 0.625rem 0.375rem;
+    text-align: center;
+  }
+
+  html[data-console-theme] .console-group-summary > .console-group-status-legend {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.375rem;
+    padding-top: 0.25rem;
+  }
+
+  html[data-console-theme] .console-group-status-legend > span {
+    justify-content: center;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 47.5rem) {
+  html[data-console-theme] .console-keys-panel .console-pagination > div {
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  html[data-console-theme] .console-keys-panel .console-pagination > div > [data-slot="select-trigger"] {
+    width: auto;
+    flex: none;
+  }
+
+  html[data-console-theme] .console-keys-panel .console-pagination [data-slot="pagination"] {
+    min-width: 0;
+    flex: 1;
+    justify-content: flex-start;
+  }
+
+  html[data-console-theme] .console-keys-panel .console-pagination [data-slot="pagination-list"] {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    width: max-content;
+  }
+}
