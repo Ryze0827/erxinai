@@ -12,11 +12,11 @@ import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
 import { NATIVE_CUSTOM_PAGE, nativeCustomPageRoute } from "../nativeCustomPages";
-import { Button, ErrorState, InlineButton, Modal, Page, Panel, TruncatedText, buttonLinkClass } from "../UI";
+import { Button, ErrorState, InlineButton, Modal, Page, Panel, ProgressBar, TruncatedText, buttonLinkClass } from "../UI";
 import { CompactTabs } from "../components/ConsoleControls";
 import { DistributionChart, UsageTrendChart } from "../components/UsageCharts";
 import { NotificationsCard } from "./ProfilePage";
-import { dateInput, formatDuration, formatTokenMillions, formatTokenMillionsFixed } from "../utils";
+import { dateInput, formatDuration, formatTokenMillions } from "../utils";
 
 const TOKEN_ACTIVITY_DAY_COUNT = 365;
 const TOKEN_ACTIVITY_MONTH_COUNT = 12;
@@ -192,19 +192,109 @@ function dashboardDelta(current, previous) {
   return { percent };
 }
 
-function MetricDelta({ current, previous, previousLabel, formatPrevious }) {
-  const delta = dashboardDelta(current, previous);
-  return <div className="console-dashboard-metric-meta">{delta && <span className={delta.percent >= 0 ? "is-increase" : "is-decrease"}><Icon name={delta.percent >= 0 ? "arrowUp" : "arrowDown"} size={13} />{delta.percent >= 0 ? "+" : ""}{delta.percent.toFixed(1)}%</span>}<small>{previousLabel}{previous == null ? "—" : formatPrevious(previous)}</small></div>;
+// Direction stays neutral; only a rising spend is worth a warning tint.
+function MetricDelta({ current, previous, previousLabel, formatPrevious, warnOnIncrease = false, comparable = true }) {
+  const delta = comparable ? dashboardDelta(current, previous) : null;
+  const direction = !delta ? null : delta.percent >= 0.05 ? "up" : delta.percent <= -0.05 ? "down" : "flat";
+  return <div className="console-kpi-delta">{delta && <span data-direction={direction} data-warning={warnOnIncrease && direction === "up" ? "" : undefined}>{direction !== "flat" && <Icon name={direction === "up" ? "arrowUp" : "arrowDown"} size={12} />}{delta.percent > 0 ? "+" : ""}{delta.percent.toFixed(1)}%</span>}<small>{previousLabel}{previous == null ? "—" : formatPrevious(previous)}</small></div>;
 }
 
-function DashboardMetric({ icon, label, value, unit, tone = "", children }) {
-  return <div className={`console-dashboard-metric ${tone ? `is-${tone}` : ""}`}><i className="console-dashboard-metric-icon"><Icon name={icon} size={21} /></i><span>{label}</span><strong>{value}{unit && <small>{unit}</small>}</strong>{children}</div>;
+function MetricHint({ label, children }) {
+  return <TooltipProvider><Tooltip><TooltipTrigger render={<button type="button" className="console-kpi-hint" aria-label={label} />}><Icon name="info" size={13} /></TooltipTrigger><TooltipContent arrow={false} className="console-kpi-hint-content">{children}</TooltipContent></Tooltip></TooltipProvider>;
 }
 
+// Tone keys the card's accent: purple for token volume, blue for requests, amber for money.
+function KpiCard({ icon, tone, label, hint, value, prefix, unit, children }) {
+  return <div className="console-kpi" data-tone={tone}>
+    <span className="console-kpi-label"><i className="console-kpi-icon"><Icon name={icon} size={15} /></i>{label}{hint && <MetricHint label={label}>{hint}</MetricHint>}</span>
+    <strong className="console-kpi-value console-ledger-number">{prefix && <small className="is-prefix">{prefix}</small>}{value}{unit && <small>{unit}</small>}</strong>
+    {children}
+  </div>;
+}
+
+function KpiMeter({ label, value, percent, tone }) {
+  return <div className="console-kpi-meter"><p className="console-kpi-detail">{label}<b>{value}</b></p><ProgressBar value={percent} tone={tone} /></div>;
+}
+
+// Secondary board: themed tiles, each a small group of related figures.
+function VitalTile({ icon, tone, title, hint, aside, children }) {
+  return <section className="console-vital-tile" data-tone={tone}>
+    <header><i className="console-vital-icon"><Icon name={icon} size={16} /></i><h3>{title}</h3>{hint && <MetricHint label={title}>{hint}</MetricHint>}{aside}</header>
+    <dl>{children}</dl>
+  </section>;
+}
+
+function TileMetric({ label, value, prefix, unit, tone }) {
+  return <div className="console-vital-metric"><dt>{label}</dt><dd className="console-ledger-number" data-tone={tone}>{prefix && <small className="is-prefix">{prefix}</small>}{value}{unit && <small>{unit}</small>}</dd></div>;
+}
+
+function rpmTone(ratio) {
+  if (ratio >= 0.9) return "danger";
+  if (ratio >= 0.7) return "warning";
+  return "success";
+}
+
+function runwayTone(days) {
+  if (days == null) return undefined;
+  if (days < 1) return "slow";
+  if (days < 3) return "moderate";
+  return undefined;
+}
+
+const PLATFORM_LABELS = { anthropic: "Claude", claude: "Claude", openai: "OpenAI", codex: "OpenAI", gemini: "Gemini", google: "Gemini", antigravity: "Antigravity", grok: "Grok", xai: "Grok" };
+
+function platformTone(platform) {
+  const label = platformLabel(platform);
+  return { Claude: "anthropic", OpenAI: "openai", Gemini: "gemini", Antigravity: "antigravity", Grok: "grok" }[label] || "other";
+}
+
+function platformLabel(platform) {
+  const key = String(platform || "").trim().toLowerCase();
+  return PLATFORM_LABELS[key] || (key ? key[0].toUpperCase() + key.slice(1) : "—");
+}
+
+// Today's spend share per platform, top three plus the remainder.
+function PlatformSplit({ items, locale }) {
+  const values = (items || []).map((item) => ({ platform: platformTone(item.platform), label: platformLabel(item.platform), value: Number(item.today_actual_cost) || 0 })).filter((item) => item.value > 0).sort((left, right) => right.value - left.value);
+  const total = values.reduce((sum, item) => sum + item.value, 0);
+  if (!total) return null;
+  const segments = values.slice(0, 3);
+  const rest = values.slice(3).reduce((sum, item) => sum + item.value, 0);
+  if (rest > 0) segments.push({ platform: "other", label: locale === "zh" ? "其他" : "Other", value: rest });
+  const shares = segments.map((item) => ({ ...item, share: item.value / total }));
+  const summary = shares.map((item) => `${item.label} ${Math.round(item.share * 100)}%`).join(" · ");
+  return <div className="console-kpi-meter console-kpi-split" title={summary}>
+    <p className="console-kpi-detail">{locale === "zh" ? "平台分布" : "By platform"}</p>
+    <div className="console-kpi-split-bar" role="img" aria-label={summary}>{shares.map((item) => <i key={item.label} data-platform={item.platform} style={{ flexGrow: item.share }} />)}</div>
+    <ul>{shares.map((item) => <li key={item.label} data-platform={item.platform}>{item.label}<b>{Math.round(item.share * 100)}%</b></li>)}</ul>
+  </div>;
+}
+
+// Sum yesterday's hourly buckets up to the current time of day, so the comparison
+// covers the same elapsed span as today's partial totals.
+function sameTimeYesterday(buckets, field) {
+  if (!buckets) return null;
+  const now = new Date();
+  const yesterday = dateInput(-1);
+  const hour = now.getHours();
+  const fraction = (now.getMinutes() * 60 + now.getSeconds()) / 3600;
+  return buckets.reduce((sum, item) => {
+    const [date, time = ""] = String(item.date || "").split(" ");
+    if (date !== yesterday) return sum;
+    const bucketHour = Number.parseInt(time, 10);
+    if (bucketHour < hour) return sum + Number(item[field] || 0);
+    if (bucketHour === hour) return sum + Number(item[field] || 0) * fraction;
+    return sum;
+  }, 0);
+}
+
+// Average daily spend over the last seven complete days (today is still partial).
 function recentActualCost(items, startOffset, count) {
   const byDate = new Map((items || []).map((item) => [String(item.date || "").slice(0, 10), item]));
   return Array.from({ length: count }, (_, index) => byDate.get(dateInput(startOffset + index))).reduce((sum, item) => sum + Number(item?.actual_cost || 0), 0);
 }
+
+const STATS_REFRESH_MS = 60_000;
 
 function DashboardPanelSkeleton({ className = "", rows = 4 }) {
   return <Panel className={`console-dashboard-panel-skeleton ${className}`.trim()} aria-hidden="true"><div className="console-dashboard-panel-skeleton-head"><Skeleton /></div><div className="console-dashboard-panel-skeleton-body">{Array.from({ length: rows }, (_, index) => <Skeleton key={index} />)}</div></Panel>;
@@ -215,7 +305,7 @@ function TokenUsageViewToggle({ value, onChange, t }) {
 }
 
 function DashboardSkeleton({ title, loadingLabel }) {
-  return <Page title={title} className="console-dashboard-page console-dashboard-loading"><span className="console-visually-hidden" role="status">{loadingLabel}</span><div className="console-dashboard-hero" aria-hidden="true"><div className="console-dashboard-greeting"><Skeleton className="console-dashboard-skeleton-title" /><Skeleton className="console-dashboard-skeleton-copy" /></div><div className="console-dashboard-quick-actions">{Array.from({ length: 5 }, (_, index) => <Skeleton key={index} />)}</div></div><section className="console-dashboard-metrics console-panel" aria-hidden="true">{Array.from({ length: 7 }, (_, index) => <Skeleton key={index} />)}</section><div className="console-dashboard-chart-grid"><DashboardPanelSkeleton rows={5} /><DashboardPanelSkeleton rows={5} /></div><div className="console-dashboard-insight-grid console-dashboard-insight-grid--single"><DashboardPanelSkeleton className="console-model-preference-panel" rows={5} /></div></Page>;
+  return <Page title={title} className="console-dashboard-page console-dashboard-loading"><span className="console-visually-hidden" role="status">{loadingLabel}</span><div className="console-dashboard-hero" aria-hidden="true"><div className="console-dashboard-greeting"><Skeleton className="console-dashboard-skeleton-title" /><Skeleton className="console-dashboard-skeleton-copy" /></div><div className="console-dashboard-quick-actions">{Array.from({ length: 5 }, (_, index) => <Skeleton key={index} />)}</div></div><section className="console-kpis console-panel" aria-hidden="true"><div className="console-kpi-grid">{Array.from({ length: 3 }, (_, index) => <div className="console-kpi" key={index}><Skeleton className="console-kpi-skeleton-label" /><Skeleton className="console-kpi-skeleton-value" /><Skeleton className="console-kpi-skeleton-meta" /></div>)}</div></section><div className="console-vital-board" aria-hidden="true">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="console-vital-skeleton" />)}</div><div className="console-dashboard-chart-grid"><DashboardPanelSkeleton rows={5} /><DashboardPanelSkeleton rows={5} /></div><div className="console-dashboard-insight-grid console-dashboard-insight-grid--single"><DashboardPanelSkeleton className="console-model-preference-panel" rows={5} /></div></Page>;
 }
 
 export function DashboardPage() {
@@ -233,7 +323,9 @@ export function DashboardPage() {
   const [modelPreferences, setModelPreferences] = useState({ loading: true, error: "", items: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sectionErrors, setSectionErrors] = useState({ models: "", trend: "" });
+  const [sectionErrors, setSectionErrors] = useState({ models: "", trend: "", stats: "" });
+  const [comparison, setComparison] = useState(null);
+  const [todayUsage, setTodayUsage] = useState(null);
   const mountedRef = useRef(true);
   const activityMountedRef = useRef(true);
   const loadedRef = useRef(false);
@@ -264,11 +356,11 @@ export function DashboardPage() {
     }
   }, [modelPreferenceRange]);
 
-  const loadTokenModelBreakdown = useCallback(async (request) => {
+  // Model totals come from the 30-day snapshot already loaded for the trend chart.
+  const loadTokenModelBreakdown = useCallback(async (request, rangeModels) => {
     if (mountedRef.current && request === loadRequestRef.current) setTokenModelBreakdown({ loading: true, items: [] });
     try {
-      const response = await usageApi.dashboardModels(range);
-      const models = [...(response?.models || [])]
+      const models = [...(rangeModels || [])]
         .filter((item) => item.model)
         .sort((left, right) => modelTokenTotal(right) - modelTokenTotal(left))
         .slice(0, 5);
@@ -289,26 +381,35 @@ export function DashboardPage() {
     const initial = !loadedRef.current;
     if (initial) setLoading(true);
     setError("");
-    const query = { ...range, granularity: "day" };
-    loadTokenModelBreakdown(request);
+    if (mountedRef.current) setTokenModelBreakdown({ loading: true, items: [] });
     try {
+      const today = dateInput();
+      const yesterday = dateInput(-1);
       const results = await Promise.allSettled([
         refreshUser(), usageApi.dashboardStats(), usageApi.dashboardModels(modelDistributionRange),
-        usageApi.dashboardTrend(query),
+        usageApi.dashboardSnapshot({ ...range, granularity: "day", include_trend: true, include_model_stats: true }),
+        usageApi.dashboardTrend({ start_date: yesterday, end_date: yesterday, granularity: "hour" }),
+        usageApi.stats({ start_date: today, end_date: today }),
       ]);
       const stats = settledValue(results[1], null);
-      if (!stats) throw results[1].reason || new Error(LOAD_FAILED_ERROR);
+      const snapshot = settledValue(results[3], null);
+      // Only a page with neither headline stats nor the trend is unusable.
+      if (!stats && !snapshot) throw results[1].reason || new Error(LOAD_FAILED_ERROR);
       if (!mountedRef.current || request !== loadRequestRef.current) return;
       loadedRef.current = true;
       setData((current) => ({
-        stats,
+        stats: stats || current.stats,
         models: results[2].status === "fulfilled" ? results[2].value?.models || [] : current.models,
-        trend: results[3].status === "fulfilled" ? results[3].value?.trend || [] : current.trend,
+        trend: snapshot ? snapshot.trend || [] : current.trend,
       }));
       setSectionErrors({
         models: results[2].status === "rejected" ? results[2].reason?.message || LOAD_FAILED_ERROR : "",
-        trend: results[3].status === "rejected" ? results[3].reason?.message || LOAD_FAILED_ERROR : "",
+        trend: snapshot ? "" : results[3].reason?.message || LOAD_FAILED_ERROR,
+        stats: stats ? "" : results[1].reason?.message || LOAD_FAILED_ERROR,
       });
+      setComparison(results[4].status === "fulfilled" ? results[4].value?.trend || [] : null);
+      setTodayUsage(settledValue(results[5], null));
+      loadTokenModelBreakdown(request, snapshot?.models);
       loadModelPreferences(request);
     } catch (loadError) {
       if (mountedRef.current && request === loadRequestRef.current) setError(loadError.message || LOAD_FAILED_ERROR);
@@ -318,6 +419,18 @@ export function DashboardPage() {
       }
     }
   }, [loadModelPreferences, loadTokenModelBreakdown, modelDistributionRange, range, refreshUser]);
+
+  // Headline stats include "live" RPM/TPM; keep them current while the tab is visible.
+  const refreshStats = useCallback(async () => {
+    const today = dateInput();
+    const [statsResult, usageResult] = await Promise.allSettled([usageApi.dashboardStats(), usageApi.stats({ start_date: today, end_date: today })]);
+    if (!mountedRef.current) return;
+    if (statsResult.status === "fulfilled") {
+      setData((current) => ({ ...current, stats: statsResult.value }));
+      setSectionErrors((current) => ({ ...current, stats: "" }));
+    }
+    if (usageResult.status === "fulfilled") setTodayUsage(usageResult.value);
+  }, []);
 
   const loadActivity = useCallback(async (signal) => {
     const request = ++activityRequestRef.current;
@@ -341,6 +454,12 @@ export function DashboardPage() {
     loadActivity(controller.signal);
     return () => { activityMountedRef.current = false; activityRequestRef.current += 1; controller.abort(); };
   }, [loadActivity]);
+  useEffect(() => {
+    const tick = () => { if (document.visibilityState === "visible" && loadedRef.current) refreshStats(); };
+    const timer = window.setInterval(tick, STATS_REFRESH_MS);
+    document.addEventListener("visibilitychange", tick);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", tick); };
+  }, [refreshStats]);
   if (loading) return <DashboardSkeleton title={t("nav.dashboard")} loadingLabel={t("common.loading")} />;
   if (error && !data.stats) return <Page title={t("nav.dashboard")}><Panel><ErrorState message={localizedLoadError(error, t)} onRetry={() => load()} /></Panel></Page>;
 
@@ -348,16 +467,34 @@ export function DashboardPage() {
   const displayName = user?.username || user?.email?.split("@")[0] || (locale === "zh" ? "用户" : "there");
   const hour = new Date().getHours();
   const greeting = t(greetingKey(hour));
-  const todayActual = Number(stats.today_actual_cost) || 0;
-  const averageDailyCost = recentActualCost(data.trend, -6, 7) / 7;
+  const zh = locale === "zh";
+  const number = (value) => Number(value) || 0;
+  const formatSpend = (value) => formatNumber(number(value), { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  const formatMoney = (value) => formatNumber(number(value), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const todayActual = number(stats.today_actual_cost);
+  const averageDailyCost = recentActualCost(data.trend, -7, 7) / 7;
   const balance = user?.balance == null ? null : Number(user.balance);
   const runwayDays = Number.isFinite(balance) && averageDailyCost > 0 ? Math.max(0, balance) / averageDailyCost : null;
-  const runwayValue = runwayDays == null ? "—" : formatNumber(Math.min(runwayDays, 999), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  const runwayUnit = runwayDays == null ? undefined : `${runwayDays > 999 ? "+" : ""}${t("dashboard.balanceRunwayDays")}`;
-  const yesterdayTrend = sectionErrors.trend ? null : data.trend.find((item) => String(item.date || "").slice(0, 10) === dateInput(-1));
-  const yesterdayTokens = sectionErrors.trend ? null : Number(yesterdayTrend?.total_tokens ?? 0);
-  const yesterdayRequests = sectionErrors.trend ? null : Number(yesterdayTrend?.requests ?? 0);
-  const yesterdayActual = sectionErrors.trend ? null : Number(yesterdayTrend?.actual_cost ?? 0);
+  const runwayValue = runwayDays == null ? "—" : runwayDays > 999 ? "999+" : formatNumber(runwayDays, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  // Hourly buckets give a same-time comparison; without them show yesterday's full
+  // day for reference only, since a partial day against a full one is not comparable.
+  const comparable = Array.isArray(comparison);
+  const yesterdayDaily = data.trend.find((item) => String(item.date || "").slice(0, 10) === dateInput(-1));
+  const previousOf = (field) => comparable ? sameTimeYesterday(comparison, field) : yesterdayDaily ? number(yesterdayDaily[field]) : null;
+  const sameTimeLabel = comparable ? (zh ? "昨日同时段 · " : "Yesterday, same time · ") : (zh ? "昨日全天 · " : "Yesterday, full day · ");
+  const previousTokens = previousOf("total_tokens");
+  const previousRequests = previousOf("requests");
+  const previousSpend = previousOf("actual_cost");
+  const activeKeys = number(stats.active_api_keys);
+  const totalKeys = number(stats.total_api_keys);
+  const cacheBase = number(stats.today_input_tokens) + number(stats.today_cache_read_tokens) + number(stats.today_cache_creation_tokens);
+  const cacheRate = cacheBase > 0 ? number(stats.today_cache_read_tokens) / cacheBase : null;
+  const todayRequests = number(stats.today_requests);
+  const averageTokens = todayRequests > 0 ? number(stats.today_tokens) / todayRequests : null;
+  const averageSpend = todayRequests > 0 ? todayActual / todayRequests : null;
+  const [durationValue, durationUnit] = todayUsage?.average_duration_ms ? formatDuration(todayUsage.average_duration_ms).split(" ") : ["—"];
+  const rpmLimit = number(user?.rpm_limit);
+  const rpmRatio = rpmLimit > 0 ? number(stats.rpm) / rpmLimit : null;
   const totalTrendTokens = data.trend.reduce((sum, item) => sum + Number(item.total_tokens || item.input_tokens || 0) + (item.total_tokens ? 0 : Number(item.output_tokens || 0) + Number(item.cache_creation_tokens || 0) + Number(item.cache_read_tokens || 0)), 0);
   const totalModelTokens = data.models.reduce((sum, item) => sum + Number(item.total_tokens || 0), 0);
   const greetingDate = new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }).format(new Date());
@@ -366,15 +503,45 @@ export function DashboardPage() {
   return <Page className="console-dashboard-page">
     {error && <div className="console-dashboard-inline-error" role="alert"><Icon name="warning" size={17} /><span>{localizedLoadError(error, t)}</span><Button onClick={() => load()}>{t("common.retry")}</Button></div>}
     <div className="console-dashboard-hero"><div className="console-dashboard-greeting"><h1>{greeting}, {displayName}</h1><p>{greetingDate}</p></div><div className="console-dashboard-quick-actions"><Link className="is-key" to="/keys?create=1"><Icon name="key" size={21} /><span>{t("dashboard.createKey")}</span></Link>{!simpleMode && <Link className="is-usage" to="/usage"><Icon name="chart" size={21} /><span>{t("dashboard.inspectUsage")}</span></Link>}{!simpleMode && settings?.payment_enabled !== false && <Link className="is-credit" to="/purchase"><Icon name="plus" size={21} /><span>{t("dashboard.addCredit")}</span></Link>}{!simpleMode && <Link className="is-image" to={IMAGE_STUDIO_PATH}><Icon name="image" size={21} /><span>{t("dashboard.generateImage")}</span></Link>}{!simpleMode && <Link className="is-redeem" to="/redeem"><Icon name="gift" size={21} /><span>{t("redeem.title")}</span></Link>}</div></div>
-    <section className="console-dashboard-metrics console-panel">
-      <DashboardMetric icon="coins" label={locale === "zh" ? "今日 Token" : "Today's tokens"} value={formatTokenMillions(stats.today_tokens)} tone="token"><MetricDelta current={stats.today_tokens} previous={yesterdayTokens} previousLabel={locale === "zh" ? "昨日 · " : "Yesterday · "} formatPrevious={formatTokenMillions} /></DashboardMetric>
-      <DashboardMetric icon="send" label={locale === "zh" ? "今日请求" : "Today's requests"} value={formatNumber(stats.today_requests)} tone="requests"><MetricDelta current={stats.today_requests} previous={yesterdayRequests} previousLabel={locale === "zh" ? "昨日 · " : "Yesterday · "} formatPrevious={(value) => formatNumber(value)} /></DashboardMetric>
-      <DashboardMetric icon="wallet" label={locale === "zh" ? "今日实际费用" : "Today's actual spend"} value={formatNumber(todayActual, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol", minimumFractionDigits: 4, maximumFractionDigits: 4 })} tone="actual"><MetricDelta current={todayActual} previous={yesterdayActual} previousLabel={locale === "zh" ? "昨日 · " : "Yesterday · "} formatPrevious={formatCurrency} /></DashboardMetric>
-      <DashboardMetric icon="gauge" label={locale === "zh" ? "实时吞吐" : "Real-time throughput"} value={formatNumber(stats.rpm, { maximumFractionDigits: 0 })} unit="RPM" tone="throughput" />
-      <DashboardMetric icon="hourglass" label={t("dashboard.latency")} value={formatDuration(stats.average_duration_ms)} tone="latency" />
-      <DashboardMetric icon="pulse" label="TPM" value={formatTokenMillionsFixed(stats.tpm)} tone="tpm" />
-      <DashboardMetric icon="clock" label={t("dashboard.balanceRunway")} value={runwayValue} unit={runwayUnit} tone="runway"><div className="console-dashboard-saved"><small>{t("dashboard.balanceRunwayBasis")}</small><button className={buttonLinkClass({ variant: "ghost", size: "sm", className: "console-dashboard-notification-link" })} type="button" onClick={async () => { await refreshUser(); setBalanceNotificationOpen(true); }}><Icon name="bell" size={15} /><span>{t("profile.notifications")}</span></button></div></DashboardMetric>
+    <section className="console-kpis console-panel" aria-label={zh ? "今日概况" : "Today at a glance"}>
+      {sectionErrors.stats && !data.stats ? <ErrorState message={localizedLoadError(sectionErrors.stats, t)} onRetry={() => load()} /> : <>
+        <div className="console-kpi-grid">
+          <KpiCard icon="coins" tone="secondary" label={zh ? "今日 Token" : "Today's tokens"} hint={zh ? "含输入、输出、缓存创建与缓存读取 Token。对比为昨日同一时刻之前的累计。" : "Input, output, cache creation and cache read tokens. Compared with yesterday up to the same time of day."} value={formatTokenMillions(stats.today_tokens).slice(0, -1)} unit="M">
+            <MetricDelta current={stats.today_tokens} previous={previousTokens} previousLabel={sameTimeLabel} formatPrevious={formatTokenMillions} comparable={comparable} />
+            <KpiMeter label={zh ? "缓存命中率" : "Cache hit rate"} value={cacheRate == null ? "—" : `${formatNumber(cacheRate * 100, { maximumFractionDigits: 1 })}%`} percent={(cacheRate || 0) * 100} tone="secondary" />
+          </KpiCard>
+          <KpiCard icon="send" tone="info" label={zh ? "今日请求" : "Today's requests"} value={formatNumber(todayRequests)}>
+            <MetricDelta current={todayRequests} previous={previousRequests} previousLabel={sameTimeLabel} formatPrevious={(value) => formatNumber(Math.round(value))} comparable={comparable} />
+            <KpiMeter label={zh ? "活跃密钥" : "Active keys"} value={`${formatNumber(activeKeys)} / ${formatNumber(totalKeys)}`} percent={totalKeys > 0 ? activeKeys / totalKeys * 100 : 0} tone="info" />
+          </KpiCard>
+          <KpiCard icon="wallet" tone="warning" label={zh ? "今日实际花费" : "Today's spend"} hint={zh ? "按分组倍率实际扣除的金额。" : "Amount actually charged after group rates."} value={formatSpend(todayActual)} prefix="$">
+            <MetricDelta current={todayActual} previous={previousSpend} previousLabel={sameTimeLabel} formatPrevious={(value) => `$${formatSpend(value)}`} warnOnIncrease comparable={comparable} />
+            <PlatformSplit items={stats.by_platform} locale={locale} />
+          </KpiCard>
+        </div>
+      </>}
     </section>
+    {data.stats && <div className="console-vital-board">
+      <VitalTile icon="pulse" tone="success" title={zh ? "实时吞吐" : "Live throughput"} hint={zh ? "最近 5 分钟的平均值，按整数向下取整，低频使用时可能显示为 0。TPM 仅含输入与输出，不含缓存 Token。" : "Averages over the last 5 minutes, rounded down; light usage may show 0. TPM counts input and output only, not cache tokens."} aside={<span className="console-vital-live">{zh ? "近 5 分钟" : "Last 5 min"}</span>}>
+        <TileMetric label="RPM" value={formatNumber(number(stats.rpm))} unit={rpmLimit > 0 ? `/ ${formatNumber(rpmLimit)}` : undefined} />
+        <TileMetric label="TPM" value={formatNumber(number(stats.tpm))} unit="tok" />
+        {rpmRatio != null && <div className="console-vital-meter"><ProgressBar value={rpmRatio * 100} tone={rpmTone(rpmRatio)} /><small>{zh ? "已用 RPM 上限" : "Of RPM limit"} {formatNumber(Math.min(rpmRatio, 9.99) * 100, { maximumFractionDigits: 0 })}%</small></div>}
+      </VitalTile>
+      <VitalTile icon="hourglass" tone="info" title={zh ? "今日单次请求" : "Per request today"} hint={zh ? "今日请求的平均值：耗时为从接收到完成的时长。" : "Today's per-request averages; duration is from receipt to completion."}>
+        <TileMetric label={zh ? "平均耗时" : "Duration"} value={durationValue} unit={durationUnit} />
+        <TileMetric label={zh ? "平均 Token" : "Tokens"} value={averageTokens == null ? "—" : formatNumber(Math.round(averageTokens))} unit={averageTokens == null ? undefined : "tok"} />
+        <TileMetric label={zh ? "平均花费" : "Spend"} value={averageSpend == null ? "—" : formatSpend(averageSpend)} prefix={averageSpend == null ? undefined : "$"} />
+      </VitalTile>
+      <VitalTile icon="usageChart" tone="secondary" title={zh ? "累计用量" : "Lifetime"}>
+        <TileMetric label={zh ? "花费" : "Spend"} value={formatMoney(stats.total_actual_cost)} prefix="$" />
+        <TileMetric label={zh ? "请求" : "Requests"} value={formatNumber(number(stats.total_requests))} />
+        <TileMetric label="Token" value={formatTokenMillions(stats.total_tokens).slice(0, -1)} unit="M" />
+      </VitalTile>
+      <VitalTile icon="clock" tone="warning" title={t("dashboard.balanceRunway")} hint={zh ? "按最近 7 个完整自然日的日均实际花费估算当前余额可用天数。" : "Days the current balance lasts at the average daily spend of the last 7 complete days."} aside={<button className={buttonLinkClass({ variant: "ghost", size: "sm", className: "console-dashboard-notification-link" })} type="button" onClick={async () => { await refreshUser(); setBalanceNotificationOpen(true); }}><Icon name="bell" size={14} /><span>{zh ? "余额提醒" : "Alerts"}</span></button>}>
+        <TileMetric label={zh ? "可用天数" : "Runway"} value={runwayValue} unit={runwayDays == null ? undefined : t("dashboard.balanceRunwayDays").trim()} tone={runwayTone(runwayDays)} />
+        <TileMetric label={zh ? "近 7 日日均" : "7-day average"} value={averageDailyCost > 0 ? formatMoney(averageDailyCost) : "—"} prefix={averageDailyCost > 0 ? "$" : undefined} />
+      </VitalTile>
+    </div>}
     <div className="console-dashboard-chart-grid">
       {tokenView === "heatmap" ? <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel}><TokenActivity items={activity.items} loading={activity.loading} error={localizedLoadError(activity.error, t)} formatDate={formatDate} formatNumber={formatNumber} formatCurrency={formatCurrency} locale={locale} onRetry={() => loadActivity()} t={t} /></UsageTrendChart> : sectionErrors.trend ? <Panel className="console-trend console-dashboard-section-error" title={locale === "zh" ? "Token 用量" : "Token usage"} actions={tokenUsageActions}><ErrorState message={localizedLoadError(sectionErrors.trend, t)} onRetry={() => load()} /></Panel> : <UsageTrendChart data={data.trend} loading={loading} variant="total" total={totalTrendTokens} actions={tokenUsageActions} rangeLabel={tokenUsageRangeLabel} modelData={tokenModelBreakdown.items} modelBreakdownLoading={tokenModelBreakdown.loading} />}
       {sectionErrors.models ? <Panel className="console-dashboard-model-distribution console-dashboard-section-error" title={t("dashboard.models")}><ErrorState message={localizedLoadError(sectionErrors.models, t)} onRetry={() => load()} /></Panel> : <DistributionChart className="console-dashboard-model-distribution" title={t("dashboard.models")} rangeLabel={locale === "zh" ? "近 7 天" : "Last 7 days"} data={data.models} nameKey="model" limit={4} showMetricTabs={false} actualOnly itemLabel={t("usage.model")} tokenLabel="Token" centerValue={formatTokenMillions(totalModelTokens)} centerLabel={locale === "zh" ? "近 7 天 Token" : "Tokens · 7 days"} />}

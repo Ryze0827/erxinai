@@ -199,7 +199,7 @@ export function StatusBadge({ status, label, icon, size = "md", className = "" }
 
 export function ProgressBar({ value, tone = "primary" }) {
   const width = Math.max(0, Math.min(100, Number(value) || 0));
-  const colors = { danger: "var(--console-danger)", info: "var(--console-info)", primary: "var(--console-primary)", success: "var(--console-success)", warning: "var(--console-warning)" };
+  const colors = { danger: "var(--console-danger)", info: "var(--console-info)", primary: "var(--console-primary)", secondary: "var(--secondary-emphasis)", success: "var(--console-success)", warning: "var(--console-warning)" };
   return <AppicaProgress className={`console-progress console-progress--${tone}`} value={width} thickness={6} indicatorColor={colors[tone] || colors.primary} />;
 }
 
