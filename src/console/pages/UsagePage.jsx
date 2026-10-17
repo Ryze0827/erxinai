@@ -187,36 +187,20 @@ function latencyParts(value) {
   return unit === "ms" ? [amount, unit] : [String(Number.parseFloat(amount)), unit];
 }
 
-function firstTokenStatus(value) {
-  if (value == null || value === "" || !Number.isFinite(Number(value)) || Number(value) < 0) return "unknown";
-  if (Number(value) > 30000) return "slow";
-  if (Number(value) > 10000) return "moderate";
-  if (Number(value) <= 2000) return "fast";
-  return "normal";
+function validLatency(value) {
+  return value != null && value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0;
 }
 
-function totalLatencyStatus(value) {
-  if (value == null || value === "" || !Number.isFinite(Number(value)) || Number(value) < 0) return "unknown";
-  if (Number(value) > 180000) return "slow";
-  if (Number(value) > 60000) return "moderate";
-  return "normal";
-}
-
-// Only slow responses are tinted; normal values stay neutral like the rest of the row.
-function FirstTokenCell({ row, locale }) {
-  const status = firstTokenStatus(row.first_token_ms);
-  if (status === "unknown") return <EmptyValue />;
-  const labels = locale === "zh" ? { fast: "快", normal: "正常", moderate: "偏慢", slow: "较慢" } : { fast: "Fast", normal: "Normal", moderate: "Elevated", slow: "Slow" };
-  const hint = localized(locale, "首 Token 响应参考：≤2s 快，2–10s 正常，10–30s 偏慢，>30s 较慢；仅评价响应速度。", "First-token response guide: ≤2s fast, 2–10s normal, 10–30s elevated, >30s slow; indicates response speed only.");
+function FirstTokenCell({ row }) {
+  if (!validLatency(row.first_token_ms)) return <EmptyValue />;
   const [value, unit] = latencyParts(row.first_token_ms);
-  return <NumberValue value={value} unit={unit} tone={status} title={`${labels[status]} · ${hint}`} />;
+  return <NumberValue value={value} unit={unit} />;
 }
 
 function DurationCell({ row }) {
-  const status = totalLatencyStatus(row.duration_ms);
-  if (status === "unknown") return <EmptyValue />;
+  if (!validLatency(row.duration_ms)) return <EmptyValue />;
   const [value, unit] = latencyParts(row.duration_ms);
-  return <NumberValue value={value} unit={unit} tone={status} />;
+  return <NumberValue value={value} unit={unit} />;
 }
 
 function UsageSummary({ summary, loading }) {
@@ -405,7 +389,7 @@ export function UsagePage() {
     { key: "cache_read_tokens", label: localized(locale, "缓存读取", "Cache read"), render: (row) => <CacheReadCell row={row} locale={locale} /> },
     { key: "cost", label: locale === "zh" ? "扣费" : "Billed cost", render: (row) => <CostCell row={row} formatNumber={formatNumber} locale={locale} /> },
     { key: "request_type", label: t("usage.type"), render: (row) => typeLabel(requestType(row), t) },
-    { key: "first_token", label: localized(locale, "首 Token", "First token"), render: (row) => <FirstTokenCell row={row} locale={locale} /> },
+    { key: "first_token", label: localized(locale, "首 Token", "First token"), render: (row) => <FirstTokenCell row={row} /> },
     { key: "duration", label: localized(locale, "总耗时", "Duration"), render: (row) => <DurationCell row={row} /> },
     { key: "ip_address", label: locale === "zh" ? "客户端 IP" : "Client IP", render: (row) => <IpGeoCell ip={row.ip_address} enabled={geoEnabled} /> },
     { key: "user_agent", label: "User-Agent", render: (row) => <TruncatedText value={row.user_agent} className="console-user-agent" /> },
