@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Children, useCallback, useEffect, useRef, useState } from "react";
 import { Badge } from "@appica/ui-react/badge";
 import { ScrollArea } from "@appica/ui-react/scroll-area";
 import { Skeleton } from "@appica/ui-react/skeleton";
@@ -79,57 +79,30 @@ function tokenActivityMonths(days, formatDate, leading = 0, columns = 1) {
   });
 }
 
-function MobileTokenActivity({ days, maximum, weekdays, formatDate, formatNumber, formatCurrency, locale, t }) {
-  const months = [...new Set(days.map((day) => day.date.slice(0, 7)))];
-  const [month, setMonth] = useState(() => months.at(-1));
-  const [selectedDate, setSelectedDate] = useState(() => days.at(-1).date);
-  const monthIndex = months.indexOf(month);
-  const monthDays = days.filter((day) => day.date.startsWith(month));
-  const selected = monthDays.find((day) => day.date === selectedDate) || monthDays.at(-1);
-  const [year, monthNumber] = month.split("-").map(Number);
-  const leading = (new Date(year, monthNumber - 1, 1).getDay() + 6) % 7;
-  const dayCount = new Date(year, monthNumber, 0).getDate();
-  const monthLabel = formatDateTimeFor(locale, new Date(year, monthNumber - 1, 1), { year: "numeric", month: "long" });
-  const changeMonth = (offset) => {
-    setMonth(months[monthIndex + offset]);
-    setSelectedDate(null);
-  };
-  return <section className="console-token-month" aria-label={t("dashboard.activity")}>
-    <div className="console-token-month-nav"><Button icon="chevronLeft" aria-label={t("dashboard.activity.previousMonth")} disabled={monthIndex <= 0} onClick={() => changeMonth(-1)} /><strong aria-live="polite">{monthLabel}</strong><Button icon="chevronRight" aria-label={t("dashboard.activity.nextMonth")} disabled={monthIndex >= months.length - 1} onClick={() => changeMonth(1)} /></div>
-    <p className="console-token-month-hint">{t("dashboard.activity.touchHint")}</p>
-    <div className="console-token-month-grid">
-      {weekdays.map((day) => <span className="console-token-month-weekday" key={day}>{day}</span>)}
-      {Array.from({ length: leading }, (_, index) => <span aria-hidden="true" key={`blank-${index}`} />)}
-      {Array.from({ length: dayCount }, (_, index) => {
-        const date = `${month}-${String(index + 1).padStart(2, "0")}`;
-        const day = monthDays.find((item) => item.date === date);
-        const level = day?.tokens > 0 && maximum > 0 ? Math.max(1, Math.ceil(Math.sqrt(day.tokens / maximum) * 7)) : 0;
-        const label = day ? t("dashboard.activity.daySummary", { date: formatDate(date, { dateOnly: true }), tokens: formatNumber(day.tokens), requests: formatNumber(day.requests), cost: formatCurrency(day.actualCost) }) : formatDate(date, { dateOnly: true });
-        return <Button variant="ghost" className={`console-token-activity-cell is-level-${level}`} disabled={!day} aria-label={label} aria-pressed={day ? selected.date === date : undefined} onClick={() => setSelectedDate(date)} key={date}>{formatNumber(index + 1)}</Button>;
-      })}
-    </div>
-    <div className="console-token-month-detail" aria-live="polite"><strong>{formatDate(selected.date, { dateOnly: true })}</strong><span>{t("dashboard.tokenAmount", { amount: formatNumber(selected.tokens) })}</span><span>{t("dashboard.requestCount", { count: selected.requests })}</span><span>{formatCurrency(selected.actualCost)}</span></div>
-  </section>;
-}
-
 function TokenActivity({ items, loading, error, formatDate, formatNumber, formatCurrency, locale, onRetry, t }) {
+  const scrollRef = useRef(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  useEffect(() => {
+    if (!loading && scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+  }, [loading]);
   if (loading) return <Skeleton className="console-token-activity-loading" aria-hidden={false} role="status" aria-label={t("common.loading")} />;
   const days = tokenActivityDays(items);
+  const selected = days.find((day) => day.date === selectedDate) || days.at(-1);
   const maximum = Math.max(...days.map((day) => day.tokens), 0);
   const leading = (new Date(`${days[0].date}T00:00:00`).getDay() + 6) % 7;
   const cellCount = Math.ceil((leading + days.length) / 7) * 7;
   const columns = cellCount / 7;
   const months = tokenActivityMonths(days, formatDate, leading, columns);
   const weekdays = [t("dashboard.mon"), t("dashboard.tue"), t("dashboard.wed"), t("dashboard.thu"), t("dashboard.fri"), t("dashboard.sat"), t("dashboard.sun")];
-  return <div className="console-token-activity"><MobileTokenActivity days={days} maximum={maximum} weekdays={weekdays} formatDate={formatDate} formatNumber={formatNumber} formatCurrency={formatCurrency} locale={locale} t={t} /><div className="console-token-activity-calendar"><div className="console-token-activity-month-labels" aria-hidden="true" style={{ "--console-activity-columns": columns }}>{months.map((month) => <span style={{ gridColumn: `${month.start} / ${month.end}` }} key={month.month}>{month.label}</span>)}</div><div className="console-token-activity-weekdays" aria-hidden="true">{weekdays.map((day) => <span key={day}>{day}</span>)}</div><div className="console-token-activity-grid" role="grid" aria-label={t("dashboard.activity")} style={{ "--console-activity-columns": columns }}>{Array.from({ length: cellCount }, (_, index) => {
+  return <div className="console-token-activity"><p className="console-token-activity-touch-hint">{t("dashboard.activity.touchHint")}</p><ScrollArea orientation="horizontal" className="console-token-activity-scroller" viewportProps={{ ref: scrollRef, "aria-label": t("dashboard.activity") }}><div className="console-token-activity-calendar"><div className="console-token-activity-month-labels" aria-hidden="true" style={{ "--console-activity-columns": columns }}>{months.map((month) => <span style={{ gridColumn: `${month.start} / ${month.end}` }} key={month.month}>{month.label}</span>)}</div><div className="console-token-activity-weekdays" aria-hidden="true">{weekdays.map((day) => <span key={day}>{day}</span>)}</div><div className="console-token-activity-grid" role="grid" aria-label={t("dashboard.activity")} style={{ "--console-activity-columns": columns }}>{Array.from({ length: cellCount }, (_, index) => {
     const day = days[index - leading];
     if (!day) return <i className="console-token-activity-placeholder" aria-hidden="true" key={`placeholder-${index}`} />;
     const level = day.tokens > 0 && maximum > 0 ? Math.max(1, Math.ceil(Math.sqrt(day.tokens / maximum) * 7)) : 0;
     const label = `${formatDate(day.date, { dateOnly: true })} · ${t("dashboard.tokenAmount", { amount: formatTokenMillions(day.tokens) })} · ${t("dashboard.requestCount", { count: formatNumber(day.requests) })} · ${formatCurrency(day.actualCost)}`;
     const tooltipEdge = index < 14 ? "is-tooltip-start" : index >= cellCount - 14 ? "is-tooltip-end" : "";
     const tooltipTokens = day.tokens >= 1_000_000 ? formatTokenMillions(day.tokens) : formatNumber(day.tokens);
-    return <span className={`console-token-activity-cell is-level-${level} ${tooltipEdge}`} role="gridcell" tabIndex="0" aria-label={label} key={day.date}><span className="console-token-activity-tooltip" aria-hidden="true"><strong>{formatDate(day.date, { dateOnly: true })}</strong><span><i />{t("dashboard.tokenAmount", { amount: tooltipTokens })}</span></span></span>;
-  })}</div></div><div className="console-token-activity-legend" aria-hidden="true"><span>{t("dashboard.less")}</span>{Array.from({ length: 8 }, (_, index) => <i className={`is-level-${index}`} key={index} />)}<span>{t("dashboard.more")}</span></div>{error && <div className="console-token-activity-error" role="alert"><small>{error}</small><InlineButton onClick={onRetry}>{t("common.retry")}</InlineButton></div>}</div>;
+    return <span className={`console-token-activity-cell is-level-${level} ${tooltipEdge}`} role="gridcell" tabIndex="0" aria-label={label} aria-selected={selected.date === day.date} onClick={() => setSelectedDate(day.date)} onFocus={() => setSelectedDate(day.date)} key={day.date}><span className="console-token-activity-tooltip" aria-hidden="true"><strong>{formatDate(day.date, { dateOnly: true })}</strong><span><i />{t("dashboard.tokenAmount", { amount: tooltipTokens })}</span></span></span>;
+  })}</div></div></ScrollArea><div className="console-token-activity-detail" aria-live="polite"><strong>{formatDate(selected.date, { dateOnly: true })}</strong><span>{t("dashboard.tokenAmount", { amount: formatNumber(selected.tokens) })}</span><span>{t("dashboard.requestCount", { count: selected.requests })}</span><span>{formatCurrency(selected.actualCost)}</span></div><div className="console-token-activity-legend" aria-hidden="true"><span>{t("dashboard.less")}</span>{Array.from({ length: 8 }, (_, index) => <i className={`is-level-${index}`} key={index} />)}<span>{t("dashboard.more")}</span></div>{error && <div className="console-token-activity-error" role="alert"><small>{error}</small><InlineButton onClick={onRetry}>{t("common.retry")}</InlineButton></div>}</div>;
 }
 
 function topRequestedModels(items) {
@@ -253,14 +226,15 @@ function KpiMeter({ label, value, percent, tone }) {
 
 // Secondary board: themed tiles, each a small group of related figures.
 function VitalTile({ icon, tone, title, hint, aside, children }) {
+  const metricCount = Children.toArray(children).filter((child) => child.type === TileMetric).length;
   return <section className="console-vital-tile" data-tone={tone}>
     <header><i className="console-vital-icon"><Icon name={icon} size={16} /></i><h3>{title}</h3>{hint && <MetricHint label={title}>{hint}</MetricHint>}{aside}</header>
-    <dl>{children}</dl>
+    <dl style={{ "--vital-metric-columns": metricCount }}>{children}</dl>
   </section>;
 }
 
 function TileMetric({ label, value, prefix, unit, tone }) {
-  return <div className="console-vital-metric"><dt>{label}</dt><dd className="console-ledger-number" data-tone={tone}>{prefix && <small className="is-prefix">{prefix}</small>}{value}{unit && <small>{unit}</small>}</dd></div>;
+  return <div className="console-vital-metric"><dt>{label}</dt><dd className="console-ledger-number" data-tone={tone}><span className="console-vital-value">{prefix && <small className="is-prefix">{prefix}</small>}{value}</span><small className="console-vital-unit" aria-hidden={unit ? undefined : true}>{unit}</small></dd></div>;
 }
 
 function rpmTone(ratio) {
