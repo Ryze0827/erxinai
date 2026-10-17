@@ -1958,7 +1958,7 @@ html[data-console-theme] .console-endpoint-item > a > span {
 html[data-console-theme] .console-keys-panel > [data-slot="card-content"] {
   display: flex;
   flex-direction: column;
-  border: 0;
+  border: var(--border-width) solid var(--border-muted);
 }
 
 html[data-console-theme] .console-keys-panel .console-table-page-toolbar {
