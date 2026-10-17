@@ -320,7 +320,6 @@ html[data-console-theme] .console-dashboard-quick-actions a:hover {
   background: color-mix(in oklab, var(--console-quick-accent, var(--info-emphasis)) 9%, var(--background));
 }
 
-html[data-console-theme] .console-cost-tooltip,
 html[data-console-theme] .console-user-popover,
 html[data-console-theme] .console-column-menu {
   border-color: var(--border-overlay);
@@ -448,28 +447,6 @@ html[data-console-theme] [data-slot="table-head"] > [data-slot="button"].console
 
 html[data-console-theme] [data-slot="table-head"].is-right > [data-slot="button"].console-table-sort-button {
   justify-content: flex-end;
-}
-
-html[data-console-theme] [data-slot="button"].console-cost-detail-trigger {
-  width: 1.5rem;
-  height: 1.5rem;
-  min-height: 1.5rem;
-  padding: 0;
-  border-radius: var(--radius-full);
-  color: var(--foreground-muted);
-  background: transparent;
-  cursor: help;
-  transition-property: color;
-}
-
-html[data-console-theme] [data-slot="button"].console-cost-detail-trigger:hover,
-html[data-console-theme] [data-slot="button"].console-cost-detail-trigger:focus-visible {
-  color: var(--foreground-intense);
-}
-
-html[data-console-theme] [data-slot="button"].console-cost-detail-trigger:active {
-  scale: 1;
-  translate: none;
 }
 
 html[data-console-theme] [data-slot="button"].console-monitor-list-item {
@@ -8048,13 +8025,9 @@ html[data-console-theme] .console-usage-records-panel .console-table td {
 }
 
 /* Usage rows are virtualized by DataTable; plain cell clipping avoids a per-cell
-   :has() match. The cost cell keeps its detail trigger's focus ring visible. */
+   :has() match. */
 html[data-console-theme] .console-usage-records-panel .console-table td {
   overflow: hidden;
-}
-
-html[data-console-theme] .console-usage-records-panel .console-table td[data-column="cost"] {
-  overflow: visible;
 }
 
 html[data-console-theme] .console-usage-records-panel [data-column="created_at"] { width: 10rem; }
@@ -8064,7 +8037,7 @@ html[data-console-theme] .console-usage-records-panel [data-column="key"] { widt
 html[data-console-theme] .console-usage-records-panel [data-column="input_tokens"] { width: 8rem; }
 html[data-console-theme] .console-usage-records-panel [data-column="output_tokens"] { width: 7rem; }
 html[data-console-theme] .console-usage-records-panel [data-column="cache_read_tokens"] { width: 8rem; }
-html[data-console-theme] .console-usage-records-panel [data-column="cost"] { width: 9rem; }
+html[data-console-theme] .console-usage-records-panel [data-column="cost"] { width: 8rem; }
 html[data-console-theme] .console-usage-records-panel [data-column="request_type"] { width: 6.5rem; }
 html[data-console-theme] .console-usage-records-panel [data-column="first_token"] { width: 6.5rem; }
 html[data-console-theme] .console-usage-records-panel [data-column="duration"] { width: 6.5rem; }
@@ -9469,62 +9442,6 @@ html[data-console-theme] [data-slot="button"].console-date-preset-trigger {
 
 html[data-console-theme] .console-date-preset-menu {
   min-width: 12rem;
-}
-
-html[data-console-theme] [data-slot="popover-content"].console-cost-tooltip {
-  width: min(22rem, calc(100vw - 2rem));
-  min-width: 0;
-  max-width: calc(100vw - 2rem);
-  overflow: hidden;
-  padding: 0;
-  border: var(--border-width) solid var(--border-overlay);
-  border-radius: var(--radius-lg);
-  color: var(--foreground);
-  background: var(--background);
-  box-shadow: var(--shadow-xl);
-}
-
-html[data-console-theme] .console-cost-tooltip-breakdown,
-html[data-console-theme] .console-cost-tooltip-summary {
-  display: grid;
-  gap: 0.5rem;
-  padding: 0.875rem 1rem;
-}
-
-html[data-console-theme] .console-cost-tooltip-breakdown h3 {
-  margin: 0 0 0.25rem;
-  color: var(--foreground-intense);
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-
-html[data-console-theme] .console-cost-tooltip-summary {
-  border-top: var(--border-width) solid var(--border-muted);
-  background: var(--background-subtle);
-}
-
-/* Popover values reuse the ledger number style: regular weight, muted spaced units. */
-html[data-console-theme] .console-cost-tooltip-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  color: var(--foreground-muted);
-  font-size: var(--text-sm);
-  line-height: 1.25rem;
-}
-
-html[data-console-theme] .console-cost-tooltip-row strong {
-  color: var(--foreground-strong);
-  font-family: inherit;
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-  text-align: end;
-}
-
-html[data-console-theme] .console-cost-tooltip-row strong.is-billed {
-  color: var(--foreground-intense);
-  font-weight: 600;
 }
 
 html[data-console-theme] .console-error-detail {
@@ -11508,8 +11425,6 @@ html[data-console-theme] .console-ledger-empty { color: var(--foreground-subtle)
 html[data-console-theme] .console-usage-records-panel .console-long-context-marker { color: var(--warning-intense); cursor: help; }
 html[data-console-theme] .console-ledger-cost { gap: 0.125rem; }
 html[data-console-theme] .console-ledger-cost > small { flex: none; margin-inline-start: 0.25rem; font-size: var(--text-xs); }
-html[data-console-theme] .console-usage-records-panel [data-slot="button"].console-cost-detail-trigger { width: 1.5rem; height: 1.5rem; min-height: 1.5rem; flex: none; border-radius: var(--radius-sm); color: var(--foreground-subtle); }
-html[data-console-theme] .console-usage-records-panel [data-slot="button"].console-cost-detail-trigger:hover { color: var(--foreground-intense); background: var(--background-muted); }
 html[data-console-theme] .console-usage-records-panel .console-ip { flex-direction: row; align-items: baseline; gap: 0.5rem; }
 html[data-console-theme] .console-usage-records-panel .console-ip > code { flex: none; color: inherit; font: inherit; }
 html[data-console-theme] .console-usage-records-panel .console-ip > small { color: var(--foreground-muted); font-size: var(--text-xs); }

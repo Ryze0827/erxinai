@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Popover } from "@appica/ui-react/popover";
-import { PopoverContent } from "@appica/ui-react/popover";
-import { PopoverTrigger } from "@appica/ui-react/popover";
 import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { PlatformMark } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, DataTable, ErrorState, Field, InlineButton, Modal, Page, Pagination, PaginationSkeleton, Panel, SelectInput, Spinner, TruncatedText } from "../UI";
+import { Button, DataTable, ErrorState, Field, Modal, Page, Pagination, PaginationSkeleton, Panel, SelectInput, Spinner, TruncatedText } from "../UI";
 import { formatDuration, formatTokenMillions } from "../utils";
 import { CompactTabs, DateRangePicker, useHiddenColumns } from "../components/ConsoleControls";
 import { IpGeoBatchToolbar, IpGeoCell } from "../components/IpGeo";
@@ -172,123 +169,16 @@ function numeric(value) {
   return Number.isFinite(number) ? number : 0;
 }
 
-function formatMultiplier(value) {
-  const number = Number(value);
-  return (Number.isFinite(number) ? number : 1).toFixed(4).replace(/\.?0+$/, "");
-}
-
-function serviceTierLabel(value) {
-  const tier = String(value || "").trim().toLowerCase();
-  if (tier === "priority" || tier === "fast") return "Fast";
-  if (tier === "ultrafast") return "Ultrafast";
-  if (tier === "flex") return "Flex";
-  if (!tier || tier === "default" || tier === "standard") return "Standard";
-  return tier;
-}
-
-function tokenPrice(cost, tokens) {
-  const count = numeric(tokens);
-  return count > 0 ? numeric(cost) / count * 1_000_000 : null;
-}
-
-function textInputTokens(row) {
-  return Math.max(0, numeric(row.input_tokens) - numeric(row.image_input_tokens));
-}
-
-function textOutputTokens(row) {
-  return Math.max(0, numeric(row.output_tokens) - numeric(row.image_output_tokens));
-}
-
-function imageSizeSource(row, locale) {
-  const labels = locale === "zh"
-    ? { output: "上游输出", input: "请求输入", default: "默认计费档位", legacy: "历史记录" }
-    : { output: "Upstream output", input: "Request input", default: "Default billing tier", legacy: "Legacy record" };
-  const source = String(row.image_size_source || "").trim().toLowerCase();
-  if (labels[source]) return labels[source];
-  if (row.image_size) return labels.legacy;
-  return locale === "zh" ? "未记录" : "Not recorded";
-}
-
-function imageSizeBreakdown(row) {
-  if (!row.image_size_breakdown || typeof row.image_size_breakdown !== "object") return "";
-  return ["1K", "2K", "4K"].filter((size) => numeric(row.image_size_breakdown[size]) > 0).map((size) => `${size} × ${numeric(row.image_size_breakdown[size])}`).join(", ");
-}
-
-function CostTooltipRow({ label, value, tone = "" }) {
-  return <div className="console-cost-tooltip-row"><span>{label}</span><strong className={tone ? `is-${tone}` : ""}>{value}</strong></div>;
-}
-
 // Dollar amounts share the ledger number style: spaced "$" prefix, muted unit suffix.
 function MoneyValue({ value, digits = 6, unit, formatNumber }) {
   const amount = formatNumber(numeric(value), { minimumFractionDigits: digits, maximumFractionDigits: digits });
   return <span className="console-ledger-number"><small className="is-prefix">$</small>{amount}{unit && <small>{unit}</small>}</span>;
 }
 
-function CostTooltip({ row, formatNumber, locale }) {
-  const imageUsage = numeric(row.image_count) > 0 && row.billing_mode !== "token" && row.billing_mode !== "video";
-  const tokenBilling = !imageUsage && (!row.billing_mode || row.billing_mode === "token");
-  const inputTextTokens = textInputTokens(row);
-  const outputTextTokens = textOutputTokens(row);
-  const breakdown = imageSizeBreakdown(row);
-  const labels = locale === "zh" ? {
-    title: "费用明细", inputCost: "输入费用", outputCost: "输出费用", imageInputCost: "图片输入费用", imageOutputCost: "图片输出费用",
-    inputPrice: "输入单价", outputPrice: "输出单价", imageInputPrice: "图片输入单价", imageOutputPrice: "图片输出单价", perMillion: "/ 1M tok",
-    cacheCreation: "缓存创建费用", cacheRead: "缓存读取费用", unitPrice: "单次价格", imageUnitPrice: "单张价格", imageTotalPrice: "图片总价",
-    imageCount: "图片张数", imageBillingSize: "计费尺寸", imageInputSize: "输入尺寸", imageOutputSize: "输出尺寸", imageSource: "尺寸来源", imageBreakdown: "尺寸明细",
-    serviceTier: "服务档位", rate: "倍率", original: "原始", billed: "用户扣费", imageUnit: "张", unknown: "未知", notRecorded: "未记录",
-  } : {
-    title: "Cost breakdown", inputCost: "Input cost", outputCost: "Output cost", imageInputCost: "Image input cost", imageOutputCost: "Image output cost",
-    inputPrice: "Input price", outputPrice: "Output price", imageInputPrice: "Image input price", imageOutputPrice: "Image output price", perMillion: "/ 1M tok",
-    cacheCreation: "Cache creation cost", cacheRead: "Cache read cost", unitPrice: "Per-request price", imageUnitPrice: "Per-image price", imageTotalPrice: "Image total price",
-    imageCount: "Image count", imageBillingSize: "Billing size", imageInputSize: "Input size", imageOutputSize: "Output size", imageSource: "Size source", imageBreakdown: "Size breakdown",
-    serviceTier: "Service tier", rate: "Rate", original: "Original", billed: "User billed", imageUnit: "img", unknown: "Unknown", notRecorded: "Not recorded",
-  };
-  const money = (value) => <MoneyValue value={value} formatNumber={formatNumber} />;
-  const price = (cost, tokens) => {
-    const value = tokenPrice(cost, tokens);
-    return value === null ? <EmptyValue /> : <MoneyValue value={value} digits={4} unit={labels.perMillion} formatNumber={formatNumber} />;
-  };
-  const billingSize = row.image_size || labels.notRecorded;
-
-  return <>
-      <div className="console-cost-tooltip-breakdown">
-        <h3>{labels.title}</h3>
-        {tokenBilling && inputTextTokens > 0 && <CostTooltipRow label={labels.inputPrice} value={price(row.input_cost, inputTextTokens)} />}
-        {tokenBilling && numeric(row.image_input_tokens) > 0 && <CostTooltipRow label={labels.imageInputPrice} value={price(row.image_input_cost, row.image_input_tokens)} />}
-        {tokenBilling && outputTextTokens > 0 && <CostTooltipRow label={labels.outputPrice} value={price(row.output_cost, outputTextTokens)} />}
-        {tokenBilling && numeric(row.image_output_tokens) > 0 && <CostTooltipRow label={labels.imageOutputPrice} value={price(row.image_output_cost, row.image_output_tokens)} />}
-        {numeric(row.input_cost) > 0 && <CostTooltipRow label={labels.inputCost} value={money(row.input_cost)} />}
-        {numeric(row.image_input_cost) > 0 && <CostTooltipRow label={labels.imageInputCost} value={money(row.image_input_cost)} />}
-        {numeric(row.output_cost) > 0 && <CostTooltipRow label={labels.outputCost} value={money(row.output_cost)} />}
-        {numeric(row.image_output_cost) > 0 && <CostTooltipRow label={labels.imageOutputCost} value={money(row.image_output_cost)} />}
-        {imageUsage && <>
-          <CostTooltipRow label={labels.imageCount} value={<NumberValue value={numeric(row.image_count)} unit={labels.imageUnit} />} />
-          <CostTooltipRow label={labels.imageBillingSize} value={billingSize} />
-          <CostTooltipRow label={labels.imageSource} value={imageSizeSource(row, locale)} />
-          <CostTooltipRow label={labels.imageInputSize} value={row.image_input_size || labels.unknown} />
-          <CostTooltipRow label={labels.imageOutputSize} value={row.image_output_size || labels.unknown} />
-          {breakdown && <CostTooltipRow label={labels.imageBreakdown} value={breakdown} />}
-          <CostTooltipRow label={labels.imageUnitPrice} value={money(numeric(row.image_count) > 0 ? numeric(row.total_cost) / numeric(row.image_count) : 0)} />
-          <CostTooltipRow label={labels.imageTotalPrice} value={money(row.total_cost)} />
-        </>}
-        {!tokenBilling && !imageUsage && <CostTooltipRow label={labels.unitPrice} value={money(row.total_cost)} />}
-        {numeric(row.cache_creation_cost) > 0 && <CostTooltipRow label={labels.cacheCreation} value={money(row.cache_creation_cost)} />}
-        {numeric(row.cache_read_cost) > 0 && <CostTooltipRow label={labels.cacheRead} value={money(row.cache_read_cost)} />}
-      </div>
-      <div className="console-cost-tooltip-summary">
-        <CostTooltipRow label={labels.serviceTier} value={serviceTierLabel(row.service_tier)} />
-        <CostTooltipRow label={labels.rate} value={<NumberValue value={formatMultiplier(row.rate_multiplier ?? 1)} unit="×" />} />
-        <CostTooltipRow label={labels.original} value={money(row.total_cost)} />
-        <CostTooltipRow label={labels.billed} value={money(row.actual_cost)} tone="billed" />
-      </div>
-    </>;
-}
-
 export function CostCell({ row, formatNumber, locale }) {
-  const label = locale === "zh" ? "查看费用明细" : "View cost breakdown";
   const longContextLabel = localized(locale, "长上下文", "Long context");
   const longContextHint = localized(locale, "已应用长上下文计费。输入和输出费率取决于定价档位，并非统一倍率。", "Long-context pricing was applied. Input and output rates depend on the pricing tier, not a uniform multiplier.");
-  return <span className="console-ledger-cost"><MoneyValue value={row.actual_cost} digits={4} formatNumber={formatNumber} /><Popover><PopoverTrigger openOnHover render={<InlineButton variant="ghost" size="icon-sm" className="console-cost-detail-trigger" aria-label={label} />}><Icon name="listDetails" size={14} /></PopoverTrigger><PopoverContent side="left" align="center" arrow={false} className="console-cost-tooltip"><CostTooltip row={row} formatNumber={formatNumber} locale={locale} /></PopoverContent></Popover>{row.long_context_billing_applied && <small className="console-long-context-marker" title={longContextHint}>{longContextLabel}</small>}</span>;
+  return <span className="console-ledger-cost"><MoneyValue value={row.actual_cost} digits={4} formatNumber={formatNumber} />{row.long_context_billing_applied && <small className="console-long-context-marker" title={longContextHint}>{longContextLabel}</small>}</span>;
 }
 
 // Split a duration into value and unit, e.g. 3800 → ["3.8", "s"], 350 → ["350", "ms"].
