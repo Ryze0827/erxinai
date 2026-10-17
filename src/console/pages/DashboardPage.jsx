@@ -79,6 +79,39 @@ function tokenActivityMonths(days, formatDate, leading = 0, columns = 1) {
   });
 }
 
+function MobileTokenActivity({ days, maximum, weekdays, formatDate, formatNumber, formatCurrency, locale, t }) {
+  const months = [...new Set(days.map((day) => day.date.slice(0, 7)))];
+  const [month, setMonth] = useState(() => months.at(-1));
+  const [selectedDate, setSelectedDate] = useState(() => days.at(-1).date);
+  const monthIndex = months.indexOf(month);
+  const monthDays = days.filter((day) => day.date.startsWith(month));
+  const selected = monthDays.find((day) => day.date === selectedDate) || monthDays.at(-1);
+  const [year, monthNumber] = month.split("-").map(Number);
+  const leading = (new Date(year, monthNumber - 1, 1).getDay() + 6) % 7;
+  const dayCount = new Date(year, monthNumber, 0).getDate();
+  const monthLabel = formatDateTimeFor(locale, new Date(year, monthNumber - 1, 1), { year: "numeric", month: "long" });
+  const changeMonth = (offset) => {
+    setMonth(months[monthIndex + offset]);
+    setSelectedDate(null);
+  };
+  return <section className="console-token-month" aria-label={t("dashboard.activity")}>
+    <div className="console-token-month-nav"><Button icon="chevronLeft" aria-label={t("dashboard.activity.previousMonth")} disabled={monthIndex <= 0} onClick={() => changeMonth(-1)} /><strong aria-live="polite">{monthLabel}</strong><Button icon="chevronRight" aria-label={t("dashboard.activity.nextMonth")} disabled={monthIndex >= months.length - 1} onClick={() => changeMonth(1)} /></div>
+    <p className="console-token-month-hint">{t("dashboard.activity.touchHint")}</p>
+    <div className="console-token-month-grid">
+      {weekdays.map((day) => <span className="console-token-month-weekday" key={day}>{day}</span>)}
+      {Array.from({ length: leading }, (_, index) => <span aria-hidden="true" key={`blank-${index}`} />)}
+      {Array.from({ length: dayCount }, (_, index) => {
+        const date = `${month}-${String(index + 1).padStart(2, "0")}`;
+        const day = monthDays.find((item) => item.date === date);
+        const level = day?.tokens > 0 && maximum > 0 ? Math.max(1, Math.ceil(Math.sqrt(day.tokens / maximum) * 7)) : 0;
+        const label = day ? t("dashboard.activity.daySummary", { date: formatDate(date, { dateOnly: true }), tokens: formatNumber(day.tokens), requests: formatNumber(day.requests), cost: formatCurrency(day.actualCost) }) : formatDate(date, { dateOnly: true });
+        return <Button variant="ghost" className={`console-token-activity-cell is-level-${level}`} disabled={!day} aria-label={label} aria-pressed={day ? selected.date === date : undefined} onClick={() => setSelectedDate(date)} key={date}>{formatNumber(index + 1)}</Button>;
+      })}
+    </div>
+    <div className="console-token-month-detail" aria-live="polite"><strong>{formatDate(selected.date, { dateOnly: true })}</strong><span>{t("dashboard.tokenAmount", { amount: formatNumber(selected.tokens) })}</span><span>{t("dashboard.requestCount", { count: selected.requests })}</span><span>{formatCurrency(selected.actualCost)}</span></div>
+  </section>;
+}
+
 function TokenActivity({ items, loading, error, formatDate, formatNumber, formatCurrency, locale, onRetry, t }) {
   if (loading) return <Skeleton className="console-token-activity-loading" aria-hidden={false} role="status" aria-label={t("common.loading")} />;
   const days = tokenActivityDays(items);
@@ -88,7 +121,7 @@ function TokenActivity({ items, loading, error, formatDate, formatNumber, format
   const columns = cellCount / 7;
   const months = tokenActivityMonths(days, formatDate, leading, columns);
   const weekdays = [t("dashboard.mon"), t("dashboard.tue"), t("dashboard.wed"), t("dashboard.thu"), t("dashboard.fri"), t("dashboard.sat"), t("dashboard.sun")];
-  return <div className="console-token-activity"><div className="console-token-activity-calendar"><div className="console-token-activity-month-labels" aria-hidden="true" style={{ "--console-activity-columns": columns }}>{months.map((month) => <span style={{ gridColumn: `${month.start} / ${month.end}` }} key={month.month}>{month.label}</span>)}</div><div className="console-token-activity-weekdays" aria-hidden="true">{weekdays.map((day) => <span key={day}>{day}</span>)}</div><div className="console-token-activity-grid" role="grid" aria-label={t("dashboard.activity")} style={{ "--console-activity-columns": columns }}>{Array.from({ length: cellCount }, (_, index) => {
+  return <div className="console-token-activity"><MobileTokenActivity days={days} maximum={maximum} weekdays={weekdays} formatDate={formatDate} formatNumber={formatNumber} formatCurrency={formatCurrency} locale={locale} t={t} /><div className="console-token-activity-calendar"><div className="console-token-activity-month-labels" aria-hidden="true" style={{ "--console-activity-columns": columns }}>{months.map((month) => <span style={{ gridColumn: `${month.start} / ${month.end}` }} key={month.month}>{month.label}</span>)}</div><div className="console-token-activity-weekdays" aria-hidden="true">{weekdays.map((day) => <span key={day}>{day}</span>)}</div><div className="console-token-activity-grid" role="grid" aria-label={t("dashboard.activity")} style={{ "--console-activity-columns": columns }}>{Array.from({ length: cellCount }, (_, index) => {
     const day = days[index - leading];
     if (!day) return <i className="console-token-activity-placeholder" aria-hidden="true" key={`placeholder-${index}`} />;
     const level = day.tokens > 0 && maximum > 0 ? Math.max(1, Math.ceil(Math.sqrt(day.tokens / maximum) * 7)) : 0;

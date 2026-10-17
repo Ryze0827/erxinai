@@ -41,6 +41,6 @@ export function CheckInButton() {
   };
 
   return <InlineButton variant="outline" className="console-header-link console-checkin-trigger" icon={submitting ? "refresh" : "calendar"} onClick={submit} disabled={submitting} aria-busy={submitting} title={translate(locale, "checkIn.dailyCheck")}>
-    {(submitting ? translate(locale, "checkIn.checking") : translate(locale, "checkIn.check"))}<span className="console-checkin-streak" aria-label={translate(locale, "checkIn.streak", { count: streak })}>{translate(locale, "checkIn.streak", { count: streak })}</span>
+    <span className="console-checkin-label">{submitting ? translate(locale, "checkIn.checking") : translate(locale, "checkIn.check")}</span><span className="console-checkin-streak" aria-label={translate(locale, "checkIn.streak", { count: streak })}>{translate(locale, "checkIn.streak", { count: streak })}</span>
   </InlineButton>;
 }

@@ -63,7 +63,7 @@ export function WelfareScheduleCountdown() {
   const seconds = Math.ceil(remaining / 1000);
   const countdown = [Math.floor(seconds / 3600), Math.floor(seconds % 3600 / 60), seconds % 60].map((value) => String(value).padStart(2, "0")).join(":");
   const copy = snapshot.countdown_copy?.[locale] || snapshot.countdown_copy?.zh;
-  const label = copy?.[active ? "closing" : "opening"] || (active ? translate(locale, "welfare.active") : null);
+  const label = copy?.[active ? "closing" : "opening"] || translate(locale, active ? "welfare.closing" : "welfare.upcoming");
   if (!label) return null;
   const hours = `${String(Math.floor(startMinute / 60)).padStart(2, "0")}:${String(startMinute % 60).padStart(2, "0")}–${String(Math.floor(endMinute / 60)).padStart(2, "0")}:${String(endMinute % 60).padStart(2, "0")}`;
   return <div className="console-welfare-countdown" data-active={active} title={`${hours} · Asia/Shanghai`} role="timer" aria-label={`${label} ${countdown}`}>
