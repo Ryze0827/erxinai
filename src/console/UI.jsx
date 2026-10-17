@@ -287,33 +287,35 @@ function TableSpacer({ height, columns }) {
   return <AppicaTableRow className="console-table-spacer" aria-hidden="true"><AppicaTableCell colSpan={columns.length} style={{ height }} /></AppicaTableRow>;
 }
 
-function VirtualTableBody({ columns, rows, rowKey, onRowClick }) {
+function VirtualTableBody({ columns, rows, rowKey, onRowClick, estimateRowHeight }) {
   const getKey = useCallback((index) => rows[index]?.[rowKey] ?? index, [rowKey, rows]);
-  const { bodyRef, start, end, paddingTop, paddingBottom } = useWindowVirtualRows({ count: rows.length, getKey });
+  const { bodyRef, start, end, paddingTop, paddingBottom } = useWindowVirtualRows({ count: rows.length, getKey, estimateSize: estimateRowHeight });
   return <AppicaTableBody ref={bodyRef}><TableSpacer height={paddingTop} columns={columns} />{rows.slice(start, end).map((row, offset) => <ConsoleTableRow key={row[rowKey] ?? start + offset} row={row} index={start + offset} columns={columns} onRowClick={onRowClick} virtual />)}<TableSpacer height={paddingBottom} columns={columns} /></AppicaTableBody>;
 }
 
-export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "", hoverableRows = true, virtualized = false }) {
-  if (!rows?.length) return empty || <EmptyState />;
-  return (
-    <div className={`console-table-wrap ${className}`}>
-      <AppicaTable className="console-table" size="sm" borderStyle="none" hoverableRows={hoverableRows} aria-rowcount={virtualized ? rows.length + 1 : undefined}><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader>{virtualized ? <VirtualTableBody columns={columns} rows={rows} rowKey={rowKey} onRowClick={onRowClick} /> : <AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} columns={columns} onRowClick={onRowClick} />)}</AppicaTableBody>}</AppicaTable>
-    </div>
-  );
+// Loading rows mirror the real body cell for cell: same data-column hooks and
+// alignment, so column-width rules apply identically before and after data arrives.
+export function TableSkeletonRows({ columns, rows = 6 }) {
+  return Array.from({ length: rows }, (_, row) => <AppicaTableRow key={row} aria-hidden="true">{columns.map((column) => <AppicaTableCell key={column.key} data-column={column.key} className={column.align ? `is-${column.align}` : ""}><AppicaSkeleton className="console-table-skeleton-bar" /></AppicaTableCell>)}</AppicaTableRow>);
 }
 
-export function TableSkeleton({ columns = 6, rows = 6, className = "", pagination = true }) {
-  const columnItems = Array.from({ length: columns }, (_, index) => index);
-  const rowItems = Array.from({ length: rows }, (_, index) => index);
-  return <div className={`console-table-skeleton ${className}`} aria-hidden="true">
-    <div className="console-table-wrap">
-      <AppicaTable className="console-table" size="sm" borderStyle="none">
-        <AppicaTableHeader><AppicaTableRow>{columnItems.map((column) => <AppicaTableHead key={column}><AppicaSkeleton /></AppicaTableHead>)}</AppicaTableRow></AppicaTableHeader>
-        <AppicaTableBody>{rowItems.map((row) => <AppicaTableRow key={row}>{columnItems.map((column) => <AppicaTableCell key={column}><AppicaSkeleton /></AppicaTableCell>)}</AppicaTableRow>)}</AppicaTableBody>
-      </AppicaTable>
+export function PaginationSkeleton() {
+  return <div className="console-pagination console-table-skeleton-pagination" aria-hidden="true"><AppicaSkeleton /><div><AppicaSkeleton /><AppicaSkeleton /></div></div>;
+}
+
+export function DataTable({ columns, rows, rowKey = "id", empty, onRowClick, sortKey, sortOrder = "desc", onSort, className = "", hoverableRows = true, virtualized = false, estimateRowHeight, loading = false, loadingRows = 6 }) {
+  const { t } = useLocale();
+  const skeleton = loading && !rows?.length;
+  if (!skeleton && !rows?.length) return empty || <EmptyState />;
+  let body;
+  if (skeleton) body = <AppicaTableBody><TableSkeletonRows columns={columns} rows={loadingRows} /></AppicaTableBody>;
+  else if (virtualized) body = <VirtualTableBody columns={columns} rows={rows} rowKey={rowKey} onRowClick={onRowClick} estimateRowHeight={estimateRowHeight} />;
+  else body = <AppicaTableBody>{rows.map((row, index) => <ConsoleTableRow key={row[rowKey] ?? index} row={row} index={index} columns={columns} onRowClick={onRowClick} />)}</AppicaTableBody>;
+  return (
+    <div className={`console-table-wrap ${className}`} role={skeleton ? "status" : undefined} aria-busy={skeleton || undefined} aria-label={skeleton ? t("common.loading") : undefined}>
+      <AppicaTable className="console-table" size="sm" borderStyle="none" hoverableRows={hoverableRows && !skeleton} aria-rowcount={virtualized && !skeleton ? rows.length + 1 : undefined}><AppicaTableHeader><AppicaTableRow>{columns.map((column) => <ConsoleTableHeader key={column.key} column={column} sortKey={sortKey} sortOrder={sortOrder} onSort={onSort} />)}</AppicaTableRow></AppicaTableHeader>{body}</AppicaTable>
     </div>
-    {pagination && <div className="console-pagination console-table-skeleton-pagination"><AppicaSkeleton /><div><AppicaSkeleton /><AppicaSkeleton /></div></div>}
-  </div>;
+  );
 }
 
 const chartTop = 26;

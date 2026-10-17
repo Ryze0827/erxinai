@@ -7,7 +7,7 @@ import { groupsApi, keysApi, usageApi } from "../../api";
 import { useConsole } from "../ConsoleContext";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, ConfirmDialog, CopyButton, DataTable, EmptyState, ErrorState, Field, IconButton, InlineButton, LineChart, Modal, Page, Pagination, Panel, ProgressBar, SelectInput, StatusBadge, TableSkeleton, TextArea, TextInput, Toggle } from "../UI";
+import { Button, ConfirmDialog, CopyButton, DataTable, EmptyState, ErrorState, Field, IconButton, InlineButton, LineChart, Modal, Page, Pagination, Panel, PaginationSkeleton, ProgressBar, SelectInput, StatusBadge, TextArea, TextInput, Toggle } from "../UI";
 import { formatTokenMillions, maskKey, statusLabel } from "../utils";
 import { ColumnPicker, useHiddenColumns } from "../components/ConsoleControls";
 import { GroupSelect } from "../components/GroupSelect";
@@ -231,11 +231,12 @@ async function persistKey(editor, payload) {
 }
 
 function KeysTableContent({ state, columns, result, sort, setSort, paging, setPaging, load, openCreate, locale, t }) {
-  if (state.loading && !result.items.length) return <TableSkeleton columns={columns.length} className="console-keys-table-skeleton" />;
+  const onSort = (key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); };
+  if (state.loading && !result.items.length) return <><DataTable className="console-keys-table" columns={columns} rows={result.items} loading sortKey={sort.key} sortOrder={sort.order} onSort={onSort} /><PaginationSkeleton /></>;
   if (state.error && !result.items.length) return <ErrorState message={state.error} onRetry={load} />;
   const empty = <EmptyState icon="key" title={keyText(locale, "还没有 API 密钥", "No API keys yet")} action={<Button variant="primary" icon="plus" data-walkthrough="create-key" onClick={openCreate}>{t("keys.new")}</Button>} />;
   const rows = sortedKeyRows(result.items, sort);
-  return <><DataTable className="console-keys-table" columns={columns} rows={rows} sortKey={sort.key} sortOrder={sort.order} onSort={(key, order) => { setSort({ key, order }); setPaging((current) => ({ ...current, page: 1 })); }} empty={empty} /><Pagination page={paging.page} pageSize={paging.pageSize} total={result.total} pages={result.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
+  return <><DataTable className="console-keys-table" columns={columns} rows={rows} sortKey={sort.key} sortOrder={sort.order} onSort={onSort} empty={empty} /><Pagination page={paging.page} pageSize={paging.pageSize} total={result.total} pages={result.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })} /></>;
 }
 
 function KeysTablePanel({ query, setQuery, setPaging, groups, settings, load, state, allColumns, hidden, toggleColumn, openCreate, columns, result, sort, setSort, paging, locale, t }) {

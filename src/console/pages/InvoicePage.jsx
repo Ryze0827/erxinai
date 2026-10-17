@@ -7,7 +7,7 @@ import { invoiceApi } from "../../api/invoices";
 import { useConsole } from "../ConsoleContext";
 import { useLocale } from "../i18n";
 import { Icon } from "../Icon";
-import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, SelectInput, StatusBadge, TableSkeleton, TextInput } from "../UI";
+import { Button, DataTable, EmptyState, ErrorState, Field, Modal, Page, Pagination, Panel, PaginationSkeleton, SelectInput, StatusBadge, TextInput } from "../UI";
 import { invoiceShortfall, MIN_INVOICE_AMOUNT } from "./invoiceRules";
 
 const DEFAULT_INVOICE_ITEM = "生产生活服务/信息服务费";
@@ -43,7 +43,7 @@ export function InvoicePage() {
   const [submitError, setSubmitError] = useState("");
   const [busy, setBusy] = useState(false);
   const [historyPage, setHistoryPage] = useState(1);
-  const [history, setHistory] = useState({ items: [], total: 0, pages: 1, error: "" });
+  const [history, setHistory] = useState({ items: [], total: 0, pages: 1, error: "", loading: true });
   const mountedRef = useRef(true);
   const submitRef = useRef(false);
   const orderIds = useMemo(() => [...selected.keys()].sort((a, b) => a - b), [selected]);
@@ -63,11 +63,12 @@ export function InvoicePage() {
     }
   }, [paging]);
   const loadHistory = useCallback(async () => {
+    setHistory((current) => ({ ...current, loading: true }));
     try {
       const result = await invoiceApi.requests(historyPage);
-      if (mountedRef.current) setHistory({ ...result, error: "" });
+      if (mountedRef.current) setHistory({ ...result, error: "", loading: false });
     } catch (error) {
-      if (mountedRef.current) setHistory((current) => ({ ...current, error: error.message }));
+      if (mountedRef.current) setHistory((current) => ({ ...current, error: error.message, loading: false }));
     }
   }, [historyPage]);
   useEffect(() => {
@@ -183,10 +184,10 @@ export function InvoicePage() {
         </div>
         <Button variant="primary" icon="orderReceipt" disabled={!state.enabled || !orderIds.length || orderIds.length > 100 || !meetsMinimum || busy} onClick={openRequest}>{t("invoice.openRequest")}</Button>
       </div>
-      {state.loading && !state.items.length ? <TableSkeleton columns={5}/> : state.error ? <ErrorState message={state.error} onRetry={load}/> : <><DataTable className="console-invoice-orders-table" columns={columns} rows={state.items} empty={<EmptyState icon="order" title={t("invoice.emptyTitle")} description={t("invoice.emptyDescription")}/>}/><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })}/></>}
+      {state.loading && !state.items.length ? <><DataTable className="console-invoice-orders-table" columns={columns} rows={state.items} loading/><PaginationSkeleton/></> : state.error ? <ErrorState message={state.error} onRetry={load}/> : <><DataTable className="console-invoice-orders-table" columns={columns} rows={state.items} empty={<EmptyState icon="order" title={t("invoice.emptyTitle")} description={t("invoice.emptyDescription")}/>}/><Pagination page={paging.page} pageSize={paging.pageSize} total={state.total} pages={state.pages} onPageChange={(page) => setPaging((current) => ({ ...current, page }))} onPageSizeChange={(pageSize) => setPaging({ page: 1, pageSize })}/></>}
     </Panel>
     <Panel className="console-invoice-history-panel" title={t("invoice.history")} actions={<Button icon="refresh" onClick={loadHistory}>{t("common.refresh")}</Button>}>
-      {history.error ? <ErrorState message={history.error} onRetry={loadHistory}/> : <><DataTable className="console-invoice-history-table" columns={historyColumns} rows={history.items} empty={<EmptyState icon="order" title={t("invoice.noRequests")}/>}/><Pagination page={historyPage} pageSize={20} total={history.total} pages={history.pages} onPageChange={setHistoryPage}/></>}
+      {history.error ? <ErrorState message={history.error} onRetry={loadHistory}/> : <><DataTable className="console-invoice-history-table" columns={historyColumns} rows={history.items} loading={history.loading} loadingRows={3} empty={<EmptyState icon="order" title={t("invoice.noRequests")}/>}/><Pagination page={historyPage} pageSize={20} total={history.total} pages={history.pages} onPageChange={setHistoryPage}/></>}
     </Panel>
     <Modal open={requestOpen} title={t("invoice.requestTitle")} description={t("invoice.confirmDescription")} onClose={closeRequest} className="console-invoice-modal" footer={<>{blockingReason && <p className="console-invoice-status" data-tone={blockingReason.tone} role="status" aria-live="polite">{blockingReason.text}</p>}<Button disabled={busy} onClick={closeRequest}>{t("common.cancel")}</Button><Button type="submit" form="invoice-request-form" variant="primary" icon="send" loading={busy} disabled={!state.enabled || !quoteCurrent || !quote.sufficient || quoteBelowMinimum || quoteLoading || !invoiceItems.includes(invoiceItem)}>{t("invoice.confirmSubmit")}</Button></>}>
       <form id="invoice-request-form" onSubmit={submit} className="console-invoice-request">

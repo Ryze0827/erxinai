@@ -11,7 +11,7 @@ import { useConsole } from "../ConsoleContext";
 import { PlatformMark } from "../GroupBadge";
 import { Icon } from "../Icon";
 import { useLocale } from "../i18n";
-import { Button, EmptyState, ErrorState, Page, Panel, ProgressBar, Skeleton, StatusBadge, TableSkeleton, buttonLinkClass } from "../UI";
+import { Button, EmptyState, ErrorState, Page, Panel, ProgressBar, Skeleton, StatusBadge, TableSkeletonRows, buttonLinkClass } from "../UI";
 import { statusLabel } from "../utils";
 
 function resetLabel(seconds, locale) {
@@ -52,10 +52,28 @@ function monthlyUsed(subscription, progress) {
   return Number(subscriptionProgress(subscription, progress, "monthly")?.used || 0);
 }
 
-function SubscriptionsLoading({ title }) {
+// One header definition for the ledger and its loading state keeps their columns aligned.
+function ledgerColumns(locale, t) {
+  return [
+    { key: "plan", label: locale === "zh" ? "套餐" : "Plan" },
+    { key: "status", label: t("common.status") },
+    { key: "expires_at", label: t("subscriptions.expires") },
+    { key: "rate", label: locale === "zh" ? "倍率" : "Rate" },
+    { key: "daily", label: t("subscriptions.daily") },
+    { key: "weekly", label: t("subscriptions.weekly") },
+    { key: "monthly", label: t("subscriptions.monthly") },
+    { key: "action", label: locale === "zh" ? "操作" : "Action" },
+  ];
+}
+
+function LedgerHeader({ columns }) {
+  return <TableHeader><TableRow>{columns.map((column) => <TableHead key={column.key} data-column={column.key}>{column.label}</TableHead>)}</TableRow></TableHeader>;
+}
+
+function SubscriptionsLoading({ title, columns }) {
   return <Page title={title} className="console-subscriptions-page console-subscriptions-loading">
     <Panel className="console-subscriptions-toolbar"><div className="console-panel-body"><p><Skeleton /><Skeleton /></p><div><Skeleton /><Skeleton /></div></div></Panel>
-    <Panel className="console-subscriptions-ledger"><div className="console-subscriptions-ledger-head"><Skeleton /></div><div className="console-subscriptions-table-wrap"><TableSkeleton columns={8} rows={3} pagination={false} /></div><footer><Skeleton /><div><Skeleton /><Skeleton /><Skeleton /></div></footer></Panel>
+    <Panel className="console-subscriptions-ledger"><div className="console-subscriptions-ledger-head"><Skeleton /></div><div className="console-subscriptions-table-wrap" role="status" aria-busy="true"><Table className="console-subscriptions-table" size="sm" borderStyle="solid"><LedgerHeader columns={columns} /><TableBody><TableSkeletonRows columns={columns} rows={3} /></TableBody></Table></div><footer><Skeleton /><div><Skeleton /><Skeleton /><Skeleton /></div></footer></Panel>
   </Page>;
 }
 
@@ -80,7 +98,7 @@ export function SubscriptionsPage() {
   }, []);
   useEffect(() => { mountedRef.current = true; load(); return () => { mountedRef.current = false; }; }, [load]);
 
-  if (state.loading) return <SubscriptionsLoading title={t("subscriptions.title")} />;
+  if (state.loading) return <SubscriptionsLoading title={t("subscriptions.title")} columns={ledgerColumns(locale, t)} />;
   if (state.error && !state.items.length) return <Page title={t("subscriptions.title")} className="console-subscriptions-page"><Panel><ErrorState message={state.error} onRetry={load} /></Panel></Page>;
   const activeCount = state.items.filter((item) => String(item.status).toLowerCase() === "active").length;
   const monthlyUsage = state.items.reduce((total, item) => total + monthlyUsed(item, state.progress[item.id] || {}), 0);
@@ -90,7 +108,7 @@ export function SubscriptionsPage() {
     <Panel className="console-subscriptions-toolbar"><div className="console-panel-body"><p><strong>{activeCount} {locale === "zh" ? "个有效" : "active"}</strong> {locale === "zh" ? "订阅" : "subscriptions"}<i>·</i><b>{formatCurrency(monthlyUsage)}</b> {locale === "zh" ? "本月用量" : "monthly usage"}</p><div><Button icon="refresh" onClick={() => load(true)} loading={state.refreshing}>{state.refreshing ? t("common.loading") : t("common.refresh")}</Button>{settings?.payment_enabled !== false && <Link className={buyClass} to="/purchase?tab=subscription"><Icon name="cart" size={17} />{locale === "zh" ? "购买订阅" : "Buy subscription"}</Link>}</div></div></Panel>
     {!state.items.length ? <Panel><EmptyState icon="card" title={locale === "zh" ? "暂无订阅" : "No subscriptions yet"} description={locale === "zh" ? "购买套餐后，配额与重置时间会显示在这里。" : "Your plan limits and reset windows will appear here."} action={settings?.payment_enabled !== false && <Link className={buyClass} to="/purchase?tab=subscription">{locale === "zh" ? "购买订阅" : "Buy subscription"}</Link>} /></Panel> : <Panel className="console-subscriptions-ledger">
       <div className="console-subscriptions-ledger-head"><h2>{locale === "zh" ? "订阅台账" : "Subscription ledger"}</h2></div>
-      <div className="console-subscriptions-table-wrap"><Table className="console-subscriptions-table" size="sm" borderStyle="solid" hoverableRows><TableHeader><TableRow><TableHead>{locale === "zh" ? "套餐" : "Plan"}</TableHead><TableHead>{t("common.status")}</TableHead><TableHead>{t("subscriptions.expires")}</TableHead><TableHead>{locale === "zh" ? "倍率" : "Rate"}</TableHead><TableHead>{t("subscriptions.daily")}</TableHead><TableHead>{t("subscriptions.weekly")}</TableHead><TableHead>{t("subscriptions.monthly")}</TableHead><TableHead>{locale === "zh" ? "操作" : "Action"}</TableHead></TableRow></TableHeader><TableBody>{state.items.map((subscription) => {
+      <div className="console-subscriptions-table-wrap"><Table className="console-subscriptions-table" size="sm" borderStyle="solid" hoverableRows><LedgerHeader columns={ledgerColumns(locale, t)} /><TableBody>{state.items.map((subscription) => {
         const progress = state.progress[subscription.id] || {};
         const platform = subscription.group?.platform || "default";
         const status = String(subscription.status || "unknown").toLowerCase();

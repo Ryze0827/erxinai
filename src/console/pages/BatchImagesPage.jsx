@@ -17,8 +17,8 @@ import {
   ProgressBar,
   SelectInput,
   Spinner,
+  PaginationSkeleton,
   StatusBadge,
-  TableSkeleton,
   TextArea,
   TextInput,
 } from "../UI";
@@ -460,7 +460,7 @@ function JobActions({ row, children, labels, busy, onInspect, onCancel, onDownlo
 }
 
 function JobTable(props) {
-  const { rows, childrenByParent, selected, expanded, formatCurrency, formatDate, locale, onSelect, onSelectAll, onExpand, onInspect, onCancel, onDownload, onRetry, onDelete, busy } = props;
+  const { rows, childrenByParent, selected, expanded, formatCurrency, formatDate, locale, onSelect, onSelectAll, onExpand, onInspect, onCancel, onDownload, onRetry, onDelete, busy, loading = false } = props;
   const labels = localCopy("jobs", locale);
   const allSelected = Boolean(rows.length) && rows.every((row) => selected.has(row._row_id));
   const someSelected = !allSelected && rows.some((row) => selected.has(row._row_id));
@@ -475,7 +475,7 @@ function JobTable(props) {
     { key: "downloaded", label: labels.downloaded, render: (row) => row.downloaded_at ? unixDate(row.downloaded_at, formatDate) : labels.notDownloaded },
     { key: "actions", label: labels.actions, align: "right", render: (row) => <JobActions row={row} children={childrenByParent.get(row._row_id)} labels={labels} busy={busy} onInspect={onInspect} onCancel={onCancel} onDownload={onDownload} onRetry={onRetry} onDelete={onDelete} /> },
   ];
-  return <DataTable columns={columns} rows={rows} rowKey="_row_id" onRowClick={onInspect} empty={<EmptyState icon="image" title={labels.empty} />} />;
+  return <DataTable className="console-batch-jobs-table" columns={columns} rows={rows} rowKey="_row_id" loading={loading} loadingRows={3} onRowClick={onInspect} empty={<EmptyState icon="image" title={labels.empty} />} />;
 }
 
 function itemStatus(item, locale) {
@@ -596,7 +596,7 @@ function NoKeysNotice({ hasKeys, state }) {
 function JobsPanel({ state, tableProps, pagingProps, onRetry }) {
   const { t } = useLocale();
   let content;
-  if (state.loading && !tableProps.rows.length) content = <TableSkeleton columns={9} rows={3} />;
+  if (state.loading && !tableProps.rows.length) content = <><JobTable {...tableProps} loading /><PaginationSkeleton /></>;
   else if (state.error && !tableProps.rows.length) content = <ErrorState message={state.error} onRetry={onRetry} />;
   else content = <><JobTable {...tableProps} /><CursorPagination {...pagingProps} /></>;
   return <Panel title={t("batch.jobs")} className="console-batch-jobs" aria-busy={state.loading}>{content}</Panel>;
