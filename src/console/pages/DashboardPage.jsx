@@ -192,11 +192,13 @@ function dashboardDelta(current, previous) {
   return { percent };
 }
 
-// Direction stays neutral; only a rising spend is worth a warning tint.
+// Usage growth reads green and a drop red; for spend the sense flips, so a rise
+// is a warning and a drop is good news. Changes under 0.05% stay neutral.
 function MetricDelta({ current, previous, previousLabel, formatPrevious, warnOnIncrease = false, comparable = true }) {
   const delta = comparable ? dashboardDelta(current, previous) : null;
   const direction = !delta ? null : delta.percent >= 0.05 ? "up" : delta.percent <= -0.05 ? "down" : "flat";
-  return <div className="console-kpi-delta">{delta && <span data-direction={direction} data-warning={warnOnIncrease && direction === "up" ? "" : undefined}>{direction !== "flat" && <Icon name={direction === "up" ? "arrowUp" : "arrowDown"} size={12} />}{delta.percent > 0 ? "+" : ""}{delta.percent.toFixed(1)}%</span>}<small>{previousLabel}{previous == null ? "—" : formatPrevious(previous)}</small></div>;
+  const tones = warnOnIncrease ? { up: "warning", down: "success" } : { up: "success", down: "danger" };
+  return <div className="console-kpi-delta">{delta && <span data-direction={direction} data-tone={tones[direction]}>{direction !== "flat" && <Icon name={direction === "up" ? "arrowUp" : "arrowDown"} size={12} />}{delta.percent > 0 ? "+" : ""}{delta.percent.toFixed(1)}%</span>}<small>{previousLabel}{previous == null ? "—" : formatPrevious(previous)}</small></div>;
 }
 
 function MetricHint({ label, children }) {

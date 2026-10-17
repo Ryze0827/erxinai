@@ -6733,7 +6733,17 @@ html[data-console-theme] .console-kpi-delta > span {
   font-variant-numeric: tabular-nums;
 }
 
-html[data-console-theme] .console-kpi-delta > span[data-warning] {
+html[data-console-theme] .console-kpi-delta > span[data-tone="success"] {
+  color: var(--success-intense);
+  background: color-mix(in oklab, var(--success-emphasis) 12%, var(--background));
+}
+
+html[data-console-theme] .console-kpi-delta > span[data-tone="danger"] {
+  color: var(--error-intense);
+  background: color-mix(in oklab, var(--error-emphasis) 12%, var(--background));
+}
+
+html[data-console-theme] .console-kpi-delta > span[data-tone="warning"] {
   color: var(--warning-intense);
   background: color-mix(in oklab, var(--warning-emphasis) 12%, var(--background));
 }
