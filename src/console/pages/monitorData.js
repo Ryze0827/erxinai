@@ -19,6 +19,12 @@ export function monitorTone(status) {
   return "unknown";
 }
 
+export function ttftRatingTone(averageMs, status) {
+  const tone = monitorTone(status);
+  const average = metricNumber(averageMs);
+  return tone === "operational" && average != null && average > 10000 ? "degraded" : tone;
+}
+
 const platformAlias = (value) => ({ claude: "anthropic", codex: "openai", google: "gemini", xai: "grok" }[value] || value);
 
 // V1 only exposes a free-text group_name, not a group ID. Never guess by monitor name

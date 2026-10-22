@@ -18,7 +18,7 @@ import { useLocale, translate, formatDateTimeFor } from "../i18n";
 import { formatCompact } from "../utils";
 import { Button, EmptyState, ErrorState, Page, Panel, SelectInput, Skeleton, StatusBadge, TextInput } from "../UI";
 import { CompactTabs } from "../components/ConsoleControls";
-import { MONITOR_RANGES, buildMonitorRankingRows, buildMonitorRows, metricNumber, metricRate, monitorTone, scoredSuccessRate, sortMonitorRows, tokensPerSecond, trendGeometry } from "./monitorData.js";
+import { MONITOR_RANGES, buildMonitorRankingRows, buildMonitorRows, metricNumber, metricRate, monitorTone, scoredSuccessRate, sortMonitorRows, tokensPerSecond, trendGeometry, ttftRatingTone } from "./monitorData.js";
 
 const REFRESH_KEY = "sentence_monitor_refresh";
 const TTFT_TREND_WARNING_MS = 10000;
@@ -80,7 +80,7 @@ function MetricRing({ value, label, accessibleLabel = label, tone = "operational
 
 function TtftMetric({ metrics, health, locale, formatNumber, showRating = true }) {
   const value = metricNumber(metrics?.avg_ms);
-  const tone = monitorTone(health?.ttft);
+  const tone = ttftRatingTone(value, health?.ttft);
   const score = tone === "unknown" ? null : metricNumber(health?.ttft_score);
   const label = {
     operational: translate(locale, "monitor.fast"),
@@ -91,7 +91,7 @@ function TtftMetric({ metrics, health, locale, formatNumber, showRating = true }
   const scoreLabel = translate(locale, "monitor.ttftScoreBackendPercentile");
   const ratingLabel = translate(locale, "monitor.ratingValue", { label });
   return <div className={"console-group-latency console-group-ttft console-monitor-tone" + (showRating ? "" : " is-unrated")} data-tone={tone}>
-    <div className="console-group-latency-value"><strong>{duration(value, formatNumber)}</strong>{showRating && <span title={scoreLabel}><StatusBadge size="sm" status={tone === "operational" ? "active" : tone === "unknown" ? "inactive" : tone} label={ratingLabel} /></span>}</div>
+    <div className="console-group-latency-value"><strong>{duration(value, formatNumber)}</strong>{showRating && <span title={translate(locale, "monitor.ttftRatingBasis")}><StatusBadge size="sm" status={tone === "operational" ? "active" : tone === "unknown" ? "inactive" : tone} label={ratingLabel} /></span>}</div>
     {showRating && (score == null ? <div className="console-group-latency-track" aria-label={scoreLabel + " · —"} /> : <Progress thickness={4} value={Math.min(100, score)} indicatorColor="var(--console-monitor-accent)" aria-label={scoreLabel} aria-valuetext={score.toFixed(1) + "/100 · " + label} />)}
     <div className="console-group-ttft-secondary" title={translate(locale, "monitor.percentilesEstimatedUsingHistogram")}><small>P50 · {estimatedDuration(metricNumber(metrics?.p50_ms), formatNumber)}</small><small>P90 · {estimatedDuration(metricNumber(metrics?.p90_ms), formatNumber)}</small><small className="console-group-ttft-estimate">{translate(locale, "monitor.bucketEstimates")}</small></div>
   </div>;
