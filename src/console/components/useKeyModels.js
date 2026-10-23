@@ -8,7 +8,6 @@ export const openCodeModels = {
     "gpt-5.6-sol": {"name":"GPT-5.6 Sol","limit":{"context":1050000,"output":128000},"options":{"store":false},"variants":{"low":{},"medium":{},"high":{},"xhigh":{},"max":{}}},
     "gpt-5.6-terra": {"name":"GPT-5.6 Terra","limit":{"context":1050000,"output":128000},"options":{"store":false},"variants":{"low":{},"medium":{},"high":{},"xhigh":{},"max":{}}},
     "gpt-5.6-luna": {"name":"GPT-5.6 Luna","limit":{"context":1050000,"output":128000},"options":{"store":false},"variants":{"low":{},"medium":{},"high":{},"xhigh":{},"max":{}}},
-    "gpt-5.5": {"name":"GPT-5.5","limit":{"context":1050000,"output":128000},"options":{"store":false},"variants":{"low":{},"medium":{},"high":{},"xhigh":{}}},
     "gpt-5.4": {"name":"GPT-5.4","limit":{"context":1050000,"output":128000},"options":{"store":false},"variants":{"low":{},"medium":{},"high":{},"xhigh":{}}},
     "gpt-5.4-mini": {"name":"GPT-5.4 Mini","limit":{"context":400000,"output":128000},"options":{"store":false},"variants":{"low":{},"medium":{},"high":{},"xhigh":{}}},
     "gpt-5.3-codex-spark": {"name":"GPT-5.3 Codex Spark","limit":{"context":128000,"output":32000},"options":{"store":false},"variants":{"low":{},"medium":{},"high":{},"xhigh":{}}},

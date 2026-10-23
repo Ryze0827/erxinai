@@ -180,7 +180,7 @@ function ccsImportUrl(row, baseUrl, siteName, clientType) {
   const endpoint = platform === "antigravity" ? `${baseUrl}/antigravity` : baseUrl;
   const script = `({request:{url:"{{baseUrl}}/v1/usage",method:"GET",headers:{"Authorization":"Bearer {{apiKey}}"}},extractor:function(response){return {isValid:response?.is_active??true,remaining:response?.remaining??response?.quota?.remaining??response?.balance,unit:response?.unit??"USD"}}})`;
   const params = new URLSearchParams([["resource", "provider"], ["app", app], ["name", siteName], ["homepage", baseUrl], ["endpoint", endpoint], ["apiKey", row.key], ["configFormat", "json"], ["usageEnabled", "true"], ["usageScript", btoa(script)], ["usageAutoInterval", "30"]]);
-  if (platform === "openai") params.set("model", "gpt-5.5");
+  if (platform === "openai") params.set("model", "gpt-6-astra");
   return `ccswitch://v1/import?${params.toString()}`;
 }
 

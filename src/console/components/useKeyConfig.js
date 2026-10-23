@@ -55,13 +55,14 @@ export function baseRoot(baseUrl) {
 }
 
 function codexFiles(shell, platform, baseUrl, apiKey, locale) {
-  const model = { openai: "gpt-5.5", anthropic: "claude-sonnet-4-6", gemini: "gemini-2.5-pro", antigravity: "claude-sonnet-4-6", grok: "grok-4.5", kimi: "kimi-k2.5", zhipu: "glm-4.7", deepseek: "deepseek-v4-pro", minimax: "MiniMax-M3", opencode_go: "glm-5.3", composite: "gpt-5.5" }[platform] || "";
+  const model = { openai: "gpt-6-astra", anthropic: "claude-sonnet-4-6", gemini: "gemini-2.5-pro", antigravity: "claude-sonnet-4-6", grok: "grok-4.5", kimi: "kimi-k2.5", zhipu: "glm-4.7", deepseek: "deepseek-v4-pro", minimax: "MiniMax-M3", opencode_go: "glm-5.3", composite: "gpt-6-astra" }[platform] || "";
+  const reviewModel = platform === "openai" || platform === "composite" ? "gpt-6-luna" : model;
   const files = [];
   let content;
   if (platform === "openai") {
     content = `model_provider = "OpenAI"
 model = ${toml(model)}
-review_model = ${toml(model)}
+review_model = ${toml(reviewModel)}
 disable_response_storage = true
 network_access = "enabled"
 windows_wsl_setup_acknowledged = true
@@ -81,7 +82,7 @@ goals = true`;
     files.push(envFile(shell, { SUB2API_API_KEY: apiKey }));
     content = `model_provider = "sub2api"
 model = ${toml(model)}
-${platform === "grok" ? "" : `review_model = ${toml(model)}\ndisable_response_storage = true\n`}
+${platform === "grok" ? "" : `review_model = ${toml(reviewModel)}\ndisable_response_storage = true\n`}
 [model_providers.sub2api]
 name = "Sub2API ${label}"
 base_url = ${toml(`${baseRoot(baseUrl)}/v1`)}
